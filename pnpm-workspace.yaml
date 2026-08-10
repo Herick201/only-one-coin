@@ -2,10 +2,7 @@ packages:
   - "apps/*"
   - "packages/*"
 
+# esbuild e sharp compilam binario no postinstall; aprovados para rodar seus build scripts.
 allowBuilds:
-  esbuild: set this to true or false
-  sharp: set this to true or false
-
-onlyBuiltDependencies:
-  - esbuild
-  - sharp
+  esbuild: true
+  sharp: true

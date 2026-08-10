@@ -1,0 +1,25 @@
+# Netlify — site público (landing, Astro estático).
+# Na UI do site, defina "Base directory" = apps/landing. Este arquivo é lido
+# a partir dessa base, então `publish = "dist"` aponta para apps/landing/dist.
+# O install do pnpm workspace roda a partir da raiz do repo automaticamente.
+
+[build]
+  command = "pnpm build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# main → produção; staging → branch deploy; PR → deploy preview (§7).
+[context.production.environment]
+  # variáveis de produção definidas na UI do site (scoped por contexto)
+
+[context.branch-deploy.environment]
+  # variáveis de staging
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
