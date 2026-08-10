@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Environment — nunca versionar (só .env.example)
+.env
+.env.*
+!.env.example
+
+# Build output
+dist/
+build/
+.next/
+.astro/
+.netlify/
+.turbo/
+
+# Supabase local
+**/supabase/.branches/
+**/supabase/.temp/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Test / coverage
+coverage/
