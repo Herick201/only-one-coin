@@ -1,0 +1,36 @@
+---
+import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const c = t.cta;
+---
+
+<section class="cta">
+  <div class="container cta-inner">
+    <div>
+      <h2 class="section-title">{c.titlePre}<span class="accent">{c.titleAccent}</span>{c.titlePost}</h2>
+      <p class="text-muted">{c.text}</p>
+    </div>
+    <a href={withLang(lang, "/contacto")} class="btn btn-gold">{c.button}</a>
+  </div>
+</section>
+
+<style>
+  .cta {
+    padding-block: 72px;
+    background: linear-gradient(135deg, rgba(42, 63, 214, 0.22), rgba(230, 168, 30, 0.12));
+    border-block: 1px solid var(--border);
+  }
+  .cta-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+    flex-wrap: wrap;
+  }
+  .cta p {
+    margin-top: 10px;
+    max-width: 560px;
+  }
+</style>

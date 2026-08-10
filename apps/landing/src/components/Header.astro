@@ -1,0 +1,85 @@
+---
+import LanguageSwitcher from "./LanguageSwitcher.astro";
+import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+const nav = [
+  { label: t.nav.home, href: withLang(lang, "/") },
+  { label: t.nav.about, href: withLang(lang, "/nosotros") },
+  { label: t.nav.courses, href: withLang(lang, "/cursos") },
+  { label: t.nav.blog, href: withLang(lang, "/blog") },
+  { label: t.nav.contact, href: withLang(lang, "/contacto") },
+];
+---
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a href={withLang(lang, "/")} class="brand" aria-label="Only One Coin">
+      <img src="/images/logo.png" alt="Only One Coin" width="120" height="69" />
+    </a>
+
+    <nav class="nav" aria-label="Principal">
+      {nav.map((item) => <a href={item.href}>{item.label}</a>)}
+    </nav>
+
+    <div class="header-actions">
+      <LanguageSwitcher />
+      <a href={withLang(lang, "/mi-cuenta")} class="btn btn-gold login-btn">{t.nav.login}</a>
+    </div>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: rgba(10, 10, 12, 0.85);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    height: 84px;
+  }
+  .brand img {
+    height: 56px;
+    width: auto;
+  }
+  .nav {
+    display: flex;
+    gap: 34px;
+    font-weight: 600;
+    color: var(--gold);
+  }
+  .nav a {
+    position: relative;
+    transition: color 0.15s ease;
+  }
+  .nav a:hover {
+    color: var(--gold-bright);
+  }
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .login-btn {
+    white-space: nowrap;
+  }
+  @media (max-width: 900px) {
+    .nav {
+      display: none;
+    }
+  }
+  @media (max-width: 560px) {
+    .login-btn {
+      display: none;
+    }
+  }
+</style>

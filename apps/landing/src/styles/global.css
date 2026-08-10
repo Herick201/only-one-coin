@@ -1,0 +1,141 @@
+/* Only One Coin — tokens de marca (dourado + azul sobre fundo escuro).
+   Exemplo inicial: valores derivados do site atual, a refinar no design system (Sessão 14). */
+:root {
+  --bg: #0a0a0c;
+  --bg-elev: #141417;
+  --surface: #1b1b1f;
+  --gold: #e6a81e;
+  --gold-bright: #f7b500;
+  --gold-soft: #f4c95b;
+  --blue: #2a3fd6;
+  --blue-bright: #3450ff;
+  --text: #ffffff;
+  --text-muted: #b6b6bd;
+  --border: #2a2a30;
+  --radius: 18px;
+  --maxw: 1200px;
+  --font: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.1;
+  margin: 0;
+  font-weight: 800;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+.container {
+  width: 100%;
+  max-width: var(--maxw);
+  margin-inline: auto;
+  padding-inline: 24px;
+}
+
+.section {
+  padding-block: 88px;
+}
+
+.eyebrow {
+  color: var(--gold);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 0.82rem;
+  margin-bottom: 14px;
+}
+
+.section-title {
+  font-size: clamp(1.9rem, 4vw, 2.9rem);
+}
+
+.section-title .accent {
+  color: var(--gold);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+/* Botões */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 26px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+  color: #1a1a1a;
+}
+.btn-gold:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px -12px var(--gold);
+}
+.btn-outline {
+  border: 2px solid var(--gold);
+  color: var(--gold);
+}
+.btn-outline:hover {
+  background: var(--gold);
+  color: #1a1a1a;
+}
+
+/* WhatsApp float */
+.wa-float {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: #25d366;
+  display: grid;
+  place-items: center;
+  z-index: 50;
+  box-shadow: 0 10px 30px -8px rgba(37, 211, 102, 0.6);
+  transition: transform 0.15s ease;
+}
+.wa-float:hover {
+  transform: scale(1.06);
+}
+
+@media (max-width: 720px) {
+  .section {
+    padding-block: 56px;
+  }
+}

@@ -1,0 +1,71 @@
+---
+import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const p = t.programs;
+---
+
+<section class="section programs" id="cursos">
+  <div class="container">
+    <p class="eyebrow">{p.eyebrow}</p>
+    <h2 class="section-title">{p.titlePre}<span class="accent">{p.titleAccent}</span>{p.titlePost}</h2>
+
+    <div class="grid">
+      {
+        p.items.map((item) => (
+          <article class="program">
+            <span class="tag">{item.tag}</span>
+            <h3>{item.title}</h3>
+            <p class="text-muted">{item.text}</p>
+            <a href={withLang(lang, item.href)} class="btn btn-gold">
+              {p.viewCourse}
+            </a>
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .grid {
+    margin-top: 44px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+  .program {
+    background:
+      radial-gradient(120% 120% at 100% 0%, rgba(42, 63, 214, 0.18), transparent 55%),
+      var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 38px 34px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .tag {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--gold);
+    background: rgba(230, 168, 30, 0.12);
+    padding: 6px 12px;
+    border-radius: 999px;
+  }
+  .program h3 {
+    font-size: 1.55rem;
+  }
+  .program .btn {
+    margin-top: 8px;
+  }
+  @media (max-width: 900px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,68 @@
+---
+import { getLangFromUrl, useTranslations } from "../i18n/utils";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const w = t.why;
+---
+
+<section class="section why" id="nosotros">
+  <div class="container">
+    <p class="eyebrow">{w.eyebrow}</p>
+    <h2 class="section-title">{w.titlePre}<span class="accent">{w.titleAccent}</span>{w.titlePost}</h2>
+
+    <div class="cards">
+      {
+        w.cards.map((item) => (
+          <article class="card">
+            <div class="card-icon">{item.icon}</div>
+            <h3>{item.title}</h3>
+            <p class="text-muted">{item.text}</p>
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .why {
+    background: linear-gradient(180deg, var(--bg), var(--bg-elev));
+  }
+  .cards {
+    margin-top: 44px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px 28px;
+    transition: transform 0.18s ease, border-color 0.18s ease;
+  }
+  .card:hover {
+    transform: translateY(-6px);
+    border-color: var(--gold);
+  }
+  .card-icon {
+    width: 62px;
+    height: 62px;
+    display: grid;
+    place-items: center;
+    font-size: 1.7rem;
+    border-radius: 16px;
+    background: rgba(230, 168, 30, 0.12);
+    margin-bottom: 18px;
+  }
+  .card h3 {
+    font-size: 1.25rem;
+    margin-bottom: 10px;
+  }
+  @media (max-width: 900px) {
+    .cards {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

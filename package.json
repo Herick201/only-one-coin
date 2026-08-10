@@ -1,0 +1,15 @@
+{
+  "name": "only-one-coin",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@11.17.0",
+  "scripts": {
+    "dev": "pnpm --filter @ooc/landing dev",
+    "dev:landing": "pnpm --filter @ooc/landing dev",
+    "build": "pnpm -r build",
+    "build:landing": "pnpm --filter @ooc/landing build"
+  }
+}

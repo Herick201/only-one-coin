@@ -1,0 +1,86 @@
+---
+import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const f = t.footer;
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div class="col">
+      <img src="/images/logo.png" alt="Only One Coin" width="120" height="69" class="footer-logo" />
+      <p class="text-muted" set:html={f.orgHtml} />
+    </div>
+
+    <div class="col">
+      <h3>{f.col1Title}</h3>
+      <ul>
+        <li><a href={withLang(lang, "/nosotros")}>{f.about}</a></li>
+        <li><a href={withLang(lang, "/politicas-de-privacidad")}>{f.privacy}</a></li>
+        <li><a href={withLang(lang, "/terminos-y-condiciones")}>{f.terms}</a></li>
+      </ul>
+    </div>
+
+    <div class="col">
+      <h3>{f.col2Title}</h3>
+      <ul>
+        <li><a href={withLang(lang, "/contacto")}>{f.contact}</a></li>
+        <li class="text-muted">{f.hoursLabel}</li>
+        <li class="text-muted">{f.hours}</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="container footer-bottom">
+    <span class="text-muted">© {year} {f.copyOrg} — {f.rights}</span>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    background: var(--bg-elev);
+    border-top: 1px solid var(--border);
+    padding-top: 56px;
+  }
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr;
+    gap: 32px;
+  }
+  .footer-logo {
+    height: 54px;
+    width: auto;
+    margin-bottom: 14px;
+  }
+  .col h3 {
+    color: var(--gold);
+    font-size: 1rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .col ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .col a:hover {
+    color: var(--gold);
+  }
+  .footer-bottom {
+    margin-top: 40px;
+    padding-block: 22px;
+    border-top: 1px solid var(--border);
+    font-size: 0.85rem;
+  }
+  @media (max-width: 800px) {
+    .footer-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
