@@ -93,22 +93,28 @@ packages/
 
 ## 4. Idioma
 
-**Código em inglês. Interface em espanhol do Peru. Conversa comigo em português.**
+**Código em inglês. Interface trilíngue. Conversa comigo em português.**
+
+### Trilíngue obrigatório
+
+**Tudo que o usuário vê tem três idiomas: `es-PE` (padrão) · `pt-BR` · `en`.** Espanhol do Peru é o idioma padrão e o fallback quando faltar tradução. Cada idioma é um arquivo de locale com a **mesma estrutura de chaves** — nunca uma chave que exista só num idioma.
 
 | Camada | Idioma |
 | --- | --- |
 | Tabelas, colunas, enums, funções, variáveis, tipos | Inglês |
 | Branches, commits, comentários de código | Inglês |
 | Chaves de i18n | Inglês (`payment.status.under_review`) |
-| **Todo texto visível ao usuário** | **Espanhol (PE)**, em `es-PE.json` |
-| Templates de e-mail, PDFs, manual | Espanhol (PE) |
+| **Todo texto visível ao usuário** | **Trilíngue**: `es-PE.json` (padrão) · `pt-BR.json` · `en.json` |
+| Templates de e-mail, PDFs, manual | **Trilíngue**, `es-PE` padrão |
 | Documentação interna e nossas conversas | Português |
+
+Seletor de idioma visível na interface. Roteamento: `es-PE` sem prefixo, `/en` e `/pt` prefixados.
 
 ### Regra dura de i18n
 
-**Zero string em espanhol dentro de `.ts` / `.tsx`.** Inclui mensagem de erro de API e corpo de e-mail. Lint quebra o build.
+**Zero string de UI dentro de `.ts` / `.tsx` / `.astro`.** Todo texto visível sai do arquivo de locale, nos três idiomas. Inclui mensagem de erro de API e corpo de e-mail. Lint quebra o build.
 
-Motivo: a Asociación dá oficinas de quechua. Se quiserem interface bilíngue, é um arquivo novo, não uma caçada.
+Motivo: a Asociación dá oficinas de quechua. Um quarto idioma (ex.: quechua) é só mais um arquivo de locale com a mesma estrutura — nunca uma caçada por strings soltas.
 
 ### Glossário (termos peruanos → código)
 
