@@ -8,7 +8,8 @@
   publish = "dist"
 
 [build.environment]
-  NODE_VERSION = "20"
+  # pnpm 11.17 exige Node >= 22.13 (usa node:sqlite).
+  NODE_VERSION = "22"
 
 # main → produção; staging → branch deploy; PR → deploy preview (§7).
 [context.production.environment]
