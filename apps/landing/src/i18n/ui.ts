@@ -55,17 +55,14 @@ export const content = {
       titlePost: "?",
       cards: [
         {
-          icon: "🪙",
           title: "Clases de Inglés por S/1.00",
           text: "Educación de calidad al alcance de todos. Un sol simbólico por acceso a nuestras clases.",
         },
         {
-          icon: "🎓",
           title: "Talleres Gratuitos",
           text: "Excel, Emprendimiento, Liderazgo y Quechua sin costo adicional para nuestros alumnos.",
         },
         {
-          icon: "💡",
           title: "Enseñanza Innovadora",
           text: "Metodología dinámica y docentes comprometidos con el aprendizaje real.",
         },
@@ -157,12 +154,10 @@ export const content = {
           text: "Quality education within everyone's reach. A symbolic one-sol fee to access our classes.",
         },
         {
-          icon: "🎓",
           title: "Free Workshops",
           text: "Excel, Entrepreneurship, Leadership and Quechua at no extra cost for our students.",
         },
         {
-          icon: "💡",
           title: "Innovative Teaching",
           text: "A dynamic methodology and teachers committed to real learning.",
         },
@@ -254,12 +249,10 @@ export const content = {
           text: "Educação de qualidade ao alcance de todos. Um sol simbólico para acessar nossas aulas.",
         },
         {
-          icon: "🎓",
           title: "Oficinas Gratuitas",
           text: "Excel, Empreendedorismo, Liderança e Quíchua sem custo adicional para nossos alunos.",
         },
         {
-          icon: "💡",
           title: "Ensino Inovador",
           text: "Metodologia dinâmica e professores comprometidos com o aprendizado real.",
         },

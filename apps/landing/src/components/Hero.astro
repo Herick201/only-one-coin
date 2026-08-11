@@ -1,4 +1,6 @@
 ---
+import { Image } from "astro:assets";
+import heroPhoto from "../assets/photos/hero.jpg";
 import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
 
 const lang = getLangFromUrl(Astro.url);
@@ -24,7 +26,16 @@ const h = t.hero;
 
     <div class="hero-media">
       <div class="hero-photo">
-        <img src="/images/hero.jpg" alt={h.imgAlt} width="1280" height="689" />
+        <Image
+          src={heroPhoto}
+          alt={h.imgAlt}
+          widths={[480, 768, 1024, 1280]}
+          sizes="(max-width: 900px) 92vw, 600px"
+          format="webp"
+          quality={78}
+          loading="eager"
+          fetchpriority="high"
+        />
       </div>
       <div class="hero-badge" set:html={h.badgeHtml} />
     </div>

@@ -4,6 +4,17 @@ import { getLangFromUrl, useTranslations } from "../i18n/utils";
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const w = t.why;
+
+// Ícones (Lucide) por card, na mesma ordem de w.cards. Não são conteúdo
+// traduzível, por isso vivem aqui e não no dicionário i18n.
+const icons = [
+  // circle-dollar-sign (clases por S/1.00)
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>',
+  // graduation-cap (talleres gratuitos)
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c3 2.5 9 2.5 12 0v-5"/><path d="M22 10v6"/></svg>',
+  // lightbulb (enseñanza innovadora)
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5a6 6 0 0 0-12 0c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>',
+];
 ---
 
 <section class="section why" id="nosotros">
@@ -13,9 +24,9 @@ const w = t.why;
 
     <div class="cards">
       {
-        w.cards.map((item) => (
+        w.cards.map((item, i) => (
           <article class="card">
-            <div class="card-icon">{item.icon}</div>
+            <div class="card-icon" set:html={icons[i]} />
             <h3>{item.title}</h3>
             <p class="text-muted">{item.text}</p>
           </article>
@@ -51,10 +62,14 @@ const w = t.why;
     height: 62px;
     display: grid;
     place-items: center;
-    font-size: 1.7rem;
     border-radius: 16px;
     background: rgba(230, 168, 30, 0.12);
+    color: var(--gold);
     margin-bottom: 18px;
+  }
+  .card-icon :global(svg) {
+    width: 28px;
+    height: 28px;
   }
   .card h3 {
     font-size: 1.25rem;
