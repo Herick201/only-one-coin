@@ -1,0 +1,125 @@
+---
+import { getLangFromUrl, useTranslations } from "../i18n/utils";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const ts = t.testimonials;
+---
+
+<section class="section testi" id="testimonios">
+  <div class="container">
+    <div class="testi-head">
+      <div>
+        <p class="eyebrow">{ts.eyebrow}</p>
+        <h2 class="section-title">
+          {ts.titlePre}<span class="accent">{ts.titleAccent}</span>{ts.titlePost}
+        </h2>
+      </div>
+    </div>
+
+    <div class="cards">
+      {
+        ts.items.map((item) => (
+          <figure class="testi-card">
+            <div class="stars" aria-label="5/5">★★★★★</div>
+            <blockquote>{item.quote}</blockquote>
+            <figcaption class="who">
+              <span class="avatar" aria-hidden="true">{item.initials}</span>
+              <span class="who-txt">
+                <span class="name">{item.name}</span>
+                <span class="role">{item.role}</span>
+              </span>
+            </figcaption>
+          </figure>
+        ))
+      }
+    </div>
+
+    <p class="note">{ts.note}</p>
+  </div>
+</section>
+
+<style>
+  .testi {
+    background: var(--paper);
+  }
+  .testi-head {
+    max-width: 640px;
+  }
+  .cards {
+    margin-top: 46px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 26px;
+  }
+  .testi-card {
+    margin: 0;
+    background: var(--sky-soft);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 30px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+  }
+  .testi-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-md);
+  }
+  .stars {
+    color: var(--yellow-deep);
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+  }
+  blockquote {
+    margin: 0;
+    font-size: 1.05rem;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .who {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin-top: auto;
+  }
+  .avatar {
+    width: 46px;
+    height: 46px;
+    flex: none;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--blue);
+    color: #fff;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+  .testi-card:nth-child(even) .avatar {
+    background: var(--yellow);
+    color: var(--ink);
+  }
+  .who-txt {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+  }
+  .name {
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .role {
+    font-size: 0.86rem;
+    color: var(--text-muted);
+  }
+  .note {
+    margin-top: 26px;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    font-style: italic;
+    text-align: center;
+  }
+</style>

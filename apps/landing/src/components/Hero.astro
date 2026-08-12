@@ -9,28 +9,36 @@ const h = t.hero;
 ---
 
 <section class="hero">
+  <span class="blob blob-a" aria-hidden="true"></span>
+  <span class="blob blob-b" aria-hidden="true"></span>
+
   <div class="container hero-grid">
     <div class="hero-copy">
+      <span class="hero-pill">🪙 Only One Coin</span>
       <h1>
-        <span class="line accent">{h.w1}</span>
-        <span class="line">{h.w2}</span>
-        <span class="line accent">{h.w3}</span>
-        <span class="price">{h.price} <span class="bang">!</span></span>
+        <span class="line">{h.w1}</span>
+        <span class="line accent">{h.w2}</span>
+        <span class="line-price">
+          <span class="w3">{h.w3}</span>
+          <span class="price">{h.price}</span>
+        </span>
       </h1>
       <p class="hero-sub" set:html={h.subHtml} />
       <div class="hero-actions">
-        <a href={withLang(lang, "/matricula")} class="btn btn-gold">{h.ctaEnroll}</a>
+        <a href={withLang(lang, "/matricula")} class="btn btn-yellow">{h.ctaEnroll}</a>
         <a href={withLang(lang, "/cursos")} class="btn btn-outline">{h.ctaCourses}</a>
       </div>
     </div>
 
     <div class="hero-media">
+      <span class="dots" aria-hidden="true"></span>
+      <span class="star star-1" aria-hidden="true">✦</span>
       <div class="hero-photo">
         <Image
           src={heroPhoto}
           alt={h.imgAlt}
           widths={[480, 768, 1024, 1280]}
-          sizes="(max-width: 900px) 92vw, 600px"
+          sizes="(max-width: 900px) 92vw, 560px"
           format="webp"
           quality={78}
           loading="eager"
@@ -46,60 +54,112 @@ const h = t.hero;
   .hero {
     position: relative;
     overflow: hidden;
-    padding-block: 64px 96px;
+    padding-block: 64px 104px;
     background:
-      radial-gradient(60% 80% at 85% 20%, rgba(230, 168, 30, 0.14), transparent 60%),
-      var(--bg);
+      radial-gradient(60% 70% at 88% 12%, rgba(255, 201, 60, 0.18), transparent 60%),
+      radial-gradient(55% 60% at 8% 90%, rgba(47, 107, 255, 0.1), transparent 60%),
+      var(--sky-soft);
+  }
+  .blob-a {
+    width: 320px;
+    height: 320px;
+    top: -80px;
+    right: -60px;
+    background: var(--yellow);
+    opacity: 0.28;
+  }
+  .blob-b {
+    width: 260px;
+    height: 260px;
+    bottom: -90px;
+    left: -70px;
+    background: var(--blue);
+    opacity: 0.16;
   }
   .hero-grid {
+    position: relative;
+    z-index: 1;
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 48px;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 56px;
     align-items: center;
   }
+
+  .hero-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    color: var(--ink);
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 8px 15px;
+    border-radius: 999px;
+    box-shadow: var(--shadow-sm);
+  }
   h1 {
-    font-size: clamp(3rem, 8vw, 5.5rem);
-    letter-spacing: -0.02em;
+    margin-top: 22px;
+    font-size: clamp(3rem, 7vw, 5rem);
   }
   .line {
     display: block;
   }
   .accent {
-    color: var(--gold);
+    color: var(--blue);
+  }
+  .line-price {
+    display: inline-flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 4px;
+  }
+  .w3 {
+    font-size: clamp(1.6rem, 3.4vw, 2.4rem);
+    color: var(--ink);
   }
   .price {
-    display: block;
-    color: var(--gold-bright);
-    font-size: clamp(2.4rem, 6vw, 4rem);
-  }
-  .bang {
-    color: var(--text);
+    display: inline-block;
+    background: linear-gradient(135deg, var(--yellow-bright), var(--yellow-deep));
+    color: var(--ink);
+    padding: 4px 20px 8px;
+    border-radius: 16px;
+    transform: rotate(-2deg);
+    box-shadow: var(--shadow-yellow);
+    font-size: clamp(2.4rem, 5.4vw, 3.6rem);
   }
   .hero-sub {
-    margin-top: 26px;
-    font-size: 1.25rem;
+    margin-top: 30px;
+    font-size: 1.2rem;
     color: var(--text-muted);
+    max-width: 30ch;
   }
   .hero-sub :global(strong) {
-    color: var(--text);
+    color: var(--ink);
   }
   .hero-sub :global(.accent) {
-    color: var(--gold);
+    color: var(--blue);
+    font-weight: 700;
   }
   .hero-actions {
-    margin-top: 32px;
+    margin-top: 34px;
     display: flex;
     gap: 14px;
     flex-wrap: wrap;
   }
+
   .hero-media {
     position: relative;
   }
   .hero-photo {
-    border-radius: 24px;
+    position: relative;
+    z-index: 2;
+    border-radius: var(--radius-lg);
     overflow: hidden;
-    border: 4px solid var(--gold);
-    box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.8);
+    border: 6px solid var(--paper);
+    box-shadow: var(--shadow-md);
+    transform: rotate(1.5deg);
   }
   .hero-photo img {
     width: 100%;
@@ -107,24 +167,74 @@ const h = t.hero;
   }
   .hero-badge {
     position: absolute;
-    left: -10px;
-    bottom: -28px;
-    max-width: 340px;
+    z-index: 3;
+    left: -14px;
+    bottom: -30px;
+    max-width: 320px;
     background: var(--blue);
     color: #fff;
     padding: 18px 22px;
-    border-radius: 16px;
-    font-size: 1rem;
-    box-shadow: 0 18px 40px -18px rgba(42, 63, 214, 0.8);
+    border-radius: 18px;
+    font-size: 0.98rem;
+    line-height: 1.45;
+    box-shadow: var(--shadow-blue);
+    transform: rotate(-2deg);
   }
+  .hero-badge :global(strong) {
+    color: var(--yellow-bright);
+  }
+  /* Playful decorations */
+  .dots {
+    position: absolute;
+    z-index: 1;
+    top: -22px;
+    right: -18px;
+    width: 108px;
+    height: 108px;
+    background-image: radial-gradient(var(--blue) 2.4px, transparent 2.4px);
+    background-size: 16px 16px;
+    opacity: 0.35;
+  }
+  .star {
+    position: absolute;
+    z-index: 3;
+    color: var(--yellow-deep);
+    font-size: 2rem;
+  }
+  .star-1 {
+    top: 40%;
+    right: -20px;
+    animation: twinkle 3s ease-in-out infinite;
+  }
+  @keyframes twinkle {
+    0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.9; }
+    50% { transform: scale(1.25) rotate(15deg); opacity: 1; }
+  }
+
   @media (max-width: 900px) {
     .hero-grid {
       grid-template-columns: 1fr;
+      gap: 40px;
+    }
+    .hero-sub {
+      max-width: none;
     }
     .hero-badge {
       position: static;
       max-width: none;
-      margin-top: 20px;
+      margin-top: 26px;
+      transform: none;
+    }
+    .hero-photo {
+      transform: none;
+    }
+    .star-1 {
+      right: 4px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .star-1 {
+      animation: none;
     }
   }
 </style>

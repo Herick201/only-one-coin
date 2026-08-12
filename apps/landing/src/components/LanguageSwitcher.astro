@@ -57,10 +57,11 @@ const entries = Object.entries(languages) as [Lang, string][];
     gap: 8px;
     cursor: pointer;
     list-style: none;
-    border: 1px solid var(--border);
+    border: 1.5px solid var(--border);
     border-radius: 999px;
-    padding: 8px 12px;
-    color: var(--text-muted);
+    padding: 8px 13px;
+    color: var(--ink);
+    background: var(--paper);
     font-weight: 700;
     font-size: 0.82rem;
     transition: color 0.15s ease, border-color 0.15s ease;
@@ -69,13 +70,13 @@ const entries = Object.entries(languages) as [Lang, string][];
     display: none;
   }
   summary:hover {
-    color: var(--gold-bright);
-    border-color: var(--gold);
+    color: var(--blue);
+    border-color: var(--blue);
   }
   .globe {
     width: 18px;
     height: 18px;
-    color: var(--gold);
+    color: var(--blue);
   }
   .chevron {
     width: 14px;
@@ -94,10 +95,10 @@ const entries = Object.entries(languages) as [Lang, string][];
     margin: 0;
     padding: 6px;
     list-style: none;
-    background: var(--surface);
+    background: var(--paper);
     border: 1px solid var(--border);
     border-radius: 14px;
-    box-shadow: 0 20px 44px -20px rgba(0, 0, 0, 0.85);
+    box-shadow: var(--shadow-md);
     z-index: 60;
   }
   .lang-link {
@@ -105,24 +106,25 @@ const entries = Object.entries(languages) as [Lang, string][];
     align-items: center;
     gap: 10px;
     padding: 9px 12px;
-    border-radius: 9px;
+    border-radius: 10px;
     color: var(--text-muted);
     font-weight: 600;
     transition: background 0.15s ease, color 0.15s ease;
   }
   .lang-link:hover {
-    background: var(--bg-elev);
-    color: var(--text);
+    background: var(--sky);
+    color: var(--ink);
   }
   .lang-link.active {
-    color: var(--gold);
+    color: var(--blue);
+    background: var(--sky);
   }
   .lang-link .code {
     font-size: 0.72rem;
     font-weight: 800;
     letter-spacing: 0.04em;
     width: 26px;
-    color: var(--gold);
+    color: var(--blue);
   }
   .lang-link .label {
     font-size: 0.9rem;

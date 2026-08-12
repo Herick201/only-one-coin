@@ -1,20 +1,43 @@
-/* Only One Coin — tokens de marca (dourado + azul sobre fundo escuro).
-   Exemplo inicial: valores derivados do site atual, a refinar no design system (Sessão 14). */
+/* Only One Coin — brand tokens.
+   Bright, youthful "school landing" system: blue + white + yellow on a light
+   background. Jovial, not childish: rounded display type + soft, playful shapes,
+   but generous whitespace and a mature, confident layout. */
 :root {
-  --bg: #0a0a0c;
-  --bg-elev: #141417;
-  --surface: #1b1b1f;
-  --gold: #e6a81e;
-  --gold-bright: #f7b500;
-  --gold-soft: #f4c95b;
-  --blue: #2a3fd6;
-  --blue-bright: #3450ff;
-  --text: #ffffff;
-  --text-muted: #b6b6bd;
-  --border: #2a2a30;
-  --radius: 18px;
-  --maxw: 1200px;
+  /* Surfaces */
+  --paper: #ffffff;
+  --sky: #eef3ff;        /* light blue section wash */
+  --sky-soft: #f6f9ff;
+  --cream: #fff7e6;      /* soft yellow wash */
+
+  /* Blue (primary) */
+  --blue: #2f6bff;
+  --blue-bright: #4d82ff;
+  --blue-deep: #1b46c9;
+  --ink: #13224b;        /* deep navy — headings & body */
+
+  /* Yellow (accent) */
+  --yellow: #ffc93c;
+  --yellow-bright: #ffd54a;
+  --yellow-deep: #f5a623;
+
+  /* Text */
+  --text: #13224b;
+  --text-muted: #5a6b90;
+  --on-blue: #ffffff;
+
+  /* Lines / shadow */
+  --border: #e4eaf7;
+  --shadow-sm: 0 6px 18px -10px rgba(19, 34, 75, 0.28);
+  --shadow-md: 0 20px 45px -22px rgba(19, 34, 75, 0.35);
+  --shadow-blue: 0 22px 45px -18px rgba(47, 107, 255, 0.5);
+  --shadow-yellow: 0 18px 38px -16px rgba(245, 166, 35, 0.55);
+
+  --radius: 20px;
+  --radius-lg: 30px;
+  --maxw: 1180px;
+
   --font: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Fredoka", "Poppins", system-ui, sans-serif;
 }
 
 *,
@@ -29,19 +52,23 @@ html {
 
 body {
   margin: 0;
-  background: var(--bg);
+  background: var(--paper);
   color: var(--text);
   font-family: var(--font);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 h1,
 h2,
 h3 {
-  line-height: 1.1;
+  font-family: var(--font-display);
+  line-height: 1.05;
   margin: 0;
-  font-weight: 800;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.01em;
 }
 
 a {
@@ -62,57 +89,119 @@ img {
 }
 
 .section {
-  padding-block: 88px;
+  padding-block: 92px;
+  position: relative;
 }
 
+/* Section header bits */
 .eyebrow {
-  color: var(--gold);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--blue-deep);
+  background: var(--sky);
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  font-size: 0.82rem;
-  margin-bottom: 14px;
+  font-size: 0.76rem;
+  padding: 7px 14px;
+  border-radius: 999px;
+  margin-bottom: 18px;
+}
+.eyebrow::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--yellow-deep);
 }
 
 .section-title {
-  font-size: clamp(1.9rem, 4vw, 2.9rem);
+  font-size: clamp(2rem, 4.4vw, 3.1rem);
+  color: var(--ink);
 }
-
 .section-title .accent {
-  color: var(--gold);
+  color: var(--blue);
+  position: relative;
+}
+/* Hand-drawn underline under the accent word */
+.section-title .accent::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.14em;
+  height: 0.16em;
+  border-radius: 999px;
+  background: var(--yellow);
 }
 
 .text-muted {
   color: var(--text-muted);
 }
 
-/* Botões */
+/* Buttons */
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 13px 26px;
+  justify-content: center;
+  gap: 9px;
+  padding: 14px 28px;
   border-radius: 999px;
+  font-family: var(--font);
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.98rem;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  border: 2px solid transparent;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease,
+    color 0.16s ease;
 }
-.btn-gold {
-  background: linear-gradient(135deg, var(--gold-bright), var(--gold));
-  color: #1a1a1a;
+.btn-primary {
+  background: var(--blue);
+  color: var(--on-blue);
+  box-shadow: var(--shadow-blue);
 }
-.btn-gold:hover {
+.btn-primary:hover {
+  background: var(--blue-deep);
   transform: translateY(-2px);
-  box-shadow: 0 12px 30px -12px var(--gold);
+}
+.btn-yellow {
+  background: linear-gradient(135deg, var(--yellow-bright), var(--yellow));
+  color: var(--ink);
+  box-shadow: var(--shadow-yellow);
+}
+.btn-yellow:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 24px 46px -14px rgba(245, 166, 35, 0.7);
 }
 .btn-outline {
-  border: 2px solid var(--gold);
-  color: var(--gold);
+  border-color: var(--blue);
+  color: var(--blue-deep);
+  background: var(--paper);
 }
 .btn-outline:hover {
-  background: var(--gold);
-  color: #1a1a1a;
+  background: var(--blue);
+  color: var(--on-blue);
+  transform: translateY(-2px);
+}
+.btn-ghost-blue {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+.btn-ghost-blue:hover {
+  background: #fff;
+  color: var(--blue-deep);
+}
+
+/* Decorative blobs / dots used across sections */
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(2px);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* WhatsApp float */
@@ -127,15 +216,15 @@ img {
   display: grid;
   place-items: center;
   z-index: 50;
-  box-shadow: 0 10px 30px -8px rgba(37, 211, 102, 0.6);
+  box-shadow: 0 14px 32px -8px rgba(37, 211, 102, 0.65);
   transition: transform 0.15s ease;
 }
 .wa-float:hover {
-  transform: scale(1.06);
+  transform: scale(1.08) rotate(-6deg);
 }
 
 @media (max-width: 720px) {
   .section {
-    padding-block: 56px;
+    padding-block: 60px;
   }
 }
