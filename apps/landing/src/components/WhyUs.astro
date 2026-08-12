@@ -44,13 +44,20 @@ const icons = [
   .why {
     background: var(--paper);
   }
+  /* Flex (not auto-fit grid) so the 5th card never orphans: the last row
+     centers whatever is left over, and it collapses cleanly on small screens. */
   .cards {
     margin-top: 46px;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(255px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 26px;
+    max-width: 1120px;
+    margin-inline: auto;
   }
   .card {
+    flex: 1 1 290px;
+    max-width: 350px;
     background: var(--paper);
     border: 1.5px solid var(--border);
     border-radius: var(--radius);
@@ -90,9 +97,10 @@ const icons = [
     font-size: 1.28rem;
     margin-bottom: 10px;
   }
-  @media (max-width: 900px) {
-    .cards {
-      grid-template-columns: 1fr;
+  @media (max-width: 560px) {
+    .card {
+      flex-basis: 100%;
+      max-width: 420px;
     }
   }
 </style>

@@ -14,7 +14,6 @@ const h = t.hero;
 
   <div class="container hero-grid">
     <div class="hero-copy">
-      <span class="hero-pill">🪙 Only One Coin</span>
       <h1>
         <span class="line">{h.w1}</span>
         <span class="line accent">{h.w2}</span>
@@ -85,22 +84,8 @@ const h = t.hero;
     align-items: center;
   }
 
-  .hero-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--paper);
-    border: 1.5px solid var(--border);
-    color: var(--ink);
-    font-weight: 700;
-    font-size: 0.85rem;
-    padding: 8px 15px;
-    border-radius: 999px;
-    box-shadow: var(--shadow-sm);
-  }
   h1 {
-    margin-top: 22px;
-    font-size: clamp(3rem, 7vw, 5rem);
+    font-size: clamp(2.6rem, 7vw, 5rem);
   }
   .line {
     display: block;

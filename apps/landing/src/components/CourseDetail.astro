@@ -1,0 +1,234 @@
+---
+import type { CourseSlug } from "../i18n/ui";
+import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
+
+interface Props {
+  slug: CourseSlug;
+}
+
+const { slug } = Astro.props;
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const d = t.courseDetail;
+const name = t.courses.list[slug];
+
+// Icons per feature (Lucide) — decorative, not translatable content.
+const featureIcons = [
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>',
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c3 2.5 9 2.5 12 0v-5"/></svg>',
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="6"/><path d="M15.5 13.5 17 22l-5-3-5 3 1.5-8.5"/></svg>',
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M2 20h20"/></svg>',
+];
+---
+
+<article class="course">
+  <div class="container">
+    <a class="back" href={withLang(lang, "/cursos")}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+      {d.backToCourses}
+    </a>
+
+    <header class="course-head">
+      <p class="eyebrow">{d.eyebrowPre}{name}{d.eyebrowPost}</p>
+      <h1>{d.titlePre}<span class="accent">{name}</span>{d.titlePost}</h1>
+      <p class="lead text-muted">{d.leadPre}{name}{d.leadPost}</p>
+      <p class="example-note">{d.exampleNote}</p>
+    </header>
+
+    <section class="block">
+      <h2 class="block-title">{d.audiencesTitle}</h2>
+      <div class="audiences">
+        {
+          d.audiences.map((a) => (
+            <div class="audience">
+              <span class="tag">{a.tag}</span>
+              <h3>{a.title}</h3>
+              <p class="text-muted">{a.text}</p>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="block">
+      <h2 class="block-title">{d.featuresTitle}</h2>
+      <div class="features">
+        {
+          d.features.map((f, i) => (
+            <div class="feature">
+              <span class="feature-icon" set:html={featureIcons[i]} />
+              <div>
+                <h3>{f.title}</h3>
+                <p class="text-muted">{f.text}</p>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="course-cta">
+      <div>
+        <h2>{d.ctaTitle}</h2>
+        <p>{d.ctaText}</p>
+      </div>
+      <div class="course-cta-actions">
+        <a class="btn btn-yellow" href={withLang(lang, "/matricula")}>{d.ctaEnroll}</a>
+        <a class="btn btn-ghost-blue" href="https://wa.me/51999999999" target="_blank" rel="noopener">{d.ctaWhatsApp}</a>
+      </div>
+    </section>
+  </div>
+</article>
+
+<style>
+  .course {
+    padding-block: 48px 88px;
+    background:
+      radial-gradient(50% 60% at 90% 0%, rgba(255, 201, 60, 0.14), transparent 60%),
+      var(--sky-soft);
+  }
+  .back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    color: var(--blue);
+    margin-bottom: 26px;
+  }
+  .back svg {
+    width: 18px;
+    height: 18px;
+    transition: transform 0.16s ease;
+  }
+  .back:hover svg {
+    transform: translateX(-3px);
+  }
+  .course-head {
+    max-width: 720px;
+  }
+  .course-head h1 {
+    margin-top: 10px;
+    font-size: clamp(2.2rem, 6vw, 3.6rem);
+  }
+  .course-head h1 .accent {
+    color: var(--blue);
+  }
+  .lead {
+    margin-top: 18px;
+    font-size: 1.15rem;
+  }
+  .example-note {
+    margin-top: 16px;
+    display: inline-block;
+    font-size: 0.82rem;
+    font-style: italic;
+    color: var(--text-muted);
+    background: var(--cream);
+    border: 1px solid var(--border);
+    padding: 7px 13px;
+    border-radius: 10px;
+  }
+
+  .block {
+    margin-top: 56px;
+  }
+  .block-title {
+    font-size: clamp(1.5rem, 3.4vw, 2rem);
+    margin-bottom: 24px;
+  }
+
+  .audiences {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 22px;
+  }
+  .audience {
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 30px 28px;
+    box-shadow: var(--shadow-sm);
+  }
+  .audience .tag {
+    display: inline-block;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--blue-deep);
+    background: var(--sky);
+    padding: 6px 12px;
+    border-radius: 999px;
+  }
+  .audience h3 {
+    margin: 14px 0 8px;
+    font-size: 1.4rem;
+  }
+
+  .features {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  .feature {
+    display: flex;
+    gap: 16px;
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px 24px;
+    box-shadow: var(--shadow-sm);
+  }
+  .feature-icon {
+    width: 50px;
+    height: 50px;
+    flex: none;
+    display: grid;
+    place-items: center;
+    border-radius: 14px;
+    background: var(--sky);
+    color: var(--blue);
+  }
+  .feature-icon :global(svg) {
+    width: 26px;
+    height: 26px;
+  }
+  .feature h3 {
+    font-size: 1.12rem;
+    margin-bottom: 6px;
+  }
+
+  .course-cta {
+    margin-top: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 26px;
+    background: linear-gradient(135deg, var(--blue), var(--blue-deep));
+    color: #fff;
+    border-radius: var(--radius-lg);
+    padding: 44px 40px;
+    box-shadow: var(--shadow-blue);
+  }
+  .course-cta h2 {
+    color: #fff;
+    font-size: clamp(1.5rem, 3.4vw, 2.1rem);
+  }
+  .course-cta p {
+    margin-top: 8px;
+    color: rgba(255, 255, 255, 0.85);
+  }
+  .course-cta-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 760px) {
+    .audiences,
+    .features {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
