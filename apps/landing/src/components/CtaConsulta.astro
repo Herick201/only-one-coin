@@ -7,30 +7,68 @@ const c = t.cta;
 ---
 
 <section class="cta">
-  <div class="container cta-inner">
-    <div>
-      <h2 class="section-title">{c.titlePre}<span class="accent">{c.titleAccent}</span>{c.titlePost}</h2>
-      <p class="text-muted">{c.text}</p>
+  <div class="container">
+    <div class="cta-card">
+      <span class="blob cta-blob-a" aria-hidden="true"></span>
+      <span class="blob cta-blob-b" aria-hidden="true"></span>
+      <div class="cta-inner">
+        <div>
+          <h2 class="cta-title">{c.titlePre}<span class="accent">{c.titleAccent}</span>{c.titlePost}</h2>
+          <p>{c.text}</p>
+        </div>
+        <a href={withLang(lang, "/contacto")} class="btn btn-yellow">{c.button}</a>
+      </div>
     </div>
-    <a href={withLang(lang, "/contacto")} class="btn btn-gold">{c.button}</a>
   </div>
 </section>
 
 <style>
   .cta {
-    padding-block: 72px;
-    background: linear-gradient(135deg, rgba(42, 63, 214, 0.22), rgba(230, 168, 30, 0.12));
-    border-block: 1px solid var(--border);
+    padding-block: 20px 92px;
+  }
+  .cta-card {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--blue), var(--blue-deep));
+    border-radius: var(--radius-lg);
+    padding: 56px 52px;
+    box-shadow: var(--shadow-blue);
+  }
+  .cta-blob-a {
+    width: 240px;
+    height: 240px;
+    top: -110px;
+    right: 8%;
+    background: var(--yellow);
+    opacity: 0.35;
+  }
+  .cta-blob-b {
+    width: 180px;
+    height: 180px;
+    bottom: -100px;
+    left: -40px;
+    background: #fff;
+    opacity: 0.14;
   }
   .cta-inner {
+    position: relative;
+    z-index: 1;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 28px;
+    gap: 32px;
     flex-wrap: wrap;
   }
+  .cta-title {
+    font-size: clamp(1.9rem, 4vw, 2.8rem);
+    color: #fff;
+  }
+  .cta-title .accent {
+    color: var(--yellow-bright);
+  }
   .cta p {
-    margin-top: 10px;
+    margin-top: 12px;
     max-width: 560px;
+    color: rgba(255, 255, 255, 0.85);
   }
 </style>

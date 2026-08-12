@@ -33,7 +33,7 @@ export const content = {
       courses: "Cursos",
       blog: "Blog",
       contact: "Contacto",
-      login: "Iniciar Sesión",
+      portal: "Portal del Alumno",
     },
     hero: {
       w1: "¡Aprende",
@@ -61,6 +61,14 @@ export const content = {
         {
           title: "Talleres Gratuitos",
           text: "Excel, Emprendimiento, Liderazgo y Quechua sin costo adicional para nuestros alumnos.",
+        },
+        {
+          title: "Certificado Digital",
+          text: "Al culminar tu curso recibes un certificado digital que valida tu aprendizaje.",
+        },
+        {
+          title: "Plataforma del Alumno",
+          text: "Un portal dedicado para ver tus clases, horarios y materiales en un solo lugar.",
         },
         {
           title: "Enseñanza Innovadora",
@@ -96,18 +104,45 @@ export const content = {
       text: "Escríbenos y con gusto te ayudamos con tu matrícula, horarios y cursos disponibles.",
       button: "Contáctanos",
     },
+    testimonials: {
+      eyebrow: "Testimonios",
+      titlePre: "Lo que dicen nuestros ",
+      titleAccent: "alumnos",
+      titlePost: "",
+      note: "Contenido de ejemplo — se reemplazará con testimonios reales.",
+      items: [
+        { name: "María Fernández", role: "Alumna de Inglés", initials: "MF", quote: "Aprendí muchísimo y los profes son súper pacientes. ¡Por un sol no lo pensé dos veces!" },
+        { name: "José Ramírez", role: "Alumno de Francés", initials: "JR", quote: "Las clases son dinámicas y prácticas. En pocos meses ya me animo a conversar." },
+        { name: "Lucía Quispe", role: "Apoderada", initials: "LQ", quote: "Mi hija espera cada clase con ganas. Una gran oportunidad para las familias." },
+      ],
+    },
+    stats: {
+      title: "La confianza de miles de familias",
+      items: [
+        { value: "+200 000", label: "Alumnos formados" },
+        { value: "+4", label: "Años en el mercado" },
+        { value: "+7", label: "Idiomas disponibles" },
+      ],
+    },
     footer: {
+      tagline: "Educación de idiomas de calidad al alcance de todos, en todo el Perú.",
       orgHtml: "Asociación Only One Coin Perú<br />RUC 20610561463",
       col1Title: "La Asociación",
       about: "Nosotros",
+      courses: "Cursos",
+      contact: "Contacto",
+      langsTitle: "Idiomas",
+      langs: ["Inglés", "Francés", "Italiano", "Alemán", "Portugués", "Chino Mandarín", "Coreano"],
+      legalTitle: "Legal",
       privacy: "Políticas de privacidad",
       terms: "Términos y condiciones",
       col2Title: "Contáctanos",
-      contact: "Contacto",
       hoursLabel: "Horario de atención",
       hours: "Lunes a viernes · 9:00 AM – 10:00 PM",
+      followTitle: "Síguenos",
       copyOrg: "Asociación Only One Coin",
       rights: "Todos los derechos reservados",
+      madeIn: "Hecho con ❤ en el Perú",
     },
     common: {
       waAria: "Escríbenos por WhatsApp",
@@ -127,7 +162,7 @@ export const content = {
       courses: "Courses",
       blog: "Blog",
       contact: "Contact",
-      login: "Log in",
+      portal: "Student Portal",
     },
     hero: {
       w1: "Learn",
@@ -156,6 +191,14 @@ export const content = {
         {
           title: "Free Workshops",
           text: "Excel, Entrepreneurship, Leadership and Quechua at no extra cost for our students.",
+        },
+        {
+          title: "Digital Certificate",
+          text: "When you complete your course you receive a digital certificate that validates your learning.",
+        },
+        {
+          title: "Student Platform",
+          text: "A dedicated portal to view your classes, schedules and materials in one place.",
         },
         {
           title: "Innovative Teaching",
@@ -191,18 +234,45 @@ export const content = {
       text: "Write to us and we'll gladly help you with enrollment, schedules and available courses.",
       button: "Contact us",
     },
+    testimonials: {
+      eyebrow: "Testimonials",
+      titlePre: "What our ",
+      titleAccent: "students",
+      titlePost: " say",
+      note: "Sample content — to be replaced with real testimonials.",
+      items: [
+        { name: "María Fernández", role: "English student", initials: "MF", quote: "I learned so much and the teachers are super patient. For one sol, I didn't think twice!" },
+        { name: "José Ramírez", role: "French student", initials: "JR", quote: "The classes are dynamic and hands-on. In just a few months I already dare to speak." },
+        { name: "Lucía Quispe", role: "Guardian", initials: "LQ", quote: "My daughter looks forward to every class. A great opportunity for families." },
+      ],
+    },
+    stats: {
+      title: "Trusted by thousands of families",
+      items: [
+        { value: "+200,000", label: "Students taught" },
+        { value: "+4", label: "Years in the market" },
+        { value: "+7", label: "Languages offered" },
+      ],
+    },
     footer: {
+      tagline: "Quality language education within everyone's reach, across all of Peru.",
       orgHtml: "Only One Coin Perú Association<br />RUC 20610561463",
       col1Title: "The Association",
       about: "About",
+      courses: "Courses",
+      contact: "Contact",
+      langsTitle: "Languages",
+      langs: ["English", "French", "Italian", "German", "Portuguese", "Mandarin Chinese", "Korean"],
+      legalTitle: "Legal",
       privacy: "Privacy policy",
       terms: "Terms & conditions",
       col2Title: "Contact",
-      contact: "Contact",
       hoursLabel: "Business hours",
       hours: "Monday to Friday · 9:00 AM – 10:00 PM",
+      followTitle: "Follow us",
       copyOrg: "Only One Coin Association",
       rights: "All rights reserved",
+      madeIn: "Made with ❤ in Peru",
     },
     common: {
       waAria: "Message us on WhatsApp",
@@ -222,7 +292,7 @@ export const content = {
       courses: "Cursos",
       blog: "Blog",
       contact: "Contato",
-      login: "Entrar",
+      portal: "Portal do Aluno",
     },
     hero: {
       w1: "Aprenda",
@@ -251,6 +321,14 @@ export const content = {
         {
           title: "Oficinas Gratuitas",
           text: "Excel, Empreendedorismo, Liderança e Quíchua sem custo adicional para nossos alunos.",
+        },
+        {
+          title: "Certificado Digital",
+          text: "Ao concluir seu curso você recebe um certificado digital que valida seu aprendizado.",
+        },
+        {
+          title: "Plataforma do Aluno",
+          text: "Um portal dedicado para ver suas aulas, horários e materiais em um só lugar.",
         },
         {
           title: "Ensino Inovador",
@@ -286,18 +364,45 @@ export const content = {
       text: "Fale com a gente e ajudamos você com matrícula, horários e cursos disponíveis.",
       button: "Fale conosco",
     },
+    testimonials: {
+      eyebrow: "Depoimentos",
+      titlePre: "O que dizem nossos ",
+      titleAccent: "alunos",
+      titlePost: "",
+      note: "Conteúdo de exemplo — será substituído por depoimentos reais.",
+      items: [
+        { name: "María Fernández", role: "Aluna de Inglês", initials: "MF", quote: "Aprendi muitíssimo e os professores são super pacientes. Por um sol, nem pensei duas vezes!" },
+        { name: "José Ramírez", role: "Aluno de Francês", initials: "JR", quote: "As aulas são dinâmicas e práticas. Em poucos meses já me arrisco a conversar." },
+        { name: "Lucía Quispe", role: "Responsável", initials: "LQ", quote: "Minha filha espera cada aula com vontade. Uma grande oportunidade para as famílias." },
+      ],
+    },
+    stats: {
+      title: "A confiança de milhares de famílias",
+      items: [
+        { value: "+200.000", label: "Alunos formados" },
+        { value: "+4", label: "Anos de mercado" },
+        { value: "+7", label: "Idiomas disponíveis" },
+      ],
+    },
     footer: {
+      tagline: "Educação de idiomas de qualidade ao alcance de todos, em todo o Peru.",
       orgHtml: "Associação Only One Coin Peru<br />RUC 20610561463",
       col1Title: "A Associação",
       about: "Sobre",
+      courses: "Cursos",
+      contact: "Contato",
+      langsTitle: "Idiomas",
+      langs: ["Inglês", "Francês", "Italiano", "Alemão", "Português", "Chinês Mandarim", "Coreano"],
+      legalTitle: "Legal",
       privacy: "Política de privacidade",
       terms: "Termos e condições",
       col2Title: "Contato",
-      contact: "Contato",
       hoursLabel: "Horário de atendimento",
       hours: "Segunda a sexta · 9:00 – 22:00",
+      followTitle: "Siga a gente",
       copyOrg: "Associação Only One Coin",
       rights: "Todos os direitos reservados",
+      madeIn: "Feito com ❤ no Peru",
     },
     common: {
       waAria: "Fale conosco no WhatsApp",

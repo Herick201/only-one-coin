@@ -1,0 +1,77 @@
+---
+import { getLangFromUrl, useTranslations } from "../i18n/utils";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const s = t.stats;
+---
+
+<section class="stats" aria-label={s.title}>
+  <div class="container stats-inner">
+    {
+      s.items.map((item) => (
+        <div class="stat">
+          <span class="stat-value">{item.value}</span>
+          <span class="stat-label">{item.label}</span>
+        </div>
+      ))
+    }
+  </div>
+</section>
+
+<style>
+  .stats {
+    background: var(--paper);
+    padding-block: 8px 4px;
+  }
+  .stats-inner {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    background: linear-gradient(135deg, var(--blue), var(--blue-deep));
+    border-radius: var(--radius-lg);
+    padding: 34px 28px;
+    box-shadow: var(--shadow-blue);
+  }
+  .stat {
+    text-align: center;
+    position: relative;
+  }
+  .stat:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    right: -10px;
+    top: 12%;
+    height: 76%;
+    width: 1px;
+    background: rgba(255, 255, 255, 0.22);
+  }
+  .stat-value {
+    display: block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2rem, 5vw, 3rem);
+    line-height: 1;
+    color: var(--yellow-bright);
+  }
+  .stat-label {
+    display: block;
+    margin-top: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.9);
+  }
+  @media (max-width: 640px) {
+    .stats-inner {
+      grid-template-columns: 1fr;
+      gap: 26px;
+    }
+    .stat:not(:last-child)::after {
+      display: none;
+    }
+    .stat:not(:last-child) {
+      padding-bottom: 26px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+    }
+  }
+</style>

@@ -26,7 +26,13 @@ const nav = [
 
     <div class="header-actions">
       <LanguageSwitcher />
-      <a href={withLang(lang, "/mi-cuenta")} class="btn btn-gold login-btn">{t.nav.login}</a>
+      <a href={withLang(lang, "/mi-cuenta")} class="btn btn-primary login-btn">
+        <span>{t.nav.portal}</span>
+        <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 12h14"></path>
+          <path d="m12 5 7 7-7 7"></path>
+        </svg>
+      </a>
     </div>
   </div>
 </header>
@@ -36,41 +42,69 @@ const nav = [
     position: sticky;
     top: 0;
     z-index: 40;
-    background: rgba(10, 10, 12, 0.85);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    border-bottom: 1px solid rgba(19, 34, 75, 0.08);
   }
   .header-inner {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 24px;
-    height: 84px;
+    height: 80px;
   }
   .brand img {
-    height: 56px;
+    height: 52px;
     width: auto;
   }
   .nav {
     display: flex;
-    gap: 34px;
+    gap: 32px;
     font-weight: 600;
-    color: var(--gold);
+    color: #0e1730;
   }
   .nav a {
     position: relative;
+    padding-block: 4px;
     transition: color 0.15s ease;
   }
+  .nav a::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -2px;
+    height: 3px;
+    border-radius: 999px;
+    background: var(--yellow);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.18s ease;
+  }
   .nav a:hover {
-    color: var(--gold-bright);
+    color: var(--blue);
+  }
+  .nav a:hover::after {
+    transform: scaleX(1);
   }
   .header-actions {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 14px;
   }
   .login-btn {
     white-space: nowrap;
+    padding: 11px 20px;
+    gap: 7px;
+  }
+  .login-btn .arrow {
+    width: 17px;
+    height: 17px;
+    transition: transform 0.2s ease;
+  }
+  .login-btn:hover .arrow {
+    transform: translateX(4px);
   }
   @media (max-width: 900px) {
     .nav {

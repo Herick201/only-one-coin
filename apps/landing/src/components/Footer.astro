@@ -5,21 +5,64 @@ const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const f = t.footer;
 const year = new Date().getFullYear();
+
+// Social links. TODO: replace "#" with the Asociación's real profile URLs.
+// Icons are not translatable content, so they live here, not in i18n.
+const socials = [
+  {
+    name: "Facebook",
+    href: "#",
+    icon: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.2c-1.2 0-1.6.8-1.6 1.6V12h2.7l-.4 2.9h-2.3v7A10 10 0 0 0 22 12z"/></svg>',
+  },
+  {
+    name: "Instagram",
+    href: "#",
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><line x1="17.5" y1="6.5" x2="17.5" y2="6.5"/></svg>',
+  },
+  {
+    name: "TikTok",
+    href: "#",
+    icon: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.5 3c.3 2.1 1.5 3.4 3.5 3.6v2.4c-1.2.1-2.3-.3-3.5-1v5.8c0 3.4-2.5 5.7-5.6 5.4-2.8-.3-4.6-2.7-4.2-5.6.3-2.3 2.3-4 4.7-3.9v2.5c-.4-.1-.9-.2-1.3-.1-1 .2-1.7 1.1-1.5 2.2.1 1 1 1.7 2 1.6 1.1-.1 1.8-1 1.8-2.2V3h3.9z"/></svg>',
+  },
+  {
+    name: "YouTube",
+    href: "#",
+    icon: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23 12s0-3.2-.4-4.7a2.5 2.5 0 0 0-1.8-1.8C19.3 5.1 12 5.1 12 5.1s-7.3 0-8.8.4A2.5 2.5 0 0 0 1.4 7.3C1 8.8 1 12 1 12s0 3.2.4 4.7a2.5 2.5 0 0 0 1.8 1.8c1.5.4 8.8.4 8.8.4s7.3 0 8.8-.4a2.5 2.5 0 0 0 1.8-1.8C23 15.2 23 12 23 12zM9.8 15.3V8.7l5.7 3.3-5.7 3.3z"/></svg>',
+  },
+];
 ---
 
 <footer class="site-footer">
+  <span class="blob footer-blob" aria-hidden="true"></span>
   <div class="container footer-grid">
-    <div class="col">
+    <div class="col brand-col">
       <img src="/brand/logo.png" alt="Only One Coin" width="120" height="69" class="footer-logo" />
-      <p class="text-muted" set:html={f.orgHtml} />
+      <p class="tagline">{f.tagline}</p>
+      <p class="org" set:html={f.orgHtml} />
+      <div class="socials" aria-label={f.followTitle}>
+        {
+          socials.map((s) => (
+            <a class="social" href={s.href} target="_blank" rel="noopener" aria-label={s.name}>
+              <span set:html={s.icon} />
+            </a>
+          ))
+        }
+      </div>
     </div>
 
     <div class="col">
       <h3>{f.col1Title}</h3>
       <ul>
         <li><a href={withLang(lang, "/nosotros")}>{f.about}</a></li>
-        <li><a href={withLang(lang, "/politicas-de-privacidad")}>{f.privacy}</a></li>
-        <li><a href={withLang(lang, "/terminos-y-condiciones")}>{f.terms}</a></li>
+        <li><a href={withLang(lang, "/cursos")}>{f.courses}</a></li>
+        <li><a href={withLang(lang, "/contacto")}>{f.contact}</a></li>
+      </ul>
+    </div>
+
+    <div class="col">
+      <h3>{f.langsTitle}</h3>
+      <ul>
+        {f.langs.map((name) => <li><a href={withLang(lang, "/cursos")}>{name}</a></li>)}
       </ul>
     </div>
 
@@ -27,39 +70,73 @@ const year = new Date().getFullYear();
       <h3>{f.col2Title}</h3>
       <ul>
         <li><a href={withLang(lang, "/contacto")}>{f.contact}</a></li>
-        <li class="text-muted">{f.hoursLabel}</li>
-        <li class="text-muted">{f.hours}</li>
+        <li class="muted">{f.hoursLabel}</li>
+        <li class="muted">{f.hours}</li>
+      </ul>
+      <h3 class="legal-title">{f.legalTitle}</h3>
+      <ul>
+        <li><a href={withLang(lang, "/politicas-de-privacidad")}>{f.privacy}</a></li>
+        <li><a href={withLang(lang, "/terminos-y-condiciones")}>{f.terms}</a></li>
       </ul>
     </div>
   </div>
 
   <div class="container footer-bottom">
-    <span class="text-muted">© {year} {f.copyOrg} — {f.rights}</span>
+    <span>© {year} {f.copyOrg} — {f.rights}</span>
+    <span class="made-in">{f.madeIn}</span>
   </div>
 </footer>
 
 <style>
   .site-footer {
-    background: var(--bg-elev);
-    border-top: 1px solid var(--border);
-    padding-top: 56px;
+    position: relative;
+    overflow: hidden;
+    background: var(--ink);
+    color: rgba(255, 255, 255, 0.72);
+    padding-top: 64px;
+  }
+  .footer-blob {
+    width: 340px;
+    height: 340px;
+    top: -160px;
+    right: -80px;
+    background: var(--blue);
+    opacity: 0.18;
   }
   .footer-grid {
+    position: relative;
+    z-index: 1;
     display: grid;
-    grid-template-columns: 1.4fr 1fr 1fr;
-    gap: 32px;
+    grid-template-columns: 1.6fr 1fr 1fr 1.2fr;
+    gap: 40px;
   }
   .footer-logo {
-    height: 54px;
+    height: 52px;
     width: auto;
-    margin-bottom: 14px;
+    margin-bottom: 16px;
+    /* Logo art is gold-on-dark; keep it bright on the navy footer */
+  }
+  .tagline {
+    max-width: 34ch;
+    margin: 0 0 14px;
+    color: rgba(255, 255, 255, 0.82);
+  }
+  .org {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0 0 20px;
   }
   .col h3 {
-    color: var(--gold);
-    font-size: 1rem;
-    letter-spacing: 0.05em;
+    color: #fff;
+    font-family: var(--font);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     margin-bottom: 16px;
+  }
+  .legal-title {
+    margin-top: 26px;
   }
   .col ul {
     list-style: none;
@@ -67,18 +144,65 @@ const year = new Date().getFullYear();
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 11px;
+    font-size: 0.95rem;
+  }
+  .col a {
+    transition: color 0.15s ease;
   }
   .col a:hover {
-    color: var(--gold);
+    color: var(--yellow-bright);
+  }
+  .muted {
+    color: rgba(255, 255, 255, 0.5);
+  }
+  .socials {
+    display: flex;
+    gap: 10px;
+  }
+  .social {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    transition: background 0.16s ease, transform 0.16s ease, color 0.16s ease;
+  }
+  .social :global(svg) {
+    width: 19px;
+    height: 19px;
+  }
+  .social:hover {
+    background: var(--yellow);
+    color: var(--ink);
+    transform: translateY(-3px);
   }
   .footer-bottom {
-    margin-top: 40px;
+    position: relative;
+    z-index: 1;
+    margin-top: 48px;
     padding-block: 22px;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
     font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
   }
-  @media (max-width: 800px) {
+  @media (max-width: 860px) {
+    .footer-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 34px;
+    }
+    .brand-col {
+      grid-column: 1 / -1;
+    }
+  }
+  @media (max-width: 520px) {
     .footer-grid {
       grid-template-columns: 1fr;
     }
