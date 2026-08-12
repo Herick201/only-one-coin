@@ -245,7 +245,7 @@ const resourcesHref = resources[0].href;
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
-    top: calc(100% + 14px);
+    top: calc(100% + 12px);
     min-width: 230px;
     display: flex;
     flex-direction: column;
@@ -255,6 +255,17 @@ const resourcesHref = resources[0].href;
     border-radius: 16px;
     box-shadow: var(--shadow-md);
     z-index: 60;
+  }
+  /* Invisible bridge over the gap between the summary and the panel, so moving
+     the cursor down to the menu never leaves the hover region (no flicker,
+     no reliance on the close-timer). */
+  .dd-panel::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -14px;
+    height: 14px;
   }
   .dd-panel a {
     padding: 10px 14px;
