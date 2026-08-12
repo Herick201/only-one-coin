@@ -2,11 +2,15 @@
 
 import { useActionState } from 'react'
 import { useTranslations } from 'next-intl'
-import { login, initialLoginState } from './actions'
+import { login, type LoginState } from './actions'
+
+// Estado inicial vive no client: um módulo 'use server' só exporta funções
+// async, então importar uma const dele chega undefined no bundle do cliente.
+const initialState: LoginState = { ok: true, errorId: null }
 
 export function LoginForm() {
   const t = useTranslations('login')
-  const [state, action, pending] = useActionState(login, initialLoginState)
+  const [state, action, pending] = useActionState(login, initialState)
 
   return (
     <form action={action} className="flex flex-col gap-4" noValidate>

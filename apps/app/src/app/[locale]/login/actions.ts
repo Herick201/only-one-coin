@@ -9,8 +9,6 @@ export type LoginState = {
   errorId: string | null
 }
 
-export const initialLoginState: LoginState = { ok: true, errorId: null }
-
 /**
  * Anti-enumeração: qualquer falha (senha errada, conta inexistente, bloqueio)
  * volta a MESMA resposta genérica + um error_id. O detalhe fica só no log do
