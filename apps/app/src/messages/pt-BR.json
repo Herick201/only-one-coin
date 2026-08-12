@@ -13,6 +13,31 @@
     "error_reference": "Código de referência: {errorId}",
     "back_to_site": "Voltar ao site"
   },
+  "backoffice": {
+    "title": "Painel administrativo",
+    "subtitle": "Acesso restrito à equipe autorizada.",
+    "email_label": "E-mail",
+    "email_placeholder": "seuemail@onlyonecoin.edu.pe",
+    "password_label": "Senha",
+    "password_placeholder": "••••••••",
+    "continue": "Continuar",
+    "checking": "Verificando…",
+    "mfa_title": "Verificação em duas etapas",
+    "mfa_subtitle": "Digite o código do seu aplicativo autenticador.",
+    "mfa_code_label": "Código de verificação",
+    "mfa_code_placeholder": "000000",
+    "verify": "Verificar e entrar",
+    "verifying": "Verificando…",
+    "back": "Voltar",
+    "generic_error": "Não conseguimos validar esses dados. Confira e tente de novo.",
+    "error_reference": "Código de referência: {errorId}",
+    "security_notice": "Este acesso é monitorado. Cada tentativa fica registrada.",
+    "mock_notice": "Prévia — ainda sem conexão com o servidor."
+  },
+  "loading": {
+    "message": "Carregando…",
+    "verifying_session": "Verificando sua sessão…"
+  },
   "home": {
     "coming_soon": "Portal do Aluno — em breve.",
     "go_to_login": "Ir para o login"

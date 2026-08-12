@@ -13,6 +13,31 @@
     "error_reference": "Reference code: {errorId}",
     "back_to_site": "Back to site"
   },
+  "backoffice": {
+    "title": "Admin panel",
+    "subtitle": "Restricted access for authorized staff only.",
+    "email_label": "Email",
+    "email_placeholder": "you@onlyonecoin.edu.pe",
+    "password_label": "Password",
+    "password_placeholder": "••••••••",
+    "continue": "Continue",
+    "checking": "Checking…",
+    "mfa_title": "Two-step verification",
+    "mfa_subtitle": "Enter the code from your authenticator app.",
+    "mfa_code_label": "Verification code",
+    "mfa_code_placeholder": "000000",
+    "verify": "Verify and sign in",
+    "verifying": "Verifying…",
+    "back": "Back",
+    "generic_error": "We couldn't validate those details. Check them and try again.",
+    "error_reference": "Reference code: {errorId}",
+    "security_notice": "This access is monitored. Every attempt is logged.",
+    "mock_notice": "Preview only — not connected to the server yet."
+  },
+  "loading": {
+    "message": "Loading…",
+    "verifying_session": "Verifying your session…"
+  },
   "home": {
     "coming_soon": "Student Portal — coming soon.",
     "go_to_login": "Go to sign in"
