@@ -1,0 +1,170 @@
+{
+  "portal": {
+    "brand": {
+      "name": "Only One Coin",
+      "portal_label": "Student Portal"
+    },
+    "nav": {
+      "dashboard": "Home",
+      "courses": "My courses",
+      "enrollments": "My enrollment",
+      "documents": "Documents",
+      "profile": "My profile",
+      "logout": "Sign out",
+      "back_to_site": "Go to site",
+      "menu": "Menu"
+    },
+    "greeting": {
+      "hello": "Hi, {name}",
+      "subtitle": "This is your space at Only One Coin. Here you can see your classes, your enrollment and your documents."
+    },
+    "common": {
+      "view_detail": "View details",
+      "see_all": "See all",
+      "download": "Download",
+      "open": "Open",
+      "of": "of",
+      "period": "Term",
+      "teacher": "Teacher",
+      "schedule": "Schedule",
+      "starts": "Starts",
+      "back": "Back"
+    },
+    "next_class": {
+      "title": "Your next class",
+      "none_title": "You have no scheduled classes",
+      "none_body": "Once your enrollment is active, your next session will show up here.",
+      "with_teacher": "with {teacher}",
+      "join": "Join the class",
+      "no_link_yet": "The link will be posted before class"
+    },
+    "enrollment_status": {
+      "under_review": "Under review",
+      "active": "Active",
+      "completed": "Completed",
+      "rejected": "Rejected"
+    },
+    "payment_status": {
+      "pending": "Pending",
+      "under_review": "Under review",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "seat_status": {
+      "reserved": "Reserved",
+      "confirmed": "Confirmed",
+      "released": "Released"
+    },
+    "document_status": {
+      "available": "Available",
+      "pending": "Processing",
+      "locked": "Not available yet"
+    },
+    "document_type": {
+      "enrollment_certificate": "Enrollment certificate",
+      "certificate": "Completion certificate"
+    },
+    "modality": {
+      "online": "Online",
+      "in_person": "In person",
+      "hybrid": "Hybrid"
+    },
+    "relationship": {
+      "mother": "Mother",
+      "father": "Father",
+      "legal_guardian": "Legal guardian"
+    },
+    "payment_method": {
+      "label": "Payment method"
+    },
+    "weekday_short": {
+      "0": "Sun",
+      "1": "Mon",
+      "2": "Tue",
+      "3": "Wed",
+      "4": "Thu",
+      "5": "Fri",
+      "6": "Sat"
+    },
+    "dashboard": {
+      "my_courses_title": "My courses",
+      "my_courses_sub": "The courses you're enrolled in.",
+      "quick_actions_title": "Quick actions",
+      "action_documents": "View my documents",
+      "action_enrollments": "View my enrollment",
+      "action_profile": "Edit my profile",
+      "review_note": "You have an enrollment under review. We'll email you once it's approved.",
+      "progress_label": "Course progress"
+    },
+    "courses": {
+      "title": "My courses",
+      "subtitle": "Everything you're taking and what you've already finished.",
+      "empty_title": "You don't have any courses yet",
+      "empty_body": "Once you complete your enrollment, your courses will appear here.",
+      "seats_label": "Seats",
+      "seats_value": "{taken} of {capacity}",
+      "materials_count": "{count} materials",
+      "progress_label": "Progress"
+    },
+    "course_detail": {
+      "about_title": "About the course",
+      "level_label": "Level",
+      "min_age_label": "Minimum age",
+      "min_age_value": "{age} years",
+      "schedule_title": "Schedule and format",
+      "teacher_title": "Teacher",
+      "join_class": "Join the class",
+      "meeting_pending": "The class link will be posted before it starts.",
+      "materials_title": "Materials",
+      "materials_empty": "No materials have been posted for this course yet.",
+      "plan_title": "Your plan",
+      "plan_price": "Plan price",
+      "enrolled_on": "Enrolled on {date}",
+      "period_dates": "From {start} to {end}"
+    },
+    "enrollments": {
+      "title": "My enrollment",
+      "subtitle": "The status of your enrollments and their receipts.",
+      "empty_title": "You have no enrollments on record",
+      "empty_body": "Once you enroll, you'll see the status of each course here.",
+      "code_label": "Enrollment code",
+      "plan_label": "Plan",
+      "price_label": "Amount",
+      "payment_title": "Payment receipt",
+      "operation_number": "Operation no.",
+      "paid_on": "Paid on {date}",
+      "seat_label": "Seat",
+      "review_note": "We're verifying your receipt. This step can take a few hours.",
+      "rejected_note": "We couldn't validate this payment. Message us on WhatsApp to sort it out.",
+      "approved_note": "Payment approved. Your seat is confirmed."
+    },
+    "documents": {
+      "title": "Documents",
+      "subtitle": "Your certificates and records.",
+      "empty_title": "You don't have any documents yet",
+      "empty_body": "Your certificates and records will appear here once they're ready.",
+      "issued_on": "Issued on {date}",
+      "pending_note": "It will be generated automatically. Check back soon.",
+      "locked_note": "It will be available once you complete the course."
+    },
+    "profile": {
+      "title": "My profile",
+      "subtitle": "Your details and your guardian's.",
+      "personal_title": "Personal details",
+      "full_name": "Full name",
+      "id_label": "ID document",
+      "email_label": "Email",
+      "phone_label": "Phone",
+      "birth_date_label": "Date of birth",
+      "minor_badge": "Minor",
+      "guardian_title": "Guardian",
+      "guardian_none": "No guardian has been registered.",
+      "relationship_label": "Relationship",
+      "consent_title": "Guardian consent",
+      "consent_accepted": "Accepted on {date}",
+      "consent_version": "Version {version}",
+      "consent_none": "Registration pending.",
+      "edit_note": "Need to correct something? Message us on WhatsApp."
+    }
+  }
+}

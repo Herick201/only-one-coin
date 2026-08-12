@@ -1,0 +1,170 @@
+{
+  "portal": {
+    "brand": {
+      "name": "Only One Coin",
+      "portal_label": "Portal do Aluno"
+    },
+    "nav": {
+      "dashboard": "Início",
+      "courses": "Meus cursos",
+      "enrollments": "Minha matrícula",
+      "documents": "Documentos",
+      "profile": "Meu perfil",
+      "logout": "Sair",
+      "back_to_site": "Ir ao site",
+      "menu": "Menu"
+    },
+    "greeting": {
+      "hello": "Olá, {name}",
+      "subtitle": "Este é o seu espaço na Only One Coin. Aqui você vê suas aulas, sua matrícula e seus documentos."
+    },
+    "common": {
+      "view_detail": "Ver detalhes",
+      "see_all": "Ver tudo",
+      "download": "Baixar",
+      "open": "Abrir",
+      "of": "de",
+      "period": "Ciclo",
+      "teacher": "Docente",
+      "schedule": "Horário",
+      "starts": "Início",
+      "back": "Voltar"
+    },
+    "next_class": {
+      "title": "Sua próxima aula",
+      "none_title": "Você não tem aulas agendadas",
+      "none_body": "Quando sua matrícula estiver ativa, sua próxima sessão aparecerá aqui.",
+      "with_teacher": "com {teacher}",
+      "join": "Entrar na aula",
+      "no_link_yet": "O link será publicado antes da aula"
+    },
+    "enrollment_status": {
+      "under_review": "Em análise",
+      "active": "Ativa",
+      "completed": "Concluída",
+      "rejected": "Recusada"
+    },
+    "payment_status": {
+      "pending": "Pendente",
+      "under_review": "Em análise",
+      "approved": "Aprovado",
+      "rejected": "Recusado"
+    },
+    "seat_status": {
+      "reserved": "Reservada",
+      "confirmed": "Confirmada",
+      "released": "Liberada"
+    },
+    "document_status": {
+      "available": "Disponível",
+      "pending": "Em processamento",
+      "locked": "Ainda indisponível"
+    },
+    "document_type": {
+      "enrollment_certificate": "Comprovante de matrícula",
+      "certificate": "Certificado de conclusão"
+    },
+    "modality": {
+      "online": "Online",
+      "in_person": "Presencial",
+      "hybrid": "Híbrida"
+    },
+    "relationship": {
+      "mother": "Mãe",
+      "father": "Pai",
+      "legal_guardian": "Responsável legal"
+    },
+    "payment_method": {
+      "label": "Método de pagamento"
+    },
+    "weekday_short": {
+      "0": "Dom",
+      "1": "Seg",
+      "2": "Ter",
+      "3": "Qua",
+      "4": "Qui",
+      "5": "Sex",
+      "6": "Sáb"
+    },
+    "dashboard": {
+      "my_courses_title": "Meus cursos",
+      "my_courses_sub": "Os cursos em que você está matriculada.",
+      "quick_actions_title": "Acessos rápidos",
+      "action_documents": "Ver meus documentos",
+      "action_enrollments": "Ver minha matrícula",
+      "action_profile": "Editar meu perfil",
+      "review_note": "Você tem uma matrícula em análise. Avisaremos por e-mail quando for aprovada.",
+      "progress_label": "Progresso do curso"
+    },
+    "courses": {
+      "title": "Meus cursos",
+      "subtitle": "Tudo o que você está cursando e o que já concluiu.",
+      "empty_title": "Você ainda não tem cursos",
+      "empty_body": "Quando concluir sua matrícula, seus cursos aparecerão aqui.",
+      "seats_label": "Vagas",
+      "seats_value": "{taken} de {capacity}",
+      "materials_count": "{count} materiais",
+      "progress_label": "Progresso"
+    },
+    "course_detail": {
+      "about_title": "Sobre o curso",
+      "level_label": "Nível",
+      "min_age_label": "Idade mínima",
+      "min_age_value": "{age} anos",
+      "schedule_title": "Horário e modalidade",
+      "teacher_title": "Docente",
+      "join_class": "Entrar na aula",
+      "meeting_pending": "O link da aula será publicado antes do início.",
+      "materials_title": "Materiais",
+      "materials_empty": "Ainda não há materiais publicados para este curso.",
+      "plan_title": "Seu plano",
+      "plan_price": "Preço do plano",
+      "enrolled_on": "Matriculada em {date}",
+      "period_dates": "De {start} a {end}"
+    },
+    "enrollments": {
+      "title": "Minha matrícula",
+      "subtitle": "O estado das suas matrículas e seus comprovantes.",
+      "empty_title": "Você não tem matrículas registradas",
+      "empty_body": "Quando você se matricular, verá aqui o estado de cada curso.",
+      "code_label": "Código da matrícula",
+      "plan_label": "Plano",
+      "price_label": "Valor",
+      "payment_title": "Comprovante de pagamento",
+      "operation_number": "N.º da operação",
+      "paid_on": "Pago em {date}",
+      "seat_label": "Vaga",
+      "review_note": "Estamos verificando seu comprovante. Esta etapa pode levar algumas horas.",
+      "rejected_note": "Não conseguimos validar este pagamento. Fale conosco pelo WhatsApp para resolver.",
+      "approved_note": "Pagamento aprovado. Sua vaga está confirmada."
+    },
+    "documents": {
+      "title": "Documentos",
+      "subtitle": "Seus comprovantes e certificados.",
+      "empty_title": "Você ainda não tem documentos",
+      "empty_body": "Seus comprovantes e certificados aparecerão aqui quando estiverem prontos.",
+      "issued_on": "Emitido em {date}",
+      "pending_note": "Será gerado automaticamente. Volte a verificar em breve.",
+      "locked_note": "Estará disponível quando você concluir o curso."
+    },
+    "profile": {
+      "title": "Meu perfil",
+      "subtitle": "Seus dados e os do seu responsável.",
+      "personal_title": "Dados pessoais",
+      "full_name": "Nome completo",
+      "id_label": "Documento de identidade",
+      "email_label": "E-mail",
+      "phone_label": "Telefone",
+      "birth_date_label": "Data de nascimento",
+      "minor_badge": "Menor de idade",
+      "guardian_title": "Responsável",
+      "guardian_none": "Nenhum responsável foi registrado.",
+      "relationship_label": "Parentesco",
+      "consent_title": "Consentimento do responsável",
+      "consent_accepted": "Aceito em {date}",
+      "consent_version": "Versão {version}",
+      "consent_none": "Registro pendente.",
+      "edit_note": "Precisa corrigir um dado? Fale conosco pelo WhatsApp."
+    }
+  }
+}
