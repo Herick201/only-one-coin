@@ -8,8 +8,8 @@ const f = t.faq;
 
 <section class="section faq" id="faq">
   <div class="container">
-    <p class="eyebrow">{f.eyebrow}</p>
-    <h2 class="section-title">{f.titlePre}<span class="accent">{f.titleAccent}</span>{f.titlePost}</h2>
+    <h1 class="section-title faq-title">{f.titlePre}<span class="accent">{f.titleAccent}</span>{f.titlePost}</h1>
+    <p class="faq-lead text-muted">{f.lead}</p>
 
     <div class="faq-list">
       {
@@ -33,6 +33,15 @@ const f = t.faq;
 <style>
   .faq {
     background: var(--sky-soft);
+  }
+  .faq-title {
+    text-align: center;
+  }
+  .faq-lead {
+    margin: 16px auto 0;
+    max-width: 60ch;
+    text-align: center;
+    font-size: 1.08rem;
   }
   .faq-list {
     margin-top: 40px;

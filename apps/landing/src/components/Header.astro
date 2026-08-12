@@ -9,7 +9,6 @@ const t = useTranslations(lang);
 const nav = [
   { label: t.nav.home, href: withLang(lang, "/") },
   { label: t.nav.about, href: withLang(lang, "/nosotros") },
-  { label: t.nav.blog, href: withLang(lang, "/blog") },
   { label: t.nav.contact, href: withLang(lang, "/contacto") },
 ];
 
@@ -18,6 +17,14 @@ const courses = courseSlugs.map((slug) => ({
   href: withLang(lang, `/cursos/${slug}`),
 }));
 const coursesHref = withLang(lang, "/cursos");
+
+// "Recursos" dropdown — community / blog / FAQ, one page each.
+const resources = [
+  { label: t.nav.community, href: withLang(lang, "/comunidad") },
+  { label: t.nav.blog, href: withLang(lang, "/blog") },
+  { label: t.nav.faq, href: withLang(lang, "/preguntas-frecuentes") },
+];
+const resourcesHref = resources[0].href;
 ---
 
 <header class="site-header">
@@ -46,8 +53,17 @@ const coursesHref = withLang(lang, "/cursos");
         </div>
       </details>
 
+      <details class="nav-dd">
+        <summary>
+          {t.nav.resources}
+          <svg class="dd-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+        </summary>
+        <div class="dd-panel">
+          {resources.map((r) => <a href={r.href}>{r.label}</a>)}
+        </div>
+      </details>
+
       <a href={nav[2].href}>{nav[2].label}</a>
-      <a href={nav[3].href}>{nav[3].label}</a>
     </nav>
 
     <div class="header-actions">
@@ -84,12 +100,65 @@ const coursesHref = withLang(lang, "/cursos");
         </div>
       </details>
 
+      <details class="m-dd">
+        <summary>
+          {t.nav.resources}
+          <svg class="dd-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+        </summary>
+        <div class="m-dd-panel">
+          {resources.map((r) => <a href={r.href}>{r.label}</a>)}
+        </div>
+      </details>
+
       <a href={nav[2].href}>{nav[2].label}</a>
-      <a href={nav[3].href}>{nav[3].label}</a>
       <a href={withLang(lang, "/mi-cuenta")} class="btn btn-primary m-portal">{t.nav.portal}</a>
     </nav>
   </div>
 </header>
+
+<script>
+  // Open the desktop dropdowns (courses, resources, language) on hover for a
+  // smoother feel, while keeping click + keyboard working. Bundled by Astro
+  // (served from /_astro) so it satisfies `script-src 'self'`.
+  const canHover = window.matchMedia("(hover: hover) and (pointer: fine)");
+  const menus = Array.from(
+    document.querySelectorAll<HTMLDetailsElement>(".site-header .nav-dd, .site-header .lang-switch"),
+  );
+
+  const closeOthers = (keep: HTMLDetailsElement) => {
+    menus.forEach((m) => {
+      if (m !== keep) m.open = false;
+    });
+  };
+
+  menus.forEach((menu) => {
+    let closeTimer: number | undefined;
+
+    menu.addEventListener("mouseenter", () => {
+      if (!canHover.matches) return;
+      window.clearTimeout(closeTimer);
+      closeOthers(menu);
+      menu.open = true;
+    });
+
+    menu.addEventListener("mouseleave", () => {
+      if (!canHover.matches) return;
+      // Small grace period so a diagonal cursor path to the panel doesn't close it.
+      closeTimer = window.setTimeout(() => (menu.open = false), 120);
+    });
+
+    // On click (or keyboard) let the native toggle win, but still close siblings.
+    menu.querySelector("summary")?.addEventListener("click", () => closeOthers(menu));
+  });
+
+  // Click outside closes any open menu.
+  document.addEventListener("click", (e) => {
+    const target = e.target as Node;
+    menus.forEach((m) => {
+      if (m.open && !m.contains(target)) m.open = false;
+    });
+  });
+</script>
 
 <style>
   .site-header {

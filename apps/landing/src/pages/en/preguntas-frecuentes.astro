@@ -1,0 +1,11 @@
+---
+import Base from "../../layouts/Base.astro";
+import Faq from "../../components/Faq.astro";
+import { content } from "../../i18n/ui";
+
+const title = `${content.en.nav.faq} — Only One Coin`;
+---
+
+<Base title={title}>
+  <Faq />
+</Base>

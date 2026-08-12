@@ -1,6 +1,7 @@
 ---
 import type { CourseSlug } from "../i18n/ui";
-import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
+import { coursePrices } from "../i18n/ui";
+import { getLangFromUrl, useTranslations, withLang, formatPEN } from "../i18n/utils";
 
 interface Props {
   slug: CourseSlug;
@@ -11,6 +12,7 @@ const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const d = t.courseDetail;
 const name = t.courses.list[slug];
+const price = formatPEN(coursePrices[slug], lang);
 
 // Icons per feature (Lucide) — decorative, not translatable content.
 const featureIcons = [
@@ -29,9 +31,12 @@ const featureIcons = [
     </a>
 
     <header class="course-head">
-      <p class="eyebrow">{d.eyebrowPre}{name}{d.eyebrowPost}</p>
       <h1>{d.titlePre}<span class="accent">{name}</span>{d.titlePost}</h1>
       <p class="lead text-muted">{d.leadPre}{name}{d.leadPost}</p>
+      <p class="price-tag">
+        <span class="price-tag-label">{d.priceLabel}</span>
+        <span class="price-tag-amount">{price}</span>
+      </p>
       <p class="example-note">{d.exampleNote}</p>
     </header>
 
@@ -116,6 +121,27 @@ const featureIcons = [
   .lead {
     margin-top: 18px;
     font-size: 1.15rem;
+  }
+  .price-tag {
+    margin-top: 22px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .price-tag-label {
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+  .price-tag-amount {
+    background: linear-gradient(135deg, var(--yellow-bright), var(--yellow-deep));
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.6rem;
+    padding: 4px 18px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-yellow);
   }
   .example-note {
     margin-top: 16px;

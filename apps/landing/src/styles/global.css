@@ -94,28 +94,6 @@ img {
 }
 
 /* Section header bits */
-.eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--blue-deep);
-  background: var(--sky);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-size: 0.76rem;
-  padding: 7px 14px;
-  border-radius: 999px;
-  margin-bottom: 18px;
-}
-.eyebrow::before {
-  content: "";
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--yellow-deep);
-}
-
 .section-title {
   font-size: clamp(2rem, 4.4vw, 3.1rem);
   color: var(--ink);
