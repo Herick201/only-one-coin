@@ -1,0 +1,96 @@
+---
+import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
+
+interface Props {
+  kind: "blog" | "community";
+}
+
+const { kind } = Astro.props;
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const p = t.pages[kind];
+---
+
+<section class="section info-page">
+  <span class="blob blob-a" aria-hidden="true"></span>
+  <div class="container">
+    <header class="info-head">
+      <h1 class="section-title">{p.titlePre}<span class="accent">{p.titleAccent}</span>{p.titlePost}</h1>
+      <p class="info-lead text-muted">{p.lead}</p>
+    </header>
+
+    <div class="soon-card">
+      <span class="soon-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+      </span>
+      <h2>{p.soonTitle}</h2>
+      <p class="text-muted">{p.soonText}</p>
+      <a class="btn btn-yellow" href={withLang(lang, "/cursos")}>{t.hero.ctaCourses}</a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .info-page {
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(50% 55% at 92% 4%, rgba(255, 201, 60, 0.14), transparent 60%),
+      var(--sky-soft);
+  }
+  .blob-a {
+    width: 300px;
+    height: 300px;
+    top: -120px;
+    left: -80px;
+    background: var(--blue);
+    opacity: 0.12;
+  }
+  .info-head {
+    position: relative;
+    z-index: 1;
+    max-width: 720px;
+    margin-inline: auto;
+    text-align: center;
+  }
+  .info-lead {
+    margin-top: 16px;
+    font-size: 1.12rem;
+  }
+  .soon-card {
+    position: relative;
+    z-index: 1;
+    margin: 48px auto 0;
+    max-width: 560px;
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: 48px 40px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .soon-icon {
+    width: 64px;
+    height: 64px;
+    display: grid;
+    place-items: center;
+    border-radius: 18px;
+    background: var(--sky);
+    color: var(--blue);
+    margin-bottom: 6px;
+  }
+  .soon-icon svg {
+    width: 32px;
+    height: 32px;
+  }
+  .soon-card h2 {
+    font-size: 1.5rem;
+  }
+  .soon-card .btn {
+    margin-top: 14px;
+  }
+</style>

@@ -34,6 +34,22 @@ export const courseSlugs = [
 
 export type CourseSlug = (typeof courseSlugs)[number];
 
+// Full-package ("paquete completo", pago único) price per course, in PEN.
+// Source: the merchant e-commerce catalog. Display copy only — the actual
+// payment system is the source of truth for charged amounts. Language-agnostic
+// number; format per locale with `formatPEN` (utils). The "1 sol" hook comes
+// from the monthly modality (≈S/20 / 20 sesiones = 1 sol por sesión), NOT from
+// these package prices — never present a course as costing only S/1.
+export const coursePrices: Record<CourseSlug, number> = {
+  "ingles": 69.9,
+  "frances": 80,
+  "italiano": 80,
+  "aleman": 30,
+  "portugues": 80,
+  "chino-mandarin": 95,
+  "coreano": 60,
+};
+
 // Country (ISO 3166-1 alpha-2) -> suggested course slug for the geo finder.
 // Fallback is always "ingles" (the flagship). Kept small and legible on
 // purpose; unknown countries get the flagship.
@@ -57,16 +73,19 @@ export const geoSuggestion: Record<string, CourseSlug> = {
 export const content = {
   es: {
     meta: {
-      title: "Only One Coin — Aprende Inglés por solo S/1.00",
+      title: "Only One Coin — Aprende Inglés desde 1 sol por sesión",
       description:
-        "Asociación Only One Coin Perú: clases de inglés por S/1.00 y talleres gratuitos para todas las edades desde los 6 años.",
+        "Asociación Only One Coin Perú: cursos de idiomas con paquete completo de pago único (Inglés S/69.90) y talleres gratuitos para todas las edades desde los 6 años.",
     },
     nav: {
       home: "Inicio",
       about: "Nosotros",
       courses: "Cursos",
       coursesAll: "Ver todos los cursos",
+      resources: "Recursos",
+      community: "Comunidad",
       blog: "Blog",
+      faq: "Preguntas frecuentes",
       contact: "Contacto",
       portal: "Portal del Alumno",
       openMenu: "Abrir menú",
@@ -75,10 +94,13 @@ export const content = {
     hero: {
       w1: "¡Aprende",
       w2: "Inglés",
-      w3: "por solo",
-      price: "S/1.00",
+      w3: "desde",
+      price: "S/1",
+      priceUnit: "por sesión",
       subHtml:
         '¡Abierto para <strong>TODAS LAS EDADES</strong><br />desde los <span class="accent">6 años</span> en adelante!',
+      packageNote:
+        'Paquete completo de Inglés: <strong>pago único de S/69.90</strong>. Incluye matrícula, libro, certificado y talleres gratuitos.',
       ctaEnroll: "Matricúlate ahora",
       ctaCourses: "Ver cursos",
       imgAlt: "Estudiantes de Only One Coin",
@@ -92,8 +114,8 @@ export const content = {
       titlePost: "?",
       cards: [
         {
-          title: "Clases de Inglés por S/1.00",
-          text: "Educación de calidad al alcance de todos. Un sol simbólico por acceso a nuestras clases.",
+          title: "Precio accesible",
+          text: "Clases desde 1 sol por sesión y el paquete completo en un pago único, sin mensualidades ni costos ocultos.",
         },
         {
           title: "Talleres Gratuitos",
@@ -177,8 +199,9 @@ export const content = {
       titlePre: "Resolvemos tus ",
       titleAccent: "dudas",
       titlePost: "",
+      lead: "Todo lo que necesitas saber sobre nuestros cursos, la matrícula y los talleres gratuitos.",
       items: [
-        { q: "¿De verdad las clases cuestan S/1.00?", a: "Sí. Cobramos un sol simbólico por acceso a nuestras clases de idiomas. Es un pago único por el curso, sin mensualidades ni costos ocultos." },
+        { q: "¿Cuánto cuesta y cómo funciona el pago?", a: "Cada curso tiene un paquete completo de pago único (por ejemplo, Inglés cuesta S/69.90), que incluye matrícula, material, certificado y talleres. También existe una modalidad mensual que equivale a 1 sol por sesión. Sin mensualidades ocultas ni cobros sorpresa." },
         { q: "¿Desde qué edad puedo matricularme?", a: "Recibimos alumnos desde los 6 años en adelante. Hay grupos pensados para niños y grupos para jóvenes y adultos." },
         { q: "¿Cómo me matriculo?", a: "Escríbenos por WhatsApp para reservar tu cupo. Luego completas el formulario de matrícula, subes tu comprobante y recibes tus credenciales de acceso." },
         { q: "¿Las clases son presenciales o virtuales?", a: "Ofrecemos ambas modalidades según el curso y la sede. Consúltanos por WhatsApp para ver los horarios disponibles del periodo." },
@@ -208,7 +231,8 @@ export const content = {
       indexTitlePre: "Elige el idioma que ",
       indexTitleAccent: "quieres aprender",
       indexTitlePost: "",
-      indexText: "Todos nuestros cursos cuestan S/1.00 y están abiertos desde los 6 años. Elige un idioma para ver el detalle.",
+      indexText: "Cada curso tiene su paquete completo de pago único y está abierto desde los 6 años. Elige un idioma para ver el precio y el detalle.",
+      payOnce: "pago único",
       viewCourse: "Ver curso",
     },
     courseDetail: {
@@ -216,7 +240,8 @@ export const content = {
       eyebrowPre: "Curso de ",
       eyebrowPost: "",
       titlePre: "Aprende ",
-      titlePost: " por solo S/1.00",
+      titlePost: "",
+      priceLabel: "Paquete completo · pago único",
       leadPre: "Un programa completo de ",
       leadPost: " para todas las edades, con enfoque conversacional y docentes comprometidos con tu aprendizaje real.",
       exampleNote: "Contenido de ejemplo — la información detallada de cada curso se completará con los datos reales del periodo.",
@@ -227,7 +252,7 @@ export const content = {
       ],
       featuresTitle: "Qué incluye",
       features: [
-        { title: "Pago único de S/1.00", text: "Un sol simbólico por acceso al curso. Sin mensualidades ni costos ocultos." },
+        { title: "Pago único del paquete", text: "Un solo pago por todo el curso. Sin mensualidades ni costos ocultos." },
         { title: "Talleres gratuitos", text: "Excel, Emprendimiento, Liderazgo y Quechua sin costo adicional." },
         { title: "Certificado digital", text: "Al culminar el curso recibes un certificado que valida tu aprendizaje." },
         { title: "Plataforma del alumno", text: "Clases, horarios y materiales en un solo lugar." },
@@ -236,6 +261,24 @@ export const content = {
       ctaText: "Reserva tu cupo por WhatsApp y matricúlate hoy.",
       ctaEnroll: "Matricúlate ahora",
       ctaWhatsApp: "Escríbenos por WhatsApp",
+    },
+    pages: {
+      blog: {
+        titlePre: "Nuestro ",
+        titleAccent: "blog",
+        titlePost: "",
+        lead: "Consejos para aprender idiomas, novedades de la Asociación y recursos gratuitos para nuestros alumnos.",
+        soonTitle: "Muy pronto",
+        soonText: "Estamos preparando nuestros primeros artículos. Vuelve pronto para leer nuestras publicaciones.",
+      },
+      community: {
+        titlePre: "Nuestra ",
+        titleAccent: "comunidad",
+        titlePost: "",
+        lead: "Miles de estudiantes de todo el Perú aprenden con nosotros. Únete, comparte tu experiencia y sigue creciendo.",
+        soonTitle: "Muy pronto",
+        soonText: "Estamos construyendo el espacio de nuestra comunidad. Mientras tanto, síguenos en nuestras redes sociales.",
+      },
     },
     footer: {
       tagline: "Educación de idiomas de calidad al alcance de todos, en todo el Perú.",
@@ -264,16 +307,19 @@ export const content = {
 
   en: {
     meta: {
-      title: "Only One Coin — Learn English for just S/1.00",
+      title: "Only One Coin — Learn English from 1 sol per session",
       description:
-        "Only One Coin Perú Association: English classes for S/1.00 and free workshops for all ages from 6 years old.",
+        "Only One Coin Perú Association: language courses with a single-payment full package (English S/69.90) and free workshops for all ages from 6.",
     },
     nav: {
       home: "Home",
       about: "About",
       courses: "Courses",
       coursesAll: "See all courses",
+      resources: "Resources",
+      community: "Community",
       blog: "Blog",
+      faq: "FAQ",
       contact: "Contact",
       portal: "Student Portal",
       openMenu: "Open menu",
@@ -282,10 +328,13 @@ export const content = {
     hero: {
       w1: "Learn",
       w2: "English",
-      w3: "for just",
-      price: "S/1.00",
+      w3: "from",
+      price: "S/1",
+      priceUnit: "per session",
       subHtml:
         'Open to <strong>ALL AGES</strong><br />from <span class="accent">6 years old</span> and up!',
+      packageNote:
+        'Full English package: <strong>one-time payment of S/69.90</strong>. Includes enrollment, book, certificate and free workshops.',
       ctaEnroll: "Enroll now",
       ctaCourses: "View courses",
       imgAlt: "Only One Coin students",
@@ -299,8 +348,8 @@ export const content = {
       titlePost: "?",
       cards: [
         {
-          title: "English Classes for S/1.00",
-          text: "Quality education within everyone's reach. A symbolic one-sol fee to access our classes.",
+          title: "Affordable pricing",
+          text: "Classes from S/1 per session and the full package in a single payment — no monthly fees or hidden costs.",
         },
         {
           title: "Free Workshops",
@@ -384,8 +433,9 @@ export const content = {
       titlePre: "We answer your ",
       titleAccent: "questions",
       titlePost: "",
+      lead: "Everything you need to know about our courses, enrollment and free workshops.",
       items: [
-        { q: "Do classes really cost S/1.00?", a: "Yes. We charge a symbolic one-sol fee to access our language classes. It's a single payment for the course, with no monthly fees or hidden costs." },
+        { q: "How much does it cost and how does payment work?", a: "Each course has a full package with a single payment (for example, English is S/69.90), including enrollment, materials, certificate and workshops. There's also a monthly modality that works out to 1 sol per session. No hidden monthly fees or surprise charges." },
         { q: "From what age can I enroll?", a: "We welcome students from 6 years old and up. There are groups designed for children and groups for teens and adults." },
         { q: "How do I enroll?", a: "Message us on WhatsApp to reserve your spot. Then you fill out the enrollment form, upload your receipt and receive your access credentials." },
         { q: "Are classes in-person or online?", a: "We offer both formats depending on the course and location. Ask us on WhatsApp about the available schedules for the term." },
@@ -415,7 +465,8 @@ export const content = {
       indexTitlePre: "Choose the language you ",
       indexTitleAccent: "want to learn",
       indexTitlePost: "",
-      indexText: "All our courses cost S/1.00 and are open from age 6. Pick a language to see the details.",
+      indexText: "Each course has its own single-payment full package and is open from age 6. Pick a language to see the price and details.",
+      payOnce: "single payment",
       viewCourse: "View course",
     },
     courseDetail: {
@@ -423,7 +474,8 @@ export const content = {
       eyebrowPre: "",
       eyebrowPost: " course",
       titlePre: "Learn ",
-      titlePost: " for just S/1.00",
+      titlePost: "",
+      priceLabel: "Full package · single payment",
       leadPre: "A complete ",
       leadPost: " program for all ages, with a conversational focus and teachers committed to your real learning.",
       exampleNote: "Sample content — the detailed information for each course will be completed with the real data for the term.",
@@ -434,7 +486,7 @@ export const content = {
       ],
       featuresTitle: "What's included",
       features: [
-        { title: "Single S/1.00 payment", text: "A symbolic one-sol fee to access the course. No monthly fees or hidden costs." },
+        { title: "Single package payment", text: "One payment for the whole course. No monthly fees or hidden costs." },
         { title: "Free workshops", text: "Excel, Entrepreneurship, Leadership and Quechua at no extra cost." },
         { title: "Digital certificate", text: "When you finish the course you get a certificate that validates your learning." },
         { title: "Student platform", text: "Classes, schedules and materials in one place." },
@@ -443,6 +495,24 @@ export const content = {
       ctaText: "Reserve your spot on WhatsApp and enroll today.",
       ctaEnroll: "Enroll now",
       ctaWhatsApp: "Message us on WhatsApp",
+    },
+    pages: {
+      blog: {
+        titlePre: "Our ",
+        titleAccent: "blog",
+        titlePost: "",
+        lead: "Tips for learning languages, news from the Association and free resources for our students.",
+        soonTitle: "Coming soon",
+        soonText: "We're preparing our first articles. Check back soon to read our posts.",
+      },
+      community: {
+        titlePre: "Our ",
+        titleAccent: "community",
+        titlePost: "",
+        lead: "Thousands of students across Peru learn with us. Join in, share your experience and keep growing.",
+        soonTitle: "Coming soon",
+        soonText: "We're building our community space. In the meantime, follow us on our social media.",
+      },
     },
     footer: {
       tagline: "Quality language education within everyone's reach, across all of Peru.",
@@ -471,16 +541,19 @@ export const content = {
 
   pt: {
     meta: {
-      title: "Only One Coin — Aprenda Inglês por apenas S/1,00",
+      title: "Only One Coin — Aprenda Inglês a partir de 1 sol por sessão",
       description:
-        "Associação Only One Coin Peru: aulas de inglês por S/1,00 e oficinas gratuitas para todas as idades a partir dos 6 anos.",
+        "Associação Only One Coin Peru: cursos de idiomas com pacote completo em pagamento único (Inglês S/69,90) e oficinas gratuitas para todas as idades a partir dos 6 anos.",
     },
     nav: {
       home: "Início",
       about: "Sobre",
       courses: "Cursos",
       coursesAll: "Ver todos os cursos",
+      resources: "Recursos",
+      community: "Comunidade",
       blog: "Blog",
+      faq: "Perguntas frequentes",
       contact: "Contato",
       portal: "Portal do Aluno",
       openMenu: "Abrir menu",
@@ -489,10 +562,13 @@ export const content = {
     hero: {
       w1: "Aprenda",
       w2: "Inglês",
-      w3: "por apenas",
-      price: "S/1,00",
+      w3: "a partir de",
+      price: "S/1",
+      priceUnit: "por sessão",
       subHtml:
         'Aberto para <strong>TODAS AS IDADES</strong><br />a partir dos <span class="accent">6 anos</span>!',
+      packageNote:
+        'Pacote completo de Inglês: <strong>pagamento único de S/69,90</strong>. Inclui matrícula, livro, certificado e oficinas gratuitas.',
       ctaEnroll: "Matricule-se agora",
       ctaCourses: "Ver cursos",
       imgAlt: "Estudantes da Only One Coin",
@@ -506,8 +582,8 @@ export const content = {
       titlePost: "?",
       cards: [
         {
-          title: "Aulas de Inglês por S/1,00",
-          text: "Educação de qualidade ao alcance de todos. Um sol simbólico para acessar nossas aulas.",
+          title: "Preço acessível",
+          text: "Aulas a partir de 1 sol por sessão e o pacote completo em pagamento único, sem mensalidades nem custos ocultos.",
         },
         {
           title: "Oficinas Gratuitas",
@@ -591,8 +667,9 @@ export const content = {
       titlePre: "Tiramos suas ",
       titleAccent: "dúvidas",
       titlePost: "",
+      lead: "Tudo o que você precisa saber sobre nossos cursos, a matrícula e as oficinas gratuitas.",
       items: [
-        { q: "As aulas custam mesmo S/1,00?", a: "Sim. Cobramos um sol simbólico pelo acesso às nossas aulas de idiomas. É um pagamento único pelo curso, sem mensalidades nem custos ocultos." },
+        { q: "Quanto custa e como funciona o pagamento?", a: "Cada curso tem um pacote completo em pagamento único (por exemplo, Inglês custa S/69,90), que inclui matrícula, material, certificado e oficinas. Também existe uma modalidade mensal que equivale a 1 sol por sessão. Sem mensalidades ocultas nem cobranças-surpresa." },
         { q: "A partir de que idade posso me matricular?", a: "Recebemos alunos a partir dos 6 anos. Há turmas pensadas para crianças e turmas para jovens e adultos." },
         { q: "Como me matriculo?", a: "Fale com a gente no WhatsApp para reservar sua vaga. Depois você preenche o formulário de matrícula, envia seu comprovante e recebe suas credenciais de acesso." },
         { q: "As aulas são presenciais ou online?", a: "Oferecemos as duas modalidades conforme o curso e a sede. Consulte no WhatsApp os horários disponíveis do período." },
@@ -622,7 +699,8 @@ export const content = {
       indexTitlePre: "Escolha o idioma que ",
       indexTitleAccent: "você quer aprender",
       indexTitlePost: "",
-      indexText: "Todos os nossos cursos custam S/1,00 e são abertos a partir dos 6 anos. Escolha um idioma para ver o detalhe.",
+      indexText: "Cada curso tem seu pacote completo em pagamento único e é aberto a partir dos 6 anos. Escolha um idioma para ver o preço e o detalhe.",
+      payOnce: "pagamento único",
       viewCourse: "Ver curso",
     },
     courseDetail: {
@@ -630,7 +708,8 @@ export const content = {
       eyebrowPre: "Curso de ",
       eyebrowPost: "",
       titlePre: "Aprenda ",
-      titlePost: " por apenas S/1,00",
+      titlePost: "",
+      priceLabel: "Pacote completo · pagamento único",
       leadPre: "Um programa completo de ",
       leadPost: " para todas as idades, com foco conversacional e professores comprometidos com o seu aprendizado real.",
       exampleNote: "Conteúdo de exemplo — a informação detalhada de cada curso será preenchida com os dados reais do período.",
@@ -641,7 +720,7 @@ export const content = {
       ],
       featuresTitle: "O que inclui",
       features: [
-        { title: "Pagamento único de S/1,00", text: "Um sol simbólico pelo acesso ao curso. Sem mensalidades nem custos ocultos." },
+        { title: "Pagamento único do pacote", text: "Um único pagamento por todo o curso. Sem mensalidades nem custos ocultos." },
         { title: "Oficinas gratuitas", text: "Excel, Empreendedorismo, Liderança e Quíchua sem custo adicional." },
         { title: "Certificado digital", text: "Ao concluir o curso você recebe um certificado que valida seu aprendizado." },
         { title: "Plataforma do aluno", text: "Aulas, horários e materiais em um só lugar." },
@@ -650,6 +729,24 @@ export const content = {
       ctaText: "Reserve sua vaga no WhatsApp e matricule-se hoje.",
       ctaEnroll: "Matricule-se agora",
       ctaWhatsApp: "Fale conosco no WhatsApp",
+    },
+    pages: {
+      blog: {
+        titlePre: "Nosso ",
+        titleAccent: "blog",
+        titlePost: "",
+        lead: "Dicas para aprender idiomas, novidades da Associação e recursos gratuitos para nossos alunos.",
+        soonTitle: "Em breve",
+        soonText: "Estamos preparando nossos primeiros artigos. Volte em breve para ler nossas publicações.",
+      },
+      community: {
+        titlePre: "Nossa ",
+        titleAccent: "comunidade",
+        titlePost: "",
+        lead: "Milhares de estudantes de todo o Peru aprendem com a gente. Participe, compartilhe sua experiência e continue crescendo.",
+        soonTitle: "Em breve",
+        soonText: "Estamos construindo o espaço da nossa comunidade. Enquanto isso, siga a gente nas redes sociais.",
+      },
     },
     footer: {
       tagline: "Educação de idiomas de qualidade ao alcance de todos, em todo o Peru.",

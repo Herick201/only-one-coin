@@ -1,6 +1,6 @@
 ---
-import { courseSlugs } from "../i18n/ui";
-import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
+import { courseSlugs, coursePrices } from "../i18n/ui";
+import { getLangFromUrl, useTranslations, withLang, formatPEN } from "../i18n/utils";
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
@@ -10,12 +10,12 @@ const courses = courseSlugs.map((slug) => ({
   slug,
   name: t.courses.list[slug],
   href: withLang(lang, `/cursos/${slug}`),
+  price: formatPEN(coursePrices[slug], lang),
 }));
 ---
 
 <section class="section courses-index">
   <div class="container">
-    <p class="eyebrow">{c.indexEyebrow}</p>
     <h1 class="section-title">{c.indexTitlePre}<span class="accent">{c.indexTitleAccent}</span>{c.indexTitlePost}</h1>
     <p class="ci-lead text-muted">{c.indexText}</p>
 
@@ -23,7 +23,7 @@ const courses = courseSlugs.map((slug) => ({
       {
         courses.map((course) => (
           <a class="ci-card" href={course.href}>
-            <span class="ci-badge">S/1.00</span>
+            <span class="ci-badge">{course.price} · {c.payOnce}</span>
             <h2>{course.name}</h2>
             <span class="ci-link">
               {c.viewCourse}

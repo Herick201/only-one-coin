@@ -19,7 +19,9 @@ const h = t.hero;
         <span class="line accent">{h.w2}</span>
         <span class="line-price">
           <span class="w3">{h.w3}</span>
-          <span class="price">{h.price}</span>
+          <span class="price">
+            {h.price}<span class="price-unit">{h.priceUnit}</span>
+          </span>
         </span>
       </h1>
       <p class="hero-sub" set:html={h.subHtml} />
@@ -27,6 +29,7 @@ const h = t.hero;
         <a href={withLang(lang, "/matricula")} class="btn btn-yellow">{h.ctaEnroll}</a>
         <a href={withLang(lang, "/cursos")} class="btn btn-outline">{h.ctaCourses}</a>
       </div>
+      <p class="price-note" set:html={h.packageNote} />
     </div>
 
     <div class="hero-media">
@@ -105,7 +108,9 @@ const h = t.hero;
     color: var(--ink);
   }
   .price {
-    display: inline-block;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
     background: linear-gradient(135deg, var(--yellow-bright), var(--yellow-deep));
     color: var(--ink);
     padding: 4px 20px 8px;
@@ -113,6 +118,23 @@ const h = t.hero;
     transform: rotate(-2deg);
     box-shadow: var(--shadow-yellow);
     font-size: clamp(2.4rem, 5.4vw, 3.6rem);
+  }
+  .price-unit {
+    font-family: var(--font);
+    font-size: 0.95rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .price-note {
+    margin-top: 20px;
+    max-width: 44ch;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    border-left: 3px solid var(--yellow);
+    padding-left: 14px;
+  }
+  .price-note :global(strong) {
+    color: var(--ink);
   }
   .hero-sub {
     margin-top: 30px;

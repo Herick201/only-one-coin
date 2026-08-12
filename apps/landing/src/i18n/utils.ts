@@ -20,6 +20,12 @@ export function withLang(lang: Lang, path: string): string {
   return clean === "/" ? `/${lang}/` : `/${lang}${clean}`;
 }
 
+/** Format a PEN amount for display: "S/80", "S/69.90" (pt uses a comma). */
+export function formatPEN(amount: number, lang: Lang): string {
+  const num = Number.isInteger(amount) ? String(amount) : amount.toFixed(2);
+  return `S/${lang === "pt" ? num.replace(".", ",") : num}`;
+}
+
 /** Same path as the current URL, but in `target` locale (for the switcher). */
 export function switchLangPath(url: URL, target: Lang): string {
   const parts = url.pathname.split("/");

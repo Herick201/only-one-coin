@@ -9,38 +9,39 @@ const ts = t.testimonials;
 <section class="section testi" id="testimonios">
   <div class="container">
     <div class="testi-head">
-      <div>
-        <p class="eyebrow">{ts.eyebrow}</p>
-        <h2 class="section-title">
-          {ts.titlePre}<span class="accent">{ts.titleAccent}</span>{ts.titlePost}
-        </h2>
-      </div>
-      <div class="testi-arrows">
-        <button class="t-arrow" data-testi-prev aria-label={ts.prev}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
-        </button>
-        <button class="t-arrow" data-testi-next aria-label={ts.next}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
-        </button>
-      </div>
+      <h2 class="section-title">
+        {ts.titlePre}<span class="accent">{ts.titleAccent}</span>{ts.titlePost}
+      </h2>
     </div>
 
-    <div class="testi-track" data-testi-track>
-      {
-        ts.items.map((item) => (
-          <figure class="testi-card">
-            <div class="stars" aria-label="5/5">★★★★★</div>
-            <blockquote>{item.quote}</blockquote>
-            <figcaption class="who">
-              <span class="avatar" aria-hidden="true">{item.initials}</span>
-              <span class="who-txt">
-                <span class="name">{item.name}</span>
-                <span class="role">{item.role}</span>
-              </span>
-            </figcaption>
-          </figure>
-        ))
-      }
+    <div class="testi-carousel" data-testi-carousel>
+      <button class="t-arrow t-prev" data-testi-prev aria-label={ts.prev} type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+      </button>
+
+      <div class="testi-window" data-testi-window>
+        <div class="testi-track" data-testi-track>
+          {
+            ts.items.map((item) => (
+              <figure class="testi-card">
+                <div class="stars" aria-label="5/5">★★★★★</div>
+                <blockquote>{item.quote}</blockquote>
+                <figcaption class="who">
+                  <span class="avatar" aria-hidden="true">{item.initials}</span>
+                  <span class="who-txt">
+                    <span class="name">{item.name}</span>
+                    <span class="role">{item.role}</span>
+                  </span>
+                </figcaption>
+              </figure>
+            ))
+          }
+        </div>
+      </div>
+
+      <button class="t-arrow t-next" data-testi-next aria-label={ts.next} type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
+      </button>
     </div>
 
     <p class="note">{ts.note}</p>
@@ -48,28 +49,95 @@ const ts = t.testimonials;
 </section>
 
 <script>
-  // Page-by-page scrolling for the testimonials carousel. Bundled by Astro
-  // (served from /_astro), so it satisfies the `script-src 'self'` CSP.
+  // Infinite "roulette" carousel: cards loop seamlessly and auto-advance,
+  // with blue arrows on the same line as the cards. Bundled by Astro
+  // (served from /_astro) so it satisfies `script-src 'self'`.
+  const carousel = document.querySelector<HTMLElement>("[data-testi-carousel]");
   const track = document.querySelector<HTMLElement>("[data-testi-track]");
-  const prev = document.querySelector<HTMLElement>("[data-testi-prev]");
-  const next = document.querySelector<HTMLElement>("[data-testi-next]");
+  const prevBtn = document.querySelector<HTMLElement>("[data-testi-prev]");
+  const nextBtn = document.querySelector<HTMLElement>("[data-testi-next]");
 
-  if (track && prev && next) {
-    const page = (dir: number) => {
-      track.scrollBy({ left: dir * track.clientWidth, behavior: "smooth" });
-    };
-    prev.addEventListener("click", () => page(-1));
-    next.addEventListener("click", () => page(1));
+  if (carousel && track && prevBtn && nextBtn) {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const originals = Array.from(track.children) as HTMLElement[];
+    const count = originals.length;
 
-    // Disable arrows at the ends so they never scroll into emptiness.
-    const sync = () => {
-      const max = track.scrollWidth - track.clientWidth - 2;
-      prev.toggleAttribute("disabled", track.scrollLeft <= 2);
-      next.toggleAttribute("disabled", track.scrollLeft >= max);
+    // Clone the full set once so advancing past the last card lands on an
+    // identical frame we can silently reset to the start (seamless loop).
+    originals.forEach((node) => {
+      const clone = node.cloneNode(true) as HTMLElement;
+      clone.setAttribute("aria-hidden", "true");
+      track.appendChild(clone);
+    });
+
+    let index = 0;
+    let animating = false;
+
+    const step = () => {
+      const first = track.children[0] as HTMLElement;
+      const gap = parseFloat(getComputedStyle(track).columnGap || "26") || 26;
+      return first.getBoundingClientRect().width + gap;
     };
-    track.addEventListener("scroll", sync, { passive: true });
-    window.addEventListener("resize", sync);
-    sync();
+
+    const apply = (withTransition: boolean) => {
+      track.style.transition = withTransition ? "transform 0.55s cubic-bezier(0.22, 1, 0.36, 1)" : "none";
+      track.style.transform = `translateX(${-index * step()}px)`;
+    };
+
+    const next = () => {
+      if (animating) return;
+      animating = true;
+      index += 1;
+      apply(true);
+    };
+
+    const prev = () => {
+      if (animating) return;
+      animating = true;
+      if (index === 0) {
+        index = count; // identical frame, jump instantly…
+        apply(false);
+        void track.offsetWidth; // …force reflow so the next move animates
+        index = count - 1;
+        apply(true);
+      } else {
+        index -= 1;
+        apply(true);
+      }
+    };
+
+    track.addEventListener("transitionend", () => {
+      animating = false;
+      if (index >= count) {
+        index -= count;
+        apply(false);
+      }
+    });
+
+    // Autoplay (the "roulette" motion) — off when the user prefers reduced motion.
+    let timer: number | undefined;
+    const play = () => {
+      if (reduce.matches) return;
+      window.clearInterval(timer);
+      timer = window.setInterval(next, 3800);
+    };
+    const stop = () => window.clearInterval(timer);
+
+    prevBtn.addEventListener("click", () => {
+      prev();
+      play();
+    });
+    nextBtn.addEventListener("click", () => {
+      next();
+      play();
+    });
+
+    carousel.addEventListener("mouseenter", stop);
+    carousel.addEventListener("mouseleave", play);
+    window.addEventListener("resize", () => apply(false));
+
+    apply(false);
+    play();
   }
 </script>
 
@@ -77,64 +145,56 @@ const ts = t.testimonials;
   .testi {
     background: var(--paper);
   }
-  .testi-head {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 20px;
-    max-width: 100%;
-  }
-  .testi-head > div:first-child {
+  .testi-head > .section-title {
     max-width: 640px;
   }
-  .testi-arrows {
+
+  .testi-carousel {
+    margin-top: 40px;
     display: flex;
-    gap: 10px;
-    flex: none;
+    align-items: center;
+    gap: 14px;
   }
+  .testi-window {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .testi-track {
+    display: flex;
+    gap: 26px;
+    will-change: transform;
+  }
+
+  /* Blue circular arrows, vertically centered on the line of the cards */
   .t-arrow {
-    width: 46px;
-    height: 46px;
+    flex: none;
+    width: 52px;
+    height: 52px;
     border-radius: 50%;
-    border: 1.5px solid var(--border);
+    border: 1.5px solid var(--blue);
     background: var(--paper);
     color: var(--blue);
     display: grid;
     place-items: center;
     cursor: pointer;
     box-shadow: var(--shadow-sm);
-    transition: background 0.16s ease, color 0.16s ease, transform 0.16s ease, opacity 0.16s ease;
+    transition: background 0.16s ease, color 0.16s ease, transform 0.16s ease;
   }
   .t-arrow svg {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
   }
-  .t-arrow:hover:not([disabled]) {
+  .t-arrow:hover {
     background: var(--blue);
     color: #fff;
-    transform: translateY(-2px);
+    transform: scale(1.08);
   }
-  .t-arrow[disabled] {
-    opacity: 0.35;
-    cursor: default;
+  .t-arrow:active {
+    transform: scale(0.96);
   }
 
-  .testi-track {
-    margin-top: 40px;
-    display: flex;
-    gap: 26px;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scroll-padding-left: 0;
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-    padding-bottom: 6px;
-  }
-  .testi-track::-webkit-scrollbar {
-    display: none;
-  }
   .testi-card {
-    scroll-snap-align: start;
     flex: 0 0 calc((100% - 2 * 26px) / 3);
     margin: 0;
     background: var(--sky-soft);
@@ -211,8 +271,12 @@ const ts = t.testimonials;
     .testi-card {
       flex-basis: 100%;
     }
-    .testi-head {
-      align-items: center;
+    .testi-carousel {
+      gap: 8px;
+    }
+    .t-arrow {
+      width: 44px;
+      height: 44px;
     }
   }
 </style>
