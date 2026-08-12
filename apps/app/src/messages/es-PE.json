@@ -1,0 +1,26 @@
+{
+  "login": {
+    "title": "Portal del Estudiante",
+    "subtitle": "Ingresa con las credenciales que recibiste por correo.",
+    "email_label": "Correo electrónico",
+    "email_placeholder": "tucorreo@ejemplo.com",
+    "password_label": "Contraseña",
+    "password_placeholder": "••••••••",
+    "submit": "Ingresar",
+    "submitting": "Ingresando…",
+    "forgot_password": "¿Olvidaste tu contraseña?",
+    "generic_error": "No pudimos iniciar sesión con esos datos. Verifica tu correo y contraseña.",
+    "error_reference": "Código de referencia: {errorId}",
+    "back_to_site": "Volver al sitio"
+  },
+  "home": {
+    "coming_soon": "Portal del Estudiante — próximamente.",
+    "go_to_login": "Ir a iniciar sesión"
+  },
+  "language": {
+    "label": "Idioma",
+    "es": "Español",
+    "en": "English",
+    "pt": "Português"
+  }
+}

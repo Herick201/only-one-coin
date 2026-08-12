@@ -9,7 +9,10 @@
   "scripts": {
     "dev": "pnpm --filter @ooc/landing dev",
     "dev:landing": "pnpm --filter @ooc/landing dev",
+    "dev:app": "pnpm --filter @ooc/app dev",
     "build": "pnpm -r build",
-    "build:landing": "pnpm --filter @ooc/landing build"
+    "build:landing": "pnpm --filter @ooc/landing build",
+    "build:app": "pnpm --filter @ooc/app build",
+    "typecheck:app": "pnpm --filter @ooc/app typecheck"
   }
 }

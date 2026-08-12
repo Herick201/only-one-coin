@@ -271,7 +271,30 @@ Cada um tem um mecanismo. O mecanismo é obrigatório, não a boa intenção.
 - `audit_log` append-only: sem grant de UPDATE nem DELETE, nem para admin
 - Ley 29733: consentimento com timestamp, versão do texto e IP; política de retenção; exclusão a pedido
 
-Papéis: `admin`, `coordinator`, `teacher`, `treasury`, `mass_approver`.
+Papéis: `admin`, `coordinator`, `teacher`, `treasury`, `mass_approver`. Aluno e apoderado: `student`, `guardian`.
+
+### Pontos de entrada separados (portal ≠ backoffice)
+
+Um **único backend de auth** (Supabase Auth, um só `auth.users`) — a separação de acesso é **RLS + `role`**, nunca a tela. Mas **duas telas de login distintas**, pelo mesmo app Next.js (não são dois deploys):
+
+- **Portal do aluno** — `/` ou `/portal`, linkado da landing, indexável, sem MFA. **Sem auto-cadastro**: o aluno recebe credenciais por e-mail após aprovação, não se registra.
+- **Backoffice** — path discreto (`/backoffice`), **nunca linkado na landing nem indexável**, MFA no fluxo. É defesa em profundidade, não a defesa.
+- **Docente** entra pelo backoffice, mas vê só as próprias turmas via RLS.
+- **Redirect por `role` sempre server-side.** O cliente nunca escolhe "sou aluno/sou admin"; o `role` vem do banco.
+
+### Gestão de cargos — anti-escalada de privilégio
+
+O `role` **nunca** mora em lugar que o próprio usuário escreve. Regras duras:
+
+- `role` vive em tabela protegida (ex.: `user_roles`) — RLS **sem grant de `UPDATE` a ninguém** via API, nem ao próprio dono, nem a admin comum.
+- **Nunca** guardar `role` em `user_metadata` (o usuário edita). Custom claim, se usado, é preenchido **server-side** (Auth Hook) a partir da tabela protegida.
+- RLS lê o `role` do banco via `auth.uid()`, **nunca** de header/JWT montado pelo cliente.
+- Toda mudança de cargo → `audit_log` append-only.
+
+**Modelo de criação de staff (fechado):**
+
+1. **Bootstrap:** o primeiro `admin` nasce por **migration versionada**.
+2. **Depois:** **só `admin`** cria/promove staff, pela UI, via função `SECURITY DEFINER` que exige **re-autenticação MFA fresca** do admin. Nenhum outro papel promove ninguém.
 
 ---
 
