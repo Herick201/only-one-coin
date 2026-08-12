@@ -18,8 +18,12 @@ const p = t.programs;
             <span class="tag">{item.tag}</span>
             <h3>{item.title}</h3>
             <p class="text-muted">{item.text}</p>
-            <a href={withLang(lang, item.href)} class="btn btn-gold">
-              {p.viewCourse}
+            <a href={withLang(lang, item.href)} class="btn btn-yellow view-course">
+              <span>{p.viewCourse}</span>
+              <svg class="vc-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 12h14"></path>
+                <path d="m12 5 7 7-7 7"></path>
+              </svg>
             </a>
           </article>
         ))
@@ -93,6 +97,23 @@ const p = t.programs;
   }
   .program .btn {
     margin-top: 8px;
+  }
+  /* "Ver curso" — arrow slides + a subtle nudge on hover */
+  .view-course .vc-arrow {
+    width: 18px;
+    height: 18px;
+    transition: transform 0.2s ease;
+  }
+  .view-course:hover .vc-arrow {
+    transform: translateX(5px);
+  }
+  .view-course:active {
+    transform: translateY(0);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .view-course:hover .vc-arrow {
+      transform: none;
+    }
   }
   @media (max-width: 900px) {
     .grid {

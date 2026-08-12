@@ -1,0 +1,212 @@
+---
+import { courseSlugs, geoSuggestion } from "../i18n/ui";
+import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const fd = t.finder;
+
+// Server-rendered default (works without JS); the client refines by geo.
+const defaultSlug = "ingles" as const;
+
+const courses = courseSlugs.map((slug) => ({
+  slug,
+  name: t.courses.list[slug],
+  href: withLang(lang, `/cursos/${slug}`),
+}));
+
+// Config the client script reads (non-executable JSON — CSP-safe).
+const clientConfig = {
+  geo: geoSuggestion,
+  courses: Object.fromEntries(courses.map((c) => [c.slug, { name: c.name, href: c.href }])),
+  defaultSlug,
+};
+---
+
+<section class="section finder" id="finder">
+  <div class="container">
+    <p class="eyebrow">{fd.eyebrow}</p>
+    <h2 class="section-title">{fd.titlePre}<span class="accent">{fd.titleAccent}</span>{fd.titlePost}</h2>
+    <p class="finder-lead text-muted">{fd.text}</p>
+
+    <div class="finder-card">
+      <div class="finder-reco">
+        <p class="from" data-finder-from hidden>
+          <span>{fd.fromLabel}</span> <strong data-finder-country></strong>
+        </p>
+        <p class="reco-pre">{fd.recommendPre}</p>
+        <p class="reco-lang" data-finder-name>{courses.find((c) => c.slug === defaultSlug)?.name}</p>
+        <a class="btn btn-yellow reco-cta" data-finder-cta href={withLang(lang, `/cursos/${defaultSlug}`)}>
+          <span>{fd.viewCourse}</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+        </a>
+      </div>
+
+      <div class="finder-choose">
+        <p class="choose-label">{fd.orChoose}</p>
+        <div class="lang-chips">
+          {courses.map((c) => <a class="chip" data-slug={c.slug} href={c.href}>{c.name}</a>)}
+        </div>
+        <a class="all-link" href={withLang(lang, "/cursos")}>{fd.allCourses} →</a>
+      </div>
+    </div>
+  </div>
+
+  <script type="application/json" data-finder-config set:html={JSON.stringify(clientConfig)}></script>
+  <script>
+    // Refine the recommendation from the visitor's country (Netlify edge geo,
+    // same-origin fetch → satisfies `connect-src 'self'`). No PII is stored;
+    // we only read a coarse country code to pick a suggested course.
+    type Cfg = {
+      geo: Record<string, string>;
+      courses: Record<string, { name: string; href: string }>;
+      defaultSlug: string;
+    };
+    const cfgEl = document.querySelector<HTMLElement>("[data-finder-config]");
+    const root = document.querySelector<HTMLElement>("#finder");
+    if (cfgEl && root) {
+      const cfg: Cfg = JSON.parse(cfgEl.textContent || "{}");
+      fetch("/api/geo", { headers: { accept: "application/json" } })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data: { country?: string; countryName?: string } | null) => {
+          const code = data?.country?.toUpperCase();
+          const slug = (code && cfg.geo[code]) || cfg.defaultSlug;
+          const course = cfg.courses[slug];
+          if (!course) return;
+
+          const nameEl = root.querySelector<HTMLElement>("[data-finder-name]");
+          const ctaEl = root.querySelector<HTMLAnchorElement>("[data-finder-cta]");
+          if (nameEl) nameEl.textContent = course.name;
+          if (ctaEl) ctaEl.href = course.href;
+
+          const fromEl = root.querySelector<HTMLElement>("[data-finder-from]");
+          const countryEl = root.querySelector<HTMLElement>("[data-finder-country]");
+          if (data?.countryName && fromEl && countryEl) {
+            countryEl.textContent = data.countryName;
+            fromEl.hidden = false;
+          }
+          root.querySelectorAll<HTMLElement>(".chip").forEach((chip) => {
+            chip.classList.toggle("active", chip.dataset.slug === slug);
+          });
+        })
+        .catch(() => {
+          /* offline / local dev: keep the server-rendered default */
+        });
+    }
+  </script>
+</section>
+
+<style>
+  .finder {
+    background: var(--paper);
+  }
+  .finder-lead {
+    margin-top: 14px;
+    max-width: 56ch;
+    font-size: 1.08rem;
+  }
+  .finder-card {
+    margin-top: 40px;
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 30px;
+    align-items: stretch;
+  }
+  .finder-reco {
+    background: linear-gradient(135deg, var(--blue), var(--blue-deep));
+    color: #fff;
+    border-radius: var(--radius-lg);
+    padding: 38px 34px;
+    box-shadow: var(--shadow-blue);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .from {
+    margin: 0 0 4px;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.82);
+  }
+  .from strong {
+    color: var(--yellow-bright);
+  }
+  .reco-pre {
+    margin: 0;
+    font-size: 1.05rem;
+    color: rgba(255, 255, 255, 0.85);
+  }
+  .reco-lang {
+    margin: 0 0 8px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2.2rem, 5vw, 3rem);
+    line-height: 1.05;
+    color: var(--yellow-bright);
+  }
+  .reco-cta {
+    margin-top: auto;
+  }
+  .reco-cta svg {
+    width: 18px;
+    height: 18px;
+    transition: transform 0.2s ease;
+  }
+  .reco-cta:hover svg {
+    transform: translateX(5px);
+  }
+
+  .finder-choose {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .choose-label {
+    margin: 0 0 16px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .lang-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .chip {
+    padding: 10px 18px;
+    border-radius: 999px;
+    border: 1.5px solid var(--border);
+    background: var(--paper);
+    font-weight: 600;
+    color: var(--ink);
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  }
+  .chip:hover {
+    border-color: var(--blue);
+    color: var(--blue);
+    transform: translateY(-2px);
+  }
+  .chip.active {
+    background: var(--yellow);
+    border-color: var(--yellow);
+    color: var(--ink);
+  }
+  .all-link {
+    margin-top: 20px;
+    font-weight: 700;
+    color: var(--blue);
+  }
+  .all-link:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 820px) {
+    .finder-card {
+      grid-template-columns: 1fr;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .reco-cta:hover svg {
+      transform: none;
+    }
+  }
+</style>

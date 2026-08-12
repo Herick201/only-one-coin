@@ -1,0 +1,18 @@
+---
+import Base from "../../../layouts/Base.astro";
+import CourseDetail from "../../../components/CourseDetail.astro";
+import { content, courseSlugs } from "../../../i18n/ui";
+import type { CourseSlug } from "../../../i18n/ui";
+
+export function getStaticPaths() {
+  return courseSlugs.map((slug) => ({ params: { slug } }));
+}
+
+const { slug } = Astro.params as { slug: CourseSlug };
+const name = content.en.courses.list[slug];
+const title = `${name} — Only One Coin`;
+---
+
+<Base title={title}>
+  <CourseDetail slug={slug} />
+</Base>

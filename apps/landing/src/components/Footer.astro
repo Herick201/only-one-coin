@@ -1,10 +1,16 @@
 ---
+import { courseSlugs } from "../i18n/ui";
 import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const f = t.footer;
 const year = new Date().getFullYear();
+
+const courseLangs = courseSlugs.map((slug) => ({
+  name: t.courses.list[slug],
+  href: withLang(lang, `/cursos/${slug}`),
+}));
 
 // Social links. TODO: replace "#" with the Asociación's real profile URLs.
 // Icons are not translatable content, so they live here, not in i18n.
@@ -62,7 +68,7 @@ const socials = [
     <div class="col">
       <h3>{f.langsTitle}</h3>
       <ul>
-        {f.langs.map((name) => <li><a href={withLang(lang, "/cursos")}>{name}</a></li>)}
+        {courseLangs.map((c) => <li><a href={c.href}>{c.name}</a></li>)}
       </ul>
     </div>
 
