@@ -1,0 +1,26 @@
+{
+  "login": {
+    "title": "Portal do Aluno",
+    "subtitle": "Entre com as credenciais que você recebeu por e-mail.",
+    "email_label": "E-mail",
+    "email_placeholder": "seuemail@exemplo.com",
+    "password_label": "Senha",
+    "password_placeholder": "••••••••",
+    "submit": "Entrar",
+    "submitting": "Entrando…",
+    "forgot_password": "Esqueceu sua senha?",
+    "generic_error": "Não conseguimos entrar com esses dados. Confira seu e-mail e senha.",
+    "error_reference": "Código de referência: {errorId}",
+    "back_to_site": "Voltar ao site"
+  },
+  "home": {
+    "coming_soon": "Portal do Aluno — em breve.",
+    "go_to_login": "Ir para o login"
+  },
+  "language": {
+    "label": "Idioma",
+    "es": "Español",
+    "en": "English",
+    "pt": "Português"
+  }
+}

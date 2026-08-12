@@ -3,6 +3,11 @@ packages:
   - "packages/*"
 
 # esbuild e sharp compilam binario no postinstall; aprovados para rodar seus build scripts.
+# As três abaixo trazem binário pré-built (bindings nativos via optionalDependencies);
+# não precisam rodar postinstall -> false (decisão explícita p/ o gate do pnpm 11).
 allowBuilds:
+  '@parcel/watcher': false
+  '@swc/core': false
   esbuild: true
   sharp: true
+  unrs-resolver: false
