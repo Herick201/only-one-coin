@@ -42,7 +42,7 @@ Sem isso, tudo depois fica mais caro. Não pule nem comprima.
 | --- | --- | --- | --- |
 | ☐ 1 | **Repositório e scaffold** | `git init`, pnpm workspaces, TypeScript strict, `apps/landing` (Astro) e `apps/app` (Next) subindo em branco, `packages/*` criados vazios | `pnpm dev` sobe os dois apps localmente e o repo está no GitHub |
 | ☐ 2 | **Config e ambiente** | Validação de env com zod no boot, `.env.example`, `.gitignore`, zero URL literal | App recusa subir com variável faltando, com mensagem clara |
-| ☐ 3 | **Supabase local** | Docker rodando, CLI configurado, migration vazia inicial aplicando | `supabase start` e `supabase db reset` funcionam do zero |
+| ☐ 3 | **Banco Postgres local** | Postgres local rodando (provedor a decidir), CLI de migrations configurado, migration vazia inicial aplicando | `reset` do banco roda do zero e reaplica as migrations |
 | ☐ 4 | **Migration: modelo acadêmico** | `academic_periods`, `courses`, `plans`, `plan_prices`, `class_groups` com `CHECK (seats_taken <= capacity)` | `db reset` roda limpo; `plan_prices` versionado por vigência |
 | ☐ 5 | **Migration: pessoas e papéis** | `students`, `guardians`, `consents`, `teachers`, `user_roles`, `pg_trgm` para busca | Busca por nome/DNI/telefone funciona; sem grant de DELETE em `students` |
 | ☐ 6 | **Migration: matrícula e pagamento** | `enrollments`, `payments` (idempotency key única, `amount_cents`), `payment_receipts` (índice único por operação e por `image_phash`), `waitlist_entries` | Máquina de estados documentada; tentar inserir pagamento duplicado falha no banco |
@@ -52,7 +52,7 @@ Sem isso, tudo depois fica mais caro. Não pule nem comprima.
 | ☐ 10 | **Fila e outbox** | `pgmq`, worker em Background Function com retry/backoff/DLQ, adapter de notificação, `providers/brevo.ts` stub | Job falho vai para DLQ e não trava a fila. **Guarda de e-mail ativa: fora de produção só allowlist** |
 | ☐ 11 | **i18n** | `packages/i18n` com `es-PE.json`, lint `no-literal-string` nos diretórios de UI | Build quebra ao introduzir string crua |
 | ☐ 12 | **CI — 7 portões** | GitHub Actions: gitleaks, varredura de `service_role`, `tsc`, ESLint, teste de RLS, migrations em banco limpo, validação de env | PR com segredo ou tabela sem RLS é bloqueado |
-| ☐ 13 | **Ambientes** | Projeto Supabase de staging, `netlify.toml` com contextos, env por contexto, branch protection na `main`, `docs/ENVIRONMENTS.md` | Push na `staging` publica em `staging.aula.onlyonecoin.edu.pe`; PR gera preview |
+| ☐ 13 | **Ambientes** | Banco Postgres gerenciado de staging (provedor a decidir), `netlify.toml` com contextos, env por contexto, branch protection na `main`, `docs/ENVIRONMENTS.md` | Push na `staging` publica em `staging.aula.onlyonecoin.edu.pe`; PR gera preview |
 
 > **Marco:** protótipo navegável aprovado pelo cliente. Fecha a Fase 0 do contrato.
 

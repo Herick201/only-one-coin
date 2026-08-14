@@ -11,7 +11,7 @@ Leia o `CLAUDE.md` na raiz antes de qualquer coisa. Ele tem o contexto, a stack 
 ## Antes de escrever nada
 
 1. Leia o `CLAUDE.md` inteiro.
-2. Verifique o que já existe no diretório e o que está instalado (`node`, `pnpm`, `supabase`, `docker`, `git`).
+2. Verifique o que já existe no diretório e o que está instalado (`node`, `pnpm`, `docker`, `git`).
 3. **Me faça as perguntas que faltam** — não assuma nada sobre nomes, volumes, credenciais ou contas já criadas. Se eu não tiver respondido algo, pergunte em vez de inventar.
 4. Me mostre o plano em passos numerados e **espere meu OK** antes de executar.
 
@@ -29,7 +29,7 @@ pnpm workspaces, TypeScript strict, na estrutura definida na seção 3 do `CLAUD
 
 ### 3. Banco — migrations versionadas
 
-Supabase local via Docker. Primeira migration com o modelo completo, em inglês, `timestamptz` em tudo, `amount_cents INTEGER` para dinheiro.
+Postgres local (provedor a decidir). Primeira migration com o modelo completo, em inglês, `timestamptz` em tudo, `amount_cents INTEGER` para dinheiro.
 
 Tabelas mínimas:
 

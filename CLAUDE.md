@@ -63,7 +63,7 @@ Se algo parecer exigir um desses, **pare e pergunte**.
 | Site público | **Astro** (estático) |
 | App (portal + backoffice) | **Next.js App Router** |
 | Hospedagem | **Netlify** (dois sites, uma conta) |
-| Banco / Auth / Storage | **Supabase** (Postgres + RLS) |
+| Banco / Auth / Storage | **Postgres + RLS** — decisão fechada. **Provedor gerenciado a decidir** |
 | Fila | **pgmq** + Netlify Background Function (15 min) |
 | OCR / IA | **Gemini 3.1 Flash-Lite** (nível 1) · modelo de outra família (nível 2) |
 | E-mail | **Brevo**, atrás de adapter |
@@ -71,9 +71,11 @@ Se algo parecer exigir um desses, **pare e pergunte**.
 | Captcha | **Cloudflare Turnstile** |
 | Backup | `pg_dump` → **Cloudflare R2** via Scheduled Function |
 | Observabilidade | **Sentry** + **PostHog** (EU Cloud) |
-| Realtime | Supabase Realtime |
+| Realtime | a decidir com o provedor de backend |
 
-Não trocar nada disso sem me perguntar. Já foram avaliadas e descartadas: Vercel, Clerk, Pinecone, Resend, Cloudflare CDN, fila no Redis.
+Não trocar nada disso sem me perguntar. Já foram avaliadas e descartadas: Vercel, Clerk, Pinecone, Resend, Cloudflare CDN, fila no Redis. O provedor de backend gerenciado que havia sido escolhido foi **removido** e está de novo em aberto (ver "Decisão em aberto" abaixo).
+
+**Decisão em aberto — provedor de backend.** Postgres com RLS é decisão **fechada** (todo o modelo de segurança da §8 depende disso). O que ainda **não** está escolhido é o **provedor gerenciado** de Postgres, auth e storage. Não escolher, não instalar SDK, não escrever código acoplado a um provedor. Se algo travar por isso, **pare e pergunte**.
 
 ### Monorepo
 
@@ -82,7 +84,7 @@ apps/
   landing/           Astro — site público
   app/               Next.js — portal + backoffice
 packages/
-  db/                migrations (Supabase CLI) + seed
+  db/                migrations + seed (CLI do provedor a decidir)
   notifications/     adapter de e-mail + outbox
   ocr/               pipeline de extração
   i18n/              locales (es-PE.json)
@@ -245,9 +247,9 @@ Cada um tem um mecanismo. O mecanismo é obrigatório, não a boa intenção.
 
 | Ambiente | Onde |
 | --- | --- |
-| Local | Supabase via Docker |
-| Staging | `staging.aula.onlyonecoin.edu.pe` · projeto Supabase próprio |
-| Produção | `aula.onlyonecoin.edu.pe` · projeto Supabase próprio |
+| Local | Postgres local (provedor a decidir) |
+| Staging | `staging.aula.onlyonecoin.edu.pe` · Postgres gerenciado próprio (provedor a decidir) |
+| Produção | `aula.onlyonecoin.edu.pe` · Postgres gerenciado próprio (provedor a decidir) |
 
 - Netlify: `main` → produção, `staging` → branch deploy, PR → deploy preview
 - Variáveis de ambiente **por contexto** do Netlify
@@ -275,7 +277,7 @@ Papéis: `admin`, `coordinator`, `teacher`, `treasury`, `mass_approver`. Aluno e
 
 ### Pontos de entrada separados (portal ≠ backoffice)
 
-Um **único backend de auth** (Supabase Auth, um só `auth.users`) — a separação de acesso é **RLS + `role`**, nunca a tela. Mas **duas telas de login distintas**, pelo mesmo app Next.js (não são dois deploys):
+Um **único backend de auth** (um só provedor de auth, um só registro de usuários) — a separação de acesso é **RLS + `role`**, nunca a tela. Mas **duas telas de login distintas**, pelo mesmo app Next.js (não são dois deploys):
 
 - **Portal do aluno** — `/` ou `/portal`, linkado da landing, indexável, sem MFA. **Sem auto-cadastro**: o aluno recebe credenciais por e-mail após aprovação, não se registra.
 - **Backoffice** — path discreto (`/backoffice`), **nunca linkado na landing nem indexável**, MFA no fluxo. É defesa em profundidade, não a defesa.
