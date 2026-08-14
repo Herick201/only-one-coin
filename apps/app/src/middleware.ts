@@ -1,7 +1,7 @@
 import createMiddleware from 'next-intl/middleware'
 import { routing } from './i18n/routing'
 
-// Só roteamento de locale por enquanto. O refresh de sessão do Supabase
+// Só roteamento de locale por enquanto. O refresh de sessão do provedor de auth
 // entra aqui quando existirem rotas protegidas (portal/backoffice).
 export default createMiddleware(routing)
 

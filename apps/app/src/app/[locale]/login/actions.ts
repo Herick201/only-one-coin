@@ -1,7 +1,6 @@
 'use server'
 
 import { getLocale } from 'next-intl/server'
-import { createClient } from '@/lib/supabase/server'
 import { redirect } from '@/i18n/navigation'
 
 export type LoginState = {
@@ -10,26 +9,17 @@ export type LoginState = {
 }
 
 /**
- * Anti-enumeração: qualquer falha (senha errada, conta inexistente, bloqueio)
- * volta a MESMA resposta genérica + um error_id. O detalhe fica só no log do
- * servidor (Sentry depois), nunca no cliente, e sem PII no log.
+ * Stub de frontend — sem provedor de auth (decisão em aberto). Por enquanto
+ * qualquer submit apenas navega ao portal mockado. A verificação real de
+ * credenciais entra quando o provedor for escolhido; o desenho anti-enumeração
+ * (mesma resposta genérica + error_id, detalhe só no log do servidor, sem PII)
+ * já está reservado no shape do estado.
  */
 export async function login(
   _prev: LoginState,
   formData: FormData,
 ): Promise<LoginState> {
-  const email = String(formData.get('email') ?? '').trim()
-  const password = String(formData.get('password') ?? '')
-
-  const supabase = await createClient()
-  const { error } = await supabase.auth.signInWithPassword({ email, password })
-
-  if (error) {
-    const errorId = crypto.randomUUID()
-    // Sem e-mail/PII no log — só o código de referência e o code do erro.
-    console.error(`[login] auth_failure error_id=${errorId} code=${error.code ?? 'unknown'}`)
-    return { ok: false, errorId }
-  }
+  void formData
 
   const locale = await getLocale()
   redirect({ href: '/portal', locale })

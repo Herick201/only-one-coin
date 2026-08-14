@@ -9,7 +9,7 @@ type Step = 'credentials' | 'mfa'
 /**
  * Backoffice login — UI only, auth mocked. Two-step on purpose: credentials →
  * MFA. MFA in the flow is what distinguishes the backoffice from the student
- * portal (CLAUDE.md §8). No Supabase wiring yet; "submit" just simulates a
+ * portal (CLAUDE.md §8). No auth wiring yet; "submit" just simulates a
  * pending state and advances the step.
  */
 export function BackofficeLoginForm() {

@@ -8,7 +8,7 @@ import type {
 
 /**
  * Mock portal session for the UI/UX phase. Every value shaped like the future
- * Supabase row it will replace (CLAUDE.md §5). Swapping this for real queries
+ * database row it will replace (CLAUDE.md §5). Swapping this for real queries
  * should not require touching any component.
  *
  * Persona: María Fernanda, 16 (minor → guardian-consent flow is central,

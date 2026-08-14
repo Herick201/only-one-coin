@@ -1,7 +1,7 @@
 /**
  * Domain shapes for the student portal UI (mockup phase).
  *
- * These mirror the future Supabase rows described in CLAUDE.md §4 glossary and
+ * These mirror the future database rows described in CLAUDE.md §4 glossary and
  * §5 architecture — same names, same enums — so the UI can later swap the mock
  * source for real queries without touching a single component.
  *
