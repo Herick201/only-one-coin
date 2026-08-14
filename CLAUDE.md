@@ -64,7 +64,7 @@ Se algo parecer exigir um desses, **pare e pergunte**.
 | App (portal + backoffice) | **Next.js App Router** |
 | API de domínio + workers | **Fastify** (`apps/api`), processo Node separado |
 | Hospedagem | **Netlify** (landing + app) — `apps/api` ainda sem hospedagem decidida (precisa de processo always-on, não cabe em function serverless) |
-| Banco / Auth / Storage | **Postgres + RLS** — decisão fechada. **Provedor gerenciado a decidir** |
+| Banco / Auth / Storage | **Postgres** — decisão fechada. **Provedor gerenciado a decidir** |
 | Fila | **Redis (Upstash) + BullMQ** — workers em `apps/api` |
 | OCR / IA | **Gemini 3.1 Flash-Lite** (nível 1) · modelo de outra família (nível 2) |
 | E-mail | **Brevo**, atrás de adapter |
@@ -76,7 +76,9 @@ Se algo parecer exigir um desses, **pare e pergunte**.
 
 Não trocar nada disso sem me perguntar. Já foram avaliadas e descartadas: Vercel, Clerk, Pinecone, Resend, Cloudflare CDN. O provedor de backend gerenciado que havia sido escolhido foi **removido** e está de novo em aberto (ver "Decisão em aberto" abaixo).
 
-**Decisão em aberto — provedor de backend.** Postgres com RLS é decisão **fechada** (todo o modelo de segurança da §8 depende disso). O que ainda **não** está escolhido é o **provedor gerenciado** de Postgres, auth e storage. Não escolher, não instalar SDK, não escrever código acoplado a um provedor. Se algo travar por isso, **pare e pergunte**.
+**Decisão em aberto — provedor de backend.** Postgres é decisão **fechada**. O que ainda **não** está escolhido é o **provedor gerenciado** de Postgres, auth e storage. Não escolher, não instalar SDK, não escrever código acoplado a um provedor. Se algo travar por isso, **pare e pergunte**.
+
+**Decisão fechada — modelo de autorização.** Autorização vive na **camada de aplicação** (`apps/api`, ver §8), não em RLS. RLS fazia sentido quando o Supabase expunha o banco direto ao cliente via PostgREST; sem Supabase, todo acesso a dado passa por `apps/api`, então quem checa papel/permissão é o usecase/rota, não uma policy de banco. Isso não impede usar RLS depois como camada extra de defesa, mas ela nunca é a única barreira nem a documentada aqui — o mecanismo de aceite é sempre o teste de autorização da aplicação (§8).
 
 ### Monorepo
 
@@ -240,9 +242,9 @@ Cada um tem um mecanismo. O mecanismo é obrigatório, não a boa intenção.
 | Erro | Mecanismo |
 | --- | --- |
 | `.env` no Git | `.gitignore` + gitleaks no CI + só `.env.example` versionado |
-| **`service_role` no bundle do cliente** | check de CI varrendo o build. Catastrófico |
+| **Credencial de banco no bundle do cliente** | check de CI varrendo o build do Next.js. Catastrófico — só `apps/api`/workers têm connection string do Postgres |
 | **E-mail real disparado de staging** | provider recusa destinatário fora da allowlist quando `NODE_ENV !== production` |
-| Tabela sem RLS | teste que enumera tabelas e falha se faltar policy |
+| Rota sem checagem de papel | middleware deny-by-default em `apps/api`; rota sem papel declarado falha no CI |
 | SQL rodado à mão no painel de produção | só migration versionada |
 | Sem rate limiting | middleware deny-by-default; rota sem política declarada falha no CI |
 | Commit direto na `main` | branch protection: PR + CI verde |
@@ -259,10 +261,10 @@ Cada um tem um mecanismo. O mecanismo é obrigatório, não a boa intenção.
 ### Portão de CI (bloqueia merge)
 
 1. gitleaks
-2. varredura do build por `service_role`
+2. varredura do build do Next.js por credencial de banco
 3. `tsc --noEmit`
 4. ESLint (`no-floating-promises`, `no-literal-string`)
-5. teste de RLS — toda tabela com policy
+5. teste de autorização — toda rota de `apps/api` declara papel exigido; teste tenta acessar com papel errado e exige falha
 6. migrations em banco limpo
 7. validação de env com zod
 
@@ -286,10 +288,10 @@ Cada um tem um mecanismo. O mecanismo é obrigatório, não a boa intenção.
 
 ## 8. Segurança
 
-- RLS em **todas** as tabelas, deny by default, com teste automatizado
-- `service_role` só em rota de servidor e worker
+- Autorização **deny-by-default na camada de aplicação** (`apps/api`, Caminho B — ver §3): toda rota/usecase declara explicitamente o(s) papel(is) permitido(s); rota sem declaração falha o CI. Teste automatizado cobre toda rota sensível, tentando acessar com papel errado e exigindo falha.
+- Só `apps/api` (e workers) têm credencial de acesso ao Postgres. O Next.js (`apps/app`) nunca fala direto com o banco — tudo passa pela API.
 - Bucket de comprovantes privado, signed URL de 5 min, caminho escopado por aluno, acesso registrado
-- Docente vê só as próprias turmas — **via RLS**, não filtro de aplicação
+- Docente vê só as próprias turmas — checagem explícita no usecase (`teacher_id` do usuário autenticado comparado ao dado), nunca um filtro montado a partir de input do cliente
 - Nenhum id vindo do cliente é confiado (anti-IDOR)
 - MFA obrigatório: `admin`, `treasury`, `mass_approver`
 - Anti-enumeração: login e recuperação de senha respondem igual para conta existente e inexistente
@@ -302,26 +304,26 @@ Papéis: `admin`, `coordinator`, `teacher`, `treasury`, `mass_approver`. Aluno e
 
 ### Pontos de entrada separados (portal ≠ backoffice)
 
-Um **único backend de auth** (um só provedor de auth, um só registro de usuários) — a separação de acesso é **RLS + `role`**, nunca a tela. Mas **duas telas de login distintas**, pelo mesmo app Next.js (não são dois deploys):
+Um **único backend de auth** (um só provedor de auth, um só registro de usuários) — a separação de acesso é a checagem de **`role`** em `apps/api`, nunca a tela. Mas **duas telas de login distintas**, pelo mesmo app Next.js (não são dois deploys):
 
 - **Portal do aluno** — `/` ou `/portal`, linkado da landing, indexável, sem MFA. **Sem auto-cadastro**: o aluno recebe credenciais por e-mail após aprovação, não se registra.
 - **Backoffice** — path discreto (`/backoffice`), **nunca linkado na landing nem indexável**, MFA no fluxo. É defesa em profundidade, não a defesa.
-- **Docente** entra pelo backoffice, mas vê só as próprias turmas via RLS.
-- **Redirect por `role` sempre server-side.** O cliente nunca escolhe "sou aluno/sou admin"; o `role` vem do banco.
+- **Docente** entra pelo backoffice, mas vê só as próprias turmas — checagem no usecase, não filtro solto.
+- **Redirect por `role` sempre server-side.** O cliente nunca escolhe "sou aluno/sou admin"; o `role` vem do banco, lido por `apps/api`.
 
 ### Gestão de cargos — anti-escalada de privilégio
 
 O `role` **nunca** mora em lugar que o próprio usuário escreve. Regras duras:
 
-- `role` vive em tabela protegida (ex.: `user_roles`) — RLS **sem grant de `UPDATE` a ninguém** via API, nem ao próprio dono, nem a admin comum.
-- **Nunca** guardar `role` em `user_metadata` (o usuário edita). Custom claim, se usado, é preenchido **server-side** (Auth Hook) a partir da tabela protegida.
-- RLS lê o `role` do banco via `auth.uid()`, **nunca** de header/JWT montado pelo cliente.
+- `role` vive em tabela protegida (ex.: `user_roles`). `apps/api` **não expõe rota genérica de `UPDATE`** nela — a única forma de mudar `role` é um usecase dedicado de promoção (não um `PATCH` de usuário comum), nem para o próprio dono, nem para admin comum fora desse fluxo.
+- **Nunca** guardar `role` em algo editável pelo usuário (ex.: `user_metadata` de provedores de auth que expõem isso). Se o provedor de auth suportar custom claim, ele é preenchido **server-side**, a partir da tabela protegida.
+- `apps/api` lê o `role` a partir do registro do usuário autenticado no banco a cada requisição sensível — **nunca** de header/JWT montado pelo cliente.
 - Toda mudança de cargo → `audit_log` append-only.
 
 **Modelo de criação de staff (fechado):**
 
 1. **Bootstrap:** o primeiro `admin` nasce por **migration versionada**.
-2. **Depois:** **só `admin`** cria/promove staff, pela UI, via função `SECURITY DEFINER` que exige **re-autenticação MFA fresca** do admin. Nenhum outro papel promove ninguém.
+2. **Depois:** **só `admin`** cria/promove staff, pela UI, via usecase dedicado (`packages/domain`) que exige **re-autenticação fresca** do admin. Nenhum outro papel promove ninguém. (Sob RLS/Supabase isso seria uma função `SECURITY DEFINER` no banco — agora é um usecase em `apps/api`, mesma regra, camada diferente.)
 
 ---
 
@@ -334,3 +336,17 @@ O `role` **nunca** mora em lugar que o próprio usuário escreve. Regras duras:
 - Antes de escrever código novo, diga em uma linha o que vai fazer e onde.
 - Se um pedido meu contradisser este arquivo, **avise antes de executar**.
 - Prefira explicitar o trade-off a escolher em silêncio.
+
+---
+
+## 10. Documentação viva
+
+**Nenhuma decisão de arquitetura termina no código.** Toda sessão que fecha, muda ou reverte uma decisão — de stack, de modelo de autorização, de RBAC, de fluxo de negócio — só está pronta quando a documentação reflete isso. "Depois eu atualizo" não é aceitável: a doc desatualizada é o que faz a próxima sessão (minha ou sua) tomar decisão em cima de premissa errada.
+
+- **`CLAUDE.md`** é a fonte da verdade — qualquer decisão fechada (stack, arquitetura, regra de negócio confirmada) vive aqui, sempre que a mudança tocar algo que já está neste arquivo.
+- **`docs/ARCHITECTURE.md`** guarda o detalhe que não cabe no `CLAUDE.md` sem inchar (ex.: tabela completa de RBAC, comparação de caminhos de decisão, checklist de segurança) — `CLAUDE.md` referencia, não duplica.
+- **`README.md`** reflete o **estado real do repo** — o que existe hoje, não o plano. Se `Estado atual` descreve algo que não é mais verdade, é bug de documentação, trato como trato bug de código.
+- **`docs/ROADMAP.md`** é atrelado ao contrato — sinalizar quando ficar desatualizado, **nunca editar sem confirmação minha**.
+- Doc nova (ex.: `docs/ARCHITECTURE.md`) é linkada na seção "Documentos" do `README.md` no mesmo commit que a cria — doc órfã não existe pra quem não sabe procurar.
+
+Antes de considerar uma sessão pronta: **alguma doc ficou desatualizada com o que acabei de fazer?** Se sim, atualiza antes de terminar, não depois.
