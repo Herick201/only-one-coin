@@ -15,10 +15,6 @@ build/
 .netlify/
 .turbo/
 
-# Supabase local
-**/supabase/.branches/
-**/supabase/.temp/
-
 # Logs
 *.log
 npm-debug.log*
