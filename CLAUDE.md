@@ -62,18 +62,19 @@ Se algo parecer exigir um desses, **pare e pergunte**.
 | --- | --- |
 | Site público | **Astro** (estático) |
 | App (portal + backoffice) | **Next.js App Router** |
-| Hospedagem | **Netlify** (dois sites, uma conta) |
+| API de domínio + workers | **Fastify** (`apps/api`), processo Node separado |
+| Hospedagem | **Netlify** (landing + app) — `apps/api` ainda sem hospedagem decidida (precisa de processo always-on, não cabe em function serverless) |
 | Banco / Auth / Storage | **Postgres + RLS** — decisão fechada. **Provedor gerenciado a decidir** |
-| Fila | **pgmq** + Netlify Background Function (15 min) |
+| Fila | **Redis (Upstash) + BullMQ** — workers em `apps/api` |
 | OCR / IA | **Gemini 3.1 Flash-Lite** (nível 1) · modelo de outra família (nível 2) |
 | E-mail | **Brevo**, atrás de adapter |
-| Rate limit + idempotência | **Upstash Redis** (borda) |
+| Rate limit + idempotência | **Upstash Redis** (borda) — mesma instância usada pela fila |
 | Captcha | **Cloudflare Turnstile** |
 | Backup | `pg_dump` → **Cloudflare R2** via Scheduled Function |
 | Observabilidade | **Sentry** + **PostHog** (EU Cloud) |
 | Realtime | a decidir com o provedor de backend |
 
-Não trocar nada disso sem me perguntar. Já foram avaliadas e descartadas: Vercel, Clerk, Pinecone, Resend, Cloudflare CDN, fila no Redis. O provedor de backend gerenciado que havia sido escolhido foi **removido** e está de novo em aberto (ver "Decisão em aberto" abaixo).
+Não trocar nada disso sem me perguntar. Já foram avaliadas e descartadas: Vercel, Clerk, Pinecone, Resend, Cloudflare CDN. O provedor de backend gerenciado que havia sido escolhido foi **removido** e está de novo em aberto (ver "Decisão em aberto" abaixo).
 
 **Decisão em aberto — provedor de backend.** Postgres com RLS é decisão **fechada** (todo o modelo de segurança da §8 depende disso). O que ainda **não** está escolhido é o **provedor gerenciado** de Postgres, auth e storage. Não escolher, não instalar SDK, não escrever código acoplado a um provedor. Se algo travar por isso, **pare e pergunte**.
 
@@ -83,7 +84,10 @@ Não trocar nada disso sem me perguntar. Já foram avaliadas e descartadas: Verc
 apps/
   landing/           Astro — site público
   app/               Next.js — portal + backoffice
+  api/               Fastify — expõe @ooc/domain via HTTP + workers de fila (BullMQ/Redis)
 packages/
+  domain/            domínio DDD puro (entidades, usecases, portas de repositório) — sem framework, sem infra
+  queue/             contrato de fila compartilhado (jobs, producers) — usado por quem publica e por quem consome
   db/                migrations + seed (CLI do provedor a decidir)
   notifications/     adapter de e-mail + outbox
   ocr/               pipeline de extração
@@ -205,6 +209,27 @@ interface NotificationProvider {
 ```
 
 Templates versionados no repositório, não desenhados só no painel do Brevo.
+
+### Domínio e fila (`packages/domain`, `packages/queue`, `apps/api`)
+
+`packages/domain` é DDD puro — sem Fastify, sem provedor de banco, sem Redis. Padrão hexagonal (portas e adaptadores):
+
+- `BaseModel` (entidade com `id`) e `BaseUseCase<TInput, TOutput>` (`abstract run()`) são a base de toda entidade/caso de uso.
+- Repositório no domínio é **só a interface** (`IExampleRepository extends IBaseRepository<T>`) — a porta. A implementação concreta (hoje `InMemoryExampleRepository`, stub) mora na infra de quem consome, em `apps/api/src/infra/persistence/`. Isso é proposital: `packages/domain` não pode saber qual provedor de banco existe por trás — e hoje isso é ainda mais verdade, porque o provedor gerenciado está em aberto (§3).
+- Agrupamento por **contexto**, não por tipo de arquivo: `domain/example/Example.ts`, `ExampleRepository.ts`, `CreateExampleUseCase.ts` na mesma pasta — não `entities/`, `value-objects/` genéricos.
+
+`apps/api` é o processo Fastify que expõe `@ooc/domain` via HTTP e roda os workers de fila. Hoje são dois entrypoints separados, pensados pra escalar HTTP e worker de forma independente:
+
+- `src/index.ts` — servidor HTTP.
+- `src/worker.ts` — workers BullMQ.
+
+**Ponto em aberto:** essa separação em dois processos só se paga se cada um puder escalar/reiniciar sozinho. Se a hospedagem escolhida (ver ponto em aberto abaixo) for um único processo *always-on* de qualquer forma, pode fazer mais sentido rodar os workers **dentro do mesmo processo** da API (um só entrypoint) em vez de manter dois. Não decidir sozinho — depende de onde `apps/api` vai rodar.
+- `container.ts` é o composition root: monta `config` (env validada com zod), repositórios e usecases, sem lib de DI — só uma função que retorna um objeto `container` importado pelas rotas.
+- Rotas usam um `RouteBuilder` fluente (`.body()/.params()/.query()/.response()/.handler()`) que gera o schema Fastify+zod e a doc do Swagger (`/docs`, só fora de produção) junto.
+
+`packages/queue` é o contrato compartilhado de fila: schema zod do payload de cada job (`jobs/`) + helpers tipados pra enfileirar (`producers/`). Usado tanto por quem produz (ex.: `apps/app`, no futuro) quanto por quem consome (workers em `apps/api`) — evita duplicar nome de fila/schema nos dois lados. Reaproveita a mesma instância Upstash Redis já usada para rate limit/idempotência (§3), não soma provedor novo.
+
+**Ponto em aberto:** onde `apps/api` roda em produção. Workers BullMQ precisam de processo *always-on* — não cabe no modelo serverless do Netlify (nem nas Background Functions, que têm teto de execução). Ainda não decidido; local roda com `pnpm dev:api` / `pnpm dev:api:worker`. Build de produção (bundling, `dist/`, etc.) também fica pra quando essa decisão de hospedagem for tomada.
 
 ---
 
