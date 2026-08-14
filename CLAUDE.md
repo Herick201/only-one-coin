@@ -78,7 +78,7 @@ Não trocar nada disso sem me perguntar. Já foram avaliadas e descartadas: Verc
 
 **Decisão em aberto — provedor de backend.** Postgres é decisão **fechada**. O que ainda **não** está escolhido é o **provedor gerenciado** de Postgres, auth e storage. Não escolher, não instalar SDK, não escrever código acoplado a um provedor. Se algo travar por isso, **pare e pergunte**.
 
-**Decisão fechada — modelo de autorização.** Autorização vive na **camada de aplicação** (`apps/api`, ver §8), não em RLS. RLS fazia sentido quando o Supabase expunha o banco direto ao cliente via PostgREST; sem Supabase, todo acesso a dado passa por `apps/api`, então quem checa papel/permissão é o usecase/rota, não uma policy de banco. Isso não impede usar RLS depois como camada extra de defesa, mas ela nunca é a única barreira nem a documentada aqui — o mecanismo de aceite é sempre o teste de autorização da aplicação (§8).
+**Decisão fechada — modelo de autorização.** Autorização vive na **camada de aplicação** (`apps/api`, ver §8), não em RLS — motivo e comparação de caminhos em `docs/ARCHITECTURE.md` §2. RLS pode voltar depois como camada extra de defesa, mas nunca como o mecanismo de aceite documentado.
 
 ### Monorepo
 
@@ -214,24 +214,7 @@ Templates versionados no repositório, não desenhados só no painel do Brevo.
 
 ### Domínio e fila (`packages/domain`, `packages/queue`, `apps/api`)
 
-`packages/domain` é DDD puro — sem Fastify, sem provedor de banco, sem Redis. Padrão hexagonal (portas e adaptadores):
-
-- `BaseModel` (entidade com `id`) e `BaseUseCase<TInput, TOutput>` (`abstract run()`) são a base de toda entidade/caso de uso.
-- Repositório no domínio é **só a interface** (`IExampleRepository extends IBaseRepository<T>`) — a porta. A implementação concreta (hoje `InMemoryExampleRepository`, stub) mora na infra de quem consome, em `apps/api/src/infra/persistence/`. Isso é proposital: `packages/domain` não pode saber qual provedor de banco existe por trás — e hoje isso é ainda mais verdade, porque o provedor gerenciado está em aberto (§3).
-- Agrupamento por **contexto**, não por tipo de arquivo: `domain/example/Example.ts`, `ExampleRepository.ts`, `CreateExampleUseCase.ts` na mesma pasta — não `entities/`, `value-objects/` genéricos.
-
-`apps/api` é o processo Fastify que expõe `@ooc/domain` via HTTP e roda os workers de fila. Hoje são dois entrypoints separados, pensados pra escalar HTTP e worker de forma independente:
-
-- `src/index.ts` — servidor HTTP.
-- `src/worker.ts` — workers BullMQ.
-
-**Ponto em aberto:** essa separação em dois processos só se paga se cada um puder escalar/reiniciar sozinho. Se a hospedagem escolhida (ver ponto em aberto abaixo) for um único processo *always-on* de qualquer forma, pode fazer mais sentido rodar os workers **dentro do mesmo processo** da API (um só entrypoint) em vez de manter dois. Não decidir sozinho — depende de onde `apps/api` vai rodar.
-- `container.ts` é o composition root: monta `config` (env validada com zod), repositórios e usecases, sem lib de DI — só uma função que retorna um objeto `container` importado pelas rotas.
-- Rotas usam um `RouteBuilder` fluente (`.body()/.params()/.query()/.response()/.handler()`) que gera o schema Fastify+zod e a doc do Swagger (`/docs`, só fora de produção) junto.
-
-`packages/queue` é o contrato compartilhado de fila: schema zod do payload de cada job (`jobs/`) + helpers tipados pra enfileirar (`producers/`). Usado tanto por quem produz (ex.: `apps/app`, no futuro) quanto por quem consome (workers em `apps/api`) — evita duplicar nome de fila/schema nos dois lados. Reaproveita a mesma instância Upstash Redis já usada para rate limit/idempotência (§3), não soma provedor novo.
-
-**Ponto em aberto:** onde `apps/api` roda em produção. Workers BullMQ precisam de processo *always-on* — não cabe no modelo serverless do Netlify (nem nas Background Functions, que têm teto de execução). Ainda não decidido; local roda com `pnpm dev:api` / `pnpm dev:api:worker`. Build de produção (bundling, `dist/`, etc.) também fica pra quando essa decisão de hospedagem for tomada.
+Regra de fronteira, vale pra qualquer contexto novo (não só `example`): `packages/domain` é DDD puro (portas e adaptadores) — nunca importa Fastify, provedor de banco ou Redis, só define a **interface** de repositório. A implementação concreta mora na infra de quem consome (`apps/api/src/infra/`). Detalhe de padrão (`BaseModel`/`BaseUseCase`, `RouteBuilder`, `container.ts`, entrypoints) está em `packages/domain/README.md` e `apps/api/README.md` — não duplicado aqui. Estrutura e dependência entre os pacotes: `docs/ARCHITECTURE.md` §1.
 
 ---
 
