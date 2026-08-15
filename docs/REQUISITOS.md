@@ -1,4 +1,4 @@
-# Sistema de Gestão Acadêmica — Requisitos (rev. 2)
+# Sistema de Gestão Acadêmica — Requisitos (rev. 3)
 
 > Instituto/academia de cursos **no Peru**. Este documento organiza o escopo:
 > fluxo principal, roadmap por fases (8 fases / 15 semanas) e Requisitos
@@ -8,6 +8,11 @@
 > normativa. Toda regra acadêmica ou financeira (limites de falta, número de
 > trancamentos, prazos etc.) entra como **política configurável da instituição**,
 > nunca como exigência legal.
+>
+> **Regras de negócio detalhadas** (catálogo, preços, taxas de procedimentos,
+> política de certificação, funil atual) ficam em
+> [`REGRAS-NEGOCIO.md`](./REGRAS-NEGOCIO.md), levantadas do processo real de
+> vendas por WhatsApp — não duplicadas neste documento.
 
 ## 0. Contexto e premissas
 
@@ -18,7 +23,14 @@
   Izipay, Niubiz ou Mercado Pago).
 - **Tipo de negócio:** instituto de cursos que **emite certificados** (aparece na
   Fase 4). Estrutura assumida: `Curso → Módulos → Turmas` (uma turma é uma
-  instância com horário e professor).
+  instância com horário e professor). Confirmado no processo real: o curso mais
+  detalhado (Inglês Básico) tem 4 módulos, cada um vendável e cursável
+  separadamente — o modelo `Curso → Módulos → Turmas` bate com a operação atual.
+- **Catálogo real hoje:** inglês, francês, português, coreano, alemão, chinês
+  mandarim e italiano — mais idiomas do que a descrição curta do negócio sugere.
+  Regras de preço, procedimentos com taxa, faixas etárias e política de
+  certificação levantadas do processo atual (WhatsApp) estão em
+  [`REGRAS-NEGOCIO.md`](./REGRAS-NEGOCIO.md) — não duplicadas aqui.
 - **Decisões em aberto** (ver §7): diferença exata entre *transferência de curso*,
   *mudança de curso* e *mudança de horário*; e o papel do *responsável*.
 
@@ -285,15 +297,32 @@ responsável, billing e comunicação.
 1. **Transferência de curso × mudança de curso × mudança de horário** — as três se
    sobrepõem. Proposta deste doc: horário = mesma turma/curso, outro horário;
    transferência = outra turma do mesmo curso; mudança = outro curso. Confirmar.
+   *Pista do processo atual (ver `REGRAS-NEGOCIO.md` §5):* "traspaso" hoje é
+   gratuito e distinto de "cambio de horário" (pago, só para Inglês Básico
+   Regular, e só antes do início do módulo ou até a 3ª aula); "cambio de curso"
+   não aparece como procedimento nomeado no processo atual — pode ser um conceito
+   novo da plataforma, não uma prática já existente.
 2. **Certificado**: por curso completo, por módulo, ou ambos? Exige quitação
-   financeira?
+   financeira? *Processo atual emite só ao final do curso (não por módulo), sem
+   menção a quitação financeira como condição — mas o processo atual não cobre
+   inadimplência, então isso pode não ter sido testado.*
 3. **Responsável**: aplica-se a menores, a responsável financeiro de adultos, ou
    ambos?
 4. **Pasarela**: qual entra na Etapa 1 (Culqi tem a integração mais rápida)?
 5. **Recorrência**: mensalidade é cobrança recorrente tokenizada ou boletos/links
    avulsos por mês?
+6. ⚠️ **Conflito com regra fechada de "pagamento único, sem parcelamento, sem
+   desconto" (`CLAUDE.md` §1):** o processo atual vende o Inglês Básico por
+   módulo (S/20/mês) e tem promoções de continuação (ver `REGRAS-NEGOCIO.md`
+   §4). Confirmar com o cliente se esse modelo é para descontinuar na migração
+   ou se precisa virar exceção documentada — **não implementar nenhuma das duas
+   coisas sem essa confirmação.**
+7. **Procedimentos administrativos pagos** (mudança de horário, congelamento,
+   repetir módulo, constância de matrícula — ver `REGRAS-NEGOCIO.md` §5): fluxo
+   de pagamento avulso, fora da matrícula original. Confirmar se usam o mesmo
+   `payments`/RF18 ou se são um domínio à parte no backoffice.
 
 ---
 
-*rev. 2 — contexto Peru, sem tratar de legislação. Ajustar §7 antes de detalhar
-as fases.*
+*rev. 3 — contexto Peru, sem tratar de legislação. Regras de negócio detalhadas
+movidas para `REGRAS-NEGOCIO.md`. Ajustar §7 antes de detalhar as fases.*
