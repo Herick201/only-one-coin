@@ -1,4 +1,5 @@
-import { randomUUID } from "node:crypto";
+// TODO: switch to native crypto.randomUUIDv7() once engines.node requires >=26 (LTS ~out/2026)
+import { v7 as uuid } from "uuid";
 import { z } from "zod";
 import { BaseModel } from "../shared/base/BaseModel.js";
 
@@ -28,7 +29,7 @@ export class Example extends BaseModel {
     }
 
     return new Example({
-      id: randomUUID(),
+      id: uuid(),
       ...result.data,
     });
   }
