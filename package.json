@@ -6,13 +6,22 @@
     "node": ">=20"
   },
   "packageManager": "pnpm@11.17.0",
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.3"
+  },
   "scripts": {
     "dev": "pnpm --filter @ooc/landing dev",
     "dev:landing": "pnpm --filter @ooc/landing dev",
     "dev:app": "pnpm --filter @ooc/app dev",
+    "dev:api": "pnpm --filter @ooc/api dev",
+    "dev:api:worker": "pnpm --filter @ooc/api dev:worker",
     "build": "pnpm -r build",
     "build:landing": "pnpm --filter @ooc/landing build",
     "build:app": "pnpm --filter @ooc/app build",
-    "typecheck:app": "pnpm --filter @ooc/app typecheck"
+    "typecheck:app": "pnpm --filter @ooc/app typecheck",
+    "typecheck:domain": "pnpm --filter @ooc/domain typecheck",
+    "typecheck:queue": "pnpm --filter @ooc/queue typecheck",
+    "typecheck:api": "pnpm --filter @ooc/api typecheck"
   }
 }
