@@ -30,7 +30,7 @@ entra aqui ou vira sessão nova.
 - Nada de string em espanhol dentro de `.ts` / `.tsx` — sempre em `es-PE.json`
 - Toda mudança de banco é migration versionada
 - Migration aplicada em staging antes de produção, sempre
-- Nenhuma feature entra sem policy de RLS e sem rate limit declarado
+- Nenhuma feature entra sem checagem de autorização por papel declarada e sem rate limit declarado
 
 ---
 
@@ -42,17 +42,17 @@ Sem isso, tudo depois fica mais caro. Não pule nem comprima.
 | --- | --- | --- | --- |
 | ☐ 1 | **Repositório e scaffold** | `git init`, pnpm workspaces, TypeScript strict, `apps/landing` (Astro) e `apps/app` (Next) subindo em branco, `packages/*` criados vazios | `pnpm dev` sobe os dois apps localmente e o repo está no GitHub |
 | ☐ 2 | **Config e ambiente** | Validação de env com zod no boot, `.env.example`, `.gitignore`, zero URL literal | App recusa subir com variável faltando, com mensagem clara |
-| ☐ 3 | **Banco Postgres local** | Postgres local rodando (provedor a decidir), CLI de migrations configurado, migration vazia inicial aplicando | `reset` do banco roda do zero e reaplica as migrations |
+| ☐ 3 | **Banco Postgres local** | Postgres local rodando (Docker — staging/produção usam Neon), CLI de migrations configurado (Postgres puro, Neon não exige CLI própria), migration vazia inicial aplicando | `reset` do banco roda do zero e reaplica as migrations |
 | ☐ 4 | **Migration: modelo acadêmico** | `academic_periods`, `courses`, `plans`, `plan_prices`, `class_groups` com `CHECK (seats_taken <= capacity)` | `db reset` roda limpo; `plan_prices` versionado por vigência |
 | ☐ 5 | **Migration: pessoas e papéis** | `students`, `guardians`, `consents`, `teachers`, `user_roles`, `pg_trgm` para busca | Busca por nome/DNI/telefone funciona; sem grant de DELETE em `students` |
 | ☐ 6 | **Migration: matrícula e pagamento** | `enrollments`, `payments` (idempotency key única, `amount_cents`), `payment_receipts` (índice único por operação e por `image_phash`), `waitlist_entries` | Máquina de estados documentada; tentar inserir pagamento duplicado falha no banco |
 | ☐ 7 | **Migration: operação** | `outbox`, `campaigns`, `audit_log` (append-only), `attendance`, `grades`, `materials`, `certificates` | `audit_log` sem grant de UPDATE/DELETE nem para admin |
-| ☐ 8 | **RLS completa + suíte de teste** | Deny by default em toda tabela, policies por papel | Teste enumera tabelas e falha se faltar policy; teste tenta ler dado de outro papel e falha corretamente |
+| ☐ 8 | **Autorização deny-by-default + suíte de teste** | Middleware deny-by-default em `apps/api`, toda rota/usecase declara o papel exigido | Teste enumera rotas e falha se faltar declaração de papel; teste tenta acessar com papel errado e falha corretamente |
 | ☐ 9 | **Seed** | Script com dado fictício: 500 alunos, 3 períodos, ~40 turmas em vários idiomas, 200 comprovantes | Idempotente, com comando de reset. Zero dado real |
-| ☐ 10 | **Fila e outbox** | `pgmq`, worker em Background Function com retry/backoff/DLQ, adapter de notificação, `providers/brevo.ts` stub | Job falho vai para DLQ e não trava a fila. **Guarda de e-mail ativa: fora de produção só allowlist** |
+| ☐ 10 | **Fila e outbox** | BullMQ (Redis/Upstash) via `packages/queue`, worker rodando em `apps/api` (Fly.io) com retry/backoff/DLQ, adapter de notificação, `providers/brevo.ts` stub | Job falho vai para DLQ e não trava a fila. **Guarda de e-mail ativa: fora de produção só allowlist** |
 | ☐ 11 | **i18n** | `packages/i18n` com `es-PE.json`, lint `no-literal-string` nos diretórios de UI | Build quebra ao introduzir string crua |
-| ☐ 12 | **CI — 7 portões** | GitHub Actions: gitleaks, varredura de `service_role`, `tsc`, ESLint, teste de RLS, migrations em banco limpo, validação de env | PR com segredo ou tabela sem RLS é bloqueado |
-| ☐ 13 | **Ambientes** | Banco Postgres gerenciado de staging (provedor a decidir), `netlify.toml` com contextos, env por contexto, branch protection na `main`, `docs/ENVIRONMENTS.md` | Push na `staging` publica em `staging.aula.onlyonecoin.edu.pe`; PR gera preview |
+| ☐ 12 | **CI — 7 portões** | GitHub Actions: gitleaks, varredura do build do Next.js por credencial de banco, `tsc`, ESLint (`no-floating-promises`, `no-literal-string`), teste de autorização, migrations em banco limpo, validação de env | PR com segredo ou rota sem papel declarado é bloqueado |
+| ☐ 13 | **Ambientes** | Banco Postgres gerenciado de staging (Neon), `apps/api` publicado no Fly.io, `netlify.toml` com contextos (landing+app), env por contexto, branch protection na `main`, `docs/ENVIRONMENTS.md` | Push na `staging` publica em `staging.aula.onlyonecoin.edu.pe`; PR gera preview |
 
 > **Marco:** protótipo navegável aprovado pelo cliente. Fecha a Fase 0 do contrato.
 
@@ -104,7 +104,7 @@ Sem isso, tudo depois fica mais caro. Não pule nem comprima.
 | ☐ 33 | **Aprovação em massa** | Seleção dos casos verdes, ação em lote, confirmação de vaga, disparo de credenciais | Aprovar 100 pagamentos em uma ação, com auditoria de cada um |
 | ☐ 34 | **Gestão de alunos** | Ficha única, busca `pg_trgm`, filtros, edição, suspensão, exportação | Busca por nome parcial e por DNI retorna em < 300ms com 30k alunos no seed |
 | ☐ 35 | **Turmas e períodos** | CRUD de turmas, janela de inscrição, cupos, lista de espera, **duplicar período anterior** | Duplicar cria ~40 turmas zerando datas e vagas |
-| ☐ 36 | **Docentes** | Perfis, atribuição de turmas, acesso restrito via RLS | Docente vê exatamente as próprias turmas, comprovado por teste |
+| ☐ 36 | **Docentes** | Perfis, atribuição de turmas, acesso restrito checado no usecase (`teacher_id` do usuário autenticado comparado ao dado, nunca filtro de input) | Docente vê exatamente as próprias turmas, comprovado por teste |
 | ☐ 37 | **Frequência e notas** | Registro por sessão, interface para celular do docente, tolerante a conexão ruim | Funciona em 3G lento; perda de conexão não perde o registro |
 | ☐ 38 | **Conciliação bancária** | Upload de extrato CSV, casamento por número de operação, relatório de divergência | Extrato de 500 linhas casado, com os não conciliados listados |
 | ☐ 39 | **Relatórios e tablero** | Matrículas por período/curso/região, ingressos, retenção, impacto social, materialized views noturnas | Relatório carrega em < 2s; agregação não é ao vivo |
@@ -116,7 +116,7 @@ Sem isso, tudo depois fica mais caro. Não pule nem comprima.
 
 | # | Sessão | Entregável | Pronto quando |
 | --- | --- | --- | --- |
-| ☐ 41 | **Acesso do aluno** | Registro, login, verificação de e-mail, recuperação de senha, política de senha, rate limit | Aluno só vê os próprios dados, comprovado por teste de RLS |
+| ☐ 41 | **Acesso do aluno** | Login com credencial recebida por e-mail (sem auto-cadastro, `CLAUDE.md` §8), recuperação de senha, política de senha, rate limit, anti-enumeração | Aluno só vê os próprios dados, comprovado por teste de autorização |
 | ☐ 42 | **Painel do aluno** | Cursos, horário, data de início, enlace à aula, estado de matrícula e pagamento | Constancia visível na tela, sem depender do e-mail |
 | ☐ 43 | **Materiais e reenvio** | Materiais e links de gravação, carga de novo comprovante pelo portal | Nenhum vídeo no Storage — só link externo |
 | ☐ 44 | **Notas, frequência e perfil** | Visualização de notas e avanço, perfil editável, dados do apoderado | — |
@@ -153,8 +153,8 @@ Sem isso, tudo depois fica mais caro. Não pule nem comprima.
 | # | Sessão | Entregável | Pronto quando |
 | --- | --- | --- | --- |
 | ☐ 54 | **Importador da base** | Import com **dry-run**, relatório de erro linha por linha, deduplicação | Planilha real do cliente importada em dry-run com relatório revisado |
-| ☐ 55 | **Backup e restauração** | `pg_dump` noturno cifrado para R2 via Scheduled Function, **restauração testada** | Backup restaurado em staging com sucesso, documentado |
-| ☐ 56 | **Segurança final** | Headers, CSP, revisão de RLS, scrubbing de PII no Sentry e PostHog, retenção de imagens | Checklist da seção 8 do `CLAUDE.md` inteiro verde |
+| ☐ 55 | **Backup e restauração** | `pg_dump` noturno cifrado para Tigris via Scheduled Function (mesmo storage do comprovante), **restauração testada** | Backup restaurado em staging com sucesso, documentado |
+| ☐ 56 | **Segurança final** | Headers, CSP, revisão de autorização por rota, scrubbing de PII no Sentry e PostHog, retenção de imagens | Checklist da seção 8 do `CLAUDE.md` inteiro verde |
 | ☐ 57 | **Teste de carga** | k6 com relatório de p50/p95/p99 e ponto de saturação | Relatório gerado — é entregável do contrato |
 | ☐ 58 | **Capacitação e docs** | Manual do backoffice em espanhol, 2 sessões gravadas | Manual entregue; sessões gravadas e enviadas |
 | ☐ 59 | **Go-live** | Migração real, cutover do DNS, monitoramento, aquecimento de domínio já em curso desde a Fase 1 | Primeira matrícula real aprovada de ponta a ponta |
@@ -172,7 +172,7 @@ Ordem de corte, da primeira à última coisa a sacrificar:
 3. Push (51)
 4. Conciliação bancária (38) → pós-lançamento, mas **antes da segunda temporada**
 
-**Nunca cortar:** Fase 0, OCR e antifraude (26–29), RLS (8), backup restaurado (55).
+**Nunca cortar:** Fase 0, OCR e antifraude (26–29), autorização (8), backup restaurado (55).
 
 ---
 
