@@ -35,6 +35,9 @@ export type BoIconName =
   | 'trend-up'
   | 'guardian'
   | 'menu'
+  | 'plus'
+  | 'sort'
+  | 'chevron-down'
 
 const paths: Record<BoIconName, ReactElement> = {
   dashboard: <path d="M4 4h7v7H4zM13 4h7v4h-7zM13 10h7v10h-7zM4 13h7v7H4z" />,
@@ -87,6 +90,9 @@ const paths: Record<BoIconName, ReactElement> = {
     <path d="M12 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM6 20a6 6 0 0 1 12 0M19 4l1.5 1.5L19 7" />
   ),
   menu: <path d="M4 7h16M4 12h16M4 17h16" />,
+  plus: <path d="M12 5v14M5 12h14" />,
+  sort: <path d="M7 4v16m0 0-3-3m3 3 3-3M17 20V4m0 0-3 3m3-3 3 3" />,
+  'chevron-down': <path d="m6 9 6 6 6-6" />,
 }
 
 export function BoIcon({

@@ -1,0 +1,117 @@
+import { notFound } from 'next/navigation'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { Link } from '@/i18n/navigation'
+import { getClassGroup } from '@/lib/backoffice/mock-data'
+import {
+  addBusinessDays,
+  businessDaysUntil,
+  CERTIFICATE_DEADLINE_BUSINESS_DAYS,
+} from '@/lib/backoffice/certificates'
+import { formatDate, type Locale } from '@/lib/format'
+import {
+  Card,
+  Field,
+  Meter,
+  MockNotice,
+  StatusBadge,
+} from '@/components/backoffice/ui'
+import { classGroupTone, seatPressureTone } from '@/components/backoffice/status-tone'
+import { BoIcon } from '@/components/backoffice/icons'
+import { ClassGroupCertificates } from './class-group-certificates'
+
+/**
+ * One class group. The deadline is computed here, on the server, and handed
+ * down as a prop: doing it inside the client component would let the server and
+ * the client disagree across a day boundary.
+ */
+export default async function ClassGroupDetailPage({
+  params,
+}: {
+  params: Promise<{ locale: string; classGroupId: string }>
+}) {
+  const { locale, classGroupId } = await params
+  setRequestLocale(locale)
+  const t = await getTranslations('bo')
+
+  const group = getClassGroup(classGroupId)
+  if (!group) notFound()
+
+  const deadline = addBusinessDays(
+    group.endDate,
+    CERTIFICATE_DEADLINE_BUSINESS_DAYS,
+  )
+  const businessDaysLeft = businessDaysUntil(deadline, new Date())
+
+  return (
+    <div className="flex flex-col gap-5">
+      <Link
+        href="/backoffice/class-groups"
+        className="inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-muted-foreground transition hover:text-ink"
+      >
+        <BoIcon name="arrow-left" size={16} />
+        {t('class_group.back_to_list')}
+      </Link>
+
+      <Card className="p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="truncate text-xl font-semibold tracking-tight text-ink">
+              {group.courseName}
+            </h1>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              {`${group.classGroupName} · ${group.academicPeriodName}`}
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge
+              tone={classGroupTone[group.status]}
+              label={t(`class_group_status.${group.status}`)}
+            />
+            <StatusBadge
+              tone="neutral"
+              dot={false}
+              label={t(`modality.${group.modality}`)}
+            />
+          </div>
+        </div>
+
+        <dl className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Field label={t('class_group.field_teacher')}>{group.teacherName}</Field>
+          <Field label={t('class_group.field_period')}>
+            {group.academicPeriodName}
+          </Field>
+          <Field label={t('class_group.field_dates')}>
+            {t('class_groups.date_range', {
+              start: formatDate(group.startDate, locale as Locale),
+              end: formatDate(group.endDate, locale as Locale),
+            })}
+          </Field>
+          <div className="min-w-0">
+            <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              {t('class_group.field_seats')}
+            </dt>
+            <dd className="mt-0.5 flex flex-col gap-1.5">
+              <span className="text-sm font-medium tabular-nums text-ink">
+                {`${group.seatsTaken} / ${group.capacity}`}
+              </span>
+              <Meter
+                value={group.seatsTaken}
+                max={group.capacity}
+                tone={seatPressureTone(group.seatsTaken, group.capacity)}
+              />
+            </dd>
+          </div>
+        </dl>
+      </Card>
+
+      <MockNotice label={t('common.mock_notice')} />
+
+      <ClassGroupCertificates
+        group={group}
+        // Date only: the deadline is a calendar day, not an instant.
+        deadlineIso={deadline.toISOString().slice(0, 10)}
+        businessDaysLeft={businessDaysLeft}
+      />
+    </div>
+  )
+}

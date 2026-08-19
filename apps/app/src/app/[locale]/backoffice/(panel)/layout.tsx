@@ -74,6 +74,11 @@ export default async function BackofficePanelLayout({
     {
       label: t('nav.group_academic'),
       items: [
+        {
+          key: 'class_groups',
+          href: '/backoffice/class-groups',
+          label: t('nav.class_groups'),
+        },
         { key: 'courses', href: '/backoffice/courses', label: t('nav.courses'), soon: true },
         {
           key: 'teachers',
