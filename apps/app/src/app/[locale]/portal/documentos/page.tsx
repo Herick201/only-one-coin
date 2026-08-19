@@ -47,10 +47,10 @@ export default async function DocumentsPage({
                   <Icon name="documents" size={22} />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <h2 className="font-display text-base font-semibold text-ink">
+                  <h2 className="text-base font-semibold text-ink">
                     {t(`document_type.${doc.type}`)}
                   </h2>
-                  <p className="mt-0.5 truncate text-xs text-muted">
+                  <p className="mt-0.5 truncate text-xs text-muted-foreground">
                     {courseName(doc.enrollmentId)}
                   </p>
                 </div>
@@ -63,7 +63,7 @@ export default async function DocumentsPage({
               {doc.status === 'available' ? (
                 <div className="flex items-center justify-between gap-3">
                   {doc.issuedAt && (
-                    <span className="text-xs text-muted">
+                    <span className="text-xs text-muted-foreground">
                       {t('documents.issued_on', {
                         date: formatDate(doc.issuedAt, locale),
                       })}
@@ -80,7 +80,7 @@ export default async function DocumentsPage({
                   </a>
                 </div>
               ) : (
-                <p className="rounded-xl bg-sky-soft px-3.5 py-2.5 text-xs text-muted">
+                <p className="rounded-xl bg-sky-soft px-3.5 py-2.5 text-xs text-muted-foreground">
                   {doc.status === 'pending'
                     ? t('documents.pending_note')
                     : t('documents.locked_note')}

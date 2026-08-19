@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { useRouter } from '@/i18n/navigation'
 import {
   ArrowLeftIcon,
   CheckCircleIcon,
@@ -13,11 +14,20 @@ import {
 
 type Step = 'credentials' | 'mfa' | 'recover' | 'recover_sent'
 
+function Heading({ title, subtitle }: { title: string; subtitle: string }) {
+  return (
+    <div className="mb-6">
+      <h1 className="text-2xl font-semibold tracking-tight text-ink">{title}</h1>
+      <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
+    </div>
+  )
+}
+
 /**
  * Backoffice login — UI only, auth mocked. Two-step on purpose: credentials →
  * MFA. MFA in the flow is what distinguishes the backoffice from the student
  * portal (CLAUDE.md §8). No auth wiring yet; "submit" just simulates a pending
- * state and advances the step.
+ * state, advances the step and lands on the mocked panel.
  *
  * Password recovery lives here as a step instead of its own route so the
  * anti-enumeration answer is structural: the confirmation screen is identical
@@ -25,14 +35,18 @@ type Step = 'credentials' | 'mfa' | 'recover' | 'recover_sent'
  */
 export function BackofficeLoginForm() {
   const t = useTranslations('backoffice')
+  const router = useRouter()
   const [step, setStep] = useState<Step>('credentials')
   const [pending, setPending] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const timer = useRef<number | undefined>(undefined)
+
+  useEffect(() => () => window.clearTimeout(timer.current), [])
 
   // Mock only: fake a round-trip so the pending UI is exercisable.
   function mockRoundTrip(next: () => void) {
     setPending(true)
-    window.setTimeout(() => {
+    timer.current = window.setTimeout(() => {
       setPending(false)
       next()
     }, 700)
@@ -47,8 +61,8 @@ export function BackofficeLoginForm() {
   function onMfa(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (pending) return
-    // No destination yet — the panel comes with the backend. Stay on step.
-    mockRoundTrip(() => undefined)
+    // Mocked panel — the real session (and MFA check) comes with the backend.
+    mockRoundTrip(() => router.push('/backoffice/home'))
   }
 
   function onRecover(event: React.FormEvent<HTMLFormElement>) {
@@ -62,24 +76,13 @@ export function BackofficeLoginForm() {
   const labelClass = 'flex flex-col gap-1.5 text-sm font-semibold text-ink'
   const fieldWrapClass = 'relative flex items-center'
   const fieldClass =
-    'w-full rounded-xl border border-line bg-sky-soft py-2.5 pl-10 pr-3 text-base font-normal text-ink outline-none transition placeholder:text-slate-400 focus:border-brand-blue focus:bg-white focus:ring-4 focus:ring-brand-blue/12'
+    'w-full rounded-xl border border-line bg-sky-soft py-2.5 pl-10 pr-3 text-base font-normal text-ink outline-none transition placeholder:text-slate-500 focus:border-brand-blue focus:bg-white focus:ring-4 focus:ring-brand-blue/12'
   const adornClass =
     'pointer-events-none absolute left-3 text-slate-400 peer-focus:text-brand-blue'
   const primaryButtonClass =
     'mt-1 flex w-full items-center justify-center gap-2 rounded-full bg-brand-blue px-4 py-3 text-sm font-bold text-white shadow-[0_16px_30px_-14px_rgba(47,107,255,0.9)] transition hover:bg-brand-blue-deep disabled:cursor-not-allowed disabled:opacity-60'
   const ghostButtonClass =
-    'flex items-center justify-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-muted transition hover:bg-sky hover:text-ink disabled:opacity-60'
-
-  function Heading({ title, subtitle }: { title: string; subtitle: string }) {
-    return (
-      <div className="mb-6">
-        <h1 className="font-display text-2xl font-semibold tracking-tight text-ink">
-          {title}
-        </h1>
-        <p className="mt-1 text-sm text-muted">{subtitle}</p>
-      </div>
-    )
-  }
+    'flex items-center justify-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-muted-foreground transition hover:bg-sky hover:text-ink disabled:opacity-60'
 
   if (step === 'recover_sent') {
     return (
@@ -157,7 +160,7 @@ export function BackofficeLoginForm() {
             maxLength={6}
             required
             placeholder={t('mfa_code_placeholder')}
-            className="w-full rounded-xl border border-line bg-sky-soft px-3 py-3 text-center text-xl font-semibold tracking-[0.5em] text-ink outline-none transition placeholder:text-slate-300 focus:border-brand-blue focus:bg-white focus:ring-4 focus:ring-brand-blue/12"
+            className="w-full rounded-xl border border-line bg-sky-soft px-3 py-3 text-center text-xl font-semibold tracking-[0.5em] text-ink outline-none transition placeholder:text-slate-400 focus:border-brand-blue focus:bg-white focus:ring-4 focus:ring-brand-blue/12"
           />
         </label>
 

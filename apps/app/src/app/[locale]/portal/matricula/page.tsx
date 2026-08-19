@@ -66,10 +66,10 @@ export default async function EnrollmentPage({
               <Card key={e.id} as="li" className="p-5 sm:p-6">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <h2 className="font-display text-lg font-semibold text-ink">
+                    <h2 className="text-lg font-semibold text-ink">
                       {e.course.name}
                     </h2>
-                    <p className="mt-0.5 text-xs text-muted">
+                    <p className="mt-0.5 text-xs text-muted-foreground">
                       {e.academicPeriod.name} · {e.classGroup.name}
                     </p>
                   </div>
@@ -121,7 +121,7 @@ export default async function EnrollmentPage({
                     </Field>
                   </dl>
                   {e.payment.paidAt && (
-                    <p className="mt-3 text-xs text-muted">
+                    <p className="mt-3 text-xs text-muted-foreground">
                       {t('enrollments.paid_on', {
                         date: formatDate(e.payment.paidAt, locale),
                       })}
