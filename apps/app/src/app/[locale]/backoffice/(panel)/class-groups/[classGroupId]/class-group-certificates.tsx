@@ -3,7 +3,12 @@
 import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
-import type { ClassGroupDetail, ClassGroupStudent } from '@/lib/backoffice/types'
+import type {
+  ClassGroupDetail,
+  ClassGroupRow,
+  ClassGroupStudent,
+  ProcedureAction,
+} from '@/lib/backoffice/types'
 import { PASSING_GRADE } from '@/lib/backoffice/mock-data'
 import { certificateBlockReason } from '@/lib/backoffice/certificates'
 import { formatDate, formatDateTime, type Locale } from '@/lib/format'
@@ -22,6 +27,7 @@ import {
   gradeTone,
 } from '@/components/backoffice/status-tone'
 import { BoIcon } from '@/components/backoffice/icons'
+import { ManageEnrollmentSheet } from './manage-enrollment-sheet'
 
 /**
  * Batch certificate issuing for one class group, plus the roster it acts on.
@@ -37,10 +43,14 @@ import { BoIcon } from '@/components/backoffice/icons'
  */
 export function ClassGroupCertificates({
   group,
+  classGroups,
+  canManage,
   deadlineIso,
   businessDaysLeft,
 }: {
   group: ClassGroupDetail
+  classGroups: ClassGroupRow[]
+  canManage: boolean
   deadlineIso: string
   businessDaysLeft: number
 }) {
@@ -49,6 +59,27 @@ export function ClassGroupCertificates({
 
   const [students, setStudents] = useState<ClassGroupStudent[]>(group.students)
   const [issuedAt, setIssuedAt] = useState<string | null>(null)
+  const [managing, setManaging] = useState<ClassGroupStudent | null>(null)
+
+  /**
+   * Recording a procedure is screen-local, like the batch above it. The real
+   * write is a usecase in `packages/domain` behind `apps/api`, with its own
+   * audit entry — a procedure that moves money must never be a browser state
+   * change (CLAUDE.md §8).
+   */
+  function applyProcedure(student: ClassGroupStudent, action: ProcedureAction) {
+    const procedure =
+      action === 'transfer'
+        ? 'transferred'
+        : action === 'freeze'
+          ? 'frozen'
+          : 'withdrawn'
+    setStudents((current) =>
+      current.map((row) =>
+        row.studentId === student.studentId ? { ...row, procedure } : row,
+      ),
+    )
+  }
 
   const rows = students.map((student) => ({
     student,
@@ -187,18 +218,31 @@ export function ClassGroupCertificates({
                   <th className={thClass}>{t('class_group.col_exam')}</th>
                 )}
                 <th className={thClass}>{t('class_group.col_certificate')}</th>
+                {canManage && (
+                  <th className={thClass}>
+                    <span className="sr-only">{t('class_group.col_manage')}</span>
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody>
               {rows.map(({ student, reason }) => (
                 <tr key={student.studentId} className="transition hover:bg-sky-soft">
                   <td className={tdClass}>
-                    <Link
-                      href={`/backoffice/students/${student.studentId}`}
-                      className="font-semibold text-ink transition hover:text-brand-blue"
-                    >
-                      {student.fullName}
-                    </Link>
+                    <span className="flex flex-wrap items-center gap-2">
+                      <Link
+                        href={`/backoffice/students/${student.studentId}`}
+                        className="font-semibold text-ink transition hover:text-brand-blue"
+                      >
+                        {student.fullName}
+                      </Link>
+                      {student.procedure && (
+                        <StatusBadge
+                          tone="neutral"
+                          label={t(`enrollment_procedure.${student.procedure}`)}
+                        />
+                      )}
+                    </span>
                   </td>
                   <td className={tdClass}>
                     <span className="flex flex-wrap items-center gap-2">
@@ -251,12 +295,32 @@ export function ClassGroupCertificates({
                       </span>
                     )}
                   </td>
+                  {canManage && (
+                    <td className={`${tdClass} text-right`}>
+                      <button
+                        type="button"
+                        onClick={() => setManaging(student)}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-2.5 py-1.5 text-xs font-semibold text-muted-foreground transition hover:text-brand-blue"
+                      >
+                        <BoIcon name="settings" size={14} />
+                        {t('class_group.manage')}
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
           </TableShell>
         )}
       </Card>
+
+      <ManageEnrollmentSheet
+        student={managing}
+        group={group}
+        classGroups={classGroups}
+        onClose={() => setManaging(null)}
+        onApply={applyProcedure}
+      />
     </div>
   )
 }

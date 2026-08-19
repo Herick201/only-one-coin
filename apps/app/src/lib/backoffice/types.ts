@@ -366,6 +366,15 @@ export interface ClassGroupRow {
   capacity: number
   status: ClassGroupStatus
   certificateRule: CertificateRule
+  /**
+   * Which administrative procedures the catalog offers for this class group
+   * (`docs/REGRAS-NEGOCIO.md` §5). Config, not code: freezing is off for
+   * Inglés Intermedio/Avanzado and the schedule change only exists for Inglés
+   * Básico Regular, and neither rule may be inferred from the course name —
+   * nothing language-specific lives in the code (CLAUDE.md §1).
+   */
+  allowsFreeze: boolean
+  allowsTransfer: boolean
   /** Students who finished and are still waiting for their certificate. */
   pendingCertificates: number
 }
@@ -384,7 +393,28 @@ export interface ClassGroupStudent {
   certificationExam: CertificationExamStatus | null
   certificateIssuedAt: string | null
   delivery: DocumentDelivery | null
+  /** Administrative procedure already applied, if any. */
+  procedure: EnrollmentProcedure | null
 }
+
+/**
+ * What an administrative procedure did to an enrollment
+ * (`docs/REGRAS-NEGOCIO.md` §5). Every one of them is paid and coordinated
+ * outside the platform today, which is why the backoffice records the outcome
+ * instead of triggering it.
+ */
+export type EnrollmentProcedure = 'frozen' | 'transferred' | 'withdrawn'
+
+export type ProcedureAction = 'transfer' | 'freeze' | 'withdraw'
+
+/** Why a procedure is not on the table — a code the locale turns into text. */
+export type ProcedureBlockReason =
+  | 'already_applied'
+  | 'group_not_running'
+  | 'enrollment_not_active'
+  | 'payment_not_approved'
+  | 'not_offered'
+  | 'no_seats_elsewhere'
 
 export interface ClassGroupDetail extends ClassGroupRow {
   students: ClassGroupStudent[]

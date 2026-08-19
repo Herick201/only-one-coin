@@ -1,7 +1,12 @@
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
-import { getClassGroup } from '@/lib/backoffice/mock-data'
+import {
+  getClassGroup,
+  getStaffSession,
+  listClassGroups,
+} from '@/lib/backoffice/mock-data'
+import { canManageEnrollment } from '@/lib/backoffice/permissions'
 import {
   addBusinessDays,
   businessDaysUntil,
@@ -35,6 +40,8 @@ export default async function ClassGroupDetailPage({
 
   const group = getClassGroup(classGroupId)
   if (!group) notFound()
+
+  const staff = getStaffSession()
 
   const deadline = addBusinessDays(
     group.endDate,
@@ -110,6 +117,8 @@ export default async function ClassGroupDetailPage({
 
       <ClassGroupCertificates
         group={group}
+        classGroups={listClassGroups()}
+        canManage={canManageEnrollment(staff.role)}
         // Date only: the deadline is a calendar day, not an instant.
         deadlineIso={deadline.toISOString().slice(0, 10)}
         businessDaysLeft={businessDaysLeft}

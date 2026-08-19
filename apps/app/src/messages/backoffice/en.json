@@ -402,7 +402,9 @@
       "field_start": "Start",
       "field_end": "End",
       "empty_roster_title": "No students",
-      "empty_roster_body": "Nobody is enrolled in this class group yet."
+      "empty_roster_body": "Nobody is enrolled in this class group yet.",
+      "col_manage": "Manage",
+      "manage": "Manage"
     },
     "class_group_status": {
       "enrolling": "Enrolling",
@@ -439,6 +441,45 @@
       "fri": "Fri",
       "sat": "Sat",
       "sun": "Sun"
+    },
+    "enrollment_procedure": {
+      "frozen": "Frozen",
+      "transferred": "Transferred",
+      "withdrawn": "Withdrawn"
+    },
+    "enrollment_procedure_action": {
+      "transfer": "Move to another class group",
+      "freeze": "Freeze enrollment",
+      "withdraw": "Withdraw from class group"
+    },
+    "enrollment_procedure_confirm": {
+      "transfer": "Record the move",
+      "freeze": "Record the freeze",
+      "withdraw": "Record the withdrawal"
+    },
+    "enrollment_procedure_rule": {
+      "transfer": "Schedule change: only before the module starts or up to the third class, and only on courses that offer it.",
+      "freeze": "Freeze (enrollment on hold). Not available on Inglés Intermedio/Avanzado.",
+      "withdraw": "Releases the seat. The rules define no refund of what was paid."
+    },
+    "procedure_block": {
+      "already_applied": "This enrollment already went through a procedure.",
+      "group_not_running": "The class group has ended.",
+      "enrollment_not_active": "The enrollment is not active.",
+      "payment_not_approved": "The enrollment payment is not approved yet.",
+      "not_offered": "This course does not offer the procedure.",
+      "no_seats_elsewhere": "No other class group of the same course has a free seat."
+    },
+    "manage_enrollment": {
+      "close": "Close",
+      "subtitle": "Procedures on the enrollment in {classGroup}.",
+      "paid_outside": "Procedures are charged outside the platform, through Atención al Alumno. This records what was already paid and agreed.",
+      "fee": "Fee {amount}",
+      "fee_undefined": "Fee to be defined",
+      "confirm_fee": "I confirm the fee was paid and the receipt approved.",
+      "confirm_no_fee": "I confirm the withdrawal was agreed with the student.",
+      "target_label": "Destination class group",
+      "target_placeholder": "Pick a class group"
     }
   }
 }

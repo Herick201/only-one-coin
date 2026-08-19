@@ -402,7 +402,9 @@
       "field_start": "Inicio",
       "field_end": "Fin",
       "empty_roster_title": "Sin alumnos",
-      "empty_roster_body": "Todavía nadie está matriculado en esta aula."
+      "empty_roster_body": "Todavía nadie está matriculado en esta aula.",
+      "col_manage": "Gestionar",
+      "manage": "Gestionar"
     },
     "class_group_status": {
       "enrolling": "Matriculando",
@@ -439,6 +441,45 @@
       "fri": "Vie",
       "sat": "Sáb",
       "sun": "Dom"
+    },
+    "enrollment_procedure": {
+      "frozen": "Congelada",
+      "transferred": "Trasladada",
+      "withdrawn": "Retirada"
+    },
+    "enrollment_procedure_action": {
+      "transfer": "Cambiar de aula",
+      "freeze": "Congelar matrícula",
+      "withdraw": "Retirar del aula"
+    },
+    "enrollment_procedure_confirm": {
+      "transfer": "Registrar el cambio",
+      "freeze": "Registrar el congelamiento",
+      "withdraw": "Registrar el retiro"
+    },
+    "enrollment_procedure_rule": {
+      "transfer": "Cambio de horario: solo antes del inicio del módulo o hasta la tercera clase, y solo en los cursos que lo ofrecen.",
+      "freeze": "Congelamiento (matrícula en pausa). No disponible en Inglés Intermedio/Avanzado.",
+      "withdraw": "Libera la vacante del aula. Las reglas no definen devolución de lo pagado."
+    },
+    "procedure_block": {
+      "already_applied": "Esta matrícula ya pasó por un procedimiento.",
+      "group_not_running": "El aula ya terminó.",
+      "enrollment_not_active": "La matrícula no está activa.",
+      "payment_not_approved": "El pago de la matrícula todavía no está aprobado.",
+      "not_offered": "Este curso no ofrece el procedimiento.",
+      "no_seats_elsewhere": "No hay otra aula del mismo curso con vacante."
+    },
+    "manage_enrollment": {
+      "close": "Cerrar",
+      "subtitle": "Procedimientos sobre la matrícula en {classGroup}.",
+      "paid_outside": "Los procedimientos se cobran fuera de la plataforma, con Atención al Alumno. Aquí se registra lo que ya se pagó y se acordó.",
+      "fee": "Tasa {amount}",
+      "fee_undefined": "Tasa por definir",
+      "confirm_fee": "Confirmo que la tasa fue pagada y el comprobante aprobado.",
+      "confirm_no_fee": "Confirmo que el retiro fue acordado con el alumno.",
+      "target_label": "Aula de destino",
+      "target_placeholder": "Elegir aula"
     }
   }
 }

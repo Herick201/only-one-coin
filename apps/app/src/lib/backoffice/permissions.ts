@@ -20,3 +20,13 @@ export function canCreateClassGroup(role: StaffRole): boolean {
 export function canIssueCertificates(role: StaffRole): boolean {
   return role === 'admin' || role === 'coordinator' || role === 'teacher'
 }
+
+/**
+ * Who may record an administrative procedure over an enrollment — moving,
+ * freezing, withdrawing (`docs/REGRAS-NEGOCIO.md` §5). They all carry a fee and
+ * touch a seat, so they belong to management: a teacher runs the class group,
+ * they do not move a student out of it.
+ */
+export function canManageEnrollment(role: StaffRole): boolean {
+  return role === 'admin' || role === 'coordinator'
+}

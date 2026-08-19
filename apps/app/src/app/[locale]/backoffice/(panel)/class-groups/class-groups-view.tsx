@@ -680,6 +680,10 @@ function NewClassGroupForm({
       capacity,
       status: 'enrolling',
       certificateRule: 'automatic',
+      // Which procedures the class group offers is catalog config; the form
+      // has no field for it yet, so a new group starts with neither.
+      allowsFreeze: false,
+      allowsTransfer: false,
       pendingCertificates: 0,
     })
   }

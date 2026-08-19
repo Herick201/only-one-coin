@@ -402,7 +402,9 @@
       "field_start": "Início",
       "field_end": "Fim",
       "empty_roster_title": "Sem alunos",
-      "empty_roster_body": "Ninguém está matriculado nesta turma ainda."
+      "empty_roster_body": "Ninguém está matriculado nesta turma ainda.",
+      "col_manage": "Gerenciar",
+      "manage": "Gerenciar"
     },
     "class_group_status": {
       "enrolling": "Matriculando",
@@ -439,6 +441,45 @@
       "fri": "Sex",
       "sat": "Sáb",
       "sun": "Dom"
+    },
+    "enrollment_procedure": {
+      "frozen": "Congelada",
+      "transferred": "Transferida",
+      "withdrawn": "Retirada"
+    },
+    "enrollment_procedure_action": {
+      "transfer": "Mover de turma",
+      "freeze": "Congelar matrícula",
+      "withdraw": "Retirar da turma"
+    },
+    "enrollment_procedure_confirm": {
+      "transfer": "Registrar a mudança",
+      "freeze": "Registrar o congelamento",
+      "withdraw": "Registrar a saída"
+    },
+    "enrollment_procedure_rule": {
+      "transfer": "Mudança de horário: só antes do início do módulo ou até a terceira aula, e só nos cursos que oferecem.",
+      "freeze": "Congelamento (matrícula em pausa). Não disponível no Inglés Intermedio/Avanzado.",
+      "withdraw": "Libera a vaga da turma. As regras não definem devolução do que foi pago."
+    },
+    "procedure_block": {
+      "already_applied": "Esta matrícula já passou por um procedimento.",
+      "group_not_running": "A turma já terminou.",
+      "enrollment_not_active": "A matrícula não está ativa.",
+      "payment_not_approved": "O pagamento da matrícula ainda não foi aprovado.",
+      "not_offered": "Este curso não oferece o procedimento.",
+      "no_seats_elsewhere": "Não há outra turma do mesmo curso com vaga."
+    },
+    "manage_enrollment": {
+      "close": "Fechar",
+      "subtitle": "Procedimentos sobre a matrícula em {classGroup}.",
+      "paid_outside": "Os procedimentos são cobrados fora da plataforma, com o Atención al Alumno. Aqui se registra o que já foi pago e combinado.",
+      "fee": "Taxa {amount}",
+      "fee_undefined": "Taxa a definir",
+      "confirm_fee": "Confirmo que a taxa foi paga e o comprovante aprovado.",
+      "confirm_no_fee": "Confirmo que a saída foi combinada com o aluno.",
+      "target_label": "Turma de destino",
+      "target_placeholder": "Escolher turma"
     }
   }
 }
