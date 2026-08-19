@@ -156,6 +156,8 @@
       "field_created_at": "Registered on",
       "field_last_activity": "Last activity",
       "guardian_title": "Guardian",
+      "guardian_edit": "Edit guardian",
+      "guardian_consent_locked": "Consent is not edited here: it is recorded when the guardian accepts the current text. Every data change keeps author, date and previous value.",
       "field_guardian_name": "Name",
       "field_relationship": "Relationship",
       "consent_given": "Consent signed",
