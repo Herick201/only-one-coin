@@ -3,11 +3,7 @@
 import { useMemo, useState, type MouseEvent } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { Link, useRouter } from '@/i18n/navigation'
-import type {
-  ClassGroupRow,
-  ClassModality,
-  Weekday,
-} from '@/lib/backoffice/types'
+import type { ClassGroupRow, CourseRow, Weekday } from '@/lib/backoffice/types'
 import { formatDate, formatDateRange, type Locale } from '@/lib/format'
 import {
   Card,
@@ -25,7 +21,6 @@ import { BoIcon } from '@/components/backoffice/icons'
 type Sort = 'newest' | 'oldest'
 
 const WEEKDAYS: Weekday[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
-const MODALITIES: ClassModality[] = ['online', 'in_person', 'hybrid']
 
 const ALL = 'all'
 
@@ -74,9 +69,11 @@ const selectClass =
  */
 export function ClassGroupsView({
   rows,
+  courses,
   canCreate,
 }: {
   rows: ClassGroupRow[]
+  courses: CourseRow[]
   canCreate: boolean
 }) {
   const t = useTranslations('bo')
@@ -355,7 +352,7 @@ export function ClassGroupsView({
 
       {creating && (
         <NewClassGroupForm
-          languages={options.languages}
+          courses={courses}
           teachers={options.teachers}
           periods={options.periods}
           onCancel={() => setCreating(false)}
@@ -639,13 +636,13 @@ export function ClassGroupsView({
  * behind `apps/api` — the browser never writes (CLAUDE.md §8).
  */
 function NewClassGroupForm({
-  languages,
+  courses,
   teachers,
   periods,
   onCancel,
   onCreate,
 }: {
-  languages: { id: string; name: string }[]
+  courses: CourseRow[]
   teachers: [string, string][]
   periods: string[]
   onCancel: () => void
@@ -653,8 +650,16 @@ function NewClassGroupForm({
 }) {
   const t = useTranslations('bo')
 
-  const [languageId, setLanguageId] = useState(languages[0]?.id ?? '')
-  const [courseName, setCourseName] = useState('')
+  /**
+   * One field, not two. Language and course are different things — Inglés has
+   * a Básico and an Intermedio — but the course already carries its language,
+   * so asking for both let someone pick Alemán and then type "Inglés Básico
+   * A1". Picking the course brings the language, the certificate rule and
+   * which procedures it offers along with it, straight from the catalog.
+   */
+  const catalog = courses.filter((course) => course.active)
+  const [courseId, setCourseId] = useState(catalog[0]?.id ?? '')
+  const course = catalog.find((item) => item.id === courseId)
   /**
    * The sequence is generated, not typed. Coordination should not have to know
    * which number is free, and a code typed by hand is a code that collides.
@@ -665,7 +670,6 @@ function NewClassGroupForm({
     String(Math.floor(Math.random() * 10000)).padStart(4, '0'),
   )
   const [teacherId, setTeacherId] = useState(teachers[0]?.[0] ?? '')
-  const [modality, setModality] = useState<ClassModality>('online')
   const [academicPeriodName, setPeriod] = useState(periods[0] ?? '')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
@@ -674,7 +678,7 @@ function NewClassGroupForm({
   const [capacity, setCapacity] = useState(30)
 
   const ready =
-    courseName.trim() !== '' &&
+    course !== undefined &&
     startDate !== '' &&
     endDate !== '' &&
     weekdays.length > 0
@@ -686,31 +690,29 @@ function NewClassGroupForm({
   }
 
   function submit() {
-    const language = languages.find((item) => item.id === languageId)
     const teacher = teachers.find(([id]) => id === teacherId)
-    if (!language || !teacher) return
-    const code = `${codePrefix(language.name)}-${sequence}`
+    if (!course || !teacher) return
     onCreate({
       id: `cg_local_${startDate}_${startTime}`,
-      courseName: courseName.trim(),
-      code,
-      language,
+      courseName: course.name,
+      code: `${codePrefix(course.language.name)}-${sequence}`,
+      language: course.language,
       weekdays: WEEKDAYS.filter((day) => weekdays.includes(day)),
       startTime,
       teacherId: teacher[0],
       teacherName: teacher[1],
-      modality,
+      modality: 'online',
       academicPeriodName,
       startDate,
       endDate,
       seatsTaken: 0,
       capacity,
       status: 'enrolling',
-      certificateRule: 'automatic',
-      // Which procedures the class group offers is catalog config; the form
-      // has no field for it yet, so a new group starts with neither.
-      allowsFreeze: false,
-      allowsTransfer: false,
+      // Inherited from the course, never chosen per class group: two groups of
+      // the same course must certify and freeze the same way.
+      certificateRule: course.certificateRule,
+      allowsFreeze: course.allowsFreeze,
+      allowsTransfer: course.allowsTransfer,
       pendingCertificates: 0,
     })
   }
@@ -722,33 +724,35 @@ function NewClassGroupForm({
       </p>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            {t('class_groups.field_language')}
-          </span>
-          <select
-            value={languageId}
-            onChange={(event) => setLanguageId(event.target.value)}
-            className={selectClass}
-          >
-            {languages.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="flex flex-col gap-1">
+        <label className="flex flex-col gap-1 sm:col-span-2">
           <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             {t('class_groups.field_course')}
           </span>
-          <input
-            value={courseName}
-            onChange={(event) => setCourseName(event.target.value)}
-            placeholder={t('class_groups.course_placeholder')}
+          {/* Grouped by language: the language is a heading here, not a field
+              to fill in, because the course already carries it. */}
+          <select
+            value={courseId}
+            onChange={(event) => setCourseId(event.target.value)}
             className={selectClass}
-          />
+          >
+            {[
+              ...new Map(
+                catalog.map((item) => [item.language.id, item.language]),
+              ).values(),
+            ]
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((language) => (
+                <optgroup key={language.id} label={language.name}>
+                  {catalog
+                    .filter((item) => item.language.id === language.id)
+                    .map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name}
+                      </option>
+                    ))}
+                </optgroup>
+              ))}
+          </select>
         </label>
 
         <div className="flex flex-col gap-1">
@@ -756,9 +760,7 @@ function NewClassGroupForm({
             {t('class_groups.field_code')}
           </span>
           <p className="rounded-lg border border-dashed border-line bg-sky-soft px-3 py-2 text-sm tabular-nums text-ink">
-            {`${codePrefix(
-              languages.find((item) => item.id === languageId)?.name ?? '',
-            )}-${sequence}`}
+            {`${codePrefix(course?.language.name ?? '')}-${sequence}`}
           </p>
           <span className="text-xs text-muted-foreground">
             {t('class_groups.code_generated')}
@@ -777,23 +779,6 @@ function NewClassGroupForm({
             {teachers.map(([id, name]) => (
               <option key={id} value={id}>
                 {name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            {t('class_groups.field_modality')}
-          </span>
-          <select
-            value={modality}
-            onChange={(event) => setModality(event.target.value as ClassModality)}
-            className={selectClass}
-          >
-            {MODALITIES.map((item) => (
-              <option key={item} value={item}>
-                {t(`modality.${item}`)}
               </option>
             ))}
           </select>
