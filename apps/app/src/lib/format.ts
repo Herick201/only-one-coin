@@ -27,9 +27,18 @@ export function formatMoney(
   }).format(amountCents / 100)
 }
 
+/** `2026-04-07` — a calendar date with no time, so no timezone to convert. */
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/
+
+/**
+ * A date-only value (birth date, course start/end) is rendered as written: it
+ * is a calendar date, not an instant. Shifting it into America/Lima would parse
+ * it as UTC midnight and print the previous day. Timestamps keep the Lima
+ * conversion (CLAUDE.md §6).
+ */
 export function formatDate(iso: string, locale: Locale): string {
   return new Intl.DateTimeFormat(intlLocale[locale], {
-    timeZone: LIMA_TZ,
+    timeZone: DATE_ONLY.test(iso) ? 'UTC' : LIMA_TZ,
     day: '2-digit',
     month: 'short',
     year: 'numeric',
