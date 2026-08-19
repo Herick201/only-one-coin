@@ -132,7 +132,10 @@ export function CourseOptionsSheet({
                   />
                 </label>
 
-                <label className="flex flex-col gap-1">
+                {/* Full width: the rule names do not fit half a row, and a
+                    truncated one reads as a different rule. The hint below
+                    carries the meaning the short label drops. */}
+                <label className="flex flex-col gap-1 sm:col-span-2">
                   <span className={labelClass}>
                     {t('course_options.certificate_rule')}
                   </span>
@@ -149,6 +152,9 @@ export function CourseOptionsSheet({
                       </option>
                     ))}
                   </select>
+                  <span className="text-xs text-muted-foreground">
+                    {t(`certificate_rule_hint.${draft.certificateRule}`)}
+                  </span>
                 </label>
               </div>
 

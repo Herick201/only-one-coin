@@ -529,8 +529,12 @@
       "cancel": "Cancel"
     },
     "certificate_rule": {
-      "automatic": "Issued on the minimum grade",
-      "exam_required": "Requires the certification exam"
+      "automatic": "Minimum grade",
+      "exam_required": "Certification exam"
+    },
+    "certificate_rule_hint": {
+      "automatic": "Issued to whoever reaches the minimum grade, with no separate request.",
+      "exam_required": "On top of the grade, the student must sit the certification exam."
     }
   }
 }

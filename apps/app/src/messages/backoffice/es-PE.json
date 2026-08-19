@@ -529,8 +529,12 @@
       "cancel": "Cancelar"
     },
     "certificate_rule": {
-      "automatic": "Sale con la nota mínima",
-      "exam_required": "Exige examen de certificación"
+      "automatic": "Nota mínima",
+      "exam_required": "Examen de certificación"
+    },
+    "certificate_rule_hint": {
+      "automatic": "Sale para quien llega a la nota mínima, sin trámite aparte.",
+      "exam_required": "Además de la nota, el alumno tiene que rendir el examen de certificación."
     }
   }
 }
