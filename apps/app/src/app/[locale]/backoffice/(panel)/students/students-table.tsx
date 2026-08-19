@@ -1,13 +1,14 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type MouseEvent } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
-import { Link } from '@/i18n/navigation'
+import { Link, useRouter } from '@/i18n/navigation'
 import type { StudentRow, StudentStatus } from '@/lib/backoffice/types'
-import { ageFrom, formatDate, type Locale } from '@/lib/format'
+import { formatDate, type Locale } from '@/lib/format'
 import {
   Card,
   EmptyState,
+  Pager,
   StatusBadge,
   TableShell,
   tdClass,
@@ -21,20 +22,42 @@ type StatusFilter = StudentStatus | 'all'
 const STATUS_FILTERS: StatusFilter[] = ['all', 'active', 'under_review', 'inactive']
 
 /**
- * Student list with client-side search and status filter. Filtering runs in the
- * browser only because the dataset is mocked; with the real API this becomes a
- * server query (5k–7k enrollments/month will not fit in the client).
+ * A screen of rows, not a scroll of them: past ~15 the eye stops scanning and
+ * starts hunting, and the toolbar scrolls out of reach.
+ */
+const PAGE_SIZE = 15
+
+/**
+ * Student list with client-side search, status filter and paging. Filtering
+ * runs in the browser only because the dataset is mocked; with the real API
+ * this becomes a server query (5k–7k enrollments/month will not fit in the
+ * client).
+ *
+ * The row carries only what tells one student from another — name, document,
+ * state, load, last activity. Contact, place, age and enrollment history live
+ * one click away in the ficha: repeating them per row made every line three
+ * lines tall and pushed the table off the screen.
  */
 export function StudentsTable({ rows }: { rows: StudentRow[] }) {
   const t = useTranslations('bo')
   const locale = useLocale() as Locale
+  const router = useRouter()
   const [query, setQuery] = useState('')
   const [status, setStatus] = useState<StatusFilter>('all')
+  /**
+   * Age is a second axis, not another status: "under review" and "minor"
+   * answer different questions, and guardian consent (CLAUDE.md §1) is chased
+   * across every status at once.
+   */
+  const [minorsOnly, setMinorsOnly] = useState(false)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [page, setPage] = useState(0)
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase()
     return rows.filter((row) => {
       if (status !== 'all' && row.status !== status) return false
+      if (minorsOnly && !row.isMinor) return false
       if (!needle) return true
       return [
         `${row.firstName} ${row.lastName}`,
@@ -47,7 +70,7 @@ export function StudentsTable({ rows }: { rows: StudentRow[] }) {
         .toLowerCase()
         .includes(needle)
     })
-  }, [rows, query, status])
+  }, [rows, query, status, minorsOnly])
 
   const counts = useMemo(() => {
     return {
@@ -58,53 +81,137 @@ export function StudentsTable({ rows }: { rows: StudentRow[] }) {
     } satisfies Record<StatusFilter, number>
   }, [rows])
 
+  const minorCount = useMemo(() => rows.filter((r) => r.isMinor).length, [rows])
+  const activeFilters = (status !== 'all' ? 1 : 0) + (minorsOnly ? 1 : 0)
+
+  /** A filter or a search that shrinks the list can leave the page behind it. */
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const currentPage = Math.min(page, pageCount - 1)
+  const pageRows = filtered.slice(
+    currentPage * PAGE_SIZE,
+    currentPage * PAGE_SIZE + PAGE_SIZE,
+  )
+
+  function search(value: string) {
+    setQuery(value)
+    setPage(0)
+  }
+
+  function filterByStatus(value: StatusFilter) {
+    setStatus(value)
+    setPage(0)
+  }
+
+  function toggleMinors() {
+    setMinorsOnly(!minorsOnly)
+    setPage(0)
+  }
+
+  /**
+   * The whole row opens the ficha, but the name stays a real link in the first
+   * cell so the keyboard, the screen reader and ctrl+click keep working — the
+   * row handler only covers the mouse, and steps aside when the click already
+   * landed on the link.
+   */
+  function rowProps(id: string) {
+    const href = `/backoffice/students/${id}`
+    return {
+      className: 'cursor-pointer transition hover:bg-sky-soft',
+      onClick: (event: MouseEvent<HTMLTableRowElement>) => {
+        if ((event.target as HTMLElement).closest('a')) return
+        router.push(href)
+      },
+    }
+  }
+
   return (
     <div className="flex flex-col gap-4">
       {/* Toolbar */}
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <label className="relative flex-1 lg:max-w-sm">
-          <span className="sr-only">{t('students.search_label')}</span>
-          <BoIcon
-            name="search"
-            size={16}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-          />
-          <input
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={t('students.search_placeholder')}
-            className="w-full rounded-lg border border-line bg-white py-2 pl-9 pr-3 text-sm text-ink outline-none transition placeholder:text-muted-foreground focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15"
-          />
-        </label>
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+          <label className="relative flex-1 lg:max-w-sm">
+            <span className="sr-only">{t('students.search_label')}</span>
+            <BoIcon
+              name="search"
+              size={16}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            />
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => search(event.target.value)}
+              placeholder={t('students.search_placeholder')}
+              className="w-full rounded-lg border border-line bg-white py-2 pl-9 pr-3 text-sm text-ink outline-none transition placeholder:text-muted-foreground focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15"
+            />
+          </label>
 
-        <div className="flex flex-wrap items-center gap-1.5">
-          {STATUS_FILTERS.map((value) => {
-            const active = status === value
-            return (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setStatus(value)}
-                aria-pressed={active}
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                  active
-                    ? 'bg-brand-blue text-white'
-                    : 'border border-line bg-white text-muted-foreground hover:bg-cream hover:text-ink'
-                }`}
-              >
-                {value === 'all' ? t('students.filter_all') : t(`student_status.${value}`)}
-                <span className={active ? 'text-white/70' : 'text-slate-400'}>
-                  {counts[value]}
-                </span>
-              </button>
-            )
-          })}
+          <button
+            type="button"
+            onClick={() => setFiltersOpen(!filtersOpen)}
+            aria-expanded={filtersOpen}
+            className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold transition ${
+              activeFilters > 0 || filtersOpen
+                ? 'border-brand-blue bg-sky text-brand-blue'
+                : 'border-line bg-white text-muted-foreground hover:text-ink'
+            }`}
+          >
+            <BoIcon name="filter" size={16} />
+            {t('students.filters')}
+            {activeFilters > 0 && (
+              <span className="rounded-full bg-brand-blue px-1.5 text-xs text-white">
+                {activeFilters}
+              </span>
+            )}
+          </button>
         </div>
+
+        {filtersOpen && (
+          <Card className="flex flex-wrap items-center gap-1.5 p-3">
+            {STATUS_FILTERS.map((value) => {
+              const active = status === value
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => filterByStatus(value)}
+                  aria-pressed={active}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                    active
+                      ? 'bg-brand-blue text-white'
+                      : 'border border-line bg-white text-muted-foreground hover:bg-cream hover:text-ink'
+                  }`}
+                >
+                  {value === 'all' ? t('students.filter_all') : t(`student_status.${value}`)}
+                  <span className={active ? 'text-white/70' : 'text-slate-400'}>
+                    {counts[value]}
+                  </span>
+                </button>
+              )
+            })}
+
+            <span aria-hidden="true" className="mx-1 h-5 w-px bg-line" />
+
+            <button
+              type="button"
+              onClick={toggleMinors}
+              aria-pressed={minorsOnly}
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                minorsOnly
+                  ? 'bg-brand-blue text-white'
+                  : 'border border-line bg-white text-muted-foreground hover:bg-cream hover:text-ink'
+              }`}
+            >
+              {t('students.minor')}
+              <span className={minorsOnly ? 'text-white/70' : 'text-slate-400'}>
+                {minorCount}
+              </span>
+            </button>
+          </Card>
+        )}
       </div>
 
       <Card>
-        {filtered.length === 0 ? (
+        {pageRows.length === 0 ? (
           <div className="p-4">
             <EmptyState
               icon="search"
@@ -113,89 +220,83 @@ export function StudentsTable({ rows }: { rows: StudentRow[] }) {
             />
           </div>
         ) : (
-          <TableShell>
-            <thead>
-              <tr>
-                <th className={thClass}>{t('students.col_student')}</th>
-                <th className={thClass}>{t('students.col_document')}</th>
-                <th className={thClass}>{t('students.col_contact')}</th>
-                <th className={thClass}>{t('students.col_status')}</th>
-                <th className={thClass}>{t('students.col_courses')}</th>
-                <th className={thClass}>{t('students.col_last_activity')}</th>
-                <th className={thClass}>
-                  <span className="sr-only">{t('common.actions')}</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((row) => (
-                <tr key={row.id} className="transition hover:bg-sky-soft">
-                  <td className={`${tdClass} whitespace-nowrap`}>
-                    <span className="flex flex-col leading-tight">
-                      <span className="font-semibold">
-                        {`${row.firstName} ${row.lastName}`}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {t('students.age_city', {
-                          age: ageFrom(row.birthDate),
-                          city: row.city,
-                        })}
-                        {row.isMinor ? ` · ${t('students.minor')}` : ''}
-                      </span>
-                    </span>
-                  </td>
-                  <td className={tdClass}>
-                    <span className="flex flex-col leading-tight">
-                      <span className="text-xs font-semibold uppercase text-muted-foreground">
-                        {t(`national_id_type.${row.nationalIdType}`)}
-                      </span>
-                      <span className="tabular-nums">{row.nationalId}</span>
-                    </span>
-                  </td>
-                  <td className={`${tdClass} whitespace-nowrap`}>
-                    <span className="flex flex-col leading-tight">
-                      <span className="truncate text-sm">{row.email}</span>
-                      <span className="text-xs text-muted-foreground">{row.phone}</span>
-                    </span>
-                  </td>
-                  <td className={tdClass}>
-                    <StatusBadge
-                      tone={studentTone[row.status]}
-                      label={t(`student_status.${row.status}`)}
-                    />
-                  </td>
-                  <td className={tdClass}>
-                    <span className="flex flex-col leading-tight">
-                      <span className="font-semibold tabular-nums">
-                        {row.activeCourses}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {t('students.total_enrollments', { count: row.totalEnrollments })}
-                      </span>
-                    </span>
-                  </td>
-                  <td className={`${tdClass} whitespace-nowrap text-sm text-muted-foreground`}>
-                    {formatDate(row.lastActivityAt, locale)}
-                  </td>
-                  <td className={`${tdClass} text-right`}>
-                    <Link
-                      href={`/backoffice/students/${row.id}`}
-                      className="inline-flex items-center gap-1 whitespace-nowrap rounded-lg border border-line px-2.5 py-1.5 text-xs font-semibold text-brand-blue transition hover:bg-cream hover:text-ink"
-                    >
-                      {t('students.open_file')}
-                      <BoIcon name="chevron-right" size={14} />
-                    </Link>
-                  </td>
+          <>
+            <TableShell>
+              <thead>
+                <tr>
+                  <th className={thClass}>{t('students.col_student')}</th>
+                  <th className={thClass}>{t('students.col_document')}</th>
+                  <th className={thClass}>{t('students.col_status')}</th>
+                  <th className={`${thClass} text-right`}>{t('students.col_courses')}</th>
+                  <th className={thClass}>{t('students.col_last_activity')}</th>
                 </tr>
-              ))}
-            </tbody>
-          </TableShell>
+              </thead>
+              <tbody>
+                {pageRows.map((row) => (
+                  <tr key={row.id} {...rowProps(row.id)}>
+                    <td className={`${tdClass} whitespace-nowrap`}>
+                      <span className="flex items-center gap-2">
+                        <Link
+                          href={`/backoffice/students/${row.id}`}
+                          className="font-semibold text-ink transition hover:text-brand-blue"
+                        >
+                          {`${row.firstName} ${row.lastName}`}
+                        </Link>
+                        {/* Guardian consent hangs on this one — it stays in the
+                            list while everything else moved to the ficha. */}
+                        {row.isMinor && (
+                          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+                            {t('students.minor')}
+                          </span>
+                        )}
+                      </span>
+                    </td>
+                    <td
+                      className={`${tdClass} whitespace-nowrap text-sm tabular-nums text-muted-foreground`}
+                    >
+                      {t('students.document', {
+                        type: t(`national_id_type.${row.nationalIdType}`),
+                        number: row.nationalId,
+                      })}
+                    </td>
+                    <td className={tdClass}>
+                      <StatusBadge
+                        tone={studentTone[row.status]}
+                        label={t(`student_status.${row.status}`)}
+                      />
+                    </td>
+                    <td
+                      className={`${tdClass} text-right text-sm font-semibold tabular-nums text-ink`}
+                    >
+                      {row.activeCourses}
+                    </td>
+                    <td
+                      className={`${tdClass} whitespace-nowrap text-sm tabular-nums text-muted-foreground`}
+                    >
+                      {formatDate(row.lastActivityAt, locale)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </TableShell>
+
+            {pageCount > 1 && (
+              <Pager
+                page={currentPage}
+                pageCount={pageCount}
+                status={t('students.page_status', {
+                  from: currentPage * PAGE_SIZE + 1,
+                  to: currentPage * PAGE_SIZE + pageRows.length,
+                  total: filtered.length,
+                })}
+                prevLabel={t('students.page_prev')}
+                nextLabel={t('students.page_next')}
+                onChange={setPage}
+              />
+            )}
+          </>
         )}
       </Card>
-
-      <p className="text-xs text-muted-foreground">
-        {t('students.showing', { shown: filtered.length, total: rows.length })}
-      </p>
     </div>
   )
 }

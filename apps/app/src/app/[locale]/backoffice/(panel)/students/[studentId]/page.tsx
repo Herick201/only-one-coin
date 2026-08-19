@@ -47,23 +47,14 @@ export default async function StudentDetailPage({
               <h1 className="truncate text-xl font-semibold tracking-tight text-ink">
                 {fullName}
               </h1>
-              <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                <span>{`${t(`national_id_type.${student.nationalIdType}`)} ${student.nationalId}`}</span>
-                <span aria-hidden="true">·</span>
-                <span>
-                  {[student.city, student.region === student.city ? null : student.region]
-                    .filter(Boolean)
-                    .join(', ')}
-                </span>
-                {student.isMinor && (
-                  <>
-                    <span aria-hidden="true">·</span>
-                    <span className="font-semibold text-amber-700">
-                      {t('students.minor')}
-                    </span>
-                  </>
-                )}
-              </p>
+              {/* Document and city are two lines below in "Datos personales";
+                  repeating them here only competed with the one fact that
+                  changes what staff may do next. */}
+              {student.isMinor && (
+                <p className="mt-0.5 text-xs font-semibold text-amber-700">
+                  {t('students.minor')}
+                </p>
+              )}
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
