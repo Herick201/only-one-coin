@@ -61,7 +61,9 @@
       "open_file": "Ver ficha",
       "empty_title": "No hay nada en cola",
       "empty_body": "Cuando un comprobante necesite revisión humana, aparecerá aquí.",
-      "pending_count": "{count} en cola"
+      "pending_count": "{count} en cola",
+      "see_all": "Ver toda la cola",
+      "showing": "Mostrando {shown} de {total} comprobantes"
     },
     "review_flag": {
       "amount_mismatch": "Monto no coincide",

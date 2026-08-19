@@ -61,7 +61,9 @@
       "open_file": "Open file",
       "empty_title": "Nothing in the queue",
       "empty_body": "When a receipt needs a human, it shows up here.",
-      "pending_count": "{count} in queue"
+      "pending_count": "{count} in queue",
+      "see_all": "See the full queue",
+      "showing": "Showing {shown} of {total} receipts"
     },
     "review_flag": {
       "amount_mismatch": "Amount mismatch",

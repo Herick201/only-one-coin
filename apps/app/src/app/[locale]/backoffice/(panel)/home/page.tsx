@@ -1,6 +1,7 @@
 import {
   AlertTriangle,
   Armchair,
+  ArrowRight,
   ArrowUpRight,
   BarChart3,
   BookOpen,
@@ -36,6 +37,7 @@ import {
 } from '@/components/ui/table'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 
 /**
  * Backoffice home. Two jobs: surface what needs a human right now (the receipt
@@ -212,9 +214,14 @@ export default async function BackofficeHomePage({
                 {t('review.subtitle')}
               </p>
             </div>
-            <Badge variant="secondary" className="shrink-0 font-semibold">
-              {t('review.pending_count', { count: metrics.pendingReview })}
-            </Badge>
+            {/* Contador e porta são a mesma coisa: o número é o que chama, a
+                seta diz que dá pra ir. */}
+            <Button asChild size="lg" className="shrink-0 font-semibold">
+              <Link href="/backoffice/payments/review" aria-label={t('review.see_all')}>
+                {t('review.pending_count', { count: metrics.pendingReview })}
+                <ArrowRight data-icon="inline-end" />
+              </Link>
+            </Button>
           </CardHeader>
 
           <CardContent className="px-0">
@@ -286,19 +293,37 @@ export default async function BackofficeHomePage({
                           {formatDateTime(item.submittedAt, locale)}
                         </TableCell>
                         <TableCell className="pr-5 text-right">
-                          <Link
-                            href={`/backoffice/students/${item.studentId}`}
-                            className="inline-flex items-center gap-1 whitespace-nowrap rounded-lg border border-border px-2.5 py-1.5 text-xs font-semibold text-primary transition hover:bg-secondary"
-                          >
-                            {t('review.open_file')}
-                            <ArrowUpRight className="size-3.5" />
-                          </Link>
+                          <Button asChild variant="outline" size="sm">
+                            <Link
+                              href={`/backoffice/students/${item.studentId}`}
+                              className="font-semibold text-primary"
+                            >
+                              {t('review.open_file')}
+                              <ArrowUpRight data-icon="inline-end" />
+                            </Link>
+                          </Button>
                         </TableCell>
                       </TableRow>
                     )
                   })}
                 </TableBody>
               </Table>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-5 py-3">
+              <p className="text-xs text-muted-foreground">
+                {t('review.showing', {
+                  shown: queue.length,
+                  total: metrics.pendingReview,
+                })}
+              </p>
+              <Link
+                href="/backoffice/payments/review"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-primary transition hover:underline"
+              >
+                {t('review.see_all')}
+                <ArrowRight className="size-3.5" />
+              </Link>
             </div>
           </CardContent>
         </Card>
