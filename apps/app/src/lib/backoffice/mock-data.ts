@@ -888,7 +888,7 @@ const classGroups: ClassGroupDetail[] = [
   {
     id: 'cg_05',
     courseName: 'Italiano Inicial',
-    code: 'ITA-02',
+    code: 'ITA-0002',
     language: LANGUAGES.it,
     weekdays: ['tue', 'thu'],
     startTime: '19:00',
@@ -1005,7 +1005,7 @@ const classGroups: ClassGroupDetail[] = [
   {
     id: 'cg_06',
     courseName: 'Inglés Básico A1',
-    code: 'ING-04',
+    code: 'ING-0004',
     language: LANGUAGES.en,
     weekdays: ['sat'],
     startTime: '09:00',
@@ -1074,7 +1074,7 @@ const classGroups: ClassGroupDetail[] = [
   {
     id: 'cg_03',
     courseName: 'Francés Inicial',
-    code: 'FRA-03',
+    code: 'FRA-0003',
     language: LANGUAGES.fr,
     weekdays: ['sat'],
     startTime: '15:00',
@@ -1094,7 +1094,7 @@ const classGroups: ClassGroupDetail[] = [
   {
     id: 'cg_01',
     courseName: 'Inglés Básico A1',
-    code: 'ING-06',
+    code: 'ING-0006',
     language: LANGUAGES.en,
     weekdays: ['mon', 'wed'],
     startTime: '18:00',
@@ -1114,7 +1114,7 @@ const classGroups: ClassGroupDetail[] = [
   {
     id: 'cg_02',
     courseName: 'Quechua Conversacional',
-    code: 'QUE-03',
+    code: 'QUE-0003',
     language: LANGUAGES.qu,
     weekdays: ['sat'],
     startTime: '11:00',
@@ -1134,7 +1134,7 @@ const classGroups: ClassGroupDetail[] = [
   {
     id: 'cg_04',
     courseName: 'Alemán Inicial',
-    code: 'ALE-02',
+    code: 'ALE-0002',
     language: LANGUAGES.de,
     weekdays: ['mon', 'wed'],
     startTime: '19:00',
@@ -1154,7 +1154,7 @@ const classGroups: ClassGroupDetail[] = [
   {
     id: 'cg_07',
     courseName: 'Inglés Intermedio B1',
-    code: 'ING-05',
+    code: 'ING-0005',
     language: LANGUAGES.en,
     weekdays: ['tue', 'thu'],
     startTime: '20:00',
@@ -1174,7 +1174,7 @@ const classGroups: ClassGroupDetail[] = [
   {
     id: 'cg_08',
     courseName: 'Portugués Inicial',
-    code: 'POR-02',
+    code: 'POR-0002',
     language: LANGUAGES.pt,
     weekdays: ['sat'],
     startTime: '09:00',
@@ -1194,7 +1194,7 @@ const classGroups: ClassGroupDetail[] = [
   {
     id: 'cg_09',
     courseName: 'Inglés Básico A1',
-    code: 'ING-07',
+    code: 'ING-0007',
     language: LANGUAGES.en,
     weekdays: ['sat'],
     startTime: '15:00',
@@ -1214,7 +1214,7 @@ const classGroups: ClassGroupDetail[] = [
   {
     id: 'cg_10',
     courseName: 'Italiano Inicial',
-    code: 'ITA-03',
+    code: 'ITA-0003',
     language: LANGUAGES.it,
     weekdays: ['mon', 'wed'],
     startTime: '20:00',
@@ -1234,7 +1234,7 @@ const classGroups: ClassGroupDetail[] = [
   {
     id: 'cg_11',
     courseName: 'Quechua Conversacional',
-    code: 'QUE-02',
+    code: 'QUE-0002',
     language: LANGUAGES.qu,
     weekdays: ['tue'],
     startTime: '18:00',
@@ -1254,7 +1254,7 @@ const classGroups: ClassGroupDetail[] = [
   {
     id: 'cg_12',
     courseName: 'Inglés Básico A1',
-    code: 'ING-02',
+    code: 'ING-0002',
     language: LANGUAGES.en,
     weekdays: ['mon', 'wed'],
     startTime: '18:00',
@@ -1274,7 +1274,7 @@ const classGroups: ClassGroupDetail[] = [
   {
     id: 'cg_13',
     courseName: 'Inglés Intermedio B1',
-    code: 'ING-03',
+    code: 'ING-0003',
     language: LANGUAGES.en,
     weekdays: ['tue', 'thu'],
     startTime: '20:00',
@@ -1294,7 +1294,7 @@ const classGroups: ClassGroupDetail[] = [
   {
     id: 'cg_14',
     courseName: 'Francés Inicial',
-    code: 'FRA-02',
+    code: 'FRA-0002',
     language: LANGUAGES.fr,
     weekdays: ['sat'],
     startTime: '15:00',
@@ -1314,7 +1314,7 @@ const classGroups: ClassGroupDetail[] = [
   {
     id: 'cg_15',
     courseName: 'Alemán Inicial',
-    code: 'ALE-01',
+    code: 'ALE-0001',
     language: LANGUAGES.de,
     weekdays: ['mon', 'wed'],
     startTime: '19:00',
@@ -1334,7 +1334,7 @@ const classGroups: ClassGroupDetail[] = [
   {
     id: 'cg_16',
     courseName: 'Portugués Inicial',
-    code: 'POR-01',
+    code: 'POR-0001',
     language: LANGUAGES.pt,
     weekdays: ['sat'],
     startTime: '09:00',
@@ -1354,7 +1354,7 @@ const classGroups: ClassGroupDetail[] = [
   {
     id: 'cg_17',
     courseName: 'Inglés Básico A1',
-    code: 'ING-01',
+    code: 'ING-0001',
     language: LANGUAGES.en,
     weekdays: ['sat'],
     startTime: '09:00',
@@ -1374,7 +1374,7 @@ const classGroups: ClassGroupDetail[] = [
   {
     id: 'cg_18',
     courseName: 'Italiano Inicial',
-    code: 'ITA-01',
+    code: 'ITA-0001',
     language: LANGUAGES.it,
     weekdays: ['mon', 'wed'],
     startTime: '20:00',
@@ -1394,7 +1394,7 @@ const classGroups: ClassGroupDetail[] = [
   {
     id: 'cg_19',
     courseName: 'Quechua Conversacional',
-    code: 'QUE-01',
+    code: 'QUE-0001',
     language: LANGUAGES.qu,
     weekdays: ['sat'],
     startTime: '11:00',
@@ -1414,7 +1414,7 @@ const classGroups: ClassGroupDetail[] = [
   {
     id: 'cg_20',
     courseName: 'Francés Inicial',
-    code: 'FRA-01',
+    code: 'FRA-0001',
     language: LANGUAGES.fr,
     weekdays: ['tue', 'thu'],
     startTime: '19:00',

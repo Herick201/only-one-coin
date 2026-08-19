@@ -360,7 +360,7 @@
       "created_local_only": "Class group created on screen only ({time}). No server connected yet.",
       "course_placeholder": "Inglés Básico A1",
       "field_code": "Class group code",
-      "code_placeholder": "ING-08",
+      "code_placeholder": "ING-0008",
       "seats_left": "{count, plural, one {# left} other {# left}}",
       "expand_all": "Expand all",
       "collapse_all": "Collapse all",

@@ -360,7 +360,7 @@
       "created_local_only": "Turma criada só na tela ({time}). Ainda não há servidor conectado.",
       "course_placeholder": "Inglés Básico A1",
       "field_code": "Código da turma",
-      "code_placeholder": "ING-08",
+      "code_placeholder": "ING-0008",
       "seats_left": "{count, plural, one {resta #} other {restam #}}",
       "expand_all": "Abrir todas",
       "collapse_all": "Fechar todas",

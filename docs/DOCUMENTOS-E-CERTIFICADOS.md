@@ -201,11 +201,12 @@ nunca pelo navegador (`CLAUDE.md` §8).
 - **Demais procedimentos pagos** (§2) — confirmar se entram na plataforma e se
   compartilham o fluxo de solicitação com pagamento.
 - **Formato do código da turma.** A tela mostra um `code` por turma — no mock,
-  três letras do idioma mais uma sequência (`ALE-02`). Nível e ciclo saíram do
-  código de propósito: o nome do curso já diz o nível e o período tem coluna
-  própria, então repeti-los só alongava a etiqueta. A sequência **não zera** a
-  cada período, senão `ING-01` existiria em dois ciclos e a busca ficaria
-  ambígua. É dado de catálogo, não id técnico — por isso pode aparecer na tela
+  três letras do idioma mais uma sequência de 4 dígitos (`ALE-0002`). Nível e
+  ciclo saíram do código de propósito: o nome do curso já diz o nível e o
+  período tem coluna própria, então repeti-los só alongava a etiqueta. A
+  sequência **não zera** a cada período, senão `ING-0001` existiria em dois
+  ciclos e a busca ficaria ambígua — e é por isso que ela tem 4 dígitos: com o
+  volume do `CLAUDE.md` §1 e uma sequência que nunca zera, 2 dígitos acabariam. É dado de catálogo, não id técnico — por isso pode aparecer na tela
   (`CLAUDE.md` §4) — mas o formato real ainda não foi confirmado com a
   Asociación.
 - **Nome do período.** `academicPeriodName` aparece como "Ciclo 2026-II" no
