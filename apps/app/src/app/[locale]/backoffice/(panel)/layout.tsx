@@ -100,14 +100,14 @@ export default async function BackofficePanelLayout({
   ]
 
   const brand = (
-    <div className="flex h-14 items-center gap-2.5 px-3">
-      <span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-lg bg-white/10">
+    <div className="flex h-14 items-center gap-2.5 px-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+      <span className="grid size-8 shrink-0 place-items-center overflow-hidden rounded-lg bg-white/10 group-data-[collapsible=icon]:bg-transparent">
         <Image
           src="/brand/logo.png"
           alt="Only One Coin"
           width={163}
           height={94}
-          className="h-5 w-auto"
+          className="h-4 w-auto"
         />
       </span>
       <span className="flex min-w-0 flex-col leading-tight group-data-[collapsible=icon]:hidden">
@@ -123,7 +123,7 @@ export default async function BackofficePanelLayout({
 
   const footer = (
     <>
-      <div className="flex items-center gap-2.5 px-1 group-data-[collapsible=icon]:px-0">
+      <div className="flex items-center gap-2.5 px-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
         <Avatar className="size-8 shrink-0">
           <AvatarFallback className="bg-white/10 text-xs font-semibold text-white">
             {monogram}

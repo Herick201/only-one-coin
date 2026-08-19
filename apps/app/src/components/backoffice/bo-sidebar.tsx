@@ -114,13 +114,16 @@ export function BoSidebar({
                         <SidebarMenuButton
                           disabled
                           tooltip={`${item.label} — ${soonLabel}`}
-                          className="cursor-default text-slate-500 opacity-70 hover:bg-transparent hover:text-slate-500"
+                          className="cursor-default pr-7 text-slate-500 opacity-70 hover:bg-transparent hover:text-slate-500"
                         >
                           <Icon />
-                          <span>{item.label}</span>
+                          <span className="truncate">{item.label}</span>
                         </SidebarMenuButton>
-                        <SidebarMenuBadge className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 group-data-[collapsible=icon]:hidden">
-                          {soonLabel}
+                        <SidebarMenuBadge
+                          aria-hidden="true"
+                          className="right-2 min-w-0 px-0"
+                        >
+                          <span className="size-1.5 rounded-full bg-slate-500" />
                         </SidebarMenuBadge>
                       </SidebarMenuItem>
                     )
@@ -135,7 +138,7 @@ export function BoSidebar({
                       >
                         <Link href={item.href}>
                           <Icon />
-                          <span>{item.label}</span>
+                          <span className="truncate">{item.label}</span>
                         </Link>
                       </SidebarMenuButton>
                       {item.badge !== undefined && item.badge > 0 && (
