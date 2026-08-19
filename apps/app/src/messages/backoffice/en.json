@@ -1,0 +1,222 @@
+{
+  "bo": {
+    "brand": {
+      "panel_label": "Admin panel"
+    },
+    "nav": {
+      "dashboard": "Home",
+      "students": "Students",
+      "enrollments": "Enrollments",
+      "payments": "Payments",
+      "courses": "Courses & groups",
+      "teachers": "Teachers",
+      "email": "Emails",
+      "reports": "Reports",
+      "staff": "Team",
+      "settings": "Settings",
+      "logout": "Sign out",
+      "soon": "Soon",
+      "group_daily": "Day to day",
+      "group_academic": "Academic",
+      "group_admin": "Administration",
+      "sidebar_toggle": "Show or hide the menu",
+      "sidebar_title": "Panel menu",
+      "sidebar_description": "Navigation across the panel modules.",
+      "sidebar_close": "Close the menu"
+    },
+    "role": {
+      "admin": "Administration",
+      "coordinator": "Coordination",
+      "teacher": "Teacher",
+      "treasury": "Treasury",
+      "mass_approver": "Bulk approval"
+    },
+    "common": {
+      "actions": "Actions",
+      "mock_notice": "Demo screen: the data is sample data and changes are not saved yet."
+    },
+    "dashboard": {
+      "greeting": "Hi, {name}",
+      "subtitle": "Today at a glance, plus everything waiting on a human.",
+      "metric_enrollments_today": "Enrollments today",
+      "metric_delta": "{value}% vs. yesterday",
+      "metric_pending_review": "In human review",
+      "metric_oldest": "Oldest waiting {hours} h",
+      "metric_active_students": "Active students",
+      "metric_seats": "Seat occupancy",
+      "metric_seats_hint": "{taken} of {capacity} seats taken"
+    },
+    "review": {
+      "title": "Review queue",
+      "subtitle": "Receipts the AI could not approve on its own. Reviewed oldest first.",
+      "col_student": "Student",
+      "col_course": "Course",
+      "col_amount": "Amount read",
+      "col_flag": "Reason",
+      "col_extraction": "Extraction",
+      "col_submitted": "Submitted",
+      "expected": "Expected: {amount}",
+      "tier": "Tier {tier}",
+      "confidence": "Confidence {value}%",
+      "open_file": "Open file",
+      "empty_title": "Nothing in the queue",
+      "empty_body": "When a receipt needs a human, it shows up here.",
+      "pending_count": "{count} in queue"
+    },
+    "review_flag": {
+      "amount_mismatch": "Amount mismatch",
+      "low_confidence": "Low confidence",
+      "illegible": "Illegible",
+      "duplicate_phash": "Duplicate receipt",
+      "model_divergence": "Models disagreed"
+    },
+    "seats": {
+      "title": "Seats per class group",
+      "subtitle": "Groups closest to filling up in this sales period.",
+      "full": "Full",
+      "available": "{count} left",
+      "taken": "{taken} of {capacity}",
+      "starts": "Starts {date}"
+    },
+    "modules": {
+      "title": "Modules",
+      "subtitle": "Everything the panel manages. We are enabling them in stages.",
+      "students": "Full file, status, enrollment history and data editing.",
+      "enrollments": "Enrollments by period, class group and status, with seat reservation.",
+      "payments": "Receipts, approval, rejection and validation tolerance.",
+      "courses": "Courses, class groups, schedules, seats and start dates.",
+      "teachers": "Teachers and the class groups each one owns.",
+      "email": "Transactional emails and campaigns, with versioned templates.",
+      "reports": "Enrollments, revenue and occupancy by course and period.",
+      "staff": "Panel users, roles and two-factor.",
+      "settings": "Sales periods, current prices and validation parameters."
+    },
+    "students": {
+      "title": "Students",
+      "subtitle": "Search by name, ID, email or phone.",
+      "search_label": "Search student",
+      "search_placeholder": "Name, ID, email or phone",
+      "filter_all": "All",
+      "col_student": "Student",
+      "col_document": "ID",
+      "col_contact": "Contact",
+      "col_status": "Status",
+      "col_courses": "Active courses",
+      "col_last_activity": "Last activity",
+      "age_city": "{age} years · {city}",
+      "minor": "Minor",
+      "total_enrollments": "{count} enrollments total",
+      "open_file": "Open file",
+      "empty_title": "No results",
+      "empty_body": "Try another name, ID or email, or clear the status filter.",
+      "showing": "Showing {shown} of {total} students"
+    },
+    "student_status": {
+      "active": "Active",
+      "under_review": "In review",
+      "inactive": "Inactive"
+    },
+    "national_id_type": {
+      "DNI": "DNI",
+      "CE": "Foreigner ID",
+      "passport": "Passport"
+    },
+    "student_file": {
+      "back_to_list": "Back to students",
+      "resend_credentials": "Resend credentials",
+      "tab_data": "Details",
+      "tab_enrollments": "Enrollments",
+      "tab_documents": "Documents",
+      "tab_activity": "Activity",
+      "personal_title": "Student details",
+      "edit": "Edit details",
+      "save": "Save changes",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "edit_audit_notice": "Every data change is recorded with author, timestamp and previous value.",
+      "saved_local_only": "Changes applied on screen only ({time}). No server is wired yet.",
+      "field_first_name": "First name",
+      "field_last_name": "Last name",
+      "field_id_type": "ID type",
+      "field_id_number": "ID number",
+      "field_email": "Email",
+      "field_phone": "Phone",
+      "field_city": "City",
+      "field_birth_date": "Date of birth",
+      "birth_date_value": "{date} · {age} years",
+      "field_created_at": "Registered on",
+      "field_last_activity": "Last activity",
+      "guardian_title": "Guardian",
+      "field_guardian_name": "Name",
+      "field_relationship": "Relationship",
+      "consent_given": "Consent signed",
+      "consent_detail": "Version {version} · {date} · IP {ip}",
+      "consent_missing": "Consent missing",
+      "consent_missing_detail": "The student is a minor and the guardian has not accepted the current text yet.",
+      "no_guardian_title": "No guardian on file",
+      "no_guardian_body": "The student is of age, so no guardian is required.",
+      "col_course": "Course & group",
+      "col_period": "Period",
+      "col_enrollment_status": "Enrollment",
+      "col_seat": "Seat",
+      "col_payment": "Payment",
+      "col_amount": "Amount",
+      "col_created": "Created",
+      "operation": "{method} · operation {number}",
+      "no_operation": "{method} · no operation number",
+      "no_enrollments_title": "No enrollments",
+      "no_enrollments_body": "This student has no enrollment on record yet.",
+      "issued_at": "Issued on {date}",
+      "not_issued": "Not issued yet",
+      "no_documents_title": "No documents",
+      "no_documents_body": "Enrollment certificates and diplomas show up here once issued.",
+      "activity_title": "History",
+      "activity_subtitle": "Append-only record: nothing is edited or deleted.",
+      "activity_actor": "{actor} · {role}",
+      "no_activity_title": "No activity",
+      "no_activity_body": "No actions have been recorded for this student yet."
+    },
+    "relationship": {
+      "mother": "Mother",
+      "father": "Father",
+      "legal_guardian": "Legal guardian"
+    },
+    "enrollment_status": {
+      "under_review": "In review",
+      "active": "Active",
+      "completed": "Completed",
+      "rejected": "Rejected"
+    },
+    "payment_status": {
+      "pending": "Pending",
+      "under_review": "In review",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "seat_status": {
+      "reserved": "Reserved",
+      "confirmed": "Confirmed",
+      "released": "Released"
+    },
+    "document_status": {
+      "available": "Available",
+      "pending": "In progress",
+      "locked": "Not available yet"
+    },
+    "document_type": {
+      "enrollment_certificate": "Enrollment certificate",
+      "certificate": "Completion certificate"
+    },
+    "audit_action": {
+      "student_created": "Student registered",
+      "student_updated": "Details edited",
+      "enrollment_created": "Enrollment created",
+      "payment_approved": "Payment approved",
+      "payment_rejected": "Payment rejected",
+      "payment_flagged": "Payment sent to review",
+      "document_issued": "Document issued",
+      "email_sent": "Email sent",
+      "credentials_sent": "Credentials sent"
+    }
+  }
+}

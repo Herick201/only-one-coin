@@ -18,7 +18,7 @@ export function LanguageSwitcher() {
   const [pending, startTransition] = useTransition()
 
   return (
-    <label className="flex items-center gap-2 text-xs font-medium text-muted">
+    <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
       <span className="sr-only">{t('label')}</span>
       <select
         value={locale}

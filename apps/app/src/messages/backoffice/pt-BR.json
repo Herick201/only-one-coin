@@ -1,0 +1,222 @@
+{
+  "bo": {
+    "brand": {
+      "panel_label": "Painel administrativo"
+    },
+    "nav": {
+      "dashboard": "Início",
+      "students": "Alunos",
+      "enrollments": "Matrículas",
+      "payments": "Pagamentos",
+      "courses": "Cursos e turmas",
+      "teachers": "Docentes",
+      "email": "E-mails",
+      "reports": "Relatórios",
+      "staff": "Equipe",
+      "settings": "Configuração",
+      "logout": "Sair",
+      "soon": "Em breve",
+      "group_daily": "Dia a dia",
+      "group_academic": "Acadêmico",
+      "group_admin": "Administração",
+      "sidebar_toggle": "Mostrar ou ocultar o menu",
+      "sidebar_title": "Menu do painel",
+      "sidebar_description": "Navegação entre os módulos do painel.",
+      "sidebar_close": "Fechar o menu"
+    },
+    "role": {
+      "admin": "Administração",
+      "coordinator": "Coordenação",
+      "teacher": "Docente",
+      "treasury": "Tesouraria",
+      "mass_approver": "Aprovação em massa"
+    },
+    "common": {
+      "actions": "Ações",
+      "mock_notice": "Tela de demonstração: os dados são de exemplo e as alterações ainda não são salvas."
+    },
+    "dashboard": {
+      "greeting": "Olá, {name}",
+      "subtitle": "Resumo do dia e tudo o que precisa de revisão humana.",
+      "metric_enrollments_today": "Matrículas de hoje",
+      "metric_delta": "{value}% em relação a ontem",
+      "metric_pending_review": "Em revisão humana",
+      "metric_oldest": "A mais antiga espera há {hours} h",
+      "metric_active_students": "Alunos ativos",
+      "metric_seats": "Ocupação de vagas",
+      "metric_seats_hint": "{taken} de {capacity} vagas ocupadas"
+    },
+    "review": {
+      "title": "Fila de revisão",
+      "subtitle": "Comprovantes que a IA não conseguiu aprovar sozinha. Revisados do mais antigo ao mais recente.",
+      "col_student": "Aluno",
+      "col_course": "Curso",
+      "col_amount": "Valor lido",
+      "col_flag": "Motivo",
+      "col_extraction": "Extração",
+      "col_submitted": "Enviado",
+      "expected": "Esperado: {amount}",
+      "tier": "Nível {tier}",
+      "confidence": "Confiança {value}%",
+      "open_file": "Ver ficha",
+      "empty_title": "Nada na fila",
+      "empty_body": "Quando um comprovante precisar de revisão humana, ele aparece aqui.",
+      "pending_count": "{count} na fila"
+    },
+    "review_flag": {
+      "amount_mismatch": "Valor não confere",
+      "low_confidence": "Confiança baixa",
+      "illegible": "Ilegível",
+      "duplicate_phash": "Comprovante repetido",
+      "model_divergence": "Modelos divergiram"
+    },
+    "seats": {
+      "title": "Vagas por turma",
+      "subtitle": "Turmas mais perto de lotar neste período de venda.",
+      "full": "Lotada",
+      "available": "{count} livres",
+      "taken": "{taken} de {capacity}",
+      "starts": "Início {date}"
+    },
+    "modules": {
+      "title": "Módulos",
+      "subtitle": "Tudo o que se gerencia pelo painel. Vamos habilitando por partes.",
+      "students": "Ficha completa, status, histórico de matrículas e edição de dados.",
+      "enrollments": "Matrículas por período, turma e status, com a reserva de vaga.",
+      "payments": "Comprovantes, aprovação, recusa e tolerância de validação.",
+      "courses": "Cursos, turmas, horários, vagas e datas de início.",
+      "teachers": "Docentes e as turmas sob responsabilidade de cada um.",
+      "email": "E-mails transacionais e campanhas, com templates versionados.",
+      "reports": "Matrículas, receita e ocupação por curso e período.",
+      "staff": "Usuários do painel, cargos e dois fatores.",
+      "settings": "Períodos de venda, preços vigentes e parâmetros de validação."
+    },
+    "students": {
+      "title": "Alunos",
+      "subtitle": "Busque por nome, documento, e-mail ou telefone.",
+      "search_label": "Buscar aluno",
+      "search_placeholder": "Nome, documento, e-mail ou telefone",
+      "filter_all": "Todos",
+      "col_student": "Aluno",
+      "col_document": "Documento",
+      "col_contact": "Contato",
+      "col_status": "Status",
+      "col_courses": "Cursos ativos",
+      "col_last_activity": "Última atividade",
+      "age_city": "{age} anos · {city}",
+      "minor": "Menor de idade",
+      "total_enrollments": "{count} matrículas no total",
+      "open_file": "Ver ficha",
+      "empty_title": "Nenhum resultado",
+      "empty_body": "Tente outro nome, documento ou e-mail, ou remova o filtro de status.",
+      "showing": "Mostrando {shown} de {total} alunos"
+    },
+    "student_status": {
+      "active": "Ativo",
+      "under_review": "Em revisão",
+      "inactive": "Inativo"
+    },
+    "national_id_type": {
+      "DNI": "DNI",
+      "CE": "Carnê de estrangeiro",
+      "passport": "Passaporte"
+    },
+    "student_file": {
+      "back_to_list": "Voltar para alunos",
+      "resend_credentials": "Reenviar credenciais",
+      "tab_data": "Dados",
+      "tab_enrollments": "Matrículas",
+      "tab_documents": "Documentos",
+      "tab_activity": "Atividade",
+      "personal_title": "Dados do aluno",
+      "edit": "Editar dados",
+      "save": "Salvar alterações",
+      "saving": "Salvando…",
+      "cancel": "Cancelar",
+      "edit_audit_notice": "Toda alteração de dados fica registrada com autor, data e valor anterior.",
+      "saved_local_only": "Alterações aplicadas só na tela ({time}). Ainda não há servidor conectado.",
+      "field_first_name": "Nome",
+      "field_last_name": "Sobrenome",
+      "field_id_type": "Tipo de documento",
+      "field_id_number": "Número do documento",
+      "field_email": "E-mail",
+      "field_phone": "Telefone",
+      "field_city": "Cidade",
+      "field_birth_date": "Data de nascimento",
+      "birth_date_value": "{date} · {age} anos",
+      "field_created_at": "Cadastrado em",
+      "field_last_activity": "Última atividade",
+      "guardian_title": "Responsável",
+      "field_guardian_name": "Nome",
+      "field_relationship": "Parentesco",
+      "consent_given": "Consentimento assinado",
+      "consent_detail": "Versão {version} · {date} · IP {ip}",
+      "consent_missing": "Falta consentimento",
+      "consent_missing_detail": "O aluno é menor de idade e o responsável ainda não aceitou o texto vigente.",
+      "no_guardian_title": "Sem responsável cadastrado",
+      "no_guardian_body": "O aluno é maior de idade, então não precisa de responsável.",
+      "col_course": "Curso e turma",
+      "col_period": "Ciclo",
+      "col_enrollment_status": "Matrícula",
+      "col_seat": "Vaga",
+      "col_payment": "Pagamento",
+      "col_amount": "Valor",
+      "col_created": "Criada",
+      "operation": "{method} · operação {number}",
+      "no_operation": "{method} · sem número de operação",
+      "no_enrollments_title": "Sem matrículas",
+      "no_enrollments_body": "Este aluno ainda não tem nenhuma matrícula registrada.",
+      "issued_at": "Emitido em {date}",
+      "not_issued": "Ainda não emitido",
+      "no_documents_title": "Sem documentos",
+      "no_documents_body": "As constâncias e certificados aparecem aqui quando forem emitidos.",
+      "activity_title": "Histórico",
+      "activity_subtitle": "Registro append-only: nada é editado nem apagado.",
+      "activity_actor": "{actor} · {role}",
+      "no_activity_title": "Sem atividade",
+      "no_activity_body": "Ainda não há ações registradas para este aluno."
+    },
+    "relationship": {
+      "mother": "Mãe",
+      "father": "Pai",
+      "legal_guardian": "Responsável legal"
+    },
+    "enrollment_status": {
+      "under_review": "Em revisão",
+      "active": "Ativa",
+      "completed": "Finalizada",
+      "rejected": "Recusada"
+    },
+    "payment_status": {
+      "pending": "Pendente",
+      "under_review": "Em revisão",
+      "approved": "Aprovado",
+      "rejected": "Recusado"
+    },
+    "seat_status": {
+      "reserved": "Reservada",
+      "confirmed": "Confirmada",
+      "released": "Liberada"
+    },
+    "document_status": {
+      "available": "Disponível",
+      "pending": "Em processo",
+      "locked": "Ainda não disponível"
+    },
+    "document_type": {
+      "enrollment_certificate": "Constância de matrícula",
+      "certificate": "Certificado de conclusão"
+    },
+    "audit_action": {
+      "student_created": "Aluno cadastrado",
+      "student_updated": "Dados editados",
+      "enrollment_created": "Matrícula criada",
+      "payment_approved": "Pagamento aprovado",
+      "payment_rejected": "Pagamento recusado",
+      "payment_flagged": "Pagamento enviado à revisão",
+      "document_issued": "Documento emitido",
+      "email_sent": "E-mail enviado",
+      "credentials_sent": "Credenciais enviadas"
+    }
+  }
+}

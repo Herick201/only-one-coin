@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
-import { Poppins, Fredoka } from 'next/font/google'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { LanguageGlobe } from '@/components/language-globe'
 import { CheckCircleIcon, KeyIcon, ShieldIcon } from './icons'
@@ -17,20 +16,6 @@ import { BackofficeLoginForm } from './backoffice-login-form'
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
-
-const poppins = Poppins({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-poppins',
-  display: 'swap',
-})
-
-const fredoka = Fredoka({
-  subsets: ['latin'],
-  weight: ['500', '600', '700'],
-  variable: '--font-fredoka',
-  display: 'swap',
-})
 
 export default async function BackofficePage({
   params,
@@ -53,7 +38,7 @@ export default async function BackofficePage({
 
   return (
     <div
-      className={`${poppins.variable} ${fredoka.variable} font-body grid min-h-dvh bg-sky-soft lg:grid-cols-[1.05fr_0.95fr]`}
+      className="grid min-h-dvh bg-sky-soft lg:grid-cols-[1.05fr_0.95fr]"
     >
       {/* Brand panel — desktop only; the phone gets the compact header below. */}
       <aside className="relative hidden overflow-hidden bg-ink px-12 py-14 lg:flex lg:flex-col lg:justify-between">
@@ -99,7 +84,7 @@ export default async function BackofficePage({
           <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-brand-yellow">
             {t('brand_eyebrow')}
           </p>
-          <h2 className="font-display text-4xl font-semibold leading-tight text-white">
+          <h2 className="text-4xl font-semibold leading-tight text-white">
             {t('brand_title')}
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-slate-300">
@@ -121,7 +106,7 @@ export default async function BackofficePage({
           </ul>
         </div>
 
-        <p className="relative text-xs text-slate-500">{t('brand_footer')}</p>
+        <p className="relative text-xs text-slate-400">{t('brand_footer')}</p>
       </aside>
 
       {/* Form side */}
@@ -142,11 +127,11 @@ export default async function BackofficePage({
           <div className="w-full max-w-sm">
             <BackofficeLoginForm />
 
-            <p className="mt-8 flex items-start gap-2 text-xs text-muted">
+            <p className="mt-8 flex items-start gap-2 text-xs text-muted-foreground">
               <ShieldIcon size={14} className="mt-0.5 shrink-0 text-brand-blue" />
               {t('security_notice')}
             </p>
-            <p className="mt-2 text-xs text-slate-400">{t('mock_notice')}</p>
+            <p className="mt-2 text-xs text-muted-foreground">{t('mock_notice')}</p>
           </div>
         </div>
       </main>
