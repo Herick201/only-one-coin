@@ -156,6 +156,8 @@
       "field_created_at": "Registrado el",
       "field_last_activity": "Última actividad",
       "guardian_title": "Apoderado",
+      "guardian_edit": "Editar apoderado",
+      "guardian_consent_locked": "El consentimiento no se edita aquí: se registra cuando el apoderado acepta el texto vigente. Todo cambio de datos queda con autor, fecha y valor anterior.",
       "field_guardian_name": "Nombre",
       "field_relationship": "Parentesco",
       "consent_given": "Consentimiento firmado",

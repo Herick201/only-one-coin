@@ -156,6 +156,8 @@
       "field_created_at": "Cadastrado em",
       "field_last_activity": "Última atividade",
       "guardian_title": "Responsável",
+      "guardian_edit": "Editar responsável",
+      "guardian_consent_locked": "O consentimento não se edita aqui: ele é registrado quando o responsável aceita o texto vigente. Toda alteração de dados fica com autor, data e valor anterior.",
       "field_guardian_name": "Nome",
       "field_relationship": "Parentesco",
       "consent_given": "Consentimento assinado",
