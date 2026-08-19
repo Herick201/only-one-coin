@@ -143,7 +143,13 @@
       "field_id_number": "Número de documento",
       "field_email": "Correo",
       "field_phone": "Teléfono",
+      "field_dial_code": "Código de país",
+      "phone_placeholder": "951 220 447",
       "field_city": "Ciudad",
+      "field_country": "País",
+      "field_region": "Departamento",
+      "select_placeholder": "Selecciona…",
+      "city_needs_region": "Elige primero el departamento",
       "field_birth_date": "Fecha de nacimiento",
       "birth_date_value": "{date} · {age} años",
       "field_created_at": "Registrado el",
@@ -166,6 +172,7 @@
       "col_created": "Creada",
       "operation": "{method} · operación {number}",
       "no_operation": "{method} · sin número de operación",
+      "frozen_price": "Precio congelado al matricular",
       "no_enrollments_title": "Sin matrículas",
       "no_enrollments_body": "Este alumno todavía no tiene ninguna matrícula registrada.",
       "issued_at": "Emitido el {date}",
@@ -175,6 +182,8 @@
       "activity_title": "Historial",
       "activity_subtitle": "Registro append-only: nada se edita ni se borra.",
       "activity_actor": "{actor} · {role}",
+      "activity_operation": "Operación {number}",
+      "activity_field": "Campo actualizado: {field}",
       "no_activity_title": "Sin actividad",
       "no_activity_body": "Todavía no hay acciones registradas para este alumno."
     },
@@ -219,6 +228,9 @@
       "document_issued": "Documento emitido",
       "email_sent": "Correo enviado",
       "credentials_sent": "Credenciales enviadas"
+    },
+    "email_template": {
+      "guardian_consent_reminder": "Recordatorio de consentimiento del apoderado"
     }
   }
 }

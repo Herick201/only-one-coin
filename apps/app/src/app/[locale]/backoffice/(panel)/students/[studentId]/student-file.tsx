@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
-import type { StudentDetail } from '@/lib/backoffice/types'
+import type { AuditReference, StudentDetail } from '@/lib/backoffice/types'
+import { paymentMethodLabel } from '@/lib/payment-method'
+import { countryName } from '@/lib/geo'
 import { ageFrom, formatDate, formatDateTime, formatMoney, type Locale } from '@/lib/format'
 import {
   Card,
@@ -26,6 +28,17 @@ import { StudentEditForm, type EditableStudent } from './student-edit-form'
 
 type Tab = 'data' | 'enrollments' | 'documents' | 'activity'
 
+/** City · department · country, dropping what is empty or repeated. */
+function placeLabel(
+  city: string,
+  region: string | null,
+  country: string,
+  locale: string,
+): string {
+  const parts = [city, region === city ? null : region, countryName(country, locale)]
+  return parts.filter(Boolean).join(' · ')
+}
+
 const TABS: Tab[] = ['data', 'enrollments', 'documents', 'activity']
 
 /**
@@ -47,9 +60,30 @@ export function StudentFile({ student }: { student: StudentDetail }) {
     email: student.email,
     phone: student.phone,
     birthDate: student.birthDate,
+    country: student.country,
+    region: student.region,
     city: student.city,
   })
   const [savedAt, setSavedAt] = useState<string | null>(null)
+
+  /** Audit references carry domain data or a domain code — the screen only ever
+   *  shows text (CLAUDE.md §4: zero UI string outside the locale files). */
+  function activityDetail(reference: AuditReference): string {
+    switch (reference.kind) {
+      case 'course':
+        return reference.name
+      case 'operation':
+        return t('student_file.activity_operation', { number: reference.number })
+      case 'review_flag':
+        return t(`review_flag.${reference.flag}`)
+      case 'student_field':
+        return t('student_file.activity_field', {
+          field: t(`student_file.field_${reference.field}`),
+        })
+      case 'email_template':
+        return t(`email_template.${reference.template}`)
+    }
+  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -123,7 +157,9 @@ export function StudentFile({ student }: { student: StudentDetail }) {
                   </Field>
                   <Field label={t('student_file.field_email')}>{draft.email}</Field>
                   <Field label={t('student_file.field_phone')}>{draft.phone}</Field>
-                  <Field label={t('student_file.field_city')}>{draft.city}</Field>
+                  <Field label={t('student_file.field_city')}>
+                    {placeLabel(draft.city, draft.region, draft.country, locale)}
+                  </Field>
                   <Field label={t('student_file.field_birth_date')}>
                     {t('student_file.birth_date_value', {
                       date: formatDate(draft.birthDate, locale),
@@ -274,11 +310,11 @@ export function StudentFile({ student }: { student: StudentDetail }) {
                         <span className="text-xs text-muted-foreground">
                           {item.operationNumber
                             ? t('student_file.operation', {
-                                method: item.paymentMethod,
+                                method: paymentMethodLabel[item.paymentMethod],
                                 number: item.operationNumber,
                               })
                             : t('student_file.no_operation', {
-                                method: item.paymentMethod,
+                                method: paymentMethodLabel[item.paymentMethod],
                               })}
                         </span>
                       </span>
@@ -288,7 +324,9 @@ export function StudentFile({ student }: { student: StudentDetail }) {
                         <span className="font-semibold tabular-nums">
                           {formatMoney(item.amountCents, item.currency, locale)}
                         </span>
-                        <span className="text-xs text-muted-foreground">{item.planPriceId}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {t('student_file.frozen_price')}
+                        </span>
                       </span>
                     </td>
                     <td className={`${tdClass} whitespace-nowrap text-sm text-muted-foreground`}>
@@ -389,7 +427,9 @@ export function StudentFile({ student }: { student: StudentDetail }) {
                       })}
                     </p>
                     {entry.reference && (
-                      <p className="text-xs text-muted-foreground">{entry.reference}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {activityDetail(entry.reference)}
+                      </p>
                     )}
                   </div>
                 </li>

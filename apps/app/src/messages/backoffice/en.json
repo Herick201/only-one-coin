@@ -143,7 +143,13 @@
       "field_id_number": "ID number",
       "field_email": "Email",
       "field_phone": "Phone",
+      "field_dial_code": "Country code",
+      "phone_placeholder": "951 220 447",
       "field_city": "City",
+      "field_country": "Country",
+      "field_region": "Region",
+      "select_placeholder": "Select…",
+      "city_needs_region": "Pick the region first",
       "field_birth_date": "Date of birth",
       "birth_date_value": "{date} · {age} years",
       "field_created_at": "Registered on",
@@ -166,6 +172,7 @@
       "col_created": "Created",
       "operation": "{method} · operation {number}",
       "no_operation": "{method} · no operation number",
+      "frozen_price": "Price frozen at enrollment",
       "no_enrollments_title": "No enrollments",
       "no_enrollments_body": "This student has no enrollment on record yet.",
       "issued_at": "Issued on {date}",
@@ -175,6 +182,8 @@
       "activity_title": "History",
       "activity_subtitle": "Append-only record: nothing is edited or deleted.",
       "activity_actor": "{actor} · {role}",
+      "activity_operation": "Operation {number}",
+      "activity_field": "Field updated: {field}",
       "no_activity_title": "No activity",
       "no_activity_body": "No actions have been recorded for this student yet."
     },
@@ -219,6 +228,9 @@
       "document_issued": "Document issued",
       "email_sent": "Email sent",
       "credentials_sent": "Credentials sent"
+    },
+    "email_template": {
+      "guardian_consent_reminder": "Guardian consent reminder"
     }
   }
 }

@@ -79,7 +79,10 @@ export interface StudentRow {
   birthDate: string
   isMinor: boolean
   status: StudentStatus
-  /** City / region, as declared at enrollment. */
+  /** ISO 3166-1 alpha-2 country, as declared at enrollment. */
+  country: string
+  /** First-level division — `departamento` in Peru. Null where we don't map one. */
+  region: string | null
   city: string
   activeCourses: number
   totalEnrollments: number
@@ -130,14 +133,40 @@ export type AuditAction =
   | 'email_sent'
   | 'credentials_sent'
 
+/** Student data fields, as shown in the file — used by the audit trail. */
+export type StudentField =
+  | 'first_name'
+  | 'last_name'
+  | 'id_type'
+  | 'id_number'
+  | 'email'
+  | 'phone'
+  | 'country'
+  | 'region'
+  | 'city'
+  | 'birth_date'
+
+/** Versioned e-mail templates (CLAUDE.md §5, outbox). */
+export type EmailTemplate = 'guardian_consent_reminder'
+
+/**
+ * What an audit entry points at. Either real data (a course name, an operation
+ * number) or a domain code the UI translates — a code never reaches the screen.
+ */
+export type AuditReference =
+  | { kind: 'course'; name: string }
+  | { kind: 'operation'; number: string }
+  | { kind: 'review_flag'; flag: ReviewFlag }
+  | { kind: 'student_field'; field: StudentField }
+  | { kind: 'email_template'; template: EmailTemplate }
+
 export interface AuditEntry {
   id: string
   at: string
   action: AuditAction
   actorName: string
   actorRole: StaffRole
-  /** Free-form data (course name, operation number…), never UI copy. */
-  reference: string | null
+  reference: AuditReference | null
 }
 
 /** Full student file. */

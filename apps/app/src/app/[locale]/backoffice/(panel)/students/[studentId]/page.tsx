@@ -50,7 +50,11 @@ export default async function StudentDetailPage({
               <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                 <span>{`${t(`national_id_type.${student.nationalIdType}`)} ${student.nationalId}`}</span>
                 <span aria-hidden="true">·</span>
-                <span>{student.city}</span>
+                <span>
+                  {[student.city, student.region === student.city ? null : student.region]
+                    .filter(Boolean)
+                    .join(', ')}
+                </span>
                 {student.isMinor && (
                   <>
                     <span aria-hidden="true">·</span>

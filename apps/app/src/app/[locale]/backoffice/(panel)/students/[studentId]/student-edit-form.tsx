@@ -1,9 +1,19 @@
 'use client'
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import type { NationalIdType } from '@/lib/backoffice/types'
 import { BoIcon } from '@/components/backoffice/icons'
+import {
+  COUNTRIES,
+  DEFAULT_COUNTRY,
+  PERU_REGIONS,
+  citiesOf,
+  countryName,
+  flagEmoji,
+  joinPhone,
+  splitPhone,
+} from '@/lib/geo'
 
 export interface EditableStudent {
   firstName: string
@@ -11,8 +21,11 @@ export interface EditableStudent {
   nationalIdType: NationalIdType
   nationalId: string
   email: string
+  /** Stored as one string, dial code included — the form only splits it to edit. */
   phone: string
   birthDate: string
+  country: string
+  region: string | null
   city: string
 }
 
@@ -34,12 +47,33 @@ export function StudentEditForm({
   onCancel: () => void
 }) {
   const t = useTranslations('bo')
+  const locale = useLocale()
   const [draft, setDraft] = useState<EditableStudent>(value)
+  const [phoneCountry, setPhoneCountry] = useState(
+    () => splitPhone(value.phone, value.country || DEFAULT_COUNTRY).country,
+  )
+  const [phoneNumber, setPhoneNumber] = useState(() => splitPhone(value.phone).number)
   const [pending, setPending] = useState(false)
 
   function set<K extends keyof EditableStudent>(key: K, next: EditableStudent[K]) {
     setDraft((prev) => ({ ...prev, [key]: next }))
   }
+
+  /** Country drives the address cascade: outside Peru there is no region list. */
+  function setCountry(next: string) {
+    setDraft((prev) => ({ ...prev, country: next, region: null, city: '' }))
+    // Only pre-fill the dial code while there is no number to rewrite.
+    if (phoneNumber.trim() === '') setPhone(next, phoneNumber)
+  }
+
+  function setPhone(country: string, number: string) {
+    setPhoneCountry(country)
+    setPhoneNumber(number)
+    set('phone', joinPhone(country, number))
+  }
+
+  const inPeru = draft.country === 'PE'
+  const cities = citiesOf(draft.region)
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -112,13 +146,29 @@ export function StudentEditForm({
         </label>
         <label className={labelClass}>
           {t('student_file.field_phone')}
-          <input
-            type="tel"
-            className={fieldClass}
-            value={draft.phone}
-            onChange={(e) => set('phone', e.target.value)}
-            required
-          />
+          <span className="flex gap-2">
+            <select
+              className={`${fieldClass} w-28 shrink-0`}
+              value={phoneCountry}
+              onChange={(e) => setPhone(e.target.value, phoneNumber)}
+              aria-label={t('student_file.field_dial_code')}
+            >
+              {COUNTRIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {`${flagEmoji(c.code)} ${c.dial}`}
+                </option>
+              ))}
+            </select>
+            <input
+              type="tel"
+              inputMode="tel"
+              className={`${fieldClass} min-w-0 flex-1`}
+              value={phoneNumber}
+              onChange={(e) => setPhone(phoneCountry, e.target.value)}
+              placeholder={t('student_file.phone_placeholder')}
+              required
+            />
+          </span>
         </label>
         <label className={labelClass}>
           {t('student_file.field_birth_date')}
@@ -131,13 +181,69 @@ export function StudentEditForm({
           />
         </label>
         <label className={labelClass}>
-          {t('student_file.field_city')}
-          <input
+          {t('student_file.field_country')}
+          <select
             className={fieldClass}
-            value={draft.city}
-            onChange={(e) => set('city', e.target.value)}
-            required
-          />
+            value={draft.country}
+            onChange={(e) => setCountry(e.target.value)}
+          >
+            {COUNTRIES.map((c) => (
+              <option key={c.code} value={c.code}>
+                {`${flagEmoji(c.code)} ${countryName(c.code, locale)}`}
+              </option>
+            ))}
+          </select>
+        </label>
+        {inPeru && (
+          <label className={labelClass}>
+            {t('student_file.field_region')}
+            <select
+              className={fieldClass}
+              value={draft.region ?? ''}
+              onChange={(e) => {
+                set('region', e.target.value || null)
+                set('city', '')
+              }}
+              required
+            >
+              <option value="">{t('student_file.select_placeholder')}</option>
+              {PERU_REGIONS.map((r) => (
+                <option key={r.region} value={r.region}>
+                  {r.region}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        <label className={labelClass}>
+          {t('student_file.field_city')}
+          {inPeru ? (
+            <select
+              className={fieldClass}
+              value={draft.city}
+              onChange={(e) => set('city', e.target.value)}
+              disabled={cities.length === 0}
+              required
+            >
+              <option value="">
+                {cities.length === 0
+                  ? t('student_file.city_needs_region')
+                  : t('student_file.select_placeholder')}
+              </option>
+              {cities.map((city) => (
+                <option key={city} value={city}>
+                  {city}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              className={fieldClass}
+              value={draft.city}
+              onChange={(e) => set('city', e.target.value)}
+              required
+            />
+          )}
         </label>
       </div>
 

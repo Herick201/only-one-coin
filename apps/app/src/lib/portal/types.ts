@@ -143,6 +143,12 @@ export interface Payment {
 
 export interface Enrollment {
   id: string
+  /**
+   * Human-readable enrollment code the student quotes for support — course
+   * short code + sequence (`IN-1122`). Generated server-side and immutable;
+   * the internal `id` never reaches the screen (CLAUDE.md §4).
+   */
+  code: string
   status: EnrollmentStatus
   seatStatus: SeatStatus
   createdAt: string

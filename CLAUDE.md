@@ -128,6 +128,8 @@ Seletor de idioma visível na interface. Roteamento: `es-PE` sem prefixo, `/en` 
 
 Motivo: a Asociación dá oficinas de quechua. Um quarto idioma (ex.: quechua) é só mais um arquivo de locale com a mesma estrutura — nunca uma caçada por strings soltas.
 
+**Zero código de domínio na tela.** Enum, flag, id técnico e nome de campo (`amount_mismatch`, `pp_en_a1_v3`, `yape`, `enr_1188`) nunca aparecem para o usuário — sempre resolvidos em texto pelo locale. Se um dado da UI pode ser código, o tipo diz qual é (união discriminada), não uma string solta. Exceção: nome próprio de marca (`Yape`, `Plin`, `BCP`) e dado real do aluno (nome de curso, número de operação).
+
 ### Glossário (termos peruanos → código)
 
 | Domínio | Código |

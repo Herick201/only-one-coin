@@ -1,7 +1,7 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { getPortalSession } from '@/lib/portal/mock-data'
 import { formatDate, formatMoney } from '@/lib/portal/format'
-import type { Locale, PaymentMethod, PaymentStatus } from '@/lib/portal/types'
+import type { Locale, PaymentStatus } from '@/lib/portal/types'
 import {
   Card,
   EmptyState,
@@ -11,14 +11,7 @@ import {
 } from '@/components/portal/ui'
 import { enrollmentTone, paymentTone, seatTone } from '@/components/portal/status-tone'
 import { Icon } from '@/components/portal/icons'
-
-/** Display casing for payment methods — codes stay lowercase in data (§4). */
-const methodDisplay: Record<PaymentMethod, string> = {
-  yape: 'Yape',
-  plin: 'Plin',
-  bcp: 'BCP',
-  interbank: 'Interbank',
-}
+import { paymentMethodLabel } from '@/lib/payment-method'
 
 /** Which payment states get a contextual note, and its tone. */
 const noteFor: Partial<Record<PaymentStatus, { key: string; tone: 'success' | 'warning' | 'danger' }>> = {
@@ -81,7 +74,7 @@ export default async function EnrollmentPage({
 
                 <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
                   <Field label={t('enrollments.code_label')}>
-                    <span className="font-mono text-xs">{e.id}</span>
+                    <span className="font-mono text-xs">{e.code}</span>
                   </Field>
                   <Field label={t('enrollments.plan_label')}>{e.plan.name}</Field>
                   <Field label={t('enrollments.price_label')}>
@@ -103,7 +96,7 @@ export default async function EnrollmentPage({
                   </div>
                   <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
                     <Field label={t('payment_method.label')}>
-                      {methodDisplay[e.payment.method]}
+                      {paymentMethodLabel[e.payment.method]}
                     </Field>
                     {e.payment.operationNumber && (
                       <Field label={t('enrollments.operation_number')}>
