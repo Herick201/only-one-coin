@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import type { AuditReference, StudentDetail } from '@/lib/backoffice/types'
-import { paymentMethodLabel } from '@/lib/payment-method'
 import { countryName } from '@/lib/geo'
 import { ageFrom, formatDate, formatDateTime, formatMoney, type Locale } from '@/lib/format'
 import {
@@ -24,6 +23,7 @@ import {
   seatTone,
 } from '@/components/backoffice/status-tone'
 import { BoIcon } from '@/components/backoffice/icons'
+import { EnrollmentDetailSheet } from './enrollment-detail-sheet'
 import { StudentEditForm, type EditableStudent } from './student-edit-form'
 
 type Tab = 'data' | 'enrollments' | 'documents' | 'activity'
@@ -65,6 +65,8 @@ export function StudentFile({ student }: { student: StudentDetail }) {
     city: student.city,
   })
   const [savedAt, setSavedAt] = useState<string | null>(null)
+  /** Enrollment whose detail panel is open — the table shows status only. */
+  const [openEnrollmentId, setOpenEnrollmentId] = useState<string | null>(null)
 
   /** Audit references carry domain data or a domain code — the screen only ever
    *  shows text (CLAUDE.md §4: zero UI string outside the locale files). */
@@ -276,14 +278,22 @@ export function StudentFile({ student }: { student: StudentDetail }) {
               </thead>
               <tbody>
                 {student.enrollments.map((item) => (
-                  <tr key={item.id} className="transition hover:bg-sky-soft">
+                  <tr
+                    key={item.id}
+                    onClick={() => setOpenEnrollmentId(item.id)}
+                    title={t('student_file.view_detail')}
+                    className="cursor-pointer transition hover:bg-sky-soft"
+                  >
                     <td className={tdClass}>
-                      <span className="flex flex-col leading-tight">
-                        <span className="font-semibold">{item.courseName}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {`${item.classGroupName} · ${item.teacherName}`}
-                        </span>
-                      </span>
+                      {/* The course name is the keyboard-reachable control; the
+                          whole row is clickable for the mouse. */}
+                      <button
+                        type="button"
+                        onClick={() => setOpenEnrollmentId(item.id)}
+                        className="rounded text-left font-semibold text-ink outline-none transition hover:text-brand-blue focus-visible:ring-2 focus-visible:ring-brand-blue/40"
+                      >
+                        {item.courseName}
+                      </button>
                     </td>
                     <td className={`${tdClass} text-sm text-muted-foreground`}>
                       {item.academicPeriodName}
@@ -302,32 +312,13 @@ export function StudentFile({ student }: { student: StudentDetail }) {
                       />
                     </td>
                     <td className={tdClass}>
-                      <span className="flex flex-col gap-1 leading-tight">
-                        <StatusBadge
-                          tone={paymentTone[item.paymentStatus]}
-                          label={t(`payment_status.${item.paymentStatus}`)}
-                        />
-                        <span className="text-xs text-muted-foreground">
-                          {item.operationNumber
-                            ? t('student_file.operation', {
-                                method: paymentMethodLabel[item.paymentMethod],
-                                number: item.operationNumber,
-                              })
-                            : t('student_file.no_operation', {
-                                method: paymentMethodLabel[item.paymentMethod],
-                              })}
-                        </span>
-                      </span>
+                      <StatusBadge
+                        tone={paymentTone[item.paymentStatus]}
+                        label={t(`payment_status.${item.paymentStatus}`)}
+                      />
                     </td>
-                    <td className={tdClass}>
-                      <span className="flex flex-col leading-tight">
-                        <span className="font-semibold tabular-nums">
-                          {formatMoney(item.amountCents, item.currency, locale)}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {t('student_file.frozen_price')}
-                        </span>
-                      </span>
+                    <td className={`${tdClass} whitespace-nowrap font-semibold tabular-nums`}>
+                      {formatMoney(item.amountCents, item.currency, locale)}
                     </td>
                     <td className={`${tdClass} whitespace-nowrap text-sm text-muted-foreground`}>
                       {formatDate(item.createdAt, locale)}
@@ -337,6 +328,12 @@ export function StudentFile({ student }: { student: StudentDetail }) {
               </tbody>
             </TableShell>
           )}
+          <EnrollmentDetailSheet
+            enrollment={
+              student.enrollments.find((item) => item.id === openEnrollmentId) ?? null
+            }
+            onClose={() => setOpenEnrollmentId(null)}
+          />
         </Card>
       )}
 

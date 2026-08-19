@@ -138,6 +138,7 @@ export interface Payment {
   status: PaymentStatus
   /** Provider operation number read from the receipt. */
   operationNumber: string | null
+  /** When the payment was credited — null until it is approved. */
   paidAt: string | null
 }
 

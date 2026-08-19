@@ -109,6 +109,7 @@ export interface EnrollmentHistoryItem {
   paymentStatus: PaymentStatus
   paymentMethod: PaymentMethod
   operationNumber: string | null
+  /** When the payment was credited — null until it is approved. */
   paidAt: string | null
   progressPct: number | null
 }
