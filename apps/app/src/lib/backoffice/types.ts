@@ -346,7 +346,12 @@ export interface CourseLanguage {
 export interface ClassGroupRow {
   id: string
   courseName: string
-  classGroupName: string
+  /**
+   * The code the institution prints on paperwork and uses on the phone —
+   * catalog data, not a technical id, which is why it is allowed on screen
+   * (CLAUDE.md §4). Format still to be confirmed with the Asociación.
+   */
+  code: string
   language: CourseLanguage
   /** Weekly schedule — the days plus the start time, in America/Lima. */
   weekdays: Weekday[]

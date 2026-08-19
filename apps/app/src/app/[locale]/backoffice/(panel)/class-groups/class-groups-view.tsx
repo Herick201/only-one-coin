@@ -13,6 +13,7 @@ import {
   Card,
   EmptyState,
   Meter,
+  Pager,
   StatusBadge,
   TableShell,
   tdClass,
@@ -27,6 +28,14 @@ const WEEKDAYS: Weekday[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 const MODALITIES: ClassModality[] = ['online', 'in_person', 'hybrid']
 
 const ALL = 'all'
+
+/**
+ * Closed groups only grow — a year of class groups would push the active list
+ * off the screen. Ten a page keeps the section scannable without hiding the
+ * pending count in the header, which is what the 25-business-day deadline
+ * hangs on (`docs/DOCUMENTOS-E-CERTIFICADOS.md` §3).
+ */
+const CLOSED_PAGE_SIZE = 10
 
 const selectClass =
   'rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink outline-none transition focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15'
@@ -63,6 +72,7 @@ export function ClassGroupsView({
   const [filtersOpen, setFiltersOpen] = useState(false)
   /** Language groups the user folded away. Everything starts open. */
   const [folded, setFolded] = useState<string[]>([])
+  const [closedPage, setClosedPage] = useState(0)
   const [creating, setCreating] = useState(false)
   const [createdAt, setCreatedAt] = useState<string | null>(null)
 
@@ -92,7 +102,7 @@ export function ClassGroupsView({
       if (teacher !== ALL && row.teacherId !== teacher) return false
       if (period !== ALL && row.academicPeriodName !== period) return false
       if (!needle) return true
-      return [row.courseName, row.classGroupName, row.teacherName, row.language.name]
+      return [row.courseName, row.code, row.teacherName, row.language.name]
         .join(' ')
         .toLowerCase()
         .includes(needle)
@@ -118,7 +128,14 @@ export function ClassGroupsView({
       map.set(row.language.id, entry)
     }
     return [...map.values()]
-      .map((entry) => ({ ...entry, groups: [...entry.groups].sort(byDate) }))
+      .map((entry) => ({
+        ...entry,
+        groups: [...entry.groups].sort(byDate),
+        // Seats rolled up per language: the divider carries the number so a
+        // folded language still says whether it is filling up.
+        seatsTaken: entry.groups.reduce((sum, row) => sum + row.seatsTaken, 0),
+        capacity: entry.groups.reduce((sum, row) => sum + row.capacity, 0),
+      }))
       .sort((a, b) => a.name.localeCompare(b.name))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtered, sort])
@@ -137,6 +154,25 @@ export function ClassGroupsView({
 
   const pendingGroups = closed.filter((row) => row.pendingCertificates > 0).length
   const activeCount = activeByLanguage.reduce((sum, e) => sum + e.groups.length, 0)
+
+  /**
+   * The page is clamped instead of reset by an effect: a filter that shrinks
+   * the list would otherwise leave the user staring at an empty page, and an
+   * effect for that would render twice on every keystroke.
+   */
+  const closedPageCount = Math.max(1, Math.ceil(closed.length / CLOSED_PAGE_SIZE))
+  const currentClosedPage = Math.min(closedPage, closedPageCount - 1)
+  const closedPageRows = closed.slice(
+    currentClosedPage * CLOSED_PAGE_SIZE,
+    currentClosedPage * CLOSED_PAGE_SIZE + CLOSED_PAGE_SIZE,
+  )
+
+  const allFolded =
+    activeByLanguage.length > 0 && folded.length >= activeByLanguage.length
+
+  function toggleAll() {
+    setFolded(allFolded ? [] : activeByLanguage.map((entry) => entry.id))
+  }
 
   function toggleLanguage(id: string) {
     setFolded((current) =>
@@ -316,6 +352,15 @@ export function ClassGroupsView({
           <span className="text-sm text-muted-foreground">
             {t('class_groups.group_count', { count: activeCount })}
           </span>
+          {activeByLanguage.length > 1 && (
+            <button
+              type="button"
+              onClick={toggleAll}
+              className="ml-auto text-xs font-semibold text-muted-foreground transition hover:text-brand-blue"
+            >
+              {t(allFolded ? 'class_groups.expand_all' : 'class_groups.collapse_all')}
+            </button>
+          )}
         </div>
 
         {activeByLanguage.length === 0 ? (
@@ -354,27 +399,30 @@ export function ClassGroupsView({
                     {/* Language divider doubles as the fold control. One table
                         for every language keeps the columns aligned. */}
                     <tr>
-                      <td colSpan={6} className="border-b border-line bg-sky-soft p-0">
+                      <td colSpan={6} className="border-y border-line bg-slate-50/80 p-0">
                         <button
                           type="button"
                           onClick={() => toggleLanguage(entry.id)}
                           aria-expanded={open}
-                          className="flex w-full items-center gap-2 px-4 py-2.5 text-left transition hover:bg-sky"
+                          className="flex w-full items-center gap-2 px-4 py-1.5 text-left transition hover:bg-slate-100 focus:outline-none focus-visible:bg-slate-100"
                         >
                           <BoIcon
                             name="chevron-down"
-                            size={16}
+                            size={14}
                             className={`text-muted-foreground transition-transform ${
                               open ? '' : '-rotate-90'
                             }`}
                           />
-                          <span className="text-sm font-semibold text-ink">
+                          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                             {entry.name}
                           </span>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-xs text-muted-foreground/70">
                             {t('class_groups.group_count', {
                               count: entry.groups.length,
                             })}
+                          </span>
+                          <span className="ml-auto text-xs tabular-nums text-muted-foreground/70">
+                            {`${entry.seatsTaken} / ${entry.capacity}`}
                           </span>
                         </button>
                       </td>
@@ -386,24 +434,36 @@ export function ClassGroupsView({
                           <td className={tdClass}>
                             <Link
                               href={`/backoffice/class-groups/${row.id}`}
-                              className="font-semibold text-ink transition hover:text-brand-blue"
+                              className="flex flex-col leading-tight"
                             >
-                              {row.courseName}
+                              <span className="font-semibold text-ink transition hover:text-brand-blue">
+                                {row.courseName}
+                              </span>
+                              <span className="text-xs tabular-nums text-muted-foreground">
+                                {row.code}
+                              </span>
                             </Link>
                           </td>
-                          <td className={`${tdClass} whitespace-nowrap text-sm text-muted-foreground`}>
+                          <td className={`${tdClass} whitespace-nowrap text-sm tabular-nums text-muted-foreground`}>
                             {scheduleLabel(row)}
                           </td>
                           <td className={`${tdClass} text-sm text-muted-foreground`}>
                             {row.teacherName}
                           </td>
-                          <td className={`${tdClass} whitespace-nowrap text-sm text-muted-foreground`}>
+                          <td className={`${tdClass} whitespace-nowrap text-sm tabular-nums text-muted-foreground`}>
                             {formatDateRange(row.startDate, row.endDate, locale)}
                           </td>
                           <td className={tdClass}>
-                            <span className="flex w-24 flex-col gap-1.5">
-                              <span className="text-xs font-semibold tabular-nums text-ink">
-                                {`${row.seatsTaken} / ${row.capacity}`}
+                            <span className="flex w-28 flex-col gap-1.5">
+                              <span className="flex items-baseline justify-between gap-1">
+                                <span className="text-xs font-semibold tabular-nums text-ink">
+                                  {`${row.seatsTaken} / ${row.capacity}`}
+                                </span>
+                                <span className="text-[11px] tabular-nums text-muted-foreground">
+                                  {t('class_groups.seats_left', {
+                                    count: Math.max(0, row.capacity - row.seatsTaken),
+                                  })}
+                                </span>
                               </span>
                               <Meter
                                 value={row.seatsTaken}
@@ -461,62 +521,83 @@ export function ClassGroupsView({
                 />
               </div>
             ) : (
-              <TableShell>
-                <thead>
-                  <tr>
-                    <th className={thClass}>{t('class_groups.col_class_group')}</th>
-                    <th className={thClass}>{t('class_groups.col_teacher')}</th>
-                    <th className={thClass}>{t('class_groups.col_dates')}</th>
-                    <th className={thClass}>{t('class_groups.col_status')}</th>
-                    <th className={thClass}>{t('class_groups.col_pending')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {closed.map((row) => (
-                    <tr key={row.id} className="transition hover:bg-sky-soft">
-                      <td className={tdClass}>
-                        <Link
-                          href={`/backoffice/class-groups/${row.id}`}
-                          className="flex flex-col leading-tight"
-                        >
-                          <span className="font-semibold text-ink transition hover:text-brand-blue">
-                            {row.courseName}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {row.language.name}
-                          </span>
-                        </Link>
-                      </td>
-                      <td className={`${tdClass} text-sm text-muted-foreground`}>
-                        {row.teacherName}
-                      </td>
-                      <td className={`${tdClass} whitespace-nowrap text-sm text-muted-foreground`}>
-                        {formatDateRange(row.startDate, row.endDate, locale)}
-                      </td>
-                      <td className={tdClass}>
-                        <StatusBadge
-                          tone={classGroupTone[row.status]}
-                          label={t(`class_group_status.${row.status}`)}
-                        />
-                      </td>
-                      <td className={tdClass}>
-                        {row.pendingCertificates > 0 ? (
-                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700">
-                            <BoIcon name="alert" size={14} />
-                            {t('class_groups.pending_certificates', {
-                              count: row.pendingCertificates,
-                            })}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">
-                            {t('class_groups.none_pending')}
-                          </span>
-                        )}
-                      </td>
+              <>
+                <TableShell>
+                  <thead>
+                    <tr>
+                      <th className={thClass}>{t('class_groups.col_class_group')}</th>
+                      <th className={thClass}>{t('class_groups.col_period')}</th>
+                      <th className={thClass}>{t('class_groups.col_teacher')}</th>
+                      <th className={thClass}>{t('class_groups.col_dates')}</th>
+                      <th className={thClass}>{t('class_groups.col_status')}</th>
+                      <th className={thClass}>{t('class_groups.col_pending')}</th>
                     </tr>
-                  ))}
-                </tbody>
-              </TableShell>
+                  </thead>
+                  <tbody>
+                    {closedPageRows.map((row) => (
+                      <tr key={row.id} className="transition hover:bg-sky-soft">
+                        <td className={tdClass}>
+                          <Link
+                            href={`/backoffice/class-groups/${row.id}`}
+                            className="flex flex-col leading-tight"
+                          >
+                            <span className="font-semibold text-ink transition hover:text-brand-blue">
+                              {row.courseName}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {`${row.code} · ${row.language.name}`}
+                            </span>
+                          </Link>
+                        </td>
+                        <td className={`${tdClass} whitespace-nowrap text-sm text-muted-foreground`}>
+                          {row.academicPeriodName}
+                        </td>
+                        <td className={`${tdClass} text-sm text-muted-foreground`}>
+                          {row.teacherName}
+                        </td>
+                        <td className={`${tdClass} whitespace-nowrap text-sm tabular-nums text-muted-foreground`}>
+                          {formatDateRange(row.startDate, row.endDate, locale)}
+                        </td>
+                        <td className={tdClass}>
+                          <StatusBadge
+                            tone={classGroupTone[row.status]}
+                            label={t(`class_group_status.${row.status}`)}
+                          />
+                        </td>
+                        <td className={tdClass}>
+                          {row.pendingCertificates > 0 ? (
+                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700">
+                              <BoIcon name="alert" size={14} />
+                              {t('class_groups.pending_certificates', {
+                                count: row.pendingCertificates,
+                              })}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">
+                              {t('class_groups.none_pending')}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </TableShell>
+
+                {closedPageCount > 1 && (
+                  <Pager
+                    page={currentClosedPage}
+                    pageCount={closedPageCount}
+                    status={t('class_groups.page_status', {
+                      from: currentClosedPage * CLOSED_PAGE_SIZE + 1,
+                      to: currentClosedPage * CLOSED_PAGE_SIZE + closedPageRows.length,
+                      total: closed.length,
+                    })}
+                    prevLabel={t('class_groups.page_prev')}
+                    nextLabel={t('class_groups.page_next')}
+                    onChange={setClosedPage}
+                  />
+                )}
+              </>
             )}
           </details>
         </Card>
@@ -547,6 +628,7 @@ function NewClassGroupForm({
 
   const [languageId, setLanguageId] = useState(languages[0]?.id ?? '')
   const [courseName, setCourseName] = useState('')
+  const [code, setCode] = useState('')
   const [teacherId, setTeacherId] = useState(teachers[0]?.[0] ?? '')
   const [modality, setModality] = useState<ClassModality>('online')
   const [academicPeriodName, setPeriod] = useState(periods[0] ?? '')
@@ -558,6 +640,7 @@ function NewClassGroupForm({
 
   const ready =
     courseName.trim() !== '' &&
+    code.trim() !== '' &&
     startDate !== '' &&
     endDate !== '' &&
     weekdays.length > 0
@@ -575,7 +658,7 @@ function NewClassGroupForm({
     onCreate({
       id: `cg_local_${startDate}_${startTime}`,
       courseName: courseName.trim(),
-      classGroupName: courseName.trim(),
+      code: code.trim().toUpperCase(),
       language,
       weekdays: WEEKDAYS.filter((day) => weekdays.includes(day)),
       startTime,
@@ -626,6 +709,18 @@ function NewClassGroupForm({
             onChange={(event) => setCourseName(event.target.value)}
             placeholder={t('class_groups.course_placeholder')}
             className={selectClass}
+          />
+        </label>
+
+        <label className="flex flex-col gap-1">
+          <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            {t('class_groups.field_code')}
+          </span>
+          <input
+            value={code}
+            onChange={(event) => setCode(event.target.value)}
+            placeholder={t('class_groups.code_placeholder')}
+            className={`${selectClass} uppercase tabular-nums`}
           />
         </label>
 

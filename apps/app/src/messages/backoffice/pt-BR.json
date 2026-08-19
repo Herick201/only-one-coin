@@ -317,7 +317,6 @@
       "col_seats": "Vagas",
       "col_status": "Estado",
       "col_pending": "Certificados",
-      "date_range": "{start} → {end}",
       "pending_certificates": "{count, plural, one {# a emitir} other {# a emitir}}",
       "none_pending": "Em dia",
       "empty_title": "Sem turmas",
@@ -359,7 +358,15 @@
       "field_capacity": "Vagas",
       "create": "Criar turma",
       "created_local_only": "Turma criada só na tela ({time}). Ainda não há servidor conectado.",
-      "course_placeholder": "Inglés Básico A1"
+      "course_placeholder": "Inglés Básico A1",
+      "field_code": "Código da turma",
+      "code_placeholder": "ING-A1-2026II-01",
+      "seats_left": "{count, plural, one {resta #} other {restam #}}",
+      "expand_all": "Abrir todas",
+      "collapse_all": "Fechar todas",
+      "page_prev": "Anteriores",
+      "page_next": "Próximas",
+      "page_status": "{from}–{to} de {total}"
     },
     "class_group": {
       "back_to_list": "Voltar às turmas",
@@ -371,8 +378,6 @@
       "grade_value": "{grade} de 20",
       "no_grade": "Sem nota",
       "field_teacher": "Docente",
-      "field_period": "Período",
-      "field_dates": "Datas",
       "field_seats": "Vagas",
       "issued_at": "Emitido em {date}",
       "not_issued": "Sem emitir",
@@ -391,7 +396,13 @@
       "deadline_left": "{days, plural, one {Falta # dia útil} other {Faltam # dias úteis}}",
       "deadline_overdue": "{days, plural, one {Vencido há # dia útil} other {Vencido há # dias úteis}}",
       "deadline_rule": "O certificado é gratuito e sai em até 25 dias úteis após o término do curso.",
-      "ready_to_issue": "Pronto para emitir"
+      "ready_to_issue": "Pronto para emitir",
+      "field_code": "Código da turma",
+      "field_schedule": "Horário",
+      "field_start": "Início",
+      "field_end": "Fim",
+      "empty_roster_title": "Sem alunos",
+      "empty_roster_body": "Ninguém está matriculado nesta turma ainda."
     },
     "class_group_status": {
       "enrolling": "Matriculando",

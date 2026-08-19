@@ -95,6 +95,12 @@ contagem no cabeçalho e **abre sozinha** enquanto houver certificado a emitir �
 esconder isso atrás de uma seção colapsada é como se perde o prazo de 25 dias
 úteis.
 
+A lista de fechadas **pagina de 10 em 10**: turma fechada só acumula, e um ano
+de turmas empurraria as ativas para fora da tela. A ordenação por pendência é o
+que garante que paginar não esconda o que falta emitir — o que está pendente
+está sempre na primeira página, e a contagem no cabeçalho é do total, não da
+página.
+
 ### Gate humano, sempre
 
 O sistema **não** dispara sozinho quando a data de término passa. Quem concluiu
@@ -194,6 +200,14 @@ nunca pelo navegador (`CLAUDE.md` §8).
   código de verificação ainda não fechado.
 - **Demais procedimentos pagos** (§2) — confirmar se entram na plataforma e se
   compartilham o fluxo de solicitação com pagamento.
+- **Formato do código da turma.** A tela mostra um `code` por turma
+  (`ING-A1-2026II-01` no mock: idioma, nível, ciclo, sequência). É dado de
+  catálogo, não id técnico — por isso pode aparecer na tela (`CLAUDE.md` §4) —
+  mas o formato real ainda não foi confirmado com a Asociación, e depende de
+  como os períodos são nomeados (item seguinte).
+- **Nome do período.** `academicPeriodName` aparece como "Ciclo 2026-II" no
+  mock; é invenção do mockup. Falta confirmar se a instituição agrupa a venda em
+  períodos nomeados e como os chama.
 - **Idioma como dado, não como enum traduzido.** `language.name` vem do
   catálogo, junto com o nome do curso — é o que permite abrir um idioma novo sem
   tocar em código nem nos três arquivos de locale (`CLAUDE.md` §1: nada

@@ -173,8 +173,8 @@ export function ClassGroupCertificates({
           <div className="p-4">
             <EmptyState
               icon="students"
-              title={t('class_groups.empty_title')}
-              body={t('class_groups.empty_body')}
+              title={t('class_group.empty_roster_title')}
+              body={t('class_group.empty_roster_body')}
             />
           </div>
         ) : (

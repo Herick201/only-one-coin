@@ -317,7 +317,6 @@
       "col_seats": "Seats",
       "col_status": "Status",
       "col_pending": "Certificates",
-      "date_range": "{start} → {end}",
       "pending_certificates": "{count, plural, one {# to issue} other {# to issue}}",
       "none_pending": "Up to date",
       "empty_title": "No class groups",
@@ -359,7 +358,15 @@
       "field_capacity": "Seats",
       "create": "Create class group",
       "created_local_only": "Class group created on screen only ({time}). No server connected yet.",
-      "course_placeholder": "Inglés Básico A1"
+      "course_placeholder": "Inglés Básico A1",
+      "field_code": "Class group code",
+      "code_placeholder": "ING-A1-2026II-01",
+      "seats_left": "{count, plural, one {# left} other {# left}}",
+      "expand_all": "Expand all",
+      "collapse_all": "Collapse all",
+      "page_prev": "Previous",
+      "page_next": "Next",
+      "page_status": "{from}–{to} of {total}"
     },
     "class_group": {
       "back_to_list": "Back to class groups",
@@ -371,8 +378,6 @@
       "grade_value": "{grade} out of 20",
       "no_grade": "No grade",
       "field_teacher": "Teacher",
-      "field_period": "Period",
-      "field_dates": "Dates",
       "field_seats": "Seats",
       "issued_at": "Issued on {date}",
       "not_issued": "Not issued",
@@ -391,7 +396,13 @@
       "deadline_left": "{days, plural, one {# business day left} other {# business days left}}",
       "deadline_overdue": "{days, plural, one {# business day overdue} other {# business days overdue}}",
       "deadline_rule": "The certificate is free and goes out within 25 business days of the course ending.",
-      "ready_to_issue": "Ready to issue"
+      "ready_to_issue": "Ready to issue",
+      "field_code": "Class group code",
+      "field_schedule": "Schedule",
+      "field_start": "Start",
+      "field_end": "End",
+      "empty_roster_title": "No students",
+      "empty_roster_body": "Nobody is enrolled in this class group yet."
     },
     "class_group_status": {
       "enrolling": "Enrolling",
