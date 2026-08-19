@@ -11,7 +11,7 @@ const toneClasses: Record<Tone, string> = {
   success: 'bg-emerald-50 text-emerald-700 ring-emerald-600/15',
   warning: 'bg-brand-yellow/15 text-brand-yellow-deep ring-brand-yellow-deep/20',
   danger: 'bg-red-50 text-red-700 ring-red-600/15',
-  neutral: 'bg-sky text-muted ring-ink/10',
+  neutral: 'bg-sky text-muted-foreground ring-ink/10',
   info: 'bg-sky text-brand-blue-deep ring-brand-blue/20',
 }
 
@@ -71,17 +71,17 @@ export function PageHeader({
 }) {
   return (
     <header className="mb-6">
-      <h1 className="font-display text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
+      <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
         {title}
       </h1>
-      {subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}
+      {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
     </header>
   )
 }
 
 export function SectionTitle({ children }: { children: ReactNode }) {
   return (
-    <h2 className="font-display text-lg font-semibold text-ink">{children}</h2>
+    <h2 className="text-lg font-semibold text-ink">{children}</h2>
   )
 }
 
@@ -89,7 +89,7 @@ export function SectionTitle({ children }: { children: ReactNode }) {
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
-      <dt className="text-xs font-medium uppercase tracking-wide text-muted">
+      <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </dt>
       <dd className="mt-0.5 text-sm font-medium text-ink">{children}</dd>
@@ -102,7 +102,7 @@ export function ProgressBar({ value, label }: { value: number; label?: string })
   return (
     <div>
       {label && (
-        <div className="mb-1.5 flex items-center justify-between text-xs font-medium text-muted">
+        <div className="mb-1.5 flex items-center justify-between text-xs font-medium text-muted-foreground">
           <span>{label}</span>
           <span className="text-ink">{clamped}%</span>
         </div>
@@ -139,8 +139,8 @@ export function EmptyState({
           {icon}
         </div>
       )}
-      <p className="font-display text-lg font-semibold text-ink">{title}</p>
-      <p className="max-w-sm text-sm text-muted">{body}</p>
+      <p className="text-lg font-semibold text-ink">{title}</p>
+      <p className="max-w-sm text-sm text-muted-foreground">{body}</p>
     </div>
   )
 }

@@ -108,12 +108,12 @@ export function LanguageGlobe({
           {routing.locales.map((code) => {
             const active = code === locale
             return (
-              <li key={code}>
+              <li key={code} role="none">
                 <button
                   type="button"
-                  role="menuitem"
+                  role="menuitemradio"
                   onClick={() => select(code)}
-                  aria-current={active ? 'true' : undefined}
+                  aria-checked={active}
                   className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-semibold transition ${
                     active
                       ? dark
@@ -121,7 +121,7 @@ export function LanguageGlobe({
                         : 'bg-sky text-brand-blue'
                       : dark
                         ? 'text-slate-300 hover:bg-white/5 hover:text-white'
-                        : 'text-muted hover:bg-sky hover:text-ink'
+                        : 'text-muted-foreground hover:bg-sky hover:text-ink'
                   }`}
                 >
                   <span

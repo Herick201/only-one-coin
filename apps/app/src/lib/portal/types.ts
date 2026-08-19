@@ -138,11 +138,18 @@ export interface Payment {
   status: PaymentStatus
   /** Provider operation number read from the receipt. */
   operationNumber: string | null
+  /** When the payment was credited — null until it is approved. */
   paidAt: string | null
 }
 
 export interface Enrollment {
   id: string
+  /**
+   * Human-readable enrollment code the student quotes for support — course
+   * short code + sequence (`IN-1122`). Generated server-side and immutable;
+   * the internal `id` never reaches the screen (CLAUDE.md §4).
+   */
+  code: string
   status: EnrollmentStatus
   seatStatus: SeatStatus
   createdAt: string

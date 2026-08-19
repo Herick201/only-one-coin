@@ -16,15 +16,21 @@ export default getRequestConfig(async ({ requestLocale }) => {
     : routing.defaultLocale
 
   const file = messageFiles[locale]
-  // As mensagens do portal ficam em arquivos próprios (messages/portal/*) e
-  // entram por merge aditivo — mantém os namespaces do portal desacoplados dos
-  // demais (login/backoffice), evitando colisão de edição entre frentes.
-  const [base, portal] = await Promise.all([
+  // Cada frente tem seu arquivo de mensagens e entra por merge aditivo — os
+  // namespaces ficam desacoplados (base = login/backoffice login, `portal`, `bo`),
+  // evitando colisão de edição entre frentes. O merge é raso de propósito: cada
+  // arquivo é dono de namespaces próprios e nunca reabre os do outro.
+  const [base, portal, backoffice] = await Promise.all([
     import(`../messages/${file}.json`),
     import(`../messages/portal/${file}.json`),
+    import(`../messages/backoffice/${file}.json`),
   ])
   return {
     locale,
-    messages: { ...base.default, ...portal.default },
+    messages: {
+      ...base.default,
+      ...portal.default,
+      ...backoffice.default,
+    },
   }
 })

@@ -36,7 +36,7 @@ export function PortalNav({
               className={`flex shrink-0 items-center gap-2 rounded-full px-3.5 py-2 text-sm font-semibold transition ${
                 active
                   ? 'bg-brand-blue text-white'
-                  : 'text-muted hover:bg-sky hover:text-ink'
+                  : 'text-muted-foreground hover:bg-sky hover:text-ink'
               }`}
             >
               <Icon name={item.icon} size={18} />
@@ -60,7 +60,7 @@ export function PortalNav({
             className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition ${
               active
                 ? 'bg-brand-blue text-white shadow-card'
-                : 'text-muted hover:bg-sky hover:text-ink'
+                : 'text-muted-foreground hover:bg-sky hover:text-ink'
             }`}
           >
             <Icon name={item.icon} size={20} />

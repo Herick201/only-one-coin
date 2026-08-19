@@ -8,6 +8,7 @@ backoffice administrativo e módulo de e-mail.
 
 - [`CLAUDE.md`](CLAUDE.md) — contexto permanente: stack fechada, convenções, regras proibidas.
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — estrutura do monorepo, modelo de autorização (Caminho A vs. B), RBAC e custo mensal estimado.
+- [`docs/DOCUMENTOS-E-CERTIFICADOS.md`](docs/DOCUMENTOS-E-CERTIFICADOS.md) — emissão de constancia e certificado, lote por turma, e-mail pela outbox.
 - [`docs/INFRAESTRUTURA.md`](docs/INFRAESTRUTURA.md) — base de conhecimento: levantamento de mercado (preços, specs, latência) que baseou as escolhas de hospedagem.
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — plano de desenvolvimento em sessões pequenas (1 sessão = 1 PR).
 - [`docs/PROMPT-arranque-claude-code.md`](docs/PROMPT-arranque-claude-code.md) — prompt de arranque da primeira sessão.
@@ -29,8 +30,14 @@ sem auth real. Só auth segue sem provedor escolhido. Domínio e fila já
 existem, independentes dessa escolha:
 
 - `apps/landing` — site público (Astro).
-- `apps/app` — shell do Next.js App Router: layout, roteamento, i18n trilíngue e
-  as telas de portal/backoffice em **mockup** (sem acesso a dados).
+- `apps/app` — Next.js App Router: layout, roteamento, i18n trilíngue e as telas
+  em **mockup** (sem acesso a dados). Portal do aluno (`/portal`) e backoffice
+  (`/backoffice` para login; painel em `/backoffice/home` e alunos em
+  `/backoffice/students`, com ficha, histórico e edição de dados só em estado
+  local). Os demais módulos do painel aparecem listados como "pronto/em breve".
+  UI em shadcn/ui sobre Tailwind v4; os tokens de marca vivem em `globals.css`
+  (paleta da landing, tipografia Inter). A landing segue com Fredoka/Poppins —
+  público diferente.
 - `packages/domain` — domínio DDD puro (entidades, usecases, portas de
   repositório), sem framework nem provedor de banco.
 - `packages/queue` — contrato de fila compartilhado (BullMQ/Redis).

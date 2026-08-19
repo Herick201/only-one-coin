@@ -124,6 +124,7 @@ const englishIntroGroup: ClassGroup = {
 const enrollments: Enrollment[] = [
   {
     id: 'enr_en_a1',
+    code: 'IN-1122',
     status: 'active',
     seatStatus: 'confirmed',
     createdAt: '2026-07-28T15:12:00Z',
@@ -155,6 +156,7 @@ const enrollments: Enrollment[] = [
   },
   {
     id: 'enr_pt_a1',
+    code: 'PT-1183',
     status: 'under_review',
     seatStatus: 'reserved',
     createdAt: '2026-08-11T22:40:00Z',
@@ -186,6 +188,7 @@ const enrollments: Enrollment[] = [
   },
   {
     id: 'enr_en_intro',
+    code: 'IN-0947',
     status: 'completed',
     seatStatus: 'released',
     createdAt: '2026-03-20T11:00:00Z',

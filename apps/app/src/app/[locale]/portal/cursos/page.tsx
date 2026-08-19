@@ -47,7 +47,7 @@ export default async function CoursesPage({
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="font-display text-lg font-semibold text-ink">
+                      <h2 className="text-lg font-semibold text-ink">
                         {e.course.name}
                       </h2>
                       <StatusBadge
@@ -58,13 +58,13 @@ export default async function CoursesPage({
                         {t(`modality.${e.classGroup.modality}`)}
                       </span>
                     </div>
-                    <p className="mt-1 text-sm text-muted">
+                    <p className="mt-1 text-sm text-muted-foreground">
                       {e.classGroup.name}
                     </p>
 
                     <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:max-w-md">
                       <div>
-                        <dt className="text-xs font-medium text-muted">
+                        <dt className="text-xs font-medium text-muted-foreground">
                           {t('common.teacher')}
                         </dt>
                         <dd className="font-medium text-ink">
@@ -72,7 +72,7 @@ export default async function CoursesPage({
                         </dd>
                       </div>
                       <div>
-                        <dt className="text-xs font-medium text-muted">
+                        <dt className="text-xs font-medium text-muted-foreground">
                           {t('common.schedule')}
                         </dt>
                         <dd className="font-medium text-ink">
@@ -81,7 +81,7 @@ export default async function CoursesPage({
                         </dd>
                       </div>
                       <div>
-                        <dt className="text-xs font-medium text-muted">
+                        <dt className="text-xs font-medium text-muted-foreground">
                           {t('common.starts')}
                         </dt>
                         <dd className="font-medium text-ink">
@@ -89,7 +89,7 @@ export default async function CoursesPage({
                         </dd>
                       </div>
                       <div>
-                        <dt className="text-xs font-medium text-muted">
+                        <dt className="text-xs font-medium text-muted-foreground">
                           {t('courses.seats_label')}
                         </dt>
                         <dd className="font-medium text-ink">
@@ -112,7 +112,7 @@ export default async function CoursesPage({
                   </div>
 
                   <div className="flex shrink-0 items-center justify-between gap-3 sm:flex-col sm:items-end">
-                    <span className="inline-flex items-center gap-1.5 text-xs text-muted">
+                    <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
                       <Icon name="doc" size={15} />
                       {t('courses.materials_count', {
                         count: e.course.materials.length,

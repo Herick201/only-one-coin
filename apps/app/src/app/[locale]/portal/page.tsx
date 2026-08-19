@@ -30,10 +30,10 @@ export default async function DashboardPage({
   return (
     <div className="flex flex-col gap-8">
       <header>
-        <h1 className="font-display text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
+        <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
           {t('greeting.hello', { name: student.firstName })}
         </h1>
-        <p className="mt-1 max-w-2xl text-sm text-muted">
+        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
           {t('greeting.subtitle')}
         </p>
       </header>
@@ -60,7 +60,7 @@ export default async function DashboardPage({
                   <Icon name="calendar" size={16} />
                   {formatDateTime(nextClass.startsAt, locale)}
                 </span>
-                <span className="font-display text-xl font-semibold">
+                <span className="text-xl font-semibold">
                   {nextClass.courseName}
                 </span>
                 <span className="text-sm text-white/85">
@@ -90,10 +90,10 @@ export default async function DashboardPage({
           </Card>
         ) : (
           <Card className="flex flex-col items-start gap-1 p-6">
-            <p className="font-display text-base font-semibold text-ink">
+            <p className="text-base font-semibold text-ink">
               {t('next_class.none_title')}
             </p>
-            <p className="text-sm text-muted">{t('next_class.none_body')}</p>
+            <p className="text-sm text-muted-foreground">{t('next_class.none_body')}</p>
           </Card>
         )}
       </section>
@@ -115,10 +115,10 @@ export default async function DashboardPage({
             <Card key={e.id} as="article" className="flex flex-col gap-3 p-5">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h3 className="font-display text-base font-semibold text-ink">
+                  <h3 className="text-base font-semibold text-ink">
                     {e.course.name}
                   </h3>
-                  <p className="mt-0.5 text-xs text-muted">
+                  <p className="mt-0.5 text-xs text-muted-foreground">
                     {e.classGroup.teacherName}
                   </p>
                 </div>
@@ -164,7 +164,7 @@ export default async function DashboardPage({
               <Icon
                 name="chevron-right"
                 size={16}
-                className="ml-auto text-muted"
+                className="ml-auto text-muted-foreground"
               />
             </Link>
           ))}
