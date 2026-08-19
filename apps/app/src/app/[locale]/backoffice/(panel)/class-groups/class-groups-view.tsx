@@ -434,14 +434,9 @@ export function ClassGroupsView({
                           <td className={tdClass}>
                             <Link
                               href={`/backoffice/class-groups/${row.id}`}
-                              className="flex flex-col leading-tight"
+                              className="font-semibold text-ink transition hover:text-brand-blue"
                             >
-                              <span className="font-semibold text-ink transition hover:text-brand-blue">
-                                {row.courseName}
-                              </span>
-                              <span className="text-xs tabular-nums text-muted-foreground">
-                                {row.code}
-                              </span>
+                              {row.courseName}
                             </Link>
                           </td>
                           <td className={`${tdClass} whitespace-nowrap text-sm tabular-nums text-muted-foreground`}>
@@ -539,14 +534,9 @@ export function ClassGroupsView({
                         <td className={tdClass}>
                           <Link
                             href={`/backoffice/class-groups/${row.id}`}
-                            className="flex flex-col leading-tight"
+                            className="font-semibold text-ink transition hover:text-brand-blue"
                           >
-                            <span className="font-semibold text-ink transition hover:text-brand-blue">
-                              {row.courseName}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {`${row.code} · ${row.language.name}`}
-                            </span>
+                            {row.courseName}
                           </Link>
                         </td>
                         <td className={`${tdClass} whitespace-nowrap text-sm text-muted-foreground`}>
