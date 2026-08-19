@@ -492,7 +492,6 @@
       "field_level": "Nivel",
       "name_placeholder": "Inglés Básico A1",
       "level_placeholder": "A1",
-      "defaults_hint": "Carga, edad mínima y procedimientos salen con valores por defecto — se ajustan en las opciones del curso.",
       "create": "Crear curso",
       "cancel": "Cancelar",
       "col_course": "Curso",
@@ -510,7 +509,9 @@
       "empty_body": "Todavía no hay cursos en el catálogo.",
       "empty_search_title": "Sin resultados",
       "empty_search_body": "Probá con otro curso, idioma o nivel.",
-      "local_only": "Los cambios son solo de pantalla. Todavía no hay servidor conectado."
+      "local_only": "Los cambios son solo de pantalla. Todavía no hay servidor conectado.",
+      "options_title": "Configuración del curso",
+      "options_hint": "Todo esto se puede cambiar después en las opciones del curso."
     },
     "course_options": {
       "close": "Cerrar",

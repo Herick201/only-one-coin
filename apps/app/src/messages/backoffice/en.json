@@ -492,7 +492,6 @@
       "field_level": "Level",
       "name_placeholder": "Inglés Básico A1",
       "level_placeholder": "A1",
-      "defaults_hint": "Load, minimum age and procedures start from defaults — adjust them in the course options.",
       "create": "Create course",
       "cancel": "Cancel",
       "col_course": "Course",
@@ -510,7 +509,9 @@
       "empty_body": "The catalog has no courses yet.",
       "empty_search_title": "No results",
       "empty_search_body": "Try another course, language or level.",
-      "local_only": "Changes are screen-only. No server is connected yet."
+      "local_only": "Changes are screen-only. No server is connected yet.",
+      "options_title": "Course configuration",
+      "options_hint": "All of this can be changed later in the course options."
     },
     "course_options": {
       "close": "Close",
