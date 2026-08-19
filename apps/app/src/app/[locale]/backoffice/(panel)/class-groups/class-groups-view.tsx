@@ -1,8 +1,8 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type MouseEvent } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
-import { Link } from '@/i18n/navigation'
+import { Link, useRouter } from '@/i18n/navigation'
 import type {
   ClassGroupRow,
   ClassModality,
@@ -62,6 +62,7 @@ export function ClassGroupsView({
 }) {
   const t = useTranslations('bo')
   const locale = useLocale() as Locale
+  const router = useRouter()
 
   const [created, setCreated] = useState<ClassGroupRow[]>([])
   const [query, setQuery] = useState('')
@@ -184,6 +185,23 @@ export function ClassGroupsView({
     setLanguage(ALL)
     setTeacher(ALL)
     setPeriod(ALL)
+  }
+
+  /**
+   * The whole row opens the class group, not just the name. The anchor stays
+   * in the first cell so the keyboard, the screen reader and ctrl+click keep
+   * working — the row handler only covers the mouse, and steps aside when the
+   * click already landed on the link.
+   */
+  function rowProps(id: string) {
+    const href = `/backoffice/class-groups/${id}`
+    return {
+      className: 'cursor-pointer transition hover:bg-sky-soft',
+      onClick: (event: MouseEvent<HTMLTableRowElement>) => {
+        if ((event.target as HTMLElement).closest('a')) return
+        router.push(href)
+      },
+    }
   }
 
   return (
@@ -430,7 +448,7 @@ export function ClassGroupsView({
 
                     {open &&
                       entry.groups.map((row) => (
-                        <tr key={row.id} className="transition hover:bg-sky-soft">
+                        <tr key={row.id} {...rowProps(row.id)}>
                           <td className={tdClass}>
                             <Link
                               href={`/backoffice/class-groups/${row.id}`}
@@ -530,7 +548,7 @@ export function ClassGroupsView({
                   </thead>
                   <tbody>
                     {closedPageRows.map((row) => (
-                      <tr key={row.id} className="transition hover:bg-sky-soft">
+                      <tr key={row.id} {...rowProps(row.id)}>
                         <td className={tdClass}>
                           <Link
                             href={`/backoffice/class-groups/${row.id}`}
