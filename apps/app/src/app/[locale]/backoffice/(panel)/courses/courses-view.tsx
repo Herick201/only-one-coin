@@ -12,6 +12,7 @@ import {
   thClass,
 } from '@/components/backoffice/ui'
 import { BoIcon } from '@/components/backoffice/icons'
+import { Toast } from '@/components/backoffice/controls'
 import { CourseOptionsSheet } from './course-options-sheet'
 import { NewCourseForm } from './new-course-form'
 
@@ -40,6 +41,7 @@ export function CoursesView({
   const [configuring, setConfiguring] = useState<CourseRow | null>(null)
   const [creating, setCreating] = useState(false)
   const [touched, setTouched] = useState(false)
+  const [toast, setToast] = useState<string | null>(null)
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase()
@@ -66,6 +68,7 @@ export function CoursesView({
       current.map((row) => (row.id === course.id ? { ...row, ...options } : row)),
     )
     setTouched(true)
+    setToast(t('courses.saved'))
   }
 
   function rowProps(course: CourseRow) {
@@ -119,6 +122,7 @@ export function CoursesView({
             setCreating(false)
             setQuery('')
             setTouched(true)
+            setToast(t('courses.created'))
           }}
         />
       )}
@@ -208,6 +212,8 @@ export function CoursesView({
         onClose={() => setConfiguring(null)}
         onSave={saveOptions}
       />
+
+      <Toast message={toast} onDismiss={() => setToast(null)} />
     </div>
   )
 }

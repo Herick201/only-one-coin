@@ -105,7 +105,7 @@ export function NewCourseForm({
         <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {t('courses.options_title')}
         </p>
-        <CourseOptionFields value={options} onChange={setOptions} />
+        <CourseOptionFields value={options} onChange={setOptions} wide />
       </div>
 
       <p className="mt-3 text-xs text-muted-foreground">{t('courses.options_hint')}</p>

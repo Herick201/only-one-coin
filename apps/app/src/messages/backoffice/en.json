@@ -511,7 +511,9 @@
       "empty_search_body": "Try another course, language or level.",
       "local_only": "Changes are screen-only. No server is connected yet.",
       "options_title": "Course configuration",
-      "options_hint": "All of this can be changed later in the course options."
+      "options_hint": "All of this can be changed later in the course options.",
+      "saved": "Changes saved",
+      "created": "Course created"
     },
     "course_options": {
       "close": "Close",

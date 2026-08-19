@@ -511,7 +511,9 @@
       "empty_search_body": "Tente outro curso, idioma ou nível.",
       "local_only": "As mudanças são só de tela. Ainda não há servidor conectado.",
       "options_title": "Configuração do curso",
-      "options_hint": "Tudo isso dá pra mudar depois nas opções do curso."
+      "options_hint": "Tudo isso dá pra mudar depois nas opções do curso.",
+      "saved": "Alterações salvas",
+      "created": "Curso criado"
     },
     "course_options": {
       "close": "Fechar",

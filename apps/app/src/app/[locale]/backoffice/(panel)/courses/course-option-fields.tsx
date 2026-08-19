@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import type { CertificateRule, CourseOptions } from '@/lib/backoffice/types'
+import { Toggle } from '@/components/backoffice/controls'
 
 const CERTIFICATE_RULES: CertificateRule[] = ['automatic', 'exam_required']
 
@@ -20,9 +21,12 @@ const labelClass =
 export function CourseOptionFields({
   value,
   onChange,
+  wide = false,
 }: {
   value: CourseOptions
   onChange: (options: CourseOptions) => void
+  /** Three fields across instead of two — the create form has the room, the sheet does not. */
+  wide?: boolean
 }) {
   const t = useTranslations('bo')
 
@@ -32,9 +36,9 @@ export function CourseOptionFields({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Three across where there is room, two in the sheet — the sheet caps at
-          `sm`, so the `lg` step only ever fires inside the wide create form. */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Driven by a prop, not a breakpoint: the sheet is narrow at every
+          viewport width, so `lg:` would widen it on a large screen too. */}
+      <div className={`grid gap-3 sm:grid-cols-2 ${wide ? 'lg:grid-cols-3' : ''}`}>
         <label className="flex flex-col gap-1">
           <span className={labelClass}>{t('course_options.min_age')}</span>
           <input
@@ -74,7 +78,9 @@ export function CourseOptionFields({
         {/* Full width: the rule names do not fit half a row, and a truncated
             one reads as a different rule. The hint carries the meaning the
             short label drops. */}
-        <label className="flex flex-col gap-1 sm:col-span-2 lg:col-span-3">
+        <label
+          className={`flex flex-col gap-1 sm:col-span-2 ${wide ? 'lg:col-span-3' : ''}`}
+        >
           <span className={labelClass}>{t('course_options.certificate_rule')}</span>
           <select
             value={value.certificateRule}
@@ -95,7 +101,7 @@ export function CourseOptionFields({
         </label>
       </div>
 
-      <fieldset className="flex flex-col gap-2.5">
+      <fieldset className="flex flex-col gap-3">
         <legend className={`mb-1 ${labelClass}`}>
           {t('course_options.procedures')}
         </legend>
@@ -105,32 +111,23 @@ export function CourseOptionFields({
             ['allowsFreeze', 'course_options.allows_freeze'],
           ] as const
         ).map(([key, label]) => (
-          <label key={key} className="flex items-start gap-2 text-sm text-ink">
-            <input
-              type="checkbox"
-              checked={value[key]}
-              onChange={(event) => set(key, event.target.checked)}
-              className="mt-0.5 h-4 w-4 shrink-0 rounded border-line accent-brand-blue"
-            />
-            {t(label)}
-          </label>
+          <Toggle
+            key={key}
+            checked={value[key]}
+            onChange={(next) => set(key, next)}
+            label={t(label)}
+          />
         ))}
       </fieldset>
 
-      <label className="flex items-start gap-2 border-t border-line pt-4 text-sm text-ink">
-        <input
-          type="checkbox"
+      <div className="border-t border-line pt-4">
+        <Toggle
           checked={value.active}
-          onChange={(event) => set('active', event.target.checked)}
-          className="mt-0.5 h-4 w-4 shrink-0 rounded border-line accent-brand-blue"
+          onChange={(next) => set('active', next)}
+          label={t('course_options.active')}
+          hint={t('course_options.active_hint')}
         />
-        <span className="flex flex-col gap-0.5">
-          {t('course_options.active')}
-          <span className="text-xs text-muted-foreground">
-            {t('course_options.active_hint')}
-          </span>
-        </span>
-      </label>
+      </div>
     </div>
   )
 }
