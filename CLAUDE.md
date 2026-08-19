@@ -36,7 +36,8 @@ Venda por WhatsApp (humano, fora do sistema)
 - **Vários idiomas** (~10) e várias turmas por idioma. Nada específico de idioma no código.
 - Cada **período de venda** tem seus próprios cursos, horários, datas de início e vagas.
 - Idade mínima por curso. **Boa parte do público é menor de idade** → consentimento do apoderado é fluxo central.
-- Volume: **5.000 a 7.000 matrículas/mês** em temporada alta (3 meses/ano).
+- Volume: **5.000/mês** em escala normal (9 meses/ano) · **até 20.000/mês** em escala pico / temporada alta (3 meses/ano).
+- Comprovante: retido por **5 anos**. Só a **versão processada/reduzida** (pós downscale/grayscale da OCR, `CLAUDE.md` §5) é retida — não o upload original bruto.
 
 ---
 
@@ -63,20 +64,23 @@ Se algo parecer exigir um desses, **pare e pergunte**.
 | Site público | **Astro** (estático) |
 | App (portal + backoffice) | **Next.js App Router** |
 | API de domínio + workers | **Fastify** (`apps/api`), processo Node separado |
-| Hospedagem | **Netlify** (landing + app) — `apps/api` ainda sem hospedagem decidida (precisa de processo always-on, não cabe em function serverless) |
-| Banco / Auth / Storage | **Postgres** — decisão fechada. **Provedor gerenciado a decidir** |
+| Hospedagem | **Netlify** (landing + app) · **Fly.io** (`apps/api`, região GRU/São Paulo — VM always-on, roda os workers de fila) |
+| Banco | **Postgres** gerenciado — **Neon** (`sa-east-1`/São Paulo) |
+| Storage (comprovante + backup) | **Tigris** (nativo do Fly.io — `fly storage create`, S3-compatible, egress zero) — mesmo bucket-provider pros dois usos, sem conta separada |
+| Auth | Decisão em aberto — ver abaixo |
 | Fila | **Redis (Upstash) + BullMQ** — workers em `apps/api` |
 | OCR / IA | **Gemini 3.1 Flash-Lite** (nível 1) · modelo de outra família (nível 2) |
-| E-mail | **Brevo**, atrás de adapter |
+| E-mail (transacional/campanhas) | **Brevo**, atrás de adapter |
+| E-mail (caixa/mailbox de staff) | **Zoho Mail Lite** — Brevo não hospeda caixa (sem IMAP próprio); usar só se alguém precisar **receber e ler** e-mail em `contato@`/`matricula@` |
 | Rate limit + idempotência | **Upstash Redis** (borda) — mesma instância usada pela fila |
 | Captcha | **Cloudflare Turnstile** |
-| Backup | `pg_dump` → **Cloudflare R2** via Scheduled Function |
+| Backup | `pg_dump` → **Tigris** via Scheduled Function (mesmo storage do comprovante) |
 | Observabilidade | **Sentry** + **PostHog** (EU Cloud) |
-| Realtime | a decidir com o provedor de backend |
+| Realtime | a decidir — depende do provedor de auth (único item de infra ainda em aberto) |
 
-Não trocar nada disso sem me perguntar. Já foram avaliadas e descartadas: Vercel, Clerk, Pinecone, Resend, Cloudflare CDN. O provedor de backend gerenciado que havia sido escolhido foi **removido** e está de novo em aberto (ver "Decisão em aberto" abaixo).
+Não trocar nada disso sem me perguntar. Já foram avaliadas e descartadas: Vercel, Clerk, Pinecone, Resend, Cloudflare CDN. O provedor de backend gerenciado que havia sido escolhido foi **removido**; Postgres, hospedagem de `apps/api`, storage de comprovante e caixa de e-mail já foram refechados (acima, sessão 17/08/2026 — critério e alternativas comparadas em `docs/ARCHITECTURE.md` §5). Só auth segue em aberto (ver abaixo).
 
-**Decisão em aberto — provedor de backend.** Postgres é decisão **fechada**. O que ainda **não** está escolhido é o **provedor gerenciado** de Postgres, auth e storage. Não escolher, não instalar SDK, não escrever código acoplado a um provedor. Se algo travar por isso, **pare e pergunte**.
+**Decisão em aberto — auth.** O provedor removido cobria Postgres, auth e storage juntos; Postgres e storage já foram resolvidos (Neon e Tigris, acima). **Auth** ainda não tem provedor escolhido. Não escolher, não instalar SDK, não escrever código acoplado a um provedor. Se algo travar por isso, **pare e pergunte**.
 
 **Decisão fechada — modelo de autorização.** Autorização vive na **camada de aplicação** (`apps/api`, ver §8), não em RLS — motivo e comparação de caminhos em `docs/ARCHITECTURE.md` §2. RLS pode voltar depois como camada extra de defesa, mas nunca como o mecanismo de aceite documentado.
 
@@ -90,7 +94,7 @@ apps/
 packages/
   domain/            domínio DDD puro (entidades, usecases, portas de repositório) — sem framework, sem infra
   queue/             contrato de fila compartilhado (jobs, producers) — usado por quem publica e por quem consome
-  db/                migrations + seed (CLI do provedor a decidir)
+  db/                migrations + seed (Postgres puro — Neon não exige CLI própria)
   notifications/     adapter de e-mail + outbox
   ocr/               pipeline de extração
   i18n/              locales (es-PE.json)
@@ -257,9 +261,9 @@ Cada um tem um mecanismo. O mecanismo é obrigatório, não a boa intenção.
 
 | Ambiente | Onde |
 | --- | --- |
-| Local | Postgres local (provedor a decidir) |
-| Staging | `staging.aula.onlyonecoin.edu.pe` · Postgres gerenciado próprio (provedor a decidir) |
-| Produção | `aula.onlyonecoin.edu.pe` · Postgres gerenciado próprio (provedor a decidir) |
+| Local | Postgres local |
+| Staging | `staging.aula.onlyonecoin.edu.pe` · Postgres gerenciado (Neon, branch de staging) |
+| Produção | `aula.onlyonecoin.edu.pe` · Postgres gerenciado (Neon) |
 
 - Netlify: `main` → produção, `staging` → branch deploy, PR → deploy preview
 - Variáveis de ambiente **por contexto** do Netlify
