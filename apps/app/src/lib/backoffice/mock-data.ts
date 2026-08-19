@@ -2,6 +2,7 @@ import type {
   AuditEntry,
   ClassGroupDetail,
   ClassGroupRow,
+  CourseRow,
   DashboardMetrics,
   DocumentDelivery,
   DocumentItem,
@@ -1564,6 +1565,146 @@ const classGroups: ClassGroupDetail[] = [
     students: [],
   },
 ]
+
+/**
+ * The course catalog. Hours and module counts come from
+ * `docs/REGRAS-NEGOCIO.md` §3 where the source states them (Inglés Básico: 4
+ * modules, 20h each) and are plausible fill-ins elsewhere — the real numbers
+ * are catalog data the Asociación owns, not something to derive in code.
+ *
+ * `minAge` follows §2: 13 for every language except the Inglés kids track,
+ * which does not exist in this mock.
+ */
+const courses: CourseRow[] = [
+  {
+    id: 'crs_01',
+    name: 'Inglés Básico A1',
+    language: LANGUAGES.en,
+    level: 'A1',
+    minAge: 13,
+    modules: 4,
+    totalHours: 80,
+    certificateRule: 'exam_required',
+    allowsFreeze: true,
+    allowsTransfer: true,
+    active: true,
+    classGroupCount: 0,
+  },
+  {
+    id: 'crs_02',
+    name: 'Inglés Intermedio B1',
+    language: LANGUAGES.en,
+    level: 'B1',
+    minAge: 13,
+    modules: 2,
+    totalHours: 80,
+    certificateRule: 'automatic',
+    // §2 and §5: the intermediate/advanced track cannot be frozen.
+    allowsFreeze: false,
+    allowsTransfer: false,
+    active: true,
+    classGroupCount: 0,
+  },
+  {
+    id: 'crs_03',
+    name: 'Francés Inicial',
+    language: LANGUAGES.fr,
+    level: 'Inicial',
+    minAge: 13,
+    modules: 4,
+    totalHours: 80,
+    certificateRule: 'automatic',
+    allowsFreeze: true,
+    allowsTransfer: false,
+    active: true,
+    classGroupCount: 0,
+  },
+  {
+    id: 'crs_04',
+    name: 'Alemán Inicial',
+    language: LANGUAGES.de,
+    level: 'Inicial',
+    minAge: 13,
+    modules: 4,
+    totalHours: 80,
+    certificateRule: 'automatic',
+    allowsFreeze: true,
+    allowsTransfer: false,
+    active: true,
+    classGroupCount: 0,
+  },
+  {
+    id: 'crs_05',
+    name: 'Italiano Inicial',
+    language: LANGUAGES.it,
+    level: 'Inicial',
+    minAge: 13,
+    modules: 4,
+    totalHours: 80,
+    certificateRule: 'automatic',
+    allowsFreeze: true,
+    allowsTransfer: false,
+    active: true,
+    classGroupCount: 0,
+  },
+  {
+    id: 'crs_06',
+    name: 'Portugués Inicial',
+    language: LANGUAGES.pt,
+    level: 'Inicial',
+    minAge: 13,
+    modules: 4,
+    totalHours: 80,
+    certificateRule: 'automatic',
+    allowsFreeze: true,
+    allowsTransfer: false,
+    active: true,
+    classGroupCount: 0,
+  },
+  {
+    id: 'crs_07',
+    name: 'Quechua Conversacional',
+    language: LANGUAGES.qu,
+    level: 'Inicial',
+    minAge: 13,
+    modules: 3,
+    totalHours: 60,
+    certificateRule: 'automatic',
+    allowsFreeze: true,
+    allowsTransfer: false,
+    active: true,
+    classGroupCount: 0,
+  },
+  {
+    id: 'crs_08',
+    name: 'Chino Mandarín Básico',
+    language: { id: 'lang_zh', name: 'Chino Mandarín' },
+    level: 'Inicial',
+    minAge: 13,
+    modules: 3,
+    totalHours: 60,
+    certificateRule: 'automatic',
+    allowsFreeze: true,
+    allowsTransfer: false,
+    // In the catalog but with no class group open this period.
+    active: false,
+    classGroupCount: 0,
+  },
+]
+
+/** Class group count is derived, never stored — it would drift the moment one opens. */
+export function listCourses(): CourseRow[] {
+  return courses
+    .map((course) => ({
+      ...course,
+      classGroupCount: classGroups.filter((group) => group.courseName === course.name)
+        .length,
+    }))
+    .sort(
+      (a, b) =>
+        a.language.name.localeCompare(b.language.name) || a.name.localeCompare(b.name),
+    )
+}
 
 export function listClassGroups(): ClassGroupRow[] {
   return classGroups.map(({ students, ...row }) => {

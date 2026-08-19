@@ -482,6 +482,58 @@
       "confirm_no_fee": "I confirm the withdrawal was agreed with the student.",
       "target_label": "Destination class group",
       "target_placeholder": "Pick a class group"
+    },
+    "courses": {
+      "title": "Courses",
+      "subtitle": "The catalog class groups are opened from.",
+      "search_label": "Search courses",
+      "search_placeholder": "Course, language or level",
+      "new_course": "New course",
+      "new_title": "New course",
+      "field_language": "Language",
+      "field_name": "Name",
+      "field_level": "Level",
+      "name_placeholder": "Inglés Básico A1",
+      "level_placeholder": "A1",
+      "defaults_hint": "Load, minimum age and procedures start from defaults — adjust them in the course options.",
+      "create": "Create course",
+      "cancel": "Cancel",
+      "col_course": "Course",
+      "col_level": "Level",
+      "col_load": "Load",
+      "col_min_age": "Minimum age",
+      "col_class_groups": "Class groups",
+      "col_status": "Status",
+      "load_value": "{modules} modules · {hours} h",
+      "min_age_value": "{age} years",
+      "class_group_count": "{count, plural, =0 {no class groups} one {# class group} other {# class groups}}",
+      "active": "In catalog",
+      "inactive": "Out of catalog",
+      "empty_title": "No courses",
+      "empty_body": "The catalog has no courses yet.",
+      "empty_search_title": "No results",
+      "empty_search_body": "Try another course, language or level.",
+      "local_only": "Changes are screen-only. No server is connected yet."
+    },
+    "course_options": {
+      "close": "Close",
+      "subtitle": "Course options · {language}",
+      "applies_forward": "What you change here applies to class groups opened afterwards. Running ones keep the rule the student enrolled under.",
+      "min_age": "Minimum age",
+      "modules": "Modules",
+      "total_hours": "Total hours",
+      "certificate_rule": "Certificate",
+      "procedures": "Procedures offered",
+      "allows_transfer": "Allows moving class group (schedule change)",
+      "allows_freeze": "Allows freezing the enrollment",
+      "active": "Course in catalog",
+      "active_hint": "Taking it out of the catalog does not end running class groups: it just stops being offered.",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "certificate_rule": {
+      "automatic": "Issued on the minimum grade",
+      "exam_required": "Requires the certification exam"
     }
   }
 }

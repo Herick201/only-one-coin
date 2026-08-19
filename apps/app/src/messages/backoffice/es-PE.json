@@ -482,6 +482,58 @@
       "confirm_no_fee": "Confirmo que el retiro fue acordado con el alumno.",
       "target_label": "Aula de destino",
       "target_placeholder": "Elegir aula"
+    },
+    "courses": {
+      "title": "Cursos",
+      "subtitle": "El catálogo del que nacen las aulas.",
+      "search_label": "Buscar cursos",
+      "search_placeholder": "Curso, idioma o nivel",
+      "new_course": "Nuevo curso",
+      "new_title": "Nuevo curso",
+      "field_language": "Idioma",
+      "field_name": "Nombre",
+      "field_level": "Nivel",
+      "name_placeholder": "Inglés Básico A1",
+      "level_placeholder": "A1",
+      "defaults_hint": "Carga, edad mínima y procedimientos salen con valores por defecto — se ajustan en las opciones del curso.",
+      "create": "Crear curso",
+      "cancel": "Cancelar",
+      "col_course": "Curso",
+      "col_level": "Nivel",
+      "col_load": "Carga",
+      "col_min_age": "Edad mínima",
+      "col_class_groups": "Aulas",
+      "col_status": "Estado",
+      "load_value": "{modules} módulos · {hours} h",
+      "min_age_value": "{age} años",
+      "class_group_count": "{count, plural, =0 {sin aulas} one {# aula} other {# aulas}}",
+      "active": "En catálogo",
+      "inactive": "Fuera de catálogo",
+      "empty_title": "Sin cursos",
+      "empty_body": "Todavía no hay cursos en el catálogo.",
+      "empty_search_title": "Sin resultados",
+      "empty_search_body": "Probá con otro curso, idioma o nivel.",
+      "local_only": "Los cambios son solo de pantalla. Todavía no hay servidor conectado."
+    },
+    "course_options": {
+      "close": "Cerrar",
+      "subtitle": "Opciones del curso · {language}",
+      "applies_forward": "Lo que cambies acá vale para las aulas que se abran después. Las que ya están corriendo mantienen la regla con la que el alumno se matriculó.",
+      "min_age": "Edad mínima",
+      "modules": "Módulos",
+      "total_hours": "Horas totales",
+      "certificate_rule": "Certificado",
+      "procedures": "Procedimientos que ofrece",
+      "allows_transfer": "Permite cambio de aula (cambio de horario)",
+      "allows_freeze": "Permite congelar la matrícula",
+      "active": "Curso en catálogo",
+      "active_hint": "Sacarlo del catálogo no cierra las aulas en curso: solo deja de ofrecerse.",
+      "save": "Guardar",
+      "cancel": "Cancelar"
+    },
+    "certificate_rule": {
+      "automatic": "Sale con la nota mínima",
+      "exam_required": "Exige examen de certificación"
     }
   }
 }

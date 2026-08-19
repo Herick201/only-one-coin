@@ -185,6 +185,8 @@ para o `audit_log` append-only.
 | Aba Documentos da ficha | `apps/app/src/app/[locale]/backoffice/(panel)/students/[studentId]/student-documents.tsx` |
 | Lista de turmas (busca, filtros, agrupamento) | `apps/app/src/app/[locale]/backoffice/(panel)/class-groups/class-groups-view.tsx` |
 | Turma + lote | `apps/app/src/app/[locale]/backoffice/(panel)/class-groups/[classGroupId]/` |
+| Procedimentos por matrícula (§5 de `REGRAS-NEGOCIO.md`) | `apps/app/src/lib/backoffice/enrollment-procedures.ts` |
+| Catálogo de cursos + opções | `apps/app/src/app/[locale]/backoffice/(panel)/courses/` |
 
 Tudo em estado local: não há backend. A escrita real passa por `apps/api`,
 nunca pelo navegador (`CLAUDE.md` §8).
@@ -199,7 +201,17 @@ nunca pelo navegador (`CLAUDE.md` §8).
   externo usado hoje (`ooc.asvnets.com/consultar`, busca por DNI). Formato do
   código de verificação ainda não fechado.
 - **Demais procedimentos pagos** (§2) — confirmar se entram na plataforma e se
-  compartilham o fluxo de solicitação com pagamento.
+  compartilham o fluxo de solicitação com pagamento. A tela de turmas já
+  registra três deles (mover de turma, congelar, retirar) como **registro do
+  que já foi pago e combinado fora da plataforma**, não como execução: o
+  backoffice pede confirmação da taxa antes de liberar o botão. Falta amarrar
+  isso a um pagamento aprovado de verdade, como a constancia do §2.
+- **Retirada/cancelamento de matrícula não tem regra.** Nenhuma fonte define
+  devolução, prazo ou consequência — a tela libera a vaga e diz que a regra não
+  existe. Confirmar com a Asociación antes de tratar isso como fluxo pronto.
+- **Traspaso × cambio de horário.** `docs/REGRAS-NEGOCIO.md` §5 cobra S/10 por
+  um e nada pelo outro; `docs/REQUISITOS.md` RF11 já sinaliza que RF11/RF12/RF13
+  podem ser a mesma coisa. A tela mostra S/10 por ora.
 - **Formato do código da turma.** A tela mostra um `code` por turma — no mock,
   três letras do idioma mais uma sequência de 4 dígitos (`ALE-0002`). Nível e
   ciclo saíram do código de propósito: o nome do curso já diz o nível e o

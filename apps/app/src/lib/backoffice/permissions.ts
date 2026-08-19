@@ -30,3 +30,17 @@ export function canIssueCertificates(role: StaffRole): boolean {
 export function canManageEnrollment(role: StaffRole): boolean {
   return role === 'admin' || role === 'coordinator'
 }
+
+/**
+ * Opening a course is an admin call: it is what the whole catalog, the price
+ * table and every future class group hang off. Coordination configures what
+ * already exists.
+ */
+export function canCreateCourse(role: StaffRole): boolean {
+  return role === 'admin'
+}
+
+/** Who may change a course's options — not the same as who may create one. */
+export function canConfigureCourse(role: StaffRole): boolean {
+  return role === 'admin' || role === 'coordinator'
+}

@@ -379,6 +379,47 @@ export interface ClassGroupRow {
   pendingCertificates: number
 }
 
+/**
+ * A course as the catalog holds it. The class group is an instance of a course
+ * with a schedule, a teacher and seats (`docs/REQUISITOS.md` RF09) — what lives
+ * here is what every one of its class groups inherits.
+ *
+ * Price is deliberately absent: it is versioned and never edited, and the
+ * enrollment freezes the `plan_price_id` in force (CLAUDE.md §5). Editing a
+ * price from a course screen is how history gets revalidated.
+ */
+export interface CourseRow {
+  id: string
+  name: string
+  language: CourseLanguage
+  /** Catalog label ("A1", "Inicial", "B1") — data, not an enum. */
+  level: string
+  /** Minimum age, per course (`docs/REGRAS-NEGOCIO.md` §2). */
+  minAge: number
+  modules: number
+  totalHours: number
+  certificateRule: CertificateRule
+  /** Administrative procedures the course offers (`docs/REGRAS-NEGOCIO.md` §5). */
+  allowsFreeze: boolean
+  allowsTransfer: boolean
+  /** Out of the catalog does not delete anything — running class groups stay. */
+  active: boolean
+  /** Class groups already opened from this course. */
+  classGroupCount: number
+}
+
+/** The subset of a course that coordination may change. */
+export type CourseOptions = Pick<
+  CourseRow,
+  | 'minAge'
+  | 'modules'
+  | 'totalHours'
+  | 'certificateRule'
+  | 'allowsFreeze'
+  | 'allowsTransfer'
+  | 'active'
+>
+
 /** One student as seen from the class group — grade first, money second. */
 export interface ClassGroupStudent {
   studentId: string
