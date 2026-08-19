@@ -360,13 +360,15 @@
       "created_local_only": "Turma criada só na tela ({time}). Ainda não há servidor conectado.",
       "course_placeholder": "Inglés Básico A1",
       "field_code": "Código da turma",
-      "code_placeholder": "ING-0008",
       "seats_left": "{count, plural, one {resta #} other {restam #}}",
       "expand_all": "Abrir todas",
       "collapse_all": "Fechar todas",
       "page_prev": "Anteriores",
       "page_next": "Próximas",
-      "page_status": "{from}–{to} de {total}"
+      "page_status": "{from}–{to} de {total}",
+      "code_generated": "Gerado automaticamente.",
+      "field_time_hour": "Hora",
+      "field_time_minute": "Minutos"
     },
     "class_group": {
       "back_to_list": "Voltar às turmas",

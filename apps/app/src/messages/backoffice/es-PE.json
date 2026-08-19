@@ -360,13 +360,15 @@
       "created_local_only": "Aula creada solo en pantalla ({time}). Aún no hay servidor conectado.",
       "course_placeholder": "Inglés Básico A1",
       "field_code": "Código de aula",
-      "code_placeholder": "ING-0008",
       "seats_left": "{count, plural, one {queda #} other {quedan #}}",
       "expand_all": "Desplegar todo",
       "collapse_all": "Plegar todo",
       "page_prev": "Anteriores",
       "page_next": "Siguientes",
-      "page_status": "{from}–{to} de {total}"
+      "page_status": "{from}–{to} de {total}",
+      "code_generated": "Generado automáticamente.",
+      "field_time_hour": "Hora",
+      "field_time_minute": "Minutos"
     },
     "class_group": {
       "back_to_list": "Volver a las aulas",

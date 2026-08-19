@@ -37,6 +37,25 @@ const ALL = 'all'
  */
 const CLOSED_PAGE_SIZE = 10
 
+/** Class start times offered by the form. */
+const HOURS = Array.from({ length: 17 }, (_, i) => String(i + 6).padStart(2, '0'))
+const MINUTES = ['00', '15', '30', '45']
+
+/**
+ * Three letters of the language, accents stripped: Inglés → ING, Alemán → ALE.
+ * Derived from the catalog name so a new language needs no code change
+ * (CLAUDE.md §1) — and stripping accents matters, or `Alemán` would yield a
+ * code nobody can type into the search box.
+ */
+function codePrefix(languageName: string): string {
+  return languageName
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z]/g, '')
+    .slice(0, 3)
+    .toUpperCase()
+}
+
 const selectClass =
   'rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink outline-none transition focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15'
 
@@ -636,7 +655,15 @@ function NewClassGroupForm({
 
   const [languageId, setLanguageId] = useState(languages[0]?.id ?? '')
   const [courseName, setCourseName] = useState('')
-  const [code, setCode] = useState('')
+  /**
+   * The sequence is generated, not typed. Coordination should not have to know
+   * which number is free, and a code typed by hand is a code that collides.
+   * Random four digits works for the mockup; the real one is a sequence handed
+   * out by `apps/api`, where uniqueness can actually be guaranteed.
+   */
+  const [sequence] = useState(() =>
+    String(Math.floor(Math.random() * 10000)).padStart(4, '0'),
+  )
   const [teacherId, setTeacherId] = useState(teachers[0]?.[0] ?? '')
   const [modality, setModality] = useState<ClassModality>('online')
   const [academicPeriodName, setPeriod] = useState(periods[0] ?? '')
@@ -648,7 +675,6 @@ function NewClassGroupForm({
 
   const ready =
     courseName.trim() !== '' &&
-    code.trim() !== '' &&
     startDate !== '' &&
     endDate !== '' &&
     weekdays.length > 0
@@ -663,10 +689,11 @@ function NewClassGroupForm({
     const language = languages.find((item) => item.id === languageId)
     const teacher = teachers.find(([id]) => id === teacherId)
     if (!language || !teacher) return
+    const code = `${codePrefix(language.name)}-${sequence}`
     onCreate({
       id: `cg_local_${startDate}_${startTime}`,
       courseName: courseName.trim(),
-      code: code.trim().toUpperCase(),
+      code,
       language,
       weekdays: WEEKDAYS.filter((day) => weekdays.includes(day)),
       startTime,
@@ -724,17 +751,19 @@ function NewClassGroupForm({
           />
         </label>
 
-        <label className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1">
           <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             {t('class_groups.field_code')}
           </span>
-          <input
-            value={code}
-            onChange={(event) => setCode(event.target.value)}
-            placeholder={t('class_groups.code_placeholder')}
-            className={`${selectClass} uppercase tabular-nums`}
-          />
-        </label>
+          <p className="rounded-lg border border-dashed border-line bg-sky-soft px-3 py-2 text-sm tabular-nums text-ink">
+            {`${codePrefix(
+              languages.find((item) => item.id === languageId)?.name ?? '',
+            )}-${sequence}`}
+          </p>
+          <span className="text-xs text-muted-foreground">
+            {t('class_groups.code_generated')}
+          </span>
+        </div>
 
         <label className="flex flex-col gap-1">
           <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -828,12 +857,40 @@ function NewClassGroupForm({
           <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             {t('class_groups.field_time')}
           </span>
-          <input
-            type="time"
-            value={startTime}
-            onChange={(event) => setStartTime(event.target.value)}
-            className={selectClass}
-          />
+          {/* Two selects instead of `type="time"`: the native picker is a
+              different widget in every browser and hands back minutes nobody
+              teaches at. Quarter-hour steps cover the real timetable. */}
+          <span className="flex items-center gap-1.5">
+            <select
+              value={startTime.slice(0, 2)}
+              onChange={(event) =>
+                setStartTime(`${event.target.value}:${startTime.slice(3, 5)}`)
+              }
+              aria-label={t('class_groups.field_time_hour')}
+              className={`${selectClass} flex-1 tabular-nums`}
+            >
+              {HOURS.map((hour) => (
+                <option key={hour} value={hour}>
+                  {hour}
+                </option>
+              ))}
+            </select>
+            <span className="text-sm font-semibold text-muted-foreground">:</span>
+            <select
+              value={startTime.slice(3, 5)}
+              onChange={(event) =>
+                setStartTime(`${startTime.slice(0, 2)}:${event.target.value}`)
+              }
+              aria-label={t('class_groups.field_time_minute')}
+              className={`${selectClass} flex-1 tabular-nums`}
+            >
+              {MINUTES.map((minute) => (
+                <option key={minute} value={minute}>
+                  {minute}
+                </option>
+              ))}
+            </select>
+          </span>
         </label>
       </div>
 
