@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import { Poppins, Fredoka } from 'next/font/google'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { logout } from '../actions'
 import { getPortalSession } from '@/lib/portal/mock-data'
@@ -8,32 +7,18 @@ import { PortalNav, type NavItem } from '@/components/portal/portal-nav'
 import { LanguageSwitcher } from '@/components/portal/language-switcher'
 import { Icon } from '@/components/portal/icons'
 
-const poppins = Poppins({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-poppins',
-  display: 'swap',
-})
-
-const fredoka = Fredoka({
-  subsets: ['latin'],
-  weight: ['500', '600', '700'],
-  variable: '--font-fredoka',
-  display: 'swap',
-})
-
 function BrandMark({ portalLabel }: { portalLabel: string }) {
   return (
     <div className="flex items-center gap-2.5">
       <span className="relative grid h-9 w-9 place-items-center rounded-xl bg-brand-blue text-white shadow-card">
-        <span className="font-display text-lg font-bold leading-none">1</span>
+        <span className="text-lg font-bold leading-none">1</span>
         <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-white bg-brand-yellow" />
       </span>
       <span className="flex flex-col leading-tight">
-        <span className="font-display text-sm font-semibold text-ink">
+        <span className="text-sm font-semibold text-ink">
           Only One Coin
         </span>
-        <span className="text-[11px] font-medium text-muted">{portalLabel}</span>
+        <span className="text-[11px] font-medium text-muted-foreground">{portalLabel}</span>
       </span>
     </div>
   )
@@ -50,12 +35,12 @@ function StudentChip({
 }) {
   return (
     <div className="flex items-center gap-3">
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-sky font-display text-sm font-semibold text-brand-blue-deep">
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-sky text-sm font-semibold text-brand-blue-deep">
         {monogram}
       </span>
       <span className="flex min-w-0 flex-col leading-tight">
         <span className="truncate text-sm font-semibold text-ink">{name}</span>
-        <span className="truncate text-[11px] text-muted">{role}</span>
+        <span className="truncate text-[11px] text-muted-foreground">{role}</span>
       </span>
     </div>
   )
@@ -88,7 +73,7 @@ export default async function PortalLayout({
     <form action={logout}>
       <button
         type="submit"
-        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-muted transition hover:bg-red-50 hover:text-red-600"
+        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-muted-foreground transition hover:bg-red-50 hover:text-red-600"
       >
         <Icon name="logout" size={18} />
         {t('nav.logout')}
@@ -98,7 +83,7 @@ export default async function PortalLayout({
 
   return (
     <div
-      className={`${poppins.variable} ${fredoka.variable} font-body min-h-dvh bg-sky-soft text-ink`}
+      className="min-h-dvh bg-sky-soft text-ink"
     >
       {/* Sidebar — desktop */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-line bg-white lg:flex">
@@ -129,14 +114,14 @@ export default async function PortalLayout({
           <BrandMark portalLabel={t('brand.portal_label')} />
           <div className="flex items-center gap-3">
             <LanguageSwitcher />
-            <span className="grid h-9 w-9 place-items-center rounded-full bg-sky font-display text-sm font-semibold text-brand-blue-deep">
+            <span className="grid h-9 w-9 place-items-center rounded-full bg-sky text-sm font-semibold text-brand-blue-deep">
               {monogram}
             </span>
             <form action={logout}>
               <button
                 type="submit"
                 aria-label={t('nav.logout')}
-                className="grid h-9 w-9 place-items-center rounded-full text-muted transition hover:bg-red-50 hover:text-red-600"
+                className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground transition hover:bg-red-50 hover:text-red-600"
               >
                 <Icon name="logout" size={18} />
               </button>

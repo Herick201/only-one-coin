@@ -1,0 +1,224 @@
+{
+  "bo": {
+    "brand": {
+      "panel_label": "Panel administrativo"
+    },
+    "nav": {
+      "dashboard": "Inicio",
+      "students": "Alumnos",
+      "enrollments": "Matrículas",
+      "payments": "Pagos",
+      "courses": "Cursos y aulas",
+      "teachers": "Docentes",
+      "email": "Correos",
+      "reports": "Reportes",
+      "staff": "Equipo",
+      "settings": "Configuración",
+      "logout": "Cerrar sesión",
+      "soon": "Pronto",
+      "group_daily": "Día a día",
+      "group_academic": "Académico",
+      "group_admin": "Administración",
+      "sidebar_toggle": "Mostrar u ocultar el menú",
+      "sidebar_title": "Menú del panel",
+      "sidebar_description": "Navegación entre los módulos del panel.",
+      "sidebar_close": "Cerrar el menú"
+    },
+    "role": {
+      "admin": "Administración",
+      "coordinator": "Coordinación",
+      "teacher": "Docente",
+      "treasury": "Tesorería",
+      "mass_approver": "Aprobación masiva"
+    },
+    "common": {
+      "actions": "Acciones",
+      "mock_notice": "Vista de demostración: los datos son de ejemplo y los cambios no se guardan todavía."
+    },
+    "dashboard": {
+      "greeting": "Hola, {name}",
+      "subtitle": "Resumen del día y todo lo que necesita revisión humana.",
+      "metric_enrollments_today": "Matrículas de hoy",
+      "metric_delta": "{value}% frente a ayer",
+      "metric_pending_review": "En revisión humana",
+      "metric_oldest": "La más antigua espera {hours} h",
+      "metric_active_students": "Alumnos activos",
+      "metric_seats": "Ocupación de vacantes",
+      "metric_seats_hint": "{taken} de {capacity} vacantes tomadas"
+    },
+    "review": {
+      "title": "Cola de revisión",
+      "subtitle": "Comprobantes que la IA no pudo aprobar sola. Se revisan de más antiguo a más reciente.",
+      "col_student": "Alumno",
+      "col_course": "Curso",
+      "col_amount": "Monto leído",
+      "col_flag": "Motivo",
+      "col_extraction": "Extracción",
+      "col_submitted": "Enviado",
+      "expected": "Esperado: {amount}",
+      "tier": "Nivel {tier}",
+      "confidence": "Confianza {value}%",
+      "open_file": "Ver ficha",
+      "empty_title": "No hay nada en cola",
+      "empty_body": "Cuando un comprobante necesite revisión humana, aparecerá aquí.",
+      "pending_count": "{count} en cola",
+      "see_all": "Ver toda la cola",
+      "showing": "Mostrando {shown} de {total} comprobantes"
+    },
+    "review_flag": {
+      "amount_mismatch": "Monto no coincide",
+      "low_confidence": "Confianza baja",
+      "illegible": "Ilegible",
+      "duplicate_phash": "Comprobante repetido",
+      "model_divergence": "Modelos no coinciden"
+    },
+    "seats": {
+      "title": "Vacantes por aula",
+      "subtitle": "Aulas más cerca de llenarse en este período de venta.",
+      "full": "Llena",
+      "available": "{count} libres",
+      "taken": "{taken} de {capacity}",
+      "starts": "Inicia {date}"
+    },
+    "modules": {
+      "title": "Módulos",
+      "subtitle": "Todo lo que se gestiona desde el panel. Vamos habilitándolos por partes.",
+      "students": "Ficha completa, estado, historial de matrículas y edición de datos.",
+      "enrollments": "Matrículas por período, aula y estado, con la reserva de vacante.",
+      "payments": "Comprobantes, aprobación, rechazo y tolerancia de validación.",
+      "courses": "Cursos, aulas, horarios, cupos y fechas de inicio.",
+      "teachers": "Docentes y las aulas que tiene a cargo cada uno.",
+      "email": "Correos transaccionales y campañas, con plantillas versionadas.",
+      "reports": "Matrículas, ingresos y ocupación por curso y período.",
+      "staff": "Usuarios del panel, cargos y doble factor.",
+      "settings": "Períodos de venta, precios vigentes y parámetros de validación."
+    },
+    "students": {
+      "title": "Alumnos",
+      "subtitle": "Busca por nombre, documento, correo o teléfono.",
+      "search_label": "Buscar alumno",
+      "search_placeholder": "Nombre, documento, correo o teléfono",
+      "filter_all": "Todos",
+      "col_student": "Alumno",
+      "col_document": "Documento",
+      "col_contact": "Contacto",
+      "col_status": "Estado",
+      "col_courses": "Cursos activos",
+      "col_last_activity": "Última actividad",
+      "age_city": "{age} años · {city}",
+      "minor": "Menor de edad",
+      "total_enrollments": "{count} matrículas en total",
+      "open_file": "Ver ficha",
+      "empty_title": "Sin resultados",
+      "empty_body": "Prueba con otro nombre, documento o correo, o quita el filtro de estado.",
+      "showing": "Mostrando {shown} de {total} alumnos"
+    },
+    "student_status": {
+      "active": "Activo",
+      "under_review": "En revisión",
+      "inactive": "Inactivo"
+    },
+    "national_id_type": {
+      "DNI": "DNI",
+      "CE": "Carné de extranjería",
+      "passport": "Pasaporte"
+    },
+    "student_file": {
+      "back_to_list": "Volver a alumnos",
+      "resend_credentials": "Reenviar credenciales",
+      "tab_data": "Datos",
+      "tab_enrollments": "Matrículas",
+      "tab_documents": "Documentos",
+      "tab_activity": "Actividad",
+      "personal_title": "Datos del alumno",
+      "edit": "Editar datos",
+      "save": "Guardar cambios",
+      "saving": "Guardando…",
+      "cancel": "Cancelar",
+      "edit_audit_notice": "Todo cambio de datos queda registrado con autor, fecha y valor anterior.",
+      "saved_local_only": "Cambios aplicados solo en pantalla ({time}). Aún no hay servidor conectado.",
+      "field_first_name": "Nombres",
+      "field_last_name": "Apellidos",
+      "field_id_type": "Tipo de documento",
+      "field_id_number": "Número de documento",
+      "field_email": "Correo",
+      "field_phone": "Teléfono",
+      "field_city": "Ciudad",
+      "field_birth_date": "Fecha de nacimiento",
+      "birth_date_value": "{date} · {age} años",
+      "field_created_at": "Registrado el",
+      "field_last_activity": "Última actividad",
+      "guardian_title": "Apoderado",
+      "field_guardian_name": "Nombre",
+      "field_relationship": "Parentesco",
+      "consent_given": "Consentimiento firmado",
+      "consent_detail": "Versión {version} · {date} · IP {ip}",
+      "consent_missing": "Falta consentimiento",
+      "consent_missing_detail": "El alumno es menor de edad y el apoderado aún no acepta el texto vigente.",
+      "no_guardian_title": "Sin apoderado registrado",
+      "no_guardian_body": "El alumno es mayor de edad, así que no requiere apoderado.",
+      "col_course": "Curso y aula",
+      "col_period": "Ciclo",
+      "col_enrollment_status": "Matrícula",
+      "col_seat": "Vacante",
+      "col_payment": "Pago",
+      "col_amount": "Monto",
+      "col_created": "Creada",
+      "operation": "{method} · operación {number}",
+      "no_operation": "{method} · sin número de operación",
+      "no_enrollments_title": "Sin matrículas",
+      "no_enrollments_body": "Este alumno todavía no tiene ninguna matrícula registrada.",
+      "issued_at": "Emitido el {date}",
+      "not_issued": "Aún no emitido",
+      "no_documents_title": "Sin documentos",
+      "no_documents_body": "Las constancias y certificados aparecerán aquí cuando se emitan.",
+      "activity_title": "Historial",
+      "activity_subtitle": "Registro append-only: nada se edita ni se borra.",
+      "activity_actor": "{actor} · {role}",
+      "no_activity_title": "Sin actividad",
+      "no_activity_body": "Todavía no hay acciones registradas para este alumno."
+    },
+    "relationship": {
+      "mother": "Madre",
+      "father": "Padre",
+      "legal_guardian": "Apoderado(a) legal"
+    },
+    "enrollment_status": {
+      "under_review": "En revisión",
+      "active": "Activa",
+      "completed": "Finalizada",
+      "rejected": "Rechazada"
+    },
+    "payment_status": {
+      "pending": "Pendiente",
+      "under_review": "En revisión",
+      "approved": "Aprobado",
+      "rejected": "Rechazado"
+    },
+    "seat_status": {
+      "reserved": "Reservada",
+      "confirmed": "Confirmada",
+      "released": "Liberada"
+    },
+    "document_status": {
+      "available": "Disponible",
+      "pending": "En proceso",
+      "locked": "Aún no disponible"
+    },
+    "document_type": {
+      "enrollment_certificate": "Constancia de matrícula",
+      "certificate": "Certificado de finalización"
+    },
+    "audit_action": {
+      "student_created": "Alumno registrado",
+      "student_updated": "Datos editados",
+      "enrollment_created": "Matrícula creada",
+      "payment_approved": "Pago aprobado",
+      "payment_rejected": "Pago rechazado",
+      "payment_flagged": "Pago enviado a revisión",
+      "document_issued": "Documento emitido",
+      "email_sent": "Correo enviado",
+      "credentials_sent": "Credenciales enviadas"
+    }
+  }
+}

@@ -34,7 +34,7 @@ export default async function CourseDetailPage({
     <div className="flex flex-col gap-6">
       <Link
         href="/portal/cursos"
-        className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted transition hover:text-ink"
+        className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground transition hover:text-ink"
       >
         <Icon name="arrow-left" size={16} />
         {t('common.back')}
@@ -42,7 +42,7 @@ export default async function CourseDetailPage({
 
       <header className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="font-display text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
+          <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
             {course.name}
           </h1>
           <StatusBadge
@@ -69,7 +69,7 @@ export default async function CourseDetailPage({
           {/* About */}
           <Card className="p-5 sm:p-6">
             <SectionTitle>{t('course_detail.about_title')}</SectionTitle>
-            <p className="mt-2 text-sm leading-relaxed text-muted">
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
               {course.summary}
             </p>
           </Card>
@@ -89,13 +89,13 @@ export default async function CourseDetailPage({
                   <span className="font-semibold text-ink">
                     {t(`weekday_short.${slot.weekday}`)}
                   </span>
-                  <span className="text-muted">
+                  <span className="text-muted-foreground">
                     {slot.startTime}–{slot.endTime}
                   </span>
                 </li>
               ))}
             </ul>
-            <p className="mt-3 text-xs text-muted">
+            <p className="mt-3 text-xs text-muted-foreground">
               {t('course_detail.period_dates', {
                 start: formatDate(classGroup.startDate, locale),
                 end: formatDate(classGroup.endDate, locale),
@@ -127,7 +127,7 @@ export default async function CourseDetailPage({
           <Card className="p-5 sm:p-6">
             <SectionTitle>{t('course_detail.materials_title')}</SectionTitle>
             {course.materials.length === 0 ? (
-              <p className="mt-2 text-sm text-muted">
+              <p className="mt-2 text-sm text-muted-foreground">
                 {t('course_detail.materials_empty')}
               </p>
             ) : (
@@ -146,7 +146,7 @@ export default async function CourseDetailPage({
                       <span className="flex-1 text-sm font-medium text-ink">
                         {m.title}
                       </span>
-                      <span className="text-muted transition group-hover:text-brand-blue">
+                      <span className="text-muted-foreground transition group-hover:text-brand-blue">
                         <Icon name="external" size={16} />
                       </span>
                     </a>
@@ -176,13 +176,13 @@ export default async function CourseDetailPage({
             <dl className="mt-3 flex flex-col gap-3">
               <Field label={t('enrollments.plan_label')}>{plan.name}</Field>
               <Field label={t('course_detail.plan_price')}>
-                <span className="font-display text-lg text-ink">
+                <span className="text-lg text-ink">
                   {formatMoney(plan.priceCents, plan.currency, locale)}
                 </span>
               </Field>
               <Field label={t('common.period')}>{academicPeriod.name}</Field>
             </dl>
-            <p className="mt-3 border-t border-line pt-3 text-xs text-muted">
+            <p className="mt-3 border-t border-line pt-3 text-xs text-muted-foreground">
               {t('course_detail.enrolled_on', {
                 date: formatDate(enrollment.createdAt, locale),
               })}

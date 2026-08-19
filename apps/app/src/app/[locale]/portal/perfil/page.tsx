@@ -76,7 +76,7 @@ export default async function ProfilePage({
                   {t('profile.consent_title')}
                 </div>
                 {guardian.consent ? (
-                  <p className="mt-1.5 text-xs text-muted">
+                  <p className="mt-1.5 text-xs text-muted-foreground">
                     {t('profile.consent_accepted', {
                       date: formatDate(guardian.consent.acceptedAt, locale),
                     })}{' '}
@@ -86,19 +86,19 @@ export default async function ProfilePage({
                     })}
                   </p>
                 ) : (
-                  <p className="mt-1.5 text-xs text-muted">
+                  <p className="mt-1.5 text-xs text-muted-foreground">
                     {t('profile.consent_none')}
                   </p>
                 )}
               </div>
             </>
           ) : (
-            <p className="mt-3 text-sm text-muted">{t('profile.guardian_none')}</p>
+            <p className="mt-3 text-sm text-muted-foreground">{t('profile.guardian_none')}</p>
           )}
         </Card>
       </div>
 
-      <p className="mt-6 text-center text-xs text-muted">
+      <p className="mt-6 text-center text-xs text-muted-foreground">
         {t('profile.edit_note')}
       </p>
     </div>
