@@ -80,9 +80,9 @@ export function BackofficeLoginForm() {
   const adornClass =
     'pointer-events-none absolute left-3 text-slate-400 peer-focus:text-brand-blue'
   const primaryButtonClass =
-    'mt-1 flex w-full items-center justify-center gap-2 rounded-full bg-brand-blue px-4 py-3 text-sm font-bold text-white shadow-[0_16px_30px_-14px_rgba(47,107,255,0.9)] transition hover:bg-brand-blue-deep disabled:cursor-not-allowed disabled:opacity-60'
+    'mt-1 flex w-full items-center justify-center gap-2 rounded-full bg-brand-blue px-4 py-3 text-sm font-bold text-white shadow-[0_16px_30px_-14px_rgba(47,107,255,0.9)] transition hover:bg-brand-yellow hover:text-ink disabled:cursor-not-allowed disabled:opacity-60'
   const ghostButtonClass =
-    'flex items-center justify-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-muted-foreground transition hover:bg-sky hover:text-ink disabled:opacity-60'
+    'flex items-center justify-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-muted-foreground transition hover:bg-cream hover:text-ink disabled:opacity-60'
 
   if (step === 'recover_sent') {
     return (
@@ -230,7 +230,7 @@ export function BackofficeLoginForm() {
               aria-pressed={showPassword}
               aria-label={showPassword ? t('hide_password') : t('show_password')}
               title={showPassword ? t('hide_password') : t('show_password')}
-              className="absolute right-2 grid h-8 w-8 place-items-center rounded-lg text-slate-400 transition hover:bg-sky hover:text-brand-blue"
+              className="absolute right-2 grid h-8 w-8 place-items-center rounded-lg text-slate-400 transition hover:bg-cream hover:text-ink"
             >
               {showPassword ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
             </button>
