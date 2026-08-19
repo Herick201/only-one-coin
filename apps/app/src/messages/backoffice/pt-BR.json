@@ -61,7 +61,9 @@
       "open_file": "Ver ficha",
       "empty_title": "Nada na fila",
       "empty_body": "Quando um comprovante precisar de revisão humana, ele aparece aqui.",
-      "pending_count": "{count} na fila"
+      "pending_count": "{count} na fila",
+      "see_all": "Ver toda a fila",
+      "showing": "Mostrando {shown} de {total} comprovantes"
     },
     "review_flag": {
       "amount_mismatch": "Valor não confere",
