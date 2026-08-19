@@ -37,6 +37,9 @@ Venda por WhatsApp (humano, fora do sistema)
 - Cada **período de venda** tem seus próprios cursos, horários, datas de início e vagas.
 - Idade mínima por curso. **Boa parte do público é menor de idade** → consentimento do apoderado é fluxo central.
 - Volume: **5.000/mês** em escala normal (9 meses/ano) · **até 20.000/mês** em escala pico / temporada alta (3 meses/ano).
+- **Constancia de matrícula é procedimento pago** (S/25) — não é um botão grátis. Entra como **solicitação com pagamento associado**: mesmo fluxo de comprovante + OCR da matrícula, e só vira documento com o pagamento aprovado. Vale para os demais procedimentos da tabela (`docs/REGRAS-NEGOCIO.md` §5).
+- **Certificado de finalização é grátis**, em até **25 dias úteis** do término. Exige nota **≥ 14**; DA (não rendeu exame final) não recebe. Inglés Básico exige também o **exame de certificação** solicitado à parte.
+- **Emissão de certificado é em lote por turma, com gate humano.** O sistema deixa a lista pronta; a coordenação confirma. Nunca disparo automático por data — quem concluiu é decisão da coordenação. Detalhe em `docs/DOCUMENTOS-E-CERTIFICADOS.md`.
 - Comprovante: retido por **5 anos**. Só a **versão processada/reduzida** (pós downscale/grayscale da OCR, `CLAUDE.md` §5) é retida — não o upload original bruto.
 
 ---
@@ -290,6 +293,8 @@ Cada um tem um mecanismo. O mecanismo é obrigatório, não a boa intenção.
 - Ley 29733: consentimento com timestamp, versão do texto e IP; política de retenção; exclusão a pedido
 
 Papéis: `admin`, `coordinator`, `teacher`, `treasury`, `mass_approver`. Aluno e apoderado: `student`, `guardian`.
+
+Emitem documento (constancia, certificado) e disparam o lote de uma turma: `admin`, `coordinator`, `teacher` — o docente **só nas próprias turmas**, checado no usecase. `treasury` e `mass_approver` não emitem. Toda emissão e todo reenvio de e-mail vão para o `audit_log`.
 
 ### Pontos de entrada separados (portal ≠ backoffice)
 

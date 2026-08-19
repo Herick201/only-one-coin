@@ -3,11 +3,8 @@
 Decisões fechadas na sessão de 19/08/2026. Complementa `CLAUDE.md` (fonte da
 verdade) e `docs/REGRAS-NEGOCIO.md` (o que a instituição já pratica hoje).
 
-> **Pendência de sincronização.** Esta sessão trabalhou numa branch 5 commits
-> atrás da `main`. Os itens marcados **→ CLAUDE.md** ainda precisam ser levados
-> para lá (§1 regras de negócio e §8 papéis) depois do rebase — não foram
-> escritos direto para não conflitar com o que a `main` já mudou nas mesmas
-> seções.
+As decisões de regra de negócio e de papéis já estão refletidas no
+`CLAUDE.md` (§1 e §8); este documento guarda o detalhe que não cabe lá.
 
 ---
 
@@ -31,7 +28,7 @@ tamanho. A rota de upload não confia em nenhum id vindo do cliente.
 
 ---
 
-## 2. Constancia de matrícula — procedimento **pago** → CLAUDE.md §1
+## 2. Constancia de matrícula — procedimento **pago**
 
 `docs/REGRAS-NEGOCIO.md` §5: a constancia custa **S/25**, cobrada à parte, como
 qualquer procedimento administrativo. Não é um botão grátis.
@@ -60,7 +57,7 @@ associado** — não como fluxos separados.
 
 ---
 
-## 3. Certificado de finalização — emissão em lote por turma → CLAUDE.md §1
+## 3. Certificado de finalização — emissão em lote por turma
 
 Grátis, dentro de **25 dias úteis** após o término do curso
 (`docs/REGRAS-NEGOCIO.md` §6).
@@ -151,7 +148,7 @@ exatamente o trabalho manual que o volume torna impossível.
 
 ---
 
-## 5. Quem pode emitir → CLAUDE.md §8
+## 5. Quem pode emitir
 
 | Papel | Emite avulso | Dispara o lote da turma |
 | --- | --- | --- |
