@@ -114,12 +114,75 @@ export interface EnrollmentHistoryItem {
   progressPct: number | null
 }
 
+/** Where the e-mail carrying a document currently is (outbox, CLAUDE.md §5). */
+export type EmailDeliveryStatus = 'not_sent' | 'queued' | 'sent' | 'failed'
+
+/**
+ * The e-mail is a consequence of issuing the document — one outbox row per
+ * emission, never a separate "send" button. A resend is an audited exception.
+ */
+export interface DocumentDelivery {
+  status: EmailDeliveryStatus
+  lastSentAt: string | null
+  attempts: number
+}
+
 export interface DocumentItem {
   id: string
   type: DocumentType
   status: DocumentStatus
   enrollmentId: string
   issuedAt: string | null
+  /** Printed on the PDF and checked by the public validation page. Set only
+   *  once the document actually exists. */
+  verificationCode: string | null
+  /** Null when the batch issued it — the actor is then the system. */
+  issuedByName: string | null
+  delivery: DocumentDelivery
+}
+
+/**
+ * A paid administrative procedure that ends in a document. The constancia de
+ * matrícula costs S/25 (`docs/REGRAS-NEGOCIO.md` §5) and is paid outside the
+ * platform exactly like an enrollment: the student uploads the receipt and the
+ * same OCR ladder validates it. No payment gateway is involved (CLAUDE.md §2).
+ */
+export interface DocumentRequest {
+  id: string
+  type: DocumentType
+  enrollmentId: string
+  requestedAt: string
+  /** Fee frozen at request time, integer cents (CLAUDE.md §5). */
+  feeCents: number
+  currency: 'PEN'
+  paymentStatus: PaymentStatus
+  paymentMethod: PaymentMethod | null
+  operationNumber: string | null
+}
+
+/** What an uploaded file is. Never a document the platform issues. */
+export type AttachmentKind =
+  | 'national_id'
+  | 'guardian_consent'
+  | 'receipt'
+  | 'other'
+
+export type AttachmentSource = 'student' | 'staff'
+
+/**
+ * A file attached to the student, uploaded by the student from the portal or by
+ * staff here. Deliberately NOT a `DocumentItem`: an uploaded PDF carries no
+ * verification code, so it must never reach the public validation page.
+ */
+export interface StudentAttachment {
+  id: string
+  kind: AttachmentKind
+  /** Real file name as uploaded — student data, shown as is (CLAUDE.md §4). */
+  fileName: string
+  sizeBytes: number
+  uploadedAt: string
+  uploadedBy: AttachmentSource
+  uploadedByName: string
 }
 
 /** Append-only audit trail (CLAUDE.md §8) — one entry per staff action. */
@@ -131,6 +194,9 @@ export type AuditAction =
   | 'payment_rejected'
   | 'payment_flagged'
   | 'document_issued'
+  | 'document_requested'
+  | 'certificates_batch_issued'
+  | 'attachment_uploaded'
   | 'email_sent'
   | 'credentials_sent'
 
@@ -148,7 +214,10 @@ export type StudentField =
   | 'birth_date'
 
 /** Versioned e-mail templates (CLAUDE.md §5, outbox). */
-export type EmailTemplate = 'guardian_consent_reminder'
+export type EmailTemplate =
+  | 'guardian_consent_reminder'
+  | 'enrollment_certificate_issued'
+  | 'certificate_issued'
 
 /**
  * What an audit entry points at. Either real data (a course name, an operation
@@ -175,6 +244,9 @@ export interface StudentDetail extends StudentRow {
   guardian: GuardianSummary | null
   enrollments: EnrollmentHistoryItem[]
   documents: DocumentItem[]
+  /** Paid procedures still on their way to becoming a document. */
+  documentRequests: DocumentRequest[]
+  attachments: StudentAttachment[]
   activity: AuditEntry[]
 }
 
@@ -224,3 +296,101 @@ export interface SeatWatchItem {
   seatsTaken: number
   capacity: number
 }
+
+/* -------------------------------------------------------------------------- */
+/* Class groups — where certificates are issued in batch                       */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * `finished` = classes are over but certificates are still owed. `closed` =
+ * everyone who qualified already got theirs. A failed student never gets one,
+ * so "all certificates issued" can never be the gate — it would leave any class
+ * group with a failure open forever.
+ */
+export type ClassGroupStatus =
+  | 'enrolling'
+  | 'in_progress'
+  | 'finished'
+  | 'closed'
+
+/**
+ * How the certificate is earned (`docs/REGRAS-NEGOCIO.md` §6). Most courses
+ * certify on grades alone; Inglés Básico additionally requires a certification
+ * exam the student has to request, so it never goes out in a blind batch.
+ */
+export type CertificateRule = 'automatic' | 'exam_required'
+
+/** Final grade outcome. `auto_failed` is the DA — a missed final exam. */
+export type GradeStatus = 'approved' | 'failed' | 'auto_failed' | 'pending'
+
+export type CertificationExamStatus =
+  | 'approved'
+  | 'failed'
+  | 'pending'
+  | 'not_requested'
+
+/** Weekday code — the screen resolves it to a short label via the locale. */
+export type Weekday = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun'
+
+/**
+ * The language a course belongs to. Carried as catalogue data, not as a
+ * translated enum: the Asociación runs ~10 languages and opens new ones
+ * (quechua workshops included), and `CLAUDE.md` §1 is explicit that nothing
+ * language-specific belongs in the code. Same treatment as `courseName`.
+ */
+export interface CourseLanguage {
+  id: string
+  name: string
+}
+
+export interface ClassGroupRow {
+  id: string
+  courseName: string
+  classGroupName: string
+  language: CourseLanguage
+  /** Weekly schedule — the days plus the start time, in America/Lima. */
+  weekdays: Weekday[]
+  startTime: string
+  teacherId: string
+  teacherName: string
+  modality: ClassModality
+  academicPeriodName: string
+  startDate: string
+  endDate: string
+  seatsTaken: number
+  capacity: number
+  status: ClassGroupStatus
+  certificateRule: CertificateRule
+  /** Students who finished and are still waiting for their certificate. */
+  pendingCertificates: number
+}
+
+/** One student as seen from the class group — grade first, money second. */
+export interface ClassGroupStudent {
+  studentId: string
+  fullName: string
+  enrollmentId: string
+  enrollmentStatus: EnrollmentStatus
+  paymentStatus: PaymentStatus
+  /** 0–20, the Peruvian scale. Null while the teacher has not closed it. */
+  finalGrade: number | null
+  gradeStatus: GradeStatus
+  /** Null unless the course certifies through an exam. */
+  certificationExam: CertificationExamStatus | null
+  certificateIssuedAt: string | null
+  delivery: DocumentDelivery | null
+}
+
+export interface ClassGroupDetail extends ClassGroupRow {
+  students: ClassGroupStudent[]
+}
+
+/** Why a student is out of the batch — a code the locale turns into text. */
+export type CertificateBlockReason =
+  | 'grade_pending'
+  | 'grade_below_minimum'
+  | 'auto_failed'
+  | 'payment_not_approved'
+  | 'enrollment_not_completed'
+  | 'exam_not_approved'
+  | 'already_issued'

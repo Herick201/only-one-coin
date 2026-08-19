@@ -1,6 +1,10 @@
 import type {
   AuditEntry,
+  ClassGroupDetail,
+  ClassGroupRow,
   DashboardMetrics,
+  DocumentDelivery,
+  DocumentItem,
   EnrollmentHistoryItem,
   ReviewQueueItem,
   SeatWatchItem,
@@ -68,6 +72,37 @@ function audit(
   }
 }
 
+/**
+ * Fee for the constancia de matrícula (`docs/REGRAS-NEGOCIO.md` §5: S/25).
+ * A backoffice setting in the real system, never a constant in the code — the
+ * same rule the payment tolerance follows (CLAUDE.md §5).
+ */
+export const CONSTANCIA_FEE_CENTS = 2500
+
+/**
+ * Minimum passing grade, 0–20 scale (`docs/REGRAS-NEGOCIO.md` §3: 14). Also a
+ * backoffice setting later; it lives here so the batch preview has one source.
+ */
+export const PASSING_GRADE = 14
+
+function noEmail(): DocumentDelivery {
+  return { status: 'not_sent', lastSentAt: null, attempts: 0 }
+}
+
+function doc(
+  partial: Partial<DocumentItem> &
+    Pick<DocumentItem, 'id' | 'type' | 'enrollmentId'>,
+): DocumentItem {
+  return {
+    status: 'available',
+    issuedAt: null,
+    verificationCode: null,
+    issuedByName: null,
+    delivery: noEmail(),
+    ...partial,
+  }
+}
+
 const students: StudentDetail[] = [
   {
     id: 'stu_0001',
@@ -131,26 +166,61 @@ const students: StudentDetail[] = [
       }),
     ],
     documents: [
-      {
+      doc({
         id: 'doc_1',
         type: 'enrollment_certificate',
-        status: 'available',
         enrollmentId: 'enr_1001',
         issuedAt: '2026-07-03T12:00:00Z',
-      },
-      {
+        verificationCode: 'OOC-2026-K4M7QP',
+        issuedByName: 'Lucía Ramírez',
+        delivery: { status: 'sent', lastSentAt: '2026-07-03T12:01:00Z', attempts: 1 },
+      }),
+      doc({
         id: 'doc_2',
         type: 'certificate',
-        status: 'available',
         enrollmentId: 'enr_0930',
         issuedAt: '2026-06-30T12:00:00Z',
-      },
-      {
+        verificationCode: 'OOC-2026-B92XR5',
+        delivery: { status: 'sent', lastSentAt: '2026-06-30T12:02:00Z', attempts: 1 },
+      }),
+      doc({
         id: 'doc_3',
         type: 'certificate',
         status: 'locked',
         enrollmentId: 'enr_1001',
-        issuedAt: null,
+      }),
+    ],
+    documentRequests: [
+      {
+        id: 'dreq_1',
+        type: 'enrollment_certificate',
+        enrollmentId: 'enr_1001',
+        requestedAt: '2026-08-18T15:40:00Z',
+        feeCents: CONSTANCIA_FEE_CENTS,
+        currency: 'PEN',
+        paymentStatus: 'under_review',
+        paymentMethod: 'yape',
+        operationNumber: '00918744',
+      },
+    ],
+    attachments: [
+      {
+        id: 'att_1',
+        kind: 'guardian_consent',
+        fileName: 'consentimiento-apoderado-firmado.pdf',
+        sizeBytes: 412_336,
+        uploadedAt: '2026-07-02T15:10:00Z',
+        uploadedBy: 'student',
+        uploadedByName: 'María Fernanda Quispe Ramos',
+      },
+      {
+        id: 'att_2',
+        kind: 'national_id',
+        fileName: 'dni-72814905.jpg',
+        sizeBytes: 1_204_880,
+        uploadedAt: '2026-07-02T15:08:00Z',
+        uploadedBy: 'student',
+        uploadedByName: 'María Fernanda Quispe Ramos',
       },
     ],
     activity: [
@@ -237,6 +307,8 @@ const students: StudentDetail[] = [
       }),
     ],
     documents: [],
+    documentRequests: [],
+    attachments: [],
     activity: [
       audit({
         id: 'aud_21',
@@ -310,14 +382,19 @@ const students: StudentDetail[] = [
       }),
     ],
     documents: [
-      {
+      doc({
         id: 'doc_11',
         type: 'enrollment_certificate',
-        status: 'available',
         enrollmentId: 'enr_1120',
         issuedAt: '2026-07-20T12:00:00Z',
-      },
+        verificationCode: 'OOC-2026-T61HN8',
+        issuedByName: 'Lucía Ramírez',
+        // Bounced: the address is full, the classic Gmail-sin-espacio case.
+        delivery: { status: 'failed', lastSentAt: '2026-07-20T12:01:00Z', attempts: 2 },
+      }),
     ],
+    documentRequests: [],
+    attachments: [],
     activity: [
       audit({
         id: 'aud_31',
@@ -374,14 +451,17 @@ const students: StudentDetail[] = [
       }),
     ],
     documents: [
-      {
+      doc({
         id: 'doc_21',
         type: 'certificate',
-        status: 'available',
         enrollmentId: 'enr_0712',
         issuedAt: '2026-01-20T14:00:00Z',
-      },
+        verificationCode: 'OOC-2026-D33WLA',
+        delivery: { status: 'sent', lastSentAt: '2026-01-20T14:03:00Z', attempts: 1 },
+      }),
     ],
+    documentRequests: [],
+    attachments: [],
     activity: [
       audit({
         id: 'aud_41',
@@ -444,6 +524,8 @@ const students: StudentDetail[] = [
       }),
     ],
     documents: [],
+    documentRequests: [],
+    attachments: [],
     activity: [
       audit({
         id: 'aud_51',
@@ -498,14 +580,18 @@ const students: StudentDetail[] = [
       }),
     ],
     documents: [
-      {
+      doc({
         id: 'doc_31',
         type: 'enrollment_certificate',
-        status: 'available',
         enrollmentId: 'enr_1044',
         issuedAt: '2026-07-12T12:00:00Z',
-      },
+        verificationCode: 'OOC-2026-S07VZ2',
+        issuedByName: 'Lucía Ramírez',
+        delivery: { status: 'queued', lastSentAt: null, attempts: 0 },
+      }),
     ],
+    documentRequests: [],
+    attachments: [],
     activity: [
       audit({
         id: 'aud_61',
@@ -565,6 +651,8 @@ const students: StudentDetail[] = [
       }),
     ],
     documents: [],
+    documentRequests: [],
+    attachments: [],
     activity: [
       audit({
         id: 'aud_71',
@@ -614,6 +702,8 @@ const students: StudentDetail[] = [
       }),
     ],
     documents: [],
+    documentRequests: [],
+    attachments: [],
     activity: [
       audit({
         id: 'aud_81',
@@ -628,13 +718,25 @@ const students: StudentDetail[] = [
 ]
 
 export function listStudents(): StudentRow[] {
-  return students.map(({ guardian, enrollments, documents, activity, ...row }) => {
-    void guardian
-    void enrollments
-    void documents
-    void activity
-    return row
-  })
+  return students.map(
+    ({
+      guardian,
+      enrollments,
+      documents,
+      documentRequests,
+      attachments,
+      activity,
+      ...row
+    }) => {
+      void guardian
+      void enrollments
+      void documents
+      void documentRequests
+      void attachments
+      void activity
+      return row
+    },
+  )
 }
 
 export function getStudent(id: string): StudentDetail | undefined {
@@ -759,4 +861,405 @@ export function getSeatWatch(): SeatWatchItem[] {
       capacity: 30,
     },
   ]
+}
+
+/* -------------------------------------------------------------------------- */
+/* Class groups                                                                */
+/* -------------------------------------------------------------------------- */
+
+/** Language catalogue. New languages are rows here, never code branches. */
+const LANGUAGES = {
+  en: { id: 'lang_en', name: 'Inglés' },
+  it: { id: 'lang_it', name: 'Italiano' },
+  fr: { id: 'lang_fr', name: 'Francés' },
+  de: { id: 'lang_de', name: 'Alemán' },
+  qu: { id: 'lang_qu', name: 'Quechua' },
+  pt: { id: 'lang_pt', name: 'Portugués' },
+} as const
+
+/**
+ * Class groups across the three states that matter for the panel: still
+ * enrolling, running, and finished — the last one being where certificates get
+ * issued in batch. `certificateRule: 'exam_required'` marks Inglés Básico,
+ * which certifies only after the student sits the certification exam
+ * (`docs/REGRAS-NEGOCIO.md` §6), so it never goes out in a blind batch.
+ */
+const classGroups: ClassGroupDetail[] = [
+  {
+    id: 'cg_05',
+    courseName: 'Italiano Inicial',
+    classGroupName: 'IT-I — Mar/Jue 19:00',
+    language: LANGUAGES.it,
+    weekdays: ['tue', 'thu'],
+    startTime: '19:00',
+    teacherId: 'tea_03',
+    teacherName: 'Paola Benítez',
+    modality: 'online',
+    academicPeriodName: 'Ciclo 2026-I',
+    startDate: '2026-04-07',
+    endDate: '2026-08-07',
+    seatsTaken: 8,
+    capacity: 30,
+    status: 'finished',
+    certificateRule: 'automatic',
+    pendingCertificates: 4,
+    students: [
+      {
+        studentId: 'stu_0004',
+        fullName: 'Sebastián Ríos Paredes',
+        enrollmentId: 'enr_0712',
+        enrollmentStatus: 'completed',
+        paymentStatus: 'approved',
+        finalGrade: 18,
+        gradeStatus: 'approved',
+        certificationExam: null,
+        certificateIssuedAt: '2026-01-20T14:00:00Z',
+        delivery: { status: 'sent', lastSentAt: '2026-01-20T14:03:00Z', attempts: 1 },
+      },
+      {
+        studentId: 'stu_0001',
+        fullName: 'María Fernanda Quispe Ramos',
+        enrollmentId: 'enr_0930',
+        enrollmentStatus: 'completed',
+        paymentStatus: 'approved',
+        finalGrade: 17,
+        gradeStatus: 'approved',
+        certificationExam: null,
+        certificateIssuedAt: null,
+        delivery: null,
+      },
+      {
+        studentId: 'stu_0003',
+        fullName: 'Camila Torres Vílchez',
+        enrollmentId: 'enr_1120',
+        enrollmentStatus: 'completed',
+        paymentStatus: 'approved',
+        finalGrade: 15,
+        gradeStatus: 'approved',
+        certificationExam: null,
+        certificateIssuedAt: null,
+        delivery: null,
+      },
+      {
+        studentId: 'stu_0006',
+        fullName: 'Diego Huamán Ccopa',
+        enrollmentId: 'enr_1044',
+        enrollmentStatus: 'completed',
+        paymentStatus: 'approved',
+        finalGrade: 14,
+        gradeStatus: 'approved',
+        certificationExam: null,
+        certificateIssuedAt: null,
+        delivery: null,
+      },
+      {
+        studentId: 'stu_0008',
+        fullName: 'Renzo Palacios Vega',
+        enrollmentId: 'enr_0640',
+        enrollmentStatus: 'completed',
+        paymentStatus: 'approved',
+        finalGrade: 16,
+        gradeStatus: 'approved',
+        certificationExam: null,
+        certificateIssuedAt: null,
+        delivery: null,
+      },
+      {
+        studentId: 'stu_0007',
+        fullName: 'Valentina Núñez Ibarra',
+        enrollmentId: 'enr_0655',
+        enrollmentStatus: 'completed',
+        paymentStatus: 'approved',
+        finalGrade: 12,
+        gradeStatus: 'failed',
+        certificationExam: null,
+        certificateIssuedAt: null,
+        delivery: null,
+      },
+      {
+        studentId: 'stu_0005',
+        fullName: 'Ana Lucía Chávez Soto',
+        enrollmentId: 'enr_0661',
+        enrollmentStatus: 'completed',
+        paymentStatus: 'approved',
+        finalGrade: null,
+        gradeStatus: 'auto_failed',
+        certificationExam: null,
+        certificateIssuedAt: null,
+        delivery: null,
+      },
+      {
+        studentId: 'stu_0002',
+        fullName: 'Jhon Alexander Mamani Ccama',
+        enrollmentId: 'enr_0670',
+        enrollmentStatus: 'active',
+        paymentStatus: 'under_review',
+        finalGrade: 16,
+        gradeStatus: 'approved',
+        certificationExam: null,
+        certificateIssuedAt: null,
+        delivery: null,
+      },
+    ],
+  },
+  {
+    id: 'cg_06',
+    courseName: 'Inglés Básico A1',
+    classGroupName: 'A1 — Sáb 09:00',
+    language: LANGUAGES.en,
+    weekdays: ['sat'],
+    startTime: '09:00',
+    teacherId: 'tea_01',
+    teacherName: 'Carlos Meza',
+    modality: 'online',
+    academicPeriodName: 'Ciclo 2026-I',
+    startDate: '2026-04-11',
+    endDate: '2026-08-12',
+    seatsTaken: 4,
+    capacity: 40,
+    status: 'finished',
+    certificateRule: 'exam_required',
+    pendingCertificates: 1,
+    students: [
+      {
+        studentId: 'stu_0003',
+        fullName: 'Camila Torres Vílchez',
+        enrollmentId: 'enr_0801',
+        enrollmentStatus: 'completed',
+        paymentStatus: 'approved',
+        finalGrade: 18,
+        gradeStatus: 'approved',
+        certificationExam: 'approved',
+        certificateIssuedAt: null,
+        delivery: null,
+      },
+      {
+        studentId: 'stu_0006',
+        fullName: 'Diego Huamán Ccopa',
+        enrollmentId: 'enr_0802',
+        enrollmentStatus: 'completed',
+        paymentStatus: 'approved',
+        finalGrade: 17,
+        gradeStatus: 'approved',
+        certificationExam: 'pending',
+        certificateIssuedAt: null,
+        delivery: null,
+      },
+      {
+        studentId: 'stu_0007',
+        fullName: 'Valentina Núñez Ibarra',
+        enrollmentId: 'enr_0803',
+        enrollmentStatus: 'completed',
+        paymentStatus: 'approved',
+        finalGrade: 15,
+        gradeStatus: 'approved',
+        certificationExam: 'not_requested',
+        certificateIssuedAt: null,
+        delivery: null,
+      },
+      {
+        studentId: 'stu_0008',
+        fullName: 'Renzo Palacios Vega',
+        enrollmentId: 'enr_0804',
+        enrollmentStatus: 'completed',
+        paymentStatus: 'approved',
+        finalGrade: null,
+        gradeStatus: 'pending',
+        certificationExam: 'not_requested',
+        certificateIssuedAt: null,
+        delivery: null,
+      },
+    ],
+  },
+  {
+    id: 'cg_03',
+    courseName: 'Francés Inicial',
+    classGroupName: 'FR-I — Sáb 15:00',
+    language: LANGUAGES.fr,
+    weekdays: ['sat'],
+    startTime: '15:00',
+    teacherId: 'tea_04',
+    teacherName: 'Marion Lefèvre',
+    modality: 'online',
+    academicPeriodName: PERIOD,
+    startDate: '2026-06-13',
+    endDate: '2026-10-17',
+    seatsTaken: 18,
+    capacity: 35,
+    status: 'in_progress',
+    certificateRule: 'automatic',
+    pendingCertificates: 0,
+    students: [],
+  },
+  {
+    id: 'cg_01',
+    courseName: 'Inglés Básico A1',
+    classGroupName: 'A1 — Lun/Mié 18:00',
+    language: LANGUAGES.en,
+    weekdays: ['mon', 'wed'],
+    startTime: '18:00',
+    teacherId: 'tea_01',
+    teacherName: 'Carlos Meza',
+    modality: 'online',
+    academicPeriodName: PERIOD,
+    startDate: '2026-09-07',
+    endDate: '2027-01-13',
+    seatsTaken: 38,
+    capacity: 40,
+    status: 'enrolling',
+    certificateRule: 'exam_required',
+    pendingCertificates: 0,
+    students: [],
+  },
+  {
+    id: 'cg_02',
+    courseName: 'Quechua Conversacional',
+    classGroupName: 'QU-I — Sáb 11:00',
+    language: LANGUAGES.qu,
+    weekdays: ['sat'],
+    startTime: '11:00',
+    teacherId: 'tea_05',
+    teacherName: 'Rosa Ccahuana',
+    modality: 'online',
+    academicPeriodName: PERIOD,
+    startDate: '2026-09-12',
+    endDate: '2026-12-19',
+    seatsTaken: 29,
+    capacity: 30,
+    status: 'enrolling',
+    certificateRule: 'automatic',
+    pendingCertificates: 0,
+    students: [],
+  },
+  {
+    id: 'cg_04',
+    courseName: 'Alemán Inicial',
+    classGroupName: 'DE-I — Lun/Mié 19:00',
+    language: LANGUAGES.de,
+    weekdays: ['mon', 'wed'],
+    startTime: '19:00',
+    teacherId: 'tea_06',
+    teacherName: 'Klaus Brenner',
+    modality: 'online',
+    academicPeriodName: PERIOD,
+    startDate: '2026-09-07',
+    endDate: '2027-01-11',
+    seatsTaken: 9,
+    capacity: 30,
+    status: 'enrolling',
+    certificateRule: 'automatic',
+    pendingCertificates: 0,
+    students: [],
+  },
+  {
+    id: 'cg_07',
+    courseName: 'Inglés Intermedio B1',
+    classGroupName: 'B1 — Mar/Jue 20:00',
+    language: LANGUAGES.en,
+    weekdays: ['tue', 'thu'],
+    startTime: '20:00',
+    teacherId: 'tea_02',
+    teacherName: 'Andrea Solís',
+    modality: 'online',
+    academicPeriodName: PERIOD,
+    startDate: '2026-07-14',
+    endDate: '2026-09-17',
+    seatsTaken: 24,
+    capacity: 25,
+    status: 'in_progress',
+    certificateRule: 'automatic',
+    pendingCertificates: 0,
+    students: [],
+  },
+  {
+    id: 'cg_08',
+    courseName: 'Portugués Inicial',
+    classGroupName: 'PT-I — Sáb 09:00',
+    language: LANGUAGES.pt,
+    weekdays: ['sat'],
+    startTime: '09:00',
+    teacherId: 'tea_07',
+    teacherName: 'Bruno Antunes',
+    modality: 'online',
+    academicPeriodName: PERIOD,
+    startDate: '2026-09-12',
+    endDate: '2026-12-19',
+    seatsTaken: 12,
+    capacity: 30,
+    status: 'enrolling',
+    certificateRule: 'automatic',
+    pendingCertificates: 0,
+    students: [],
+  },
+  {
+    id: 'cg_09',
+    courseName: 'Inglés Básico A1',
+    classGroupName: 'A1 — Sáb 15:00',
+    language: LANGUAGES.en,
+    weekdays: ['sat'],
+    startTime: '15:00',
+    teacherId: 'tea_02',
+    teacherName: 'Andrea Solís',
+    modality: 'online',
+    academicPeriodName: PERIOD,
+    startDate: '2026-09-12',
+    endDate: '2027-01-16',
+    seatsTaken: 31,
+    capacity: 40,
+    status: 'enrolling',
+    certificateRule: 'exam_required',
+    pendingCertificates: 0,
+    students: [],
+  },
+  {
+    id: 'cg_10',
+    courseName: 'Italiano Inicial',
+    classGroupName: 'IT-I — Lun/Mié 20:00',
+    language: LANGUAGES.it,
+    weekdays: ['mon', 'wed'],
+    startTime: '20:00',
+    teacherId: 'tea_03',
+    teacherName: 'Paola Benítez',
+    modality: 'online',
+    academicPeriodName: PERIOD,
+    startDate: '2026-09-07',
+    endDate: '2027-01-11',
+    seatsTaken: 6,
+    capacity: 30,
+    status: 'enrolling',
+    certificateRule: 'automatic',
+    pendingCertificates: 0,
+    students: [],
+  },
+  {
+    id: 'cg_11',
+    courseName: 'Quechua Conversacional',
+    classGroupName: 'QU-I — Mar 18:00',
+    language: LANGUAGES.qu,
+    weekdays: ['tue'],
+    startTime: '18:00',
+    teacherId: 'tea_05',
+    teacherName: 'Rosa Ccahuana',
+    modality: 'online',
+    academicPeriodName: 'Ciclo 2026-I',
+    startDate: '2026-03-10',
+    endDate: '2026-06-30',
+    seatsTaken: 22,
+    capacity: 25,
+    status: 'closed',
+    certificateRule: 'automatic',
+    pendingCertificates: 0,
+    students: [],
+  },
+]
+
+export function listClassGroups(): ClassGroupRow[] {
+  return classGroups.map(({ students, ...row }) => {
+    void students
+    return row
+  })
+}
+
+export function getClassGroup(id: string): ClassGroupDetail | undefined {
+  return classGroups.find((group) => group.id === id)
 }

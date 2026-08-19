@@ -17,13 +17,13 @@ import {
 } from '@/components/backoffice/ui'
 import {
   auditTone,
-  documentTone,
   enrollmentTone,
   paymentTone,
   seatTone,
 } from '@/components/backoffice/status-tone'
 import { BoIcon } from '@/components/backoffice/icons'
 import { EnrollmentDetailSheet } from './enrollment-detail-sheet'
+import { StudentDocuments } from './student-documents'
 import { StudentEditForm, type EditableStudent } from './student-edit-form'
 
 type Tab = 'data' | 'enrollments' | 'documents' | 'activity'
@@ -337,50 +337,7 @@ export function StudentFile({ student }: { student: StudentDetail }) {
         </Card>
       )}
 
-      {tab === 'documents' && (
-        <Card>
-          {student.documents.length === 0 ? (
-            <div className="p-4">
-              <EmptyState
-                icon="doc"
-                title={t('student_file.no_documents_title')}
-                body={t('student_file.no_documents_body')}
-              />
-            </div>
-          ) : (
-            <ul className="divide-y divide-line">
-              {student.documents.map((doc) => (
-                <li
-                  key={doc.id}
-                  className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
-                >
-                  <span className="flex items-center gap-3">
-                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-sky text-brand-blue">
-                      <BoIcon name="doc" size={18} />
-                    </span>
-                    <span className="flex flex-col leading-tight">
-                      <span className="text-sm font-semibold text-ink">
-                        {t(`document_type.${doc.type}`)}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {doc.issuedAt
-                          ? t('student_file.issued_at', {
-                              date: formatDate(doc.issuedAt, locale),
-                            })
-                          : t('student_file.not_issued')}
-                      </span>
-                    </span>
-                  </span>
-                  <StatusBadge
-                    tone={documentTone[doc.status]}
-                    label={t(`document_status.${doc.status}`)}
-                  />
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
-      )}
+      {tab === 'documents' && <StudentDocuments student={student} />}
 
       {tab === 'activity' && (
         <Card className="p-5">

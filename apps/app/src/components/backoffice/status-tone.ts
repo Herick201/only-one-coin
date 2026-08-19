@@ -1,7 +1,11 @@
 import type { Tone } from './ui'
 import type {
   AuditAction,
+  CertificationExamStatus,
+  ClassGroupStatus,
   DocumentStatus,
+  EmailDeliveryStatus,
+  GradeStatus,
   EnrollmentStatus,
   PaymentStatus,
   ReviewFlag,
@@ -60,8 +64,42 @@ export const auditTone: Record<AuditAction, Tone> = {
   payment_rejected: 'danger',
   payment_flagged: 'warning',
   document_issued: 'success',
+  document_requested: 'info',
+  certificates_batch_issued: 'success',
+  attachment_uploaded: 'info',
   email_sent: 'neutral',
   credentials_sent: 'neutral',
+}
+
+/** Outbox state of the e-mail that carries a document (CLAUDE.md §5). */
+export const deliveryTone: Record<EmailDeliveryStatus, Tone> = {
+  not_sent: 'neutral',
+  queued: 'info',
+  sent: 'success',
+  failed: 'danger',
+}
+
+export const classGroupTone: Record<ClassGroupStatus, Tone> = {
+  enrolling: 'info',
+  in_progress: 'success',
+  // Finished still owes certificates — it must not read as "done".
+  finished: 'warning',
+  closed: 'neutral',
+}
+
+/** `auto_failed` is the DA — a missed final exam, not a low grade. */
+export const gradeTone: Record<GradeStatus, Tone> = {
+  approved: 'success',
+  failed: 'danger',
+  auto_failed: 'danger',
+  pending: 'neutral',
+}
+
+export const examTone: Record<CertificationExamStatus, Tone> = {
+  approved: 'success',
+  failed: 'danger',
+  pending: 'warning',
+  not_requested: 'neutral',
 }
 
 /** Seat pressure: full → danger, ≥85% → warning. */

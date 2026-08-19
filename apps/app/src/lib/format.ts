@@ -88,3 +88,45 @@ export function ageFrom(birthDateIso: string, now = new Date()): number {
   }
   return age
 }
+
+/**
+ * File size for an attachment row. The unit is a symbol, not a word, so it does
+ * not belong in the locale files — same reasoning as the currency symbol.
+ */
+export function formatFileSize(bytes: number, locale: Locale): string {
+  const mb = bytes / 1_000_000
+  const useMb = mb >= 1
+  const value = useMb ? mb : bytes / 1000
+  const formatted = new Intl.NumberFormat(intlLocale[locale], {
+    maximumFractionDigits: useMb ? 1 : 0,
+  }).format(value)
+  return `${formatted} ${useMb ? 'MB' : 'KB'}`
+}
+
+/**
+ * Compact range for a class group: `13 jun → 17 out 2026`. Built from parts so
+ * the locale's own field order survives while its connectors ("de", ",") are
+ * dropped — a table column has no room for `13 de jun. de 2026`. The year is
+ * printed once when both ends share it.
+ */
+function compactDate(iso: string, locale: Locale, withYear: boolean): string {
+  return new Intl.DateTimeFormat(intlLocale[locale], {
+    timeZone: 'UTC',
+    day: '2-digit',
+    month: 'short',
+    ...(withYear ? { year: 'numeric' } : {}),
+  })
+    .formatToParts(new Date(iso))
+    .filter((part) => part.type !== 'literal')
+    .map((part) => part.value.replace('.', ''))
+    .join(' ')
+}
+
+export function formatDateRange(
+  startIso: string,
+  endIso: string,
+  locale: Locale,
+): string {
+  const sameYear = startIso.slice(0, 4) === endIso.slice(0, 4)
+  return `${compactDate(startIso, locale, !sameYear)} → ${compactDate(endIso, locale, true)}`
+}
