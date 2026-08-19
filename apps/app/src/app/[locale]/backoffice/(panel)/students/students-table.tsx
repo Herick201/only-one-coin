@@ -90,7 +90,7 @@ export function StudentsTable({ rows }: { rows: StudentRow[] }) {
                 className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                   active
                     ? 'bg-brand-blue text-white'
-                    : 'border border-line bg-white text-muted-foreground hover:bg-sky'
+                    : 'border border-line bg-white text-muted-foreground hover:bg-cream hover:text-ink'
                 }`}
               >
                 {value === 'all' ? t('students.filter_all') : t(`student_status.${value}`)}
@@ -180,7 +180,7 @@ export function StudentsTable({ rows }: { rows: StudentRow[] }) {
                   <td className={`${tdClass} text-right`}>
                     <Link
                       href={`/backoffice/students/${row.id}`}
-                      className="inline-flex items-center gap-1 whitespace-nowrap rounded-lg border border-line px-2.5 py-1.5 text-xs font-semibold text-brand-blue transition hover:bg-sky"
+                      className="inline-flex items-center gap-1 whitespace-nowrap rounded-lg border border-line px-2.5 py-1.5 text-xs font-semibold text-brand-blue transition hover:bg-cream hover:text-ink"
                     >
                       {t('students.open_file')}
                       <BoIcon name="chevron-right" size={14} />
