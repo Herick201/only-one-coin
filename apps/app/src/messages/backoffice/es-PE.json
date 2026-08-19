@@ -360,7 +360,7 @@
       "created_local_only": "Aula creada solo en pantalla ({time}). Aún no hay servidor conectado.",
       "course_placeholder": "Inglés Básico A1",
       "field_code": "Código de aula",
-      "code_placeholder": "ING-A1-2026II-01",
+      "code_placeholder": "ING-08",
       "seats_left": "{count, plural, one {queda #} other {quedan #}}",
       "expand_all": "Desplegar todo",
       "collapse_all": "Plegar todo",

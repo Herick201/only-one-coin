@@ -200,11 +200,14 @@ nunca pelo navegador (`CLAUDE.md` §8).
   código de verificação ainda não fechado.
 - **Demais procedimentos pagos** (§2) — confirmar se entram na plataforma e se
   compartilham o fluxo de solicitação com pagamento.
-- **Formato do código da turma.** A tela mostra um `code` por turma
-  (`ING-A1-2026II-01` no mock: idioma, nível, ciclo, sequência). É dado de
-  catálogo, não id técnico — por isso pode aparecer na tela (`CLAUDE.md` §4) —
-  mas o formato real ainda não foi confirmado com a Asociación, e depende de
-  como os períodos são nomeados (item seguinte).
+- **Formato do código da turma.** A tela mostra um `code` por turma — no mock,
+  três letras do idioma mais uma sequência (`ALE-02`). Nível e ciclo saíram do
+  código de propósito: o nome do curso já diz o nível e o período tem coluna
+  própria, então repeti-los só alongava a etiqueta. A sequência **não zera** a
+  cada período, senão `ING-01` existiria em dois ciclos e a busca ficaria
+  ambígua. É dado de catálogo, não id técnico — por isso pode aparecer na tela
+  (`CLAUDE.md` §4) — mas o formato real ainda não foi confirmado com a
+  Asociación.
 - **Nome do período.** `academicPeriodName` aparece como "Ciclo 2026-II" no
   mock; é invenção do mockup. Falta confirmar se a instituição agrupa a venda em
   períodos nomeados e como os chama.

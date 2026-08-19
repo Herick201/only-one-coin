@@ -62,17 +62,13 @@ export default async function ClassGroupDetailPage({
               {`${group.language.name} · ${group.academicPeriodName}`}
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <StatusBadge
-              tone={classGroupTone[group.status]}
-              label={t(`class_group_status.${group.status}`)}
-            />
-            <StatusBadge
-              tone="neutral"
-              dot={false}
-              label={t(`modality.${group.modality}`)}
-            />
-          </div>
+          {/* Modality is not shown: the institution is 100% virtual
+              (`docs/REGRAS-NEGOCIO.md` §8), so the badge always read "online"
+              and carried no information. */}
+          <StatusBadge
+            tone={classGroupTone[group.status]}
+            label={t(`class_group_status.${group.status}`)}
+          />
         </div>
 
         {/* Period lives in the subtitle above, so it is not repeated here. The
