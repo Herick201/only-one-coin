@@ -87,8 +87,12 @@ export function ClassGroupsView({
   const [period, setPeriod] = useState(ALL)
   const [sort, setSort] = useState<Sort>('newest')
   const [filtersOpen, setFiltersOpen] = useState(false)
-  /** Language groups the user folded away. Everything starts open. */
-  const [folded, setFolded] = useState<string[]>([])
+  /**
+   * Language groups the user opened. Everything starts closed: with ~10
+   * languages the open list is longer than a screen, and the first thing you
+   * want is to find your language, not to scroll past the other nine.
+   */
+  const [opened, setOpened] = useState<string[]>([])
   const [closedPage, setClosedPage] = useState(0)
   const [creating, setCreating] = useState(false)
   const [createdAt, setCreatedAt] = useState<string | null>(null)
@@ -184,15 +188,15 @@ export function ClassGroupsView({
     currentClosedPage * CLOSED_PAGE_SIZE + CLOSED_PAGE_SIZE,
   )
 
-  const allFolded =
-    activeByLanguage.length > 0 && folded.length >= activeByLanguage.length
+  const allOpen =
+    activeByLanguage.length > 0 && opened.length >= activeByLanguage.length
 
   function toggleAll() {
-    setFolded(allFolded ? [] : activeByLanguage.map((entry) => entry.id))
+    setOpened(allOpen ? [] : activeByLanguage.map((entry) => entry.id))
   }
 
   function toggleLanguage(id: string) {
-    setFolded((current) =>
+    setOpened((current) =>
       current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
     )
   }
@@ -392,7 +396,7 @@ export function ClassGroupsView({
               onClick={toggleAll}
               className="ml-auto text-xs font-semibold text-muted-foreground transition hover:text-brand-blue"
             >
-              {t(allFolded ? 'class_groups.expand_all' : 'class_groups.collapse_all')}
+              {t(allOpen ? 'class_groups.collapse_all' : 'class_groups.expand_all')}
             </button>
           )}
         </div>
@@ -427,7 +431,7 @@ export function ClassGroupsView({
                 </tr>
               </thead>
               {activeByLanguage.map((entry) => {
-                const open = !folded.includes(entry.id)
+                const open = opened.includes(entry.id)
                 return (
                   <tbody key={entry.id}>
                     {/* Language divider doubles as the fold control. One table
