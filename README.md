@@ -26,10 +26,10 @@ staff) · Sentry + PostHog.
 
 Postgres (Neon), hospedagem de `apps/api` (Fly.io), storage de comprovante
 (Tigris), caixa de e-mail (Zoho Mail) e auth (Better Auth) já estão
-decididos (`docs/ARCHITECTURE.md` §5) mas o auth ainda não está
-implementado — sem banco real ainda, o adapter concreto do Better Auth
-depende do Postgres local existir primeiro. Domínio e fila já existem,
-independentes dessa escolha:
+decididos (`docs/ARCHITECTURE.md` §5). Auth ainda não está implementado —
+Postgres local já existe (abaixo), mas o adapter concreto do Better Auth em
+si ainda não foi escrito. Domínio e fila já existem, independentes dessa
+escolha:
 
 - `apps/landing` — site público (Astro).
 - `apps/app` — Next.js App Router: layout, roteamento, i18n trilíngue e as telas
@@ -49,12 +49,17 @@ independentes dessa escolha:
   identidade/auth (`identity/`, ver `packages/domain/README.md`) e um
   vocabulário de erro HTTP reutilizável (`shared/base/errors/`).
 - `packages/queue` — contrato de fila compartilhado (BullMQ/Redis).
+- `packages/db` — Postgres local via `compose.yml` (`postgres:18-alpine`) +
+  schema/migrations com Drizzle Kit (`docs/ARCHITECTURE.md` §5.8). Só a
+  migration baseline vazia por enquanto — o modelo acadêmico e de pessoas
+  entra nas próximas sessões do `ROADMAP.md`.
 - `apps/api` — Fastify expondo `@ooc/domain` via HTTP e rodando os workers de
-  fila. Persistência ainda em memória (`InMemoryExampleRepository`) até o
-  banco Neon ser provisionado. Já tem error handler global + logger
+  fila. Persistência ainda em memória (`InMemoryExampleRepository`) — ainda
+  não fala com o Postgres local. Já tem error handler global + logger
   compartilhado (`container.logger`) via `infra/plugins/`.
 
-**A reconstruir** (volta quando banco for provisionado): migrations, adapter
-real do Better Auth (`apps/api/src/infra/auth/`), storage, OCR e
-notificações reais. Autorização é feita na camada de aplicação (`apps/api`),
-não em RLS — ver `CLAUDE.md` §8.
+**A reconstruir** (volta quando o Neon de staging/produção for provisionado,
+`ROADMAP.md` Sessão 13): storage, OCR e notificações reais. Adapter real do
+Better Auth (`apps/api/src/infra/auth/`) e migrations do modelo de negócio já
+podem começar — Postgres local existe. Autorização é feita na camada de
+aplicação (`apps/api`), não em RLS — ver `CLAUDE.md` §8.
