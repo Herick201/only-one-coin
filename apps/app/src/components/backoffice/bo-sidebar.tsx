@@ -54,6 +54,12 @@ export interface BoNavItem {
   key: BoModuleKey
   href: string
   label: string
+  /**
+   * Extra paths the item owns. One entry can front a section that spans more
+   * than one route — the item has to stay lit on all of them, or the sidebar
+   * says you left a section you are still inside.
+   */
+  alsoMatches?: string[]
   /** Module already agreed on but not built yet — shown disabled, not hidden. */
   soon?: boolean
   badge?: number
@@ -64,8 +70,10 @@ export interface BoNavGroup {
   items: BoNavItem[]
 }
 
-function isActive(pathname: string, href: string) {
-  return pathname === href || pathname.startsWith(`${href}/`)
+function isActive(pathname: string, item: Pick<BoNavItem, 'href' | 'alsoMatches'>) {
+  return [item.href, ...(item.alsoMatches ?? [])].some(
+    (href) => pathname === href || pathname.startsWith(`${href}/`),
+  )
 }
 
 /**
@@ -130,7 +138,7 @@ export function BoSidebar({
                       </SidebarMenuItem>
                     )
                   }
-                  const active = isActive(pathname, item.href)
+                  const active = isActive(pathname, item)
                   return (
                     <SidebarMenuItem key={item.key}>
                       <SidebarMenuButton
