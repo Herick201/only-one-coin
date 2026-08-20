@@ -222,6 +222,32 @@ interface NotificationProvider {
 
 Templates versionados no repositório, não desenhados só no painel do Brevo.
 
+### Layout das telas (`apps/app`)
+
+**A tela responde à coluna que recebeu, nunca à janela.** O painel nunca ocupa a
+janela inteira — a sidebar tira 13,5rem aberta e 3rem recolhida —, então
+`sm:`/`lg:`/`xl:` decidem a partir de um número que a tela não vê: a mesma janela
+de 1280px dá ~1000px de coluna com a sidebar aberta e ~1170px com ela recolhida.
+É isso que faz uma tela parecer certa no monitor de quem desenhou e quebrada no
+monitor do lado.
+
+- Grade de cards ou campos: **`AutoGrid`** (`components/layout/auto-grid.tsx`).
+  Você declara a largura mínima de uma coluna (`min`) e o browser decide quantas
+  cabem — a cada resize e a cada toggle da sidebar. **Antes de escrever
+  `grid-cols-*` com breakpoint, use `AutoGrid`.**
+- Linha de controles (busca + filtros): `flex-wrap`, não `flex-col sm:flex-row`.
+  Quebra quando falta espaço de verdade, não quando a janela cruza um número.
+- Split assimétrico (2fr/1fr), que `auto-fit` não expressa: container query
+  (`@4xl/page:`). O `@container/page` já está declarado no `<main>` dos dois
+  shells (portal e backoffice).
+- Breakpoint de viewport (`lg:`) só onde a tela **é** a janela — ex.: o split da
+  tela de login, que não tem shell em volta.
+- Scroll horizontal mora no wrapper da tabela, nunca na página. O `<main>` do
+  shell leva `min-w-0`: sem isso uma célula que não encolhe empurra o documento
+  inteiro e arrasta o header sticky junto.
+
+Detalhe e histórico da decisão: `docs/ARCHITECTURE.md` §7.
+
 ### Domínio e fila (`packages/domain`, `packages/queue`, `apps/api`)
 
 Regra de fronteira, vale pra qualquer contexto novo (não só `example`): `packages/domain` é DDD puro (portas e adaptadores) — nunca importa Fastify, provedor de banco ou Redis, só define a **interface** de repositório. A implementação concreta mora na infra de quem consome (`apps/api/src/infra/`). Detalhe de padrão (`BaseModel`/`BaseUseCase`, `RouteBuilder`, `container.ts`, entrypoints) está em `packages/domain/README.md` e `apps/api/README.md` — não duplicado aqui. Estrutura e dependência entre os pacotes: `docs/ARCHITECTURE.md` §1.
