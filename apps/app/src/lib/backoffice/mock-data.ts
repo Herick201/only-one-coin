@@ -58,8 +58,8 @@ export function getStaffSession(): StaffUser {
     firstName: 'Lucía',
     lastName: 'Ramírez',
     email: 'lucia.ramirez@onlyonecoin.edu.pe',
-    role: 'teacher',
-    teacherId: 'tea_03',
+    role: 'admin',
+    teacherId: null,
   }
 }
 
@@ -2583,7 +2583,7 @@ export function getTeacher(id: string): TeacherDetail | undefined {
 
 /**
  * The class groups a staff member may list. For a teacher that is their own and
- * only their own (`docs/ARCHITECTURE.md` §RBAC): the filter is built from the
+ * only their own (`docs/ARCHITECTURE.md` §3): the filter is built from the
  * session's `teacherId`, never from anything the client sent (CLAUDE.md §8).
  *
  * Here it narrows a mocked array; in production the same rule is the usecase in
