@@ -5,7 +5,12 @@ import { cookies } from 'next/headers'
 import { LogOut } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { logoutStaff } from '../actions'
-import { getDashboardMetrics, getStaffSession } from '@/lib/backoffice/mock-data'
+import { isRestrictedToOwnClassGroups } from '@/lib/backoffice/permissions'
+import {
+  getDashboardMetrics,
+  getEnrollmentMetrics,
+  getStaffSession,
+} from '@/lib/backoffice/mock-data'
 import { initials } from '@/lib/format'
 import { BoSidebar, type BoNavGroup } from '@/components/backoffice/bo-sidebar'
 import { LanguageGlobe } from '@/components/language-globe'
@@ -44,23 +49,75 @@ export default async function BackofficePanelLayout({
 
   const staff = getStaffSession()
   const { pendingReview } = getDashboardMetrics()
+  const { expiringSoon: expiringReservations } = getEnrollmentMetrics()
   const monogram = initials(staff.firstName, staff.lastName)
 
   // shadcn writes this cookie from the trigger; reading it here avoids the
   // sidebar flashing open before hydration.
   const sidebarOpen = (await cookies()).get('sidebar_state')?.value !== 'false'
 
-  const groups: BoNavGroup[] = [
+  /**
+   * A teacher gets the panel narrowed to their own work: their class groups
+   * and their own ficha. The money, the student directory and the
+   * administration group are not theirs to open — and the sidebar says so by
+   * not offering them, rather than by letting the click fail.
+   *
+   * This is the screen honouring the rule, never enforcing it: the check that
+   * counts compares the authenticated `teacher_id` inside the usecase in
+   * `apps/api` (CLAUDE.md §8).
+   */
+  const restricted = isRestrictedToOwnClassGroups(staff.role)
+
+  const groups: BoNavGroup[] = restricted
+    ? [
+        {
+          key: 'home',
+          items: [
+            { key: 'dashboard', href: '/backoffice/home', label: t('nav.dashboard') },
+          ],
+        },
+        {
+          key: 'academic',
+          label: t('nav.group_academic'),
+          items: [
+            {
+              key: 'class_groups',
+              href: '/backoffice/class-groups',
+              label: t('nav.my_class_groups'),
+            },
+            {
+              key: 'teachers',
+              href: staff.teacherId
+                ? `/backoffice/teachers/${staff.teacherId}`
+                : '/backoffice/teachers',
+              label: t('nav.my_profile'),
+            },
+          ],
+        },
+      ]
+    : [
     {
-      label: t('nav.group_daily'),
+      /* No label, so it renders loose above the dropdowns. Home is not a
+         section of the panel — it is where the panel starts. */
+      key: 'home',
       items: [
         { key: 'dashboard', href: '/backoffice/home', label: t('nav.dashboard') },
+      ],
+    },
+    {
+      key: 'daily',
+      label: t('nav.group_daily'),
+      items: [
         { key: 'students', href: '/backoffice/students', label: t('nav.students') },
         {
+          /* One entry for the two screens of the section — the ledger and the
+             seats still held by an open payment. The badge is the reservations
+             about to expire: a seat nobody chased is a seat the cron hands
+             back with the money already paid. */
           key: 'enrollments',
           href: '/backoffice/enrollments',
           label: t('nav.enrollments'),
-          soon: true,
+          badge: expiringReservations,
         },
         {
           /* One entry for the three screens of the section — the ledger, the
@@ -74,6 +131,7 @@ export default async function BackofficePanelLayout({
       ],
     },
     {
+      key: 'academic',
       label: t('nav.group_academic'),
       items: [
         {
@@ -91,11 +149,11 @@ export default async function BackofficePanelLayout({
           key: 'teachers',
           href: '/backoffice/teachers',
           label: t('nav.teachers'),
-          soon: true,
         },
       ],
     },
     {
+      key: 'admin',
       label: t('nav.group_admin'),
       items: [
         { key: 'email', href: '/backoffice/emails', label: t('nav.email'), soon: true },
@@ -115,11 +173,11 @@ export default async function BackofficePanelLayout({
     <div className="flex h-14 items-center gap-2.5 px-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
       <span className="grid size-8 shrink-0 place-items-center overflow-hidden rounded-lg bg-white/10 group-data-[collapsible=icon]:bg-transparent">
         <Image
-          src="/brand/logo.png"
+          src="/brand/logo-mark.png"
           alt="Only One Coin"
-          width={163}
-          height={94}
-          className="h-4 w-auto"
+          width={192}
+          height={66}
+          className="h-auto w-7"
         />
       </span>
       <span className="flex min-w-0 flex-col leading-tight group-data-[collapsible=icon]:hidden">
