@@ -66,6 +66,21 @@
       "see_all": "Ver toda a fila",
       "showing": "Mostrando {shown} de {total} comprovantes"
     },
+    "review_queue": {
+      "search_label": "Buscar comprovante",
+      "search_placeholder": "Aluno, curso ou número da operação",
+      "filters": "Filtros",
+      "filter_all": "Todos",
+      "sort_oldest": "Mais antigos",
+      "sort_newest": "Mais recentes",
+      "col_operation": "Operação",
+      "no_operation": "Sem número",
+      "empty_search_title": "Nenhum resultado",
+      "empty_search_body": "Tente outro aluno, curso ou número de operação, ou remova o filtro de motivo.",
+      "page_prev": "Anteriores",
+      "page_next": "Próximos",
+      "page_status": "Página {page} de {pages}"
+    },
     "review_flag": {
       "amount_mismatch": "Valor não confere",
       "low_confidence": "Confiança baixa",
@@ -79,7 +94,8 @@
       "full": "Lotada",
       "available": "{count} livres",
       "taken": "{taken} de {capacity}",
-      "starts": "Início {date}"
+      "starts": "Início {date}",
+      "see_all": "Ver todos os cursos"
     },
     "modules": {
       "title": "Módulos",

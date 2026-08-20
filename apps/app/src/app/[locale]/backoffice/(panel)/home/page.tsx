@@ -310,20 +310,15 @@ export default async function BackofficeHomePage({
               </Table>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-5 py-3">
+            {/* The door to the queue is the counter in the header — one per
+                card, or the eye stops trusting either. */}
+            <div className="border-t border-border px-5 py-3">
               <p className="text-xs text-muted-foreground">
                 {t('review.showing', {
                   shown: queue.length,
                   total: metrics.pendingReview,
                 })}
               </p>
-              <Link
-                href="/backoffice/payments/review"
-                className="inline-flex items-center gap-1 text-xs font-semibold text-primary transition hover:underline"
-              >
-                {t('review.see_all')}
-                <ArrowRight className="size-3.5" />
-              </Link>
             </div>
           </CardContent>
         </Card>
@@ -331,11 +326,23 @@ export default async function BackofficeHomePage({
 
       {/* Seat pressure per class group. */}
       <section>
-        <h2 className="mb-3 flex items-center gap-2 text-base font-semibold text-foreground">
-          <Armchair className="size-4 text-brand-blue" />
-          {t('seats.title')}
-        </h2>
-        <p className="-mt-2 mb-3 text-sm text-muted-foreground">{t('seats.subtitle')}</p>
+        <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
+              <Armchair className="size-4 text-brand-blue" />
+              {t('seats.title')}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">{t('seats.subtitle')}</p>
+          </div>
+          {/* A lista mostra só as aulas mais cheias; a porta pro resto fica aqui. */}
+          <Link
+            href="/backoffice/courses"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-primary transition hover:underline"
+          >
+            {t('seats.see_all')}
+            <ArrowRight className="size-3.5" />
+          </Link>
+        </div>
         <div className="grid gap-3 sm:grid-cols-2">
           {seats.map((group) => {
             const tone = seatPressureTone(group.seatsTaken, group.capacity)
