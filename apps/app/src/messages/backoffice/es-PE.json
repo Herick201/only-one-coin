@@ -317,7 +317,6 @@
       "col_seats": "Vacantes",
       "col_status": "Estado",
       "col_pending": "Certificados",
-      "date_range": "{start} → {end}",
       "pending_certificates": "{count, plural, one {# por emitir} other {# por emitir}}",
       "none_pending": "Al día",
       "empty_title": "Sin aulas",
@@ -347,10 +346,8 @@
       "empty_closed_title": "Sin aulas cerradas",
       "empty_closed_body": "Las aulas aparecen aquí cuando terminan.",
       "new_title": "Nueva aula",
-      "field_language": "Idioma",
       "field_course": "Curso",
       "field_teacher": "Docente",
-      "field_modality": "Modalidad",
       "field_period": "Período",
       "field_start": "Inicio",
       "field_end": "Término",
@@ -359,7 +356,16 @@
       "field_capacity": "Vacantes",
       "create": "Crear aula",
       "created_local_only": "Aula creada solo en pantalla ({time}). Aún no hay servidor conectado.",
-      "course_placeholder": "Inglés Básico A1"
+      "field_code": "Código de aula",
+      "seats_left": "{count, plural, one {queda #} other {quedan #}}",
+      "expand_all": "Desplegar todo",
+      "collapse_all": "Plegar todo",
+      "page_prev": "Anteriores",
+      "page_next": "Siguientes",
+      "page_status": "{from}–{to} de {total}",
+      "code_generated": "Generado automáticamente.",
+      "field_time_hour": "Hora",
+      "field_time_minute": "Minutos"
     },
     "class_group": {
       "back_to_list": "Volver a las aulas",
@@ -371,8 +377,6 @@
       "grade_value": "{grade} de 20",
       "no_grade": "Sin nota",
       "field_teacher": "Docente",
-      "field_period": "Período",
-      "field_dates": "Fechas",
       "field_seats": "Vacantes",
       "issued_at": "Emitido el {date}",
       "not_issued": "Sin emitir",
@@ -391,7 +395,15 @@
       "deadline_left": "{days, plural, one {Queda # día hábil} other {Quedan # días hábiles}}",
       "deadline_overdue": "{days, plural, one {Vencido hace # día hábil} other {Vencido hace # días hábiles}}",
       "deadline_rule": "El certificado es gratuito y sale dentro de 25 días hábiles del término del curso.",
-      "ready_to_issue": "Listo para emitir"
+      "ready_to_issue": "Listo para emitir",
+      "field_code": "Código de aula",
+      "field_schedule": "Horario",
+      "field_start": "Inicio",
+      "field_end": "Fin",
+      "empty_roster_title": "Sin alumnos",
+      "empty_roster_body": "Todavía nadie está matriculado en esta aula.",
+      "col_manage": "Gestionar",
+      "manage": "Gestionar"
     },
     "class_group_status": {
       "enrolling": "Matriculando",
@@ -428,6 +440,104 @@
       "fri": "Vie",
       "sat": "Sáb",
       "sun": "Dom"
+    },
+    "enrollment_procedure": {
+      "frozen": "Congelada",
+      "transferred": "Trasladada",
+      "withdrawn": "Retirada"
+    },
+    "enrollment_procedure_action": {
+      "transfer": "Cambiar de aula",
+      "freeze": "Congelar matrícula",
+      "withdraw": "Retirar del aula"
+    },
+    "enrollment_procedure_confirm": {
+      "transfer": "Registrar el cambio",
+      "freeze": "Registrar el congelamiento",
+      "withdraw": "Registrar el retiro"
+    },
+    "enrollment_procedure_rule": {
+      "transfer": "Cambio de horario: solo antes del inicio del módulo o hasta la tercera clase, y solo en los cursos que lo ofrecen.",
+      "freeze": "Congelamiento (matrícula en pausa). No disponible en Inglés Intermedio/Avanzado.",
+      "withdraw": "Libera la vacante del aula. Las reglas no definen devolución de lo pagado."
+    },
+    "procedure_block": {
+      "already_applied": "Esta matrícula ya pasó por un procedimiento.",
+      "group_not_running": "El aula ya terminó.",
+      "enrollment_not_active": "La matrícula no está activa.",
+      "payment_not_approved": "El pago de la matrícula todavía no está aprobado.",
+      "not_offered": "Este curso no ofrece el procedimiento.",
+      "no_seats_elsewhere": "No hay otra aula del mismo curso con vacante."
+    },
+    "manage_enrollment": {
+      "close": "Cerrar",
+      "subtitle": "Procedimientos sobre la matrícula en {classGroup}.",
+      "paid_outside": "Los procedimientos se cobran fuera de la plataforma, con Atención al Alumno. Aquí se registra lo que ya se pagó y se acordó.",
+      "fee": "Tasa {amount}",
+      "fee_undefined": "Tasa por definir",
+      "confirm_fee": "Confirmo que la tasa fue pagada y el comprobante aprobado.",
+      "confirm_no_fee": "Confirmo que el retiro fue acordado con el alumno.",
+      "target_label": "Aula de destino",
+      "target_placeholder": "Elegir aula"
+    },
+    "courses": {
+      "title": "Cursos",
+      "subtitle": "El catálogo del que nacen las aulas.",
+      "search_label": "Buscar cursos",
+      "search_placeholder": "Curso, idioma o nivel",
+      "new_course": "Nuevo curso",
+      "new_title": "Nuevo curso",
+      "field_language": "Idioma",
+      "field_name": "Nombre",
+      "field_level": "Nivel",
+      "name_placeholder": "Inglés Básico A1",
+      "level_placeholder": "A1",
+      "create": "Crear curso",
+      "cancel": "Cancelar",
+      "col_course": "Curso",
+      "col_level": "Nivel",
+      "col_load": "Carga",
+      "col_min_age": "Edad mínima",
+      "col_class_groups": "Aulas",
+      "col_status": "Estado",
+      "load_value": "{modules} módulos · {hours} h",
+      "min_age_value": "{age} años",
+      "class_group_count": "{count, plural, =0 {sin aulas} one {# aula} other {# aulas}}",
+      "active": "En catálogo",
+      "inactive": "Fuera de catálogo",
+      "empty_title": "Sin cursos",
+      "empty_body": "Todavía no hay cursos en el catálogo.",
+      "empty_search_title": "Sin resultados",
+      "empty_search_body": "Probá con otro curso, idioma o nivel.",
+      "local_only": "Los cambios son solo de pantalla. Todavía no hay servidor conectado.",
+      "options_title": "Configuración del curso",
+      "options_hint": "Todo esto se puede cambiar después en las opciones del curso.",
+      "saved": "Cambios guardados",
+      "created": "Curso creado"
+    },
+    "course_options": {
+      "close": "Cerrar",
+      "subtitle": "Opciones del curso · {language}",
+      "applies_forward": "Lo que cambies acá vale para las aulas que se abran después. Las que ya están corriendo mantienen la regla con la que el alumno se matriculó.",
+      "min_age": "Edad mínima",
+      "modules": "Módulos",
+      "total_hours": "Horas totales",
+      "certificate_rule": "Certificado",
+      "procedures": "Procedimientos que ofrece",
+      "allows_transfer": "Permite cambio de aula (cambio de horario)",
+      "allows_freeze": "Permite congelar la matrícula",
+      "active": "Curso en catálogo",
+      "active_hint": "Sacarlo del catálogo no cierra las aulas en curso: solo deja de ofrecerse.",
+      "save": "Guardar",
+      "cancel": "Cancelar"
+    },
+    "certificate_rule": {
+      "automatic": "Nota mínima",
+      "exam_required": "Examen de certificación"
+    },
+    "certificate_rule_hint": {
+      "automatic": "Sale para quien llega a la nota mínima, sin trámite aparte.",
+      "exam_required": "Además de la nota, el alumno tiene que rendir el examen de certificación."
     }
   }
 }

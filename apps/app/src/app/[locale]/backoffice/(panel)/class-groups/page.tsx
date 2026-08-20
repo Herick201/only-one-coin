@@ -1,5 +1,9 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { getStaffSession, listClassGroups } from '@/lib/backoffice/mock-data'
+import {
+  getStaffSession,
+  listClassGroups,
+  listCourses,
+} from '@/lib/backoffice/mock-data'
 import { canCreateClassGroup } from '@/lib/backoffice/permissions'
 import { MockNotice, PageHeader } from '@/components/backoffice/ui'
 import { ClassGroupsView } from './class-groups-view'
@@ -30,7 +34,11 @@ export default async function ClassGroupsPage({
         subtitle={t('class_groups.subtitle')}
       />
       <MockNotice label={t('common.mock_notice')} />
-      <ClassGroupsView rows={rows} canCreate={canCreateClassGroup(staff.role)} />
+      <ClassGroupsView
+        rows={rows}
+        courses={listCourses()}
+        canCreate={canCreateClassGroup(staff.role)}
+      />
     </div>
   )
 }

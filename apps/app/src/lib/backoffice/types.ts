@@ -346,7 +346,12 @@ export interface CourseLanguage {
 export interface ClassGroupRow {
   id: string
   courseName: string
-  classGroupName: string
+  /**
+   * The code the institution prints on paperwork and uses on the phone —
+   * catalog data, not a technical id, which is why it is allowed on screen
+   * (CLAUDE.md §4). Format still to be confirmed with the Asociación.
+   */
+  code: string
   language: CourseLanguage
   /** Weekly schedule — the days plus the start time, in America/Lima. */
   weekdays: Weekday[]
@@ -361,9 +366,59 @@ export interface ClassGroupRow {
   capacity: number
   status: ClassGroupStatus
   certificateRule: CertificateRule
+  /**
+   * Which administrative procedures the catalog offers for this class group
+   * (`docs/REGRAS-NEGOCIO.md` §5). Config, not code: freezing is off for
+   * Inglés Intermedio/Avanzado and the schedule change only exists for Inglés
+   * Básico Regular, and neither rule may be inferred from the course name —
+   * nothing language-specific lives in the code (CLAUDE.md §1).
+   */
+  allowsFreeze: boolean
+  allowsTransfer: boolean
   /** Students who finished and are still waiting for their certificate. */
   pendingCertificates: number
 }
+
+/**
+ * A course as the catalog holds it. The class group is an instance of a course
+ * with a schedule, a teacher and seats (`docs/REQUISITOS.md` RF09) — what lives
+ * here is what every one of its class groups inherits.
+ *
+ * Price is deliberately absent: it is versioned and never edited, and the
+ * enrollment freezes the `plan_price_id` in force (CLAUDE.md §5). Editing a
+ * price from a course screen is how history gets revalidated.
+ */
+export interface CourseRow {
+  id: string
+  name: string
+  language: CourseLanguage
+  /** Catalog label ("A1", "Inicial", "B1") — data, not an enum. */
+  level: string
+  /** Minimum age, per course (`docs/REGRAS-NEGOCIO.md` §2). */
+  minAge: number
+  modules: number
+  totalHours: number
+  certificateRule: CertificateRule
+  /** Administrative procedures the course offers (`docs/REGRAS-NEGOCIO.md` §5). */
+  allowsFreeze: boolean
+  allowsTransfer: boolean
+  /** Out of the catalog does not delete anything — running class groups stay. */
+  active: boolean
+  /** Class groups already opened from this course. */
+  classGroupCount: number
+}
+
+/** The subset of a course that coordination may change. */
+export type CourseOptions = Pick<
+  CourseRow,
+  | 'minAge'
+  | 'modules'
+  | 'totalHours'
+  | 'certificateRule'
+  | 'allowsFreeze'
+  | 'allowsTransfer'
+  | 'active'
+>
 
 /** One student as seen from the class group — grade first, money second. */
 export interface ClassGroupStudent {
@@ -379,7 +434,28 @@ export interface ClassGroupStudent {
   certificationExam: CertificationExamStatus | null
   certificateIssuedAt: string | null
   delivery: DocumentDelivery | null
+  /** Administrative procedure already applied, if any. */
+  procedure: EnrollmentProcedure | null
 }
+
+/**
+ * What an administrative procedure did to an enrollment
+ * (`docs/REGRAS-NEGOCIO.md` §5). Every one of them is paid and coordinated
+ * outside the platform today, which is why the backoffice records the outcome
+ * instead of triggering it.
+ */
+export type EnrollmentProcedure = 'frozen' | 'transferred' | 'withdrawn'
+
+export type ProcedureAction = 'transfer' | 'freeze' | 'withdraw'
+
+/** Why a procedure is not on the table — a code the locale turns into text. */
+export type ProcedureBlockReason =
+  | 'already_applied'
+  | 'group_not_running'
+  | 'enrollment_not_active'
+  | 'payment_not_approved'
+  | 'not_offered'
+  | 'no_seats_elsewhere'
 
 export interface ClassGroupDetail extends ClassGroupRow {
   students: ClassGroupStudent[]

@@ -95,6 +95,12 @@ contagem no cabeçalho e **abre sozinha** enquanto houver certificado a emitir �
 esconder isso atrás de uma seção colapsada é como se perde o prazo de 25 dias
 úteis.
 
+A lista de fechadas **pagina de 10 em 10**: turma fechada só acumula, e um ano
+de turmas empurraria as ativas para fora da tela. A ordenação por pendência é o
+que garante que paginar não esconda o que falta emitir — o que está pendente
+está sempre na primeira página, e a contagem no cabeçalho é do total, não da
+página.
+
 ### Gate humano, sempre
 
 O sistema **não** dispara sozinho quando a data de término passa. Quem concluiu
@@ -179,6 +185,8 @@ para o `audit_log` append-only.
 | Aba Documentos da ficha | `apps/app/src/app/[locale]/backoffice/(panel)/students/[studentId]/student-documents.tsx` |
 | Lista de turmas (busca, filtros, agrupamento) | `apps/app/src/app/[locale]/backoffice/(panel)/class-groups/class-groups-view.tsx` |
 | Turma + lote | `apps/app/src/app/[locale]/backoffice/(panel)/class-groups/[classGroupId]/` |
+| Procedimentos por matrícula (§5 de `REGRAS-NEGOCIO.md`) | `apps/app/src/lib/backoffice/enrollment-procedures.ts` |
+| Catálogo de cursos + opções | `apps/app/src/app/[locale]/backoffice/(panel)/courses/` |
 
 Tudo em estado local: não há backend. A escrita real passa por `apps/api`,
 nunca pelo navegador (`CLAUDE.md` §8).
@@ -193,7 +201,29 @@ nunca pelo navegador (`CLAUDE.md` §8).
   externo usado hoje (`ooc.asvnets.com/consultar`, busca por DNI). Formato do
   código de verificação ainda não fechado.
 - **Demais procedimentos pagos** (§2) — confirmar se entram na plataforma e se
-  compartilham o fluxo de solicitação com pagamento.
+  compartilham o fluxo de solicitação com pagamento. A tela de turmas já
+  registra três deles (mover de turma, congelar, retirar) como **registro do
+  que já foi pago e combinado fora da plataforma**, não como execução: o
+  backoffice pede confirmação da taxa antes de liberar o botão. Falta amarrar
+  isso a um pagamento aprovado de verdade, como a constancia do §2.
+- **Retirada/cancelamento de matrícula não tem regra.** Nenhuma fonte define
+  devolução, prazo ou consequência — a tela libera a vaga e diz que a regra não
+  existe. Confirmar com a Asociación antes de tratar isso como fluxo pronto.
+- **Traspaso × cambio de horário.** `docs/REGRAS-NEGOCIO.md` §5 cobra S/10 por
+  um e nada pelo outro; `docs/REQUISITOS.md` RF11 já sinaliza que RF11/RF12/RF13
+  podem ser a mesma coisa. A tela mostra S/10 por ora.
+- **Formato do código da turma.** A tela mostra um `code` por turma — no mock,
+  três letras do idioma mais uma sequência de 4 dígitos (`ALE-0002`). Nível e
+  ciclo saíram do código de propósito: o nome do curso já diz o nível e o
+  período tem coluna própria, então repeti-los só alongava a etiqueta. A
+  sequência **não zera** a cada período, senão `ING-0001` existiria em dois
+  ciclos e a busca ficaria ambígua — e é por isso que ela tem 4 dígitos: com o
+  volume do `CLAUDE.md` §1 e uma sequência que nunca zera, 2 dígitos acabariam. É dado de catálogo, não id técnico — por isso pode aparecer na tela
+  (`CLAUDE.md` §4) — mas o formato real ainda não foi confirmado com a
+  Asociación.
+- **Nome do período.** `academicPeriodName` aparece como "Ciclo 2026-II" no
+  mock; é invenção do mockup. Falta confirmar se a instituição agrupa a venda em
+  períodos nomeados e como os chama.
 - **Idioma como dado, não como enum traduzido.** `language.name` vem do
   catálogo, junto com o nome do curso — é o que permite abrir um idioma novo sem
   tocar em código nem nos três arquivos de locale (`CLAUDE.md` §1: nada

@@ -1,7 +1,12 @@
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
-import { getClassGroup } from '@/lib/backoffice/mock-data'
+import {
+  getClassGroup,
+  getStaffSession,
+  listClassGroups,
+} from '@/lib/backoffice/mock-data'
+import { canManageEnrollment } from '@/lib/backoffice/permissions'
 import {
   addBusinessDays,
   businessDaysUntil,
@@ -36,6 +41,8 @@ export default async function ClassGroupDetailPage({
   const group = getClassGroup(classGroupId)
   if (!group) notFound()
 
+  const staff = getStaffSession()
+
   const deadline = addBusinessDays(
     group.endDate,
     CERTIFICATE_DEADLINE_BUSINESS_DAYS,
@@ -59,32 +66,34 @@ export default async function ClassGroupDetailPage({
               {group.courseName}
             </h1>
             <p className="mt-0.5 text-sm text-muted-foreground">
-              {`${group.classGroupName} · ${group.academicPeriodName}`}
+              {`${group.language.name} · ${group.academicPeriodName}`}
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <StatusBadge
-              tone={classGroupTone[group.status]}
-              label={t(`class_group_status.${group.status}`)}
-            />
-            <StatusBadge
-              tone="neutral"
-              dot={false}
-              label={t(`modality.${group.modality}`)}
-            />
-          </div>
+          {/* Modality is not shown: the institution is 100% virtual
+              (`docs/REGRAS-NEGOCIO.md` §8), so the badge always read "online"
+              and carried no information. */}
+          <StatusBadge
+            tone={classGroupTone[group.status]}
+            label={t(`class_group_status.${group.status}`)}
+          />
         </div>
 
-        <dl className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Field label={t('class_group.field_teacher')}>{group.teacherName}</Field>
-          <Field label={t('class_group.field_period')}>
-            {group.academicPeriodName}
+        {/* Period lives in the subtitle above, so it is not repeated here. The
+            date range is split in two fields on purpose: as one string it hit
+            the field's truncation and lost the end date. */}
+        <dl className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Field label={t('class_group.field_code')}>
+            <span className="tabular-nums">{group.code}</span>
           </Field>
-          <Field label={t('class_group.field_dates')}>
-            {t('class_groups.date_range', {
-              start: formatDate(group.startDate, locale as Locale),
-              end: formatDate(group.endDate, locale as Locale),
-            })}
+          <Field label={t('class_group.field_teacher')}>{group.teacherName}</Field>
+          <Field label={t('class_group.field_schedule')}>
+            {`${group.weekdays.map((day) => t(`weekday.${day}`)).join('/')} · ${group.startTime}`}
+          </Field>
+          <Field label={t('class_group.field_start')}>
+            {formatDate(group.startDate, locale as Locale)}
+          </Field>
+          <Field label={t('class_group.field_end')}>
+            {formatDate(group.endDate, locale as Locale)}
           </Field>
           <div className="min-w-0">
             <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -108,6 +117,8 @@ export default async function ClassGroupDetailPage({
 
       <ClassGroupCertificates
         group={group}
+        classGroups={listClassGroups()}
+        canManage={canManageEnrollment(staff.role)}
         // Date only: the deadline is a calendar day, not an instant.
         deadlineIso={deadline.toISOString().slice(0, 10)}
         businessDaysLeft={businessDaysLeft}

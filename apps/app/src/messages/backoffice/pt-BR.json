@@ -317,7 +317,6 @@
       "col_seats": "Vagas",
       "col_status": "Estado",
       "col_pending": "Certificados",
-      "date_range": "{start} → {end}",
       "pending_certificates": "{count, plural, one {# a emitir} other {# a emitir}}",
       "none_pending": "Em dia",
       "empty_title": "Sem turmas",
@@ -347,10 +346,8 @@
       "empty_closed_title": "Sem turmas fechadas",
       "empty_closed_body": "As turmas aparecem aqui quando terminam.",
       "new_title": "Nova turma",
-      "field_language": "Idioma",
       "field_course": "Curso",
       "field_teacher": "Docente",
-      "field_modality": "Modalidade",
       "field_period": "Período",
       "field_start": "Início",
       "field_end": "Término",
@@ -359,7 +356,16 @@
       "field_capacity": "Vagas",
       "create": "Criar turma",
       "created_local_only": "Turma criada só na tela ({time}). Ainda não há servidor conectado.",
-      "course_placeholder": "Inglés Básico A1"
+      "field_code": "Código da turma",
+      "seats_left": "{count, plural, one {resta #} other {restam #}}",
+      "expand_all": "Abrir todas",
+      "collapse_all": "Fechar todas",
+      "page_prev": "Anteriores",
+      "page_next": "Próximas",
+      "page_status": "{from}–{to} de {total}",
+      "code_generated": "Gerado automaticamente.",
+      "field_time_hour": "Hora",
+      "field_time_minute": "Minutos"
     },
     "class_group": {
       "back_to_list": "Voltar às turmas",
@@ -371,8 +377,6 @@
       "grade_value": "{grade} de 20",
       "no_grade": "Sem nota",
       "field_teacher": "Docente",
-      "field_period": "Período",
-      "field_dates": "Datas",
       "field_seats": "Vagas",
       "issued_at": "Emitido em {date}",
       "not_issued": "Sem emitir",
@@ -391,7 +395,15 @@
       "deadline_left": "{days, plural, one {Falta # dia útil} other {Faltam # dias úteis}}",
       "deadline_overdue": "{days, plural, one {Vencido há # dia útil} other {Vencido há # dias úteis}}",
       "deadline_rule": "O certificado é gratuito e sai em até 25 dias úteis após o término do curso.",
-      "ready_to_issue": "Pronto para emitir"
+      "ready_to_issue": "Pronto para emitir",
+      "field_code": "Código da turma",
+      "field_schedule": "Horário",
+      "field_start": "Início",
+      "field_end": "Fim",
+      "empty_roster_title": "Sem alunos",
+      "empty_roster_body": "Ninguém está matriculado nesta turma ainda.",
+      "col_manage": "Gerenciar",
+      "manage": "Gerenciar"
     },
     "class_group_status": {
       "enrolling": "Matriculando",
@@ -428,6 +440,104 @@
       "fri": "Sex",
       "sat": "Sáb",
       "sun": "Dom"
+    },
+    "enrollment_procedure": {
+      "frozen": "Congelada",
+      "transferred": "Transferida",
+      "withdrawn": "Retirada"
+    },
+    "enrollment_procedure_action": {
+      "transfer": "Mover de turma",
+      "freeze": "Congelar matrícula",
+      "withdraw": "Retirar da turma"
+    },
+    "enrollment_procedure_confirm": {
+      "transfer": "Registrar a mudança",
+      "freeze": "Registrar o congelamento",
+      "withdraw": "Registrar a saída"
+    },
+    "enrollment_procedure_rule": {
+      "transfer": "Mudança de horário: só antes do início do módulo ou até a terceira aula, e só nos cursos que oferecem.",
+      "freeze": "Congelamento (matrícula em pausa). Não disponível no Inglés Intermedio/Avanzado.",
+      "withdraw": "Libera a vaga da turma. As regras não definem devolução do que foi pago."
+    },
+    "procedure_block": {
+      "already_applied": "Esta matrícula já passou por um procedimento.",
+      "group_not_running": "A turma já terminou.",
+      "enrollment_not_active": "A matrícula não está ativa.",
+      "payment_not_approved": "O pagamento da matrícula ainda não foi aprovado.",
+      "not_offered": "Este curso não oferece o procedimento.",
+      "no_seats_elsewhere": "Não há outra turma do mesmo curso com vaga."
+    },
+    "manage_enrollment": {
+      "close": "Fechar",
+      "subtitle": "Procedimentos sobre a matrícula em {classGroup}.",
+      "paid_outside": "Os procedimentos são cobrados fora da plataforma, com o Atención al Alumno. Aqui se registra o que já foi pago e combinado.",
+      "fee": "Taxa {amount}",
+      "fee_undefined": "Taxa a definir",
+      "confirm_fee": "Confirmo que a taxa foi paga e o comprovante aprovado.",
+      "confirm_no_fee": "Confirmo que a saída foi combinada com o aluno.",
+      "target_label": "Turma de destino",
+      "target_placeholder": "Escolher turma"
+    },
+    "courses": {
+      "title": "Cursos",
+      "subtitle": "O catálogo de onde nascem as turmas.",
+      "search_label": "Buscar cursos",
+      "search_placeholder": "Curso, idioma ou nível",
+      "new_course": "Novo curso",
+      "new_title": "Novo curso",
+      "field_language": "Idioma",
+      "field_name": "Nome",
+      "field_level": "Nível",
+      "name_placeholder": "Inglés Básico A1",
+      "level_placeholder": "A1",
+      "create": "Criar curso",
+      "cancel": "Cancelar",
+      "col_course": "Curso",
+      "col_level": "Nível",
+      "col_load": "Carga",
+      "col_min_age": "Idade mínima",
+      "col_class_groups": "Turmas",
+      "col_status": "Estado",
+      "load_value": "{modules} módulos · {hours} h",
+      "min_age_value": "{age} anos",
+      "class_group_count": "{count, plural, =0 {sem turmas} one {# turma} other {# turmas}}",
+      "active": "No catálogo",
+      "inactive": "Fora do catálogo",
+      "empty_title": "Sem cursos",
+      "empty_body": "Ainda não há cursos no catálogo.",
+      "empty_search_title": "Sem resultados",
+      "empty_search_body": "Tente outro curso, idioma ou nível.",
+      "local_only": "As mudanças são só de tela. Ainda não há servidor conectado.",
+      "options_title": "Configuração do curso",
+      "options_hint": "Tudo isso dá pra mudar depois nas opções do curso.",
+      "saved": "Alterações salvas",
+      "created": "Curso criado"
+    },
+    "course_options": {
+      "close": "Fechar",
+      "subtitle": "Opções do curso · {language}",
+      "applies_forward": "O que você mudar aqui vale para as turmas abertas depois. As que já estão em andamento mantêm a regra com que o aluno se matriculou.",
+      "min_age": "Idade mínima",
+      "modules": "Módulos",
+      "total_hours": "Horas totais",
+      "certificate_rule": "Certificado",
+      "procedures": "Procedimentos que oferece",
+      "allows_transfer": "Permite mudar de turma (mudança de horário)",
+      "allows_freeze": "Permite congelar a matrícula",
+      "active": "Curso no catálogo",
+      "active_hint": "Tirar do catálogo não encerra as turmas em curso: só deixa de ser oferecido.",
+      "save": "Salvar",
+      "cancel": "Cancelar"
+    },
+    "certificate_rule": {
+      "automatic": "Nota mínima",
+      "exam_required": "Exame de certificação"
+    },
+    "certificate_rule_hint": {
+      "automatic": "Sai para quem atinge a nota mínima, sem trâmite à parte.",
+      "exam_required": "Além da nota, o aluno precisa prestar o exame de certificação."
     }
   }
 }

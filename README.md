@@ -32,9 +32,13 @@ existem, independentes dessa escolha:
 - `apps/landing` — site público (Astro).
 - `apps/app` — Next.js App Router: layout, roteamento, i18n trilíngue e as telas
   em **mockup** (sem acesso a dados). Portal do aluno (`/portal`) e backoffice
-  (`/backoffice` para login; painel em `/backoffice/home` e alunos em
-  `/backoffice/students`, com ficha, histórico e edição de dados só em estado
-  local). Os demais módulos do painel aparecem listados como "pronto/em breve".
+  (`/backoffice` para login; painel em `/backoffice/home`). No backoffice já
+  existem: alunos (`/backoffice/students`, com ficha, histórico e edição),
+  turmas (`/backoffice/class-groups`, com lista paginada, ficha da turma,
+  emissão de certificados em lote e procedimentos por matrícula — mover,
+  congelar, retirar) e cursos (`/backoffice/courses`, catálogo com opções por
+  curso). Toda escrita é estado local. Os demais módulos do painel aparecem
+  listados como "pronto/em breve".
   UI em shadcn/ui sobre Tailwind v4; os tokens de marca vivem em `globals.css`
   (paleta da landing, tipografia Inter). A landing segue com Fredoka/Poppins —
   público diferente.

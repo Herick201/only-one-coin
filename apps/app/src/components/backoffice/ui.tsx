@@ -219,6 +219,56 @@ export function Meter({ value, max, tone }: { value: number; max: number; tone: 
   )
 }
 
+/**
+ * Page control for long tables. Copy arrives translated from the caller (i18n
+ * hard rule, CLAUDE.md §4) and the component owns no state: the page lives with
+ * whoever slices the rows, so a filter change can reset it.
+ */
+export function Pager({
+  page,
+  pageCount,
+  status,
+  prevLabel,
+  nextLabel,
+  onChange,
+}: {
+  /** Zero-based. */
+  page: number
+  pageCount: number
+  status: string
+  prevLabel: string
+  nextLabel: string
+  onChange: (page: number) => void
+}) {
+  const button =
+    'inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-sm font-semibold text-muted-foreground transition hover:text-ink disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-muted-foreground'
+  return (
+    <nav className="flex items-center justify-between gap-3 border-t border-line px-4 py-3">
+      <span className="text-xs text-muted-foreground">{status}</span>
+      <span className="flex items-center gap-2">
+        <button
+          type="button"
+          className={button}
+          disabled={page <= 0}
+          onClick={() => onChange(page - 1)}
+        >
+          <BoIcon name="chevron-down" size={14} className="rotate-90" />
+          {prevLabel}
+        </button>
+        <button
+          type="button"
+          className={button}
+          disabled={page >= pageCount - 1}
+          onClick={() => onChange(page + 1)}
+        >
+          {nextLabel}
+          <BoIcon name="chevron-down" size={14} className="-rotate-90" />
+        </button>
+      </span>
+    </nav>
+  )
+}
+
 /** Banner reminding that the screen is a mock with no backend behind it. */
 export function MockNotice({ label }: { label: string }) {
   return (
