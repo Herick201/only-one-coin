@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type MouseEvent, type ReactNode } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
-import { Link, useRouter } from '@/i18n/navigation'
+import { Link } from '@/i18n/navigation'
 import type {
   PaymentMethod,
   PaymentMetrics,
@@ -21,8 +21,9 @@ import {
   tdClass,
   thClass,
 } from '@/components/backoffice/ui'
-import { paymentTone, reviewFlagTone } from '@/components/backoffice/status-tone'
+import { paymentTone } from '@/components/backoffice/status-tone'
 import { BoIcon } from '@/components/backoffice/icons'
+import { PaymentDetailDialog } from './payment-detail-dialog'
 
 type StatusFilter = PaymentStatus | 'all'
 type MethodFilter = PaymentMethod | 'all'
@@ -59,16 +60,14 @@ const PAGE_SIZE = 15
 export function PaymentsView({
   rows,
   metrics,
-  canReview,
 }: {
   rows: PaymentRow[]
   metrics: PaymentMetrics
-  canReview: boolean
 }) {
   const t = useTranslations('bo')
   const locale = useLocale() as Locale
-  const router = useRouter()
 
+  const [detail, setDetail] = useState<PaymentRow | null>(null)
   const [query, setQuery] = useState('')
   const [status, setStatus] = useState<StatusFilter>('all')
   const [method, setMethod] = useState<MethodFilter>('all')
@@ -118,16 +117,16 @@ export function PaymentsView({
   }
 
   /**
-   * The whole row opens the student file, but the name stays a real link so
-   * the keyboard, the screen reader and ctrl+click keep working — the row
-   * handler only covers the mouse.
+   * The row opens the payment, not the student: this screen is the ledger, and
+   * what a reader wants from a line is the receipt behind it. The name stays a
+   * real link to the file for whoever came looking for the person instead.
    */
-  function rowProps(studentId: string) {
+  function rowProps(row: PaymentRow) {
     return {
       className: 'cursor-pointer transition hover:bg-sky-soft',
       onClick: (event: MouseEvent<HTMLTableRowElement>) => {
         if ((event.target as HTMLElement).closest('a')) return
-        router.push(`/backoffice/students/${studentId}`)
+        setDetail(row)
       },
     }
   }
@@ -302,9 +301,8 @@ export function PaymentsView({
               <tbody>
                 {pageRows.map((row) => {
                   const mismatch = row.amountCents !== row.expectedAmountCents
-                  const open = row.status === 'under_review' || row.status === 'pending'
                   return (
-                    <tr key={row.id} {...rowProps(row.studentId)}>
+                    <tr key={row.id} {...rowProps(row)}>
                       <td className={tdClass}>
                         <Link
                           href={`/backoffice/students/${row.studentId}`}
@@ -353,45 +351,15 @@ export function PaymentsView({
                         )}
                       </td>
 
-                      {/* A row is either open or settled, never both — so the
-                          cell carries the flag and the door, or the trail.
-                          The door lives here rather than in a column of its
-                          own: the state is what asks for the action, and a
-                          seventh column pushed it off the screen. */}
+                      {/* One badge, nothing under it. The flag, the rail, the
+                          operation number and who settled it all live one
+                          click away in the dialog: stacked on the row they
+                          turned a ledger into four lines per payment. */}
                       <td className={tdClass}>
                         <StatusBadge
                           tone={paymentTone[row.status]}
                           label={t(`payment_status.${row.status}`)}
                         />
-                        {row.flag && (
-                          <span className="mt-1 block">
-                            <StatusBadge
-                              tone={reviewFlagTone[row.flag]}
-                              dot={false}
-                              label={t(`review_flag.${row.flag}`)}
-                            />
-                          </span>
-                        )}
-                        {/* Only a flagged receipt is in the human queue, so
-                            only a flagged row gets the door — a link landing
-                            on a queue that does not hold the case is worse
-                            than no link. */}
-                        {canReview && row.flag && (
-                          <span className="mt-1 block">
-                            <Link
-                              href="/backoffice/payments/review"
-                              className="inline-flex items-center gap-0.5 text-xs font-semibold text-brand-blue transition hover:underline"
-                            >
-                              {t('payments.review_action')}
-                              <BoIcon name="chevron-right" size={12} />
-                            </Link>
-                          </span>
-                        )}
-                        {!open && (
-                          <span className="mt-1 block text-xs text-muted-foreground">
-                            {row.decidedByName ?? t('payments.decided_auto')}
-                          </span>
-                        )}
                       </td>
 
                       <td
@@ -401,9 +369,6 @@ export function PaymentsView({
                           {row.method
                             ? paymentMethodLabel[row.method]
                             : t('payments.no_method')}
-                        </span>
-                        <span className="block tabular-nums">
-                          {row.operationNumber ?? t('payments.no_operation')}
                         </span>
                       </td>
 
@@ -435,6 +400,8 @@ export function PaymentsView({
           </>
         )}
       </Card>
+
+      <PaymentDetailDialog payment={detail} onClose={() => setDetail(null)} />
     </div>
   )
 }

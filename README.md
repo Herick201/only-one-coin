@@ -41,7 +41,8 @@ escolha:
   congelar, retirar), cursos (`/backoffice/courses`, catálogo com opções por
   curso) e pagamentos (`/backoffice/payments`: livro de todos os pagamentos —
   matrícula e trâmite — com métricas do ciclo, busca e filtros por estado, meio
-  e conceito; `/backoffice/payments/review`, a fila de revisão humana com a
+  e conceito, e cada linha abrindo o comprovante e os dados do pagamento num
+  modal; `/backoffice/payments/review`, a fila de revisão humana com a
   ficha de decisão do comprovante — extração campo a campo com confiança,
   segunda leitura quando os modelos divergem, aprovar/recusar com motivo; e
   `/backoffice/payments/settings`, os parâmetros de validação — tolerância de

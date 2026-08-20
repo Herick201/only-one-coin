@@ -4,10 +4,7 @@ import {
   getStaffSession,
   listPayments,
 } from '@/lib/backoffice/mock-data'
-import {
-  canConfigurePayments,
-  canReviewPayments,
-} from '@/lib/backoffice/permissions'
+import { canConfigurePayments } from '@/lib/backoffice/permissions'
 import { MockNotice, PageHeader } from '@/components/backoffice/ui'
 import { SectionTabs } from '@/components/backoffice/section-tabs'
 import { PaymentsView } from './payments-view'
@@ -54,11 +51,7 @@ export default async function PaymentsPage({
         ]}
       />
       <MockNotice label={t('common.mock_notice')} />
-      <PaymentsView
-        rows={listPayments()}
-        metrics={getPaymentMetrics()}
-        canReview={canReviewPayments(staff.role)}
-      />
+      <PaymentsView rows={listPayments()} metrics={getPaymentMetrics()} />
     </div>
   )
 }
