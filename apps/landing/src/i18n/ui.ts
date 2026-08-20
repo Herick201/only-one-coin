@@ -73,9 +73,39 @@ export const geoSuggestion: Record<string, CourseSlug> = {
 export const content = {
   es: {
     meta: {
-      title: "Only One Coin — Aprende Inglés desde 1 sol por sesión",
+      title: "Cursos de inglés e idiomas online en Perú — Only One Coin",
       description:
-        "Asociación Only One Coin Perú: cursos de idiomas con paquete completo de pago único (Inglés S/69.90) y talleres gratuitos para todas las edades desde los 6 años.",
+        "Clases 100% online para todo el Perú: inglés, francés, italiano, alemán, portugués, chino y coreano. Paquete completo de pago único, certificado y talleres gratis.",
+      siteName: "Only One Coin",
+      imageAlt: "Asociación Only One Coin Perú — cursos de idiomas online",
+      courses: {
+        title: "Cursos de idiomas online: precios y paquetes — Only One Coin",
+        description:
+          "Elige inglés, francés, italiano, alemán, portugués, chino mandarín o coreano. Clases online desde los 6 años, con paquete completo de pago único y sin mensualidades.",
+      },
+      course: {
+        titlePre: "Curso de ",
+        titleMid: " online en Perú · ",
+        titlePost: " pago único",
+        descPre: "Aprende ",
+        descMid: " online con la Asociación Only One Coin Perú: paquete completo por ",
+        descPost: " de pago único, desde los 6 años, con certificado digital y talleres gratis.",
+      },
+      faq: {
+        title: "Preguntas frecuentes sobre los cursos online — Only One Coin",
+        description:
+          "Resolvemos las dudas más comunes sobre matrícula, precios, horarios, certificados y talleres gratuitos de la Asociación Only One Coin Perú.",
+      },
+      blog: {
+        title: "Blog de idiomas y aprendizaje — Only One Coin",
+        description:
+          "Consejos para aprender idiomas online, novedades de la Asociación Only One Coin Perú y recursos gratuitos para nuestros alumnos.",
+      },
+      community: {
+        title: "Comunidad de alumnos en todo el Perú — Only One Coin",
+        description:
+          "Miles de estudiantes de todo el Perú aprenden idiomas online con la Asociación Only One Coin. Conoce nuestra comunidad y súmate.",
+      },
     },
     nav: {
       home: "Inicio",
@@ -204,7 +234,7 @@ export const content = {
         { q: "¿Cuánto cuesta y cómo funciona el pago?", a: "Cada curso tiene un paquete completo de pago único (por ejemplo, Inglés cuesta S/69.90), que incluye matrícula, material, certificado y talleres. También existe una modalidad mensual que equivale a 1 sol por sesión. Sin mensualidades ocultas ni cobros sorpresa." },
         { q: "¿Desde qué edad puedo matricularme?", a: "Recibimos alumnos desde los 6 años en adelante. Hay grupos pensados para niños y grupos para jóvenes y adultos." },
         { q: "¿Cómo me matriculo?", a: "Escríbenos por WhatsApp para reservar tu cupo. Luego completas el formulario de matrícula, subes tu comprobante y recibes tus credenciales de acceso." },
-        { q: "¿Las clases son presenciales o virtuales?", a: "Ofrecemos ambas modalidades según el curso y la sede. Consúltanos por WhatsApp para ver los horarios disponibles del periodo." },
+        { q: "¿Las clases son presenciales o virtuales?", a: "Todas nuestras clases son 100% online, en vivo con un docente. Puedes estudiar desde cualquier ciudad del Perú sin moverte de casa. Consúltanos por WhatsApp los horarios disponibles del periodo." },
         { q: "¿Qué incluye la matrícula?", a: "El acceso a tu curso de idioma, la plataforma del alumno y los talleres gratuitos de Excel, Emprendimiento, Liderazgo y Quechua." },
         { q: "¿Recibo algún certificado?", a: "Sí. Al culminar tu curso recibes un certificado digital que valida tu aprendizaje." },
       ],
@@ -307,9 +337,39 @@ export const content = {
 
   en: {
     meta: {
-      title: "Only One Coin — Learn English from 1 sol per session",
+      title: "Online language courses in Peru — Only One Coin",
       description:
-        "Only One Coin Perú Association: language courses with a single-payment full package (English S/69.90) and free workshops for all ages from 6.",
+        "100% online classes across Peru: English, French, Italian, German, Portuguese, Chinese and Korean. Full package with a single payment, certificate and free workshops from age 6.",
+      siteName: "Only One Coin",
+      imageAlt: "Only One Coin Perú Association — online language courses",
+      courses: {
+        title: "Online language courses: prices and packages — Only One Coin",
+        description:
+          "Choose English, French, Italian, German, Portuguese, Mandarin Chinese or Korean. Online classes from age 6, each a full package with a single payment and no monthly fees.",
+      },
+      course: {
+        titlePre: "Online ",
+        titleMid: " course in Peru · ",
+        titlePost: " single payment",
+        descPre: "Learn ",
+        descMid: " online with the Only One Coin Perú Association: full package for ",
+        descPost: " as a single payment, from age 6, with a digital certificate and free workshops.",
+      },
+      faq: {
+        title: "FAQ about our online courses — Only One Coin",
+        description:
+          "Answers to the most common questions about enrolment, prices, schedules, certificates and the free workshops of the Only One Coin Perú Association.",
+      },
+      blog: {
+        title: "Language learning blog — Only One Coin",
+        description:
+          "Tips for learning languages online, news from the Only One Coin Perú Association and free resources for our students.",
+      },
+      community: {
+        title: "Our student community across Peru — Only One Coin",
+        description:
+          "Thousands of students across Peru learn languages online with the Only One Coin Association. Meet our community and join in.",
+      },
     },
     nav: {
       home: "Home",
@@ -438,7 +498,7 @@ export const content = {
         { q: "How much does it cost and how does payment work?", a: "Each course has a full package with a single payment (for example, English is S/69.90), including enrollment, materials, certificate and workshops. There's also a monthly modality that works out to 1 sol per session. No hidden monthly fees or surprise charges." },
         { q: "From what age can I enroll?", a: "We welcome students from 6 years old and up. There are groups designed for children and groups for teens and adults." },
         { q: "How do I enroll?", a: "Message us on WhatsApp to reserve your spot. Then you fill out the enrollment form, upload your receipt and receive your access credentials." },
-        { q: "Are classes in-person or online?", a: "We offer both formats depending on the course and location. Ask us on WhatsApp about the available schedules for the term." },
+        { q: "Are classes in-person or online?", a: "All our classes are 100% online and live with a teacher. You can study from anywhere in Peru without leaving home. Ask us on WhatsApp about the available schedules for the term." },
         { q: "What does enrollment include?", a: "Access to your language course, the student platform and the free Excel, Entrepreneurship, Leadership and Quechua workshops." },
         { q: "Do I get a certificate?", a: "Yes. When you complete your course you receive a digital certificate that validates your learning." },
       ],
@@ -541,9 +601,39 @@ export const content = {
 
   pt: {
     meta: {
-      title: "Only One Coin — Aprenda Inglês a partir de 1 sol por sessão",
+      title: "Cursos de inglês e idiomas online no Peru — Only One Coin",
       description:
-        "Associação Only One Coin Peru: cursos de idiomas com pacote completo em pagamento único (Inglês S/69,90) e oficinas gratuitas para todas as idades a partir dos 6 anos.",
+        "Aulas 100% online para todo o Peru: inglês, francês, italiano, alemão, português, chinês e coreano. Pacote completo em pagamento único, certificado e oficinas grátis.",
+      siteName: "Only One Coin",
+      imageAlt: "Associação Only One Coin Peru — cursos de idiomas online",
+      courses: {
+        title: "Cursos de idiomas online: preços e pacotes — Only One Coin",
+        description:
+          "Escolha inglês, francês, italiano, alemão, português, chinês mandarim ou coreano. Aulas online a partir dos 6 anos, com pacote completo em pagamento único e sem mensalidades.",
+      },
+      course: {
+        titlePre: "Curso de ",
+        titleMid: " online no Peru · ",
+        titlePost: " pagamento único",
+        descPre: "Aprenda ",
+        descMid: " online com a Associação Only One Coin Peru: pacote completo por ",
+        descPost: " em pagamento único, a partir dos 6 anos, com certificado digital e oficinas grátis.",
+      },
+      faq: {
+        title: "Perguntas frequentes sobre os cursos online — Only One Coin",
+        description:
+          "Respondemos as dúvidas mais comuns sobre matrícula, preços, horários, certificados e oficinas gratuitas da Associação Only One Coin Peru.",
+      },
+      blog: {
+        title: "Blog de idiomas e aprendizagem — Only One Coin",
+        description:
+          "Dicas para aprender idiomas online, novidades da Associação Only One Coin Peru e recursos gratuitos para os nossos alunos.",
+      },
+      community: {
+        title: "Comunidade de alunos em todo o Peru — Only One Coin",
+        description:
+          "Milhares de estudantes de todo o Peru aprendem idiomas online com a Associação Only One Coin. Conheça a nossa comunidade e participe.",
+      },
     },
     nav: {
       home: "Início",
@@ -672,7 +762,7 @@ export const content = {
         { q: "Quanto custa e como funciona o pagamento?", a: "Cada curso tem um pacote completo em pagamento único (por exemplo, Inglês custa S/69,90), que inclui matrícula, material, certificado e oficinas. Também existe uma modalidade mensal que equivale a 1 sol por sessão. Sem mensalidades ocultas nem cobranças-surpresa." },
         { q: "A partir de que idade posso me matricular?", a: "Recebemos alunos a partir dos 6 anos. Há turmas pensadas para crianças e turmas para jovens e adultos." },
         { q: "Como me matriculo?", a: "Fale com a gente no WhatsApp para reservar sua vaga. Depois você preenche o formulário de matrícula, envia seu comprovante e recebe suas credenciais de acesso." },
-        { q: "As aulas são presenciais ou online?", a: "Oferecemos as duas modalidades conforme o curso e a sede. Consulte no WhatsApp os horários disponíveis do período." },
+        { q: "As aulas são presenciais ou online?", a: "Todas as nossas aulas são 100% online e ao vivo com um professor. Você pode estudar de qualquer cidade do Peru sem sair de casa. Consulte no WhatsApp os horários disponíveis do período." },
         { q: "O que a matrícula inclui?", a: "O acesso ao seu curso de idioma, a plataforma do aluno e as oficinas gratuitas de Excel, Empreendedorismo, Liderança e Quíchua." },
         { q: "Recebo algum certificado?", a: "Sim. Ao concluir seu curso você recebe um certificado digital que valida seu aprendizado." },
       ],

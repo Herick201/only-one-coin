@@ -1,8 +1,11 @@
 ---
 import Base from "../../layouts/Base.astro";
 import CoursesIndex from "../../components/CoursesIndex.astro";
+import { content, defaultLang } from "../../i18n/ui";
+
+const m = content[defaultLang].meta.courses;
 ---
 
-<Base>
+<Base title={m.title} description={m.description}>
   <CoursesIndex />
 </Base>
