@@ -109,7 +109,7 @@ export function PaymentSettingsForm({ settings }: { settings: PaymentSettings })
           type="button"
           disabled={!dirty}
           onClick={() => setToast(t('payment_settings.saved_toast'))}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-deep disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-yellow hover:text-ink active:bg-brand-yellow-deep disabled:cursor-not-allowed disabled:opacity-40"
         >
           <BoIcon name="check" size={16} />
           {t('payment_settings.save')}
