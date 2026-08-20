@@ -14,12 +14,12 @@ import { SectionTitle, StatusBadge } from '@/components/backoffice/ui'
 import { reviewFlagTone } from '@/components/backoffice/status-tone'
 import { BoIcon } from '@/components/backoffice/icons'
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 
 /** Offered in the order the queue produces them — the first four mirror a flag. */
 const REASONS: RejectionReason[] = [
@@ -41,8 +41,12 @@ const REASONS: RejectionReason[] = [
  * own confidence, the tier says how the extraction got here, and when the
  * ladder escalated, both readings are shown side by side. Agreement decides,
  * not the more expensive model (CLAUDE.md §5).
+ *
+ * A centred modal, the same shape the ledger opens a payment with: the queue
+ * stays behind it, and the case gets the middle of the screen instead of a
+ * strip glued to the edge.
  */
-export function ReceiptReviewSheet({
+export function ReceiptReviewDialog({
   extraction,
   onClose,
   onDecide,
@@ -58,7 +62,7 @@ export function ReceiptReviewSheet({
   const [reason, setReason] = useState<RejectionReason>('amount_mismatch')
   const [note, setNote] = useState('')
 
-  // The form follows whichever receipt the sheet was opened on, and is thrown
+  // The form follows whichever receipt the dialog was opened on, and is thrown
   // away on close — a half-written rejection must not leak into the next case.
   useEffect(() => {
     setRejecting(false)
@@ -82,24 +86,23 @@ export function ReceiptReviewSheet({
   }
 
   return (
-    <Sheet
+    <Dialog
       open={extraction !== null}
       onOpenChange={(open) => {
         if (!open) onClose()
       }}
     >
-      <SheetContent
-        side="right"
+      <DialogContent
         closeLabel={t('receipt_review.close')}
-        className="w-full gap-0 overflow-y-auto bg-white p-0 sm:max-w-xl"
+        className="bg-white sm:max-w-xl"
       >
         {extraction && (
           <>
-            <SheetHeader className="gap-2 border-b border-line p-5 pr-14">
-              <SheetTitle className="text-base font-semibold text-ink">
+            <DialogHeader className="gap-2 border-b border-line p-5 pr-14">
+              <DialogTitle className="text-base font-semibold text-ink">
                 {extraction.studentName}
-              </SheetTitle>
-              <SheetDescription>
+              </DialogTitle>
+              <DialogDescription>
                 {t('receipt_review.subtitle', {
                   date: formatDateTime(extraction.submittedAt, locale),
                   course:
@@ -107,7 +110,7 @@ export function ReceiptReviewSheet({
                       ? extraction.concept.courseName
                       : t(`document_type.${extraction.concept.type}`),
                 })}
-              </SheetDescription>
+              </DialogDescription>
               <div className="mt-1 flex flex-wrap items-center gap-2">
                 <StatusBadge
                   tone={reviewFlagTone[extraction.flag]}
@@ -121,7 +124,7 @@ export function ReceiptReviewSheet({
                   })}
                 </span>
               </div>
-            </SheetHeader>
+            </DialogHeader>
 
             <div className="flex flex-col gap-6 p-5">
               {/* Tier 0 is a block, not a doubt: the reviewer is confirming a
@@ -323,7 +326,7 @@ export function ReceiptReviewSheet({
                         onClick={() =>
                           onDecide(extraction.paymentId, { kind: 'approve' })
                         }
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-deep"
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-yellow hover:text-ink active:bg-brand-yellow-deep"
                       >
                         <BoIcon name="check" size={16} />
                         {t('receipt_review.approve')}
@@ -346,8 +349,8 @@ export function ReceiptReviewSheet({
             </div>
           </>
         )}
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   )
 }
 

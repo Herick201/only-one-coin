@@ -9,7 +9,6 @@ import type {
   ReviewQueueItem,
 } from '@/lib/backoffice/types'
 import { formatDateTime, formatMoney, type Locale } from '@/lib/format'
-import { paymentMethodLabel } from '@/lib/payment-method'
 import {
   Card,
   EmptyState,
@@ -22,7 +21,7 @@ import {
 import { Toast } from '@/components/backoffice/controls'
 import { reviewFlagTone } from '@/components/backoffice/status-tone'
 import { BoIcon } from '@/components/backoffice/icons'
-import { ReceiptReviewSheet } from './receipt-review-sheet'
+import { ReceiptReviewDialog } from './receipt-review-dialog'
 
 type FlagFilter = ReviewFlag | 'all'
 
@@ -43,9 +42,14 @@ const PAGE_SIZE = 15
  * is a student waiting, and the promise on the home card is that the queue is
  * worked from the oldest one.
  *
- * The row triages; the decision happens in the sheet, next to the image and to
+ * The row triages; the decision happens in the dialog, next to the image and to
  * what the model read. Settling a receipt from a list, on a flag alone, is how
  * a mismatch gets approved because the row looked like the one above it.
+ *
+ * The row carries only what sorts one case from another — who is waiting, how
+ * much, why it stopped, since when. The rail and the operation number are read
+ * against the image or not at all, so they wait for the click instead of
+ * printing a number nobody can check from the list.
  *
  * Filtering and paging run in the browser only because the dataset is mocked;
  * with the real API this becomes a server query (up to 20k receipts a month in
@@ -130,7 +134,7 @@ export function ReviewQueueView({
   /**
    * The row opens the receipt, it does not leave the queue. Sending a reviewer
    * to the student file mid-triage loses the page, the filter and the place in
-   * the list — and the sheet already carries everything the row was hiding.
+   * the list — and the dialog already carries everything the row was hiding.
    * The button in the last column is the keyboard path; this only covers the
    * mouse.
    */
@@ -254,7 +258,6 @@ export function ReviewQueueView({
                   <th className={thClass}>{t('review.col_student')}</th>
                   <th className={thClass}>{t('review.col_amount')}</th>
                   <th className={thClass}>{t('review.col_flag')}</th>
-                  <th className={thClass}>{t('review_queue.col_operation')}</th>
                   <th className={thClass}>{t('review.col_submitted')}</th>
                   <th className={thClass}>
                     <span className="sr-only">{t('common.actions')}</span>
@@ -303,14 +306,6 @@ export function ReviewQueueView({
                           label={t(`review_flag.${row.flag}`)}
                         />
                       </td>
-                      <td className={`${tdClass} whitespace-nowrap text-xs text-muted-foreground`}>
-                        <span className="block font-semibold text-ink">
-                          {paymentMethodLabel[row.method]}
-                        </span>
-                        <span className="block tabular-nums">
-                          {row.operationNumber ?? t('review_queue.no_operation')}
-                        </span>
-                      </td>
                       <td
                         className={`${tdClass} whitespace-nowrap text-sm tabular-nums text-muted-foreground`}
                       >
@@ -321,7 +316,7 @@ export function ReviewQueueView({
                           <button
                             type="button"
                             onClick={() => setReviewing(row.id)}
-                            className="inline-flex items-center gap-1 rounded-lg border border-line px-2.5 py-1.5 text-sm font-semibold text-brand-blue transition hover:border-brand-blue hover:bg-sky"
+                            className="inline-flex items-center gap-1 rounded-lg border border-line px-2.5 py-1.5 text-sm font-semibold text-brand-blue transition hover:border-brand-yellow hover:bg-cream hover:text-ink"
                           >
                             {t('receipt_review.open')}
                             <BoIcon name="chevron-right" size={14} />
@@ -351,7 +346,7 @@ export function ReviewQueueView({
         )}
       </Card>
 
-      <ReceiptReviewSheet
+      <ReceiptReviewDialog
         extraction={reviewing ? (extractions[reviewing] ?? null) : null}
         onClose={() => setReviewing(null)}
         onDecide={decide}
