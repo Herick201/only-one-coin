@@ -182,10 +182,25 @@ export function EmptyState({
 }
 
 /** Table shell — horizontal scroll is on the wrapper, never on the page. */
-export function TableShell({ children }: { children: ReactNode }) {
+export function TableShell({
+  children,
+  fixed = false,
+}: {
+  children: ReactNode
+  /**
+   * Locks the column widths to the caller's `<colgroup>`. Auto layout sizes a
+   * column by its widest cell, so a table whose rows appear and disappear —
+   * anything folded — reflows its headers on every toggle.
+   */
+  fixed?: boolean
+}) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[46rem] border-collapse text-left text-sm">
+      <table
+        className={`w-full min-w-[46rem] border-collapse text-left text-sm ${
+          fixed ? 'table-fixed' : ''
+        }`}
+      >
         {children}
       </table>
     </div>
