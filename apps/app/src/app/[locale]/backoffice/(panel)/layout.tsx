@@ -108,11 +108,11 @@ export default async function BackofficePanelLayout({
     <div className="flex h-14 items-center gap-2.5 px-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
       <span className="grid size-8 shrink-0 place-items-center overflow-hidden rounded-lg bg-white/10 group-data-[collapsible=icon]:bg-transparent">
         <Image
-          src="/brand/logo.png"
+          src="/brand/logo-mark.png"
           alt="Only One Coin"
-          width={163}
-          height={94}
-          className="h-4 w-auto"
+          width={192}
+          height={66}
+          className="h-auto w-7"
         />
       </span>
       <span className="flex min-w-0 flex-col leading-tight group-data-[collapsible=icon]:hidden">
