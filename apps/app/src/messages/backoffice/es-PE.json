@@ -428,7 +428,7 @@
       "page_next": "Siguientes",
       "page_status": "Página {page} de {pages}",
       "locked_title": "Esta pantalla no es tuya",
-      "locked_body": "Un docente ve a los alumnos de sus propias aulas, entrando por el aula — nunca el listado de matrículas de toda la institución."
+      "locked_body": "Las matrículas las llevan administración y coordinación. La tesorería trabaja el dinero en Pagos; un docente ve a los alumnos de sus propias aulas, entrando por el aula."
     },
     "enrollment_detail": {
       "close": "Cerrar la matrícula",

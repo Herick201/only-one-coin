@@ -95,13 +95,26 @@ export function canBrowseStudents(role: StaffRole): boolean {
 
 /**
  * Whether the panel must be narrowed to the signed-in teacher's own class
- * groups (`docs/ARCHITECTURE.md` §RBAC). The screen honours it so the reader is
+ * groups (`docs/ARCHITECTURE.md` §3). The screen honours it so the reader is
  * not shown doors that would fail; the enforcing check compares the
  * authenticated `teacher_id` against the class group inside the usecase, and it
  * is the only one that counts (CLAUDE.md §8).
  */
 export function isRestrictedToOwnClassGroups(role: StaffRole): boolean {
   return role === 'teacher'
+}
+
+/**
+ * Who may read the enrollment ledger. Administration and coordination —
+ * `docs/ARCHITECTURE.md` §3 gives coordination the class groups, the periods
+ * and the enrollments, and keeps tesorería out of academic data that is not
+ * financial: the ledger carries the course, the class group, the teacher and
+ * the student's progress, and tesorería settles money in the payments section.
+ * A teacher sees the students of their own class groups, through the class
+ * group, never a roster of the whole institution (CLAUDE.md §8).
+ */
+export function canBrowseEnrollments(role: StaffRole): boolean {
+  return role === 'admin' || role === 'coordinator'
 }
 
 /**

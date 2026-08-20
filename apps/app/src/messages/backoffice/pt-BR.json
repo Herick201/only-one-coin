@@ -428,7 +428,7 @@
       "page_next": "Próximas",
       "page_status": "Página {page} de {pages}",
       "locked_title": "Esta tela não é sua",
-      "locked_body": "Um docente vê os alunos das próprias turmas, entrando pela turma — nunca a listagem de matrículas da instituição inteira."
+      "locked_body": "As matrículas ficam com administração e coordenação. A tesouraria trabalha o dinheiro em Pagamentos; um docente vê os alunos das próprias turmas, entrando pela turma."
     },
     "enrollment_detail": {
       "close": "Fechar a matrícula",

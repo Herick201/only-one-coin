@@ -428,7 +428,7 @@
       "page_next": "Next",
       "page_status": "Page {page} of {pages}",
       "locked_title": "This screen is not yours",
-      "locked_body": "A teacher sees the students of their own class groups, reached through the class group — never the enrollment ledger of the whole institution."
+      "locked_body": "Enrollments belong to administration and coordination. Treasury settles the money in Payments; a teacher sees the students of their own class groups, reached through the class group."
     },
     "enrollment_detail": {
       "close": "Close the enrollment",

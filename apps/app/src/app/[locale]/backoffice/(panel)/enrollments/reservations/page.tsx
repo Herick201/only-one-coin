@@ -4,7 +4,7 @@ import {
   getStaffSession,
   listSeatReservations,
 } from '@/lib/backoffice/mock-data'
-import { isRestrictedToOwnClassGroups } from '@/lib/backoffice/permissions'
+import { canBrowseEnrollments } from '@/lib/backoffice/permissions'
 import { EmptyState, MockNotice, PageHeader } from '@/components/backoffice/ui'
 import { SectionTabs } from '@/components/backoffice/section-tabs'
 import { ReservationsView } from './reservations-view'
@@ -34,11 +34,12 @@ export default async function ReservationsPage({
 
   const staff = getStaffSession()
 
-  /* A teacher sees the students of their own class groups, reached through the
-     class group — never a roster of every enrollment in the institution
-     (CLAUDE.md §8). The screen says so; the role on the route in `apps/api` is
-     what enforces it. */
-  if (isRestrictedToOwnClassGroups(staff.role)) {
+  /* Enrollments belong to administration and coordination
+     (`docs/ARCHITECTURE.md` §3). Tesorería settles the money in the payments
+     section and a teacher reaches their students through the class group —
+     neither reads a roster of the whole institution. The screen says so; the
+     role on the route in `apps/api` is what enforces it (CLAUDE.md §8). */
+  if (!canBrowseEnrollments(staff.role)) {
     return (
       <div className="flex flex-col gap-5">
         <PageHeader
