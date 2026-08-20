@@ -97,7 +97,7 @@ apps/
 packages/
   domain/            domínio DDD puro (entidades, usecases, portas de repositório) — sem framework, sem infra
   queue/             contrato de fila compartilhado (jobs, producers) — usado por quem publica e por quem consome
-  db/                migrations + seed (Postgres puro — Neon não exige CLI própria)
+  db/                schema + migrations (Drizzle Kit) + seed — mesma DATABASE_URL local/Neon
   notifications/     adapter de e-mail + outbox
   ocr/               pipeline de extração
   i18n/              locales (es-PE.json)

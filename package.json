@@ -22,6 +22,12 @@
     "typecheck:app": "pnpm --filter @ooc/app typecheck",
     "typecheck:domain": "pnpm --filter @ooc/domain typecheck",
     "typecheck:queue": "pnpm --filter @ooc/queue typecheck",
-    "typecheck:api": "pnpm --filter @ooc/api typecheck"
+    "typecheck:api": "pnpm --filter @ooc/api typecheck",
+    "typecheck:db": "pnpm --filter @ooc/db typecheck",
+    "db:up": "docker compose up -d --wait",
+    "db:down": "docker compose down",
+    "db:generate": "pnpm --filter @ooc/db db:generate",
+    "db:migrate": "pnpm --filter @ooc/db db:migrate",
+    "db:reset": "docker compose down -v && docker compose up -d --wait && pnpm --filter @ooc/db db:migrate"
   }
 }

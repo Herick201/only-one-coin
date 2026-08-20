@@ -17,7 +17,8 @@ pnpm workspaces com dois grupos, no mesmo padrão do diagrama do `CLAUDE.md` §3
 | `apps/api` (`@ooc/api`) | Fastify — expõe `@ooc/domain` via HTTP, roda os workers de `@ooc/queue` | `@ooc/domain`, `@ooc/queue` | Scaffold rodando local, persistência em memória |
 | `packages/domain` (`@ooc/domain`) | DDD puro — entidades, usecases, portas de repositório | Nenhum (núcleo — não depende de nada do monorepo) | Scaffold com contexto de exemplo + porta de identidade (auth) + vocabulário de erro HTTP |
 | `packages/queue` (`@ooc/queue`) | Contrato de fila compartilhado (schemas zod, producers) | Nenhum pacote interno (só `bullmq`/`ioredis`/`zod`) | Scaffold com job de exemplo |
-| `packages/db`, `notifications`, `ocr`, `i18n`, `shared` | Reservados no diagrama do `CLAUDE.md` §3 | — | Ainda não criados |
+| `packages/db` (`@ooc/db`) | Schema + migrations (Drizzle Kit) — mesma `DATABASE_URL` local/Neon | Nenhum pacote interno (só `drizzle-orm`/`pg`) | Postgres local (Docker) + migration baseline vazia aplicando |
+| `notifications`, `ocr`, `i18n`, `shared` | Reservados no diagrama do `CLAUDE.md` §3 | — | Ainda não criados |
 
 **Regra de dependência:** `apps/*` depende de `packages/*`, nunca o contrário. Dentro de `packages/*`, `@ooc/domain` é o núcleo — todo o resto pode depender dele, ele não depende de nenhum outro pacote do monorepo (nem de `@ooc/queue`, nem de infra). Hoje só `apps/api` importa `@ooc/domain` e `@ooc/queue`; `apps/app` é candidato futuro a importar `@ooc/queue` como produtor de job (ver `CLAUDE.md` §5), mas ainda não faz isso.
 
@@ -196,13 +197,28 @@ Detalhe completo do padrão de integração (fronteira com `packages/domain`, co
 
 **Bootstrap do primeiro admin, em dois passos** (`CLAUDE.md` §8): (1) criar a conta pelo fluxo normal do Better Auth, garantindo hash de senha compatível com login futuro — `role` nasce no `defaultValue` de menor privilégio, `input:false` ignora qualquer `role` no payload; (2) uma migration versionada (`UPDATE "user" SET role = 'admin' WHERE email = $1`) promove esse usuário específico — única exceção documentada a "só o usecase promove".
 
-**Bloqueado até Postgres local existir (Sessão 3 do `ROADMAP.md`):** instalar `better-auth`, os adapters reais em `apps/api/src/infra/`, a rota catch-all `/api/auth/*`, o wiring em `container.ts`, as envs `DATABASE_URL`/`BETTER_AUTH_SECRET`, e o proxy em `apps/app`. Pertence à Sessão 3 e à Sessão 31 (`ROADMAP.md`, "Shell e autenticação").
+**Postgres local existe desde a Sessão 3 do `ROADMAP.md`** (`docker-compose.yml` na raiz + `packages/db`, ver §5.8 abaixo) — o que ainda falta é só o código do adapter: instalar `better-auth`, os adapters reais em `apps/api/src/infra/`, a rota catch-all `/api/auth/*`, o wiring em `container.ts`, as envs `DATABASE_URL`/`BETTER_AUTH_SECRET`, e o proxy em `apps/app`. Pertence à Sessão 31 (`ROADMAP.md`, "Shell e autenticação").
 
 ### 5.7 Contrato de erro da API
 
 Vocabulário reutilizável em `packages/domain/src/shared/base/errors/`: `HttpError` (base, `status` default 500) e as subclasses genéricas `UnauthorizedError` (401), `ForbiddenError` (403), `NotFoundError` (404), `UnableToProcessEntryError` (422 — regra de negócio recusa uma requisição bem formada). Exceção documentada à regra "domínio nunca sabe de HTTP" — `CLAUDE.md` §5.
 
 Envelope de resposta pública (`apps/api/src/shared/http/ErrorResponseSchema.ts`, aplicado via `setErrorHandler` global em `apps/api/src/infra/plugins/errorHandler.ts`): `{ status, reason, path?, errorId? }`. Sem `message` livre no contrato — `reason` é a chave estável que `apps/app` resolve pra texto localizado via `packages/i18n` (`CLAUDE.md` §4, "zero string de UI... inclui mensagem de erro de API"); `message` (herdado de `Error`) fica só em log/Sentry. Erro inesperado (não tipado) responde 500 com `errorId` = `request.id` (Fastify, UUID gerado por requisição via `genReqId`, compartilhado por todo log daquela requisição via `container.logger`) — nunca stack trace ao usuário (`CLAUDE.md` §6).
+
+### 5.8 Postgres local + migrations — Docker e Drizzle Kit (fechado)
+
+**Postgres local — `postgres:18-alpine` via `compose.yml` na raiz.** Staging e produção seguem no Neon (§5.1); local é só pra desenvolvimento, sem dado real (`CLAUDE.md` §7). Volume nomeado montado em `/var/lib/postgresql` (não `/var/lib/postgresql/data`) — a partir do Postgres 18 a imagem oficial passou a versionar o `PGDATA` (`/var/lib/postgresql/18/docker`), e montar no caminho antigo cria um volume anônimo não-persistente pro caminho real. `pnpm db:reset` derruba container **e volume**, sobe de novo do zero e reaplica todas as migrations — é o critério de pronto da Sessão 3 do `ROADMAP.md`.
+
+**Migrations — Drizzle Kit, não um migration runner separado.**
+
+| Critério | **Drizzle Kit (escolhido)** | Alternativa considerada — `node-pg-migrate` |
+| --- | --- | --- |
+| Modelo | Schema-first: `packages/db/src/schema.ts` em TypeScript, migration SQL **gerada** por diff (`drizzle-kit generate`) | Migration-first: cada mudança é um arquivo JS/SQL escrito à mão, sem schema central |
+| Ferramenta | Uma só — schema e migration vivem juntos, tipagem de query (`drizzle-orm`) fica disponível de graça se `apps/api` decidir usá-la depois | Duas esteiras se algo mais tarde precisar de schema tipado: o runner de migration e, separado, o que gera tipos de query |
+| Portabilidade Neon | Dialeto `postgresql` puro, mesma `DATABASE_URL` local/Neon, sem CLI específica de provedor | Igual — também é Postgres puro |
+| Por que não a alternativa agora | — | Decisão revertida em 19/08/2026: manter duas ferramentas (uma pra migration, outra se `apps/api` algum dia quiser um query builder tipado) não se paga frente a uma ferramenta só cobrindo os dois papéis |
+
+Migration "vazia inicial" (Sessão 3) gerada com `drizzle-kit generate --custom` — o modo padrão (`generate`, diff de schema) não produz arquivo quando não há tabela nenhuma ainda; `--custom` existe justamente pra SQL que não vem de diff de schema (baseline vazia, extensão, seed pontual). `Drizzle ORM` como client de query em `apps/api` (substituindo `pg` cru nos repositórios) é decisão separada, ainda em aberto — este fechamento cobre só schema/migration em `packages/db`.
 
 ---
 
