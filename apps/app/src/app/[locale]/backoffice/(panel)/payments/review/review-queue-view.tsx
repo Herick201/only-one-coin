@@ -2,7 +2,6 @@
 
 import { useMemo, useState, type MouseEvent } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
-import { Link, useRouter } from '@/i18n/navigation'
 import type {
   ReceiptExtraction,
   ReviewDecision,
@@ -64,7 +63,6 @@ export function ReviewQueueView({
 }) {
   const t = useTranslations('bo')
   const locale = useLocale() as Locale
-  const router = useRouter()
 
   /** A settled receipt leaves the queue — that is the whole point of settling
    *  it. No server yet, so the removal lives here (see the mock notice). */
@@ -130,16 +128,20 @@ export function ReviewQueueView({
   }
 
   /**
-   * The whole row opens the student file, but the name stays a real link so
-   * the keyboard, the screen reader and ctrl+click keep working — the row
-   * handler only covers the mouse.
+   * The row opens the receipt, it does not leave the queue. Sending a reviewer
+   * to the student file mid-triage loses the page, the filter and the place in
+   * the list — and the sheet already carries everything the row was hiding.
+   * The button in the last column is the keyboard path; this only covers the
+   * mouse.
    */
-  function rowProps(studentId: string) {
+  function rowProps(id: string) {
+    const openable = canReview && Boolean(extractions[id])
+    if (!openable) return {}
     return {
       className: 'cursor-pointer transition hover:bg-sky-soft',
       onClick: (event: MouseEvent<HTMLTableRowElement>) => {
         if ((event.target as HTMLElement).closest('a,button')) return
-        router.push(`/backoffice/students/${studentId}`)
+        setReviewing(id)
       },
     }
   }
@@ -252,7 +254,6 @@ export function ReviewQueueView({
                   <th className={thClass}>{t('review.col_student')}</th>
                   <th className={thClass}>{t('review.col_amount')}</th>
                   <th className={thClass}>{t('review.col_flag')}</th>
-                  <th className={thClass}>{t('review.col_extraction')}</th>
                   <th className={thClass}>{t('review_queue.col_operation')}</th>
                   <th className={thClass}>{t('review.col_submitted')}</th>
                   <th className={thClass}>
@@ -264,18 +265,15 @@ export function ReviewQueueView({
                 {pageRows.map((row) => {
                   const mismatch = row.amountCents !== row.expectedAmountCents
                   return (
-                    <tr key={row.id} {...rowProps(row.studentId)}>
+                    <tr key={row.id} {...rowProps(row.id)}>
                       {/* Course rides under the name: it says which price the
                           receipt is being checked against, and as its own
                           column it pushed the table off the screen. */}
                       <td className={tdClass}>
                         <span className="block max-w-[15rem]">
-                          <Link
-                            href={`/backoffice/students/${row.studentId}`}
-                            className="block truncate font-semibold text-ink transition hover:text-brand-blue"
-                          >
+                          <span className="block truncate font-semibold text-ink">
                             {row.studentName}
-                          </Link>
+                          </span>
                           <span className="block truncate text-xs text-muted-foreground">
                             {row.courseName}
                           </span>
@@ -304,14 +302,6 @@ export function ReviewQueueView({
                           tone={reviewFlagTone[row.flag]}
                           label={t(`review_flag.${row.flag}`)}
                         />
-                      </td>
-                      <td className={`${tdClass} whitespace-nowrap text-xs text-muted-foreground`}>
-                        <span className="block">{t('review.tier', { tier: row.tier })}</span>
-                        <span className="block">
-                          {t('review.confidence', {
-                            value: Math.round(row.confidence * 100),
-                          })}
-                        </span>
                       </td>
                       <td className={`${tdClass} whitespace-nowrap text-xs text-muted-foreground`}>
                         <span className="block font-semibold text-ink">
