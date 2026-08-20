@@ -18,7 +18,9 @@ import { NewCourseForm } from './new-course-form'
 
 /**
  * The catalog, folded by language like the class group list — the two screens
- * are read the same way and there is no reason for them to disagree.
+ * are read the same way and there is no reason for them to disagree. With ~10
+ * languages over a handful of courses each, a flat list is mostly dividers:
+ * closed, the first thing on screen is the language you came for.
  *
  * Changing a course changes every class group opened from it afterwards, never
  * the ones already running: a student enrolled under a rule keeps that rule,
@@ -38,10 +40,20 @@ export function CoursesView({
 
   const [courses, setCourses] = useState<CourseRow[]>(rows)
   const [query, setQuery] = useState('')
+  /**
+   * Language groups the user opened. The catalog opens whole, unlike the class
+   * group list: a language holds a handful of courses, not a year of groups,
+   * so closing it by default would hide the whole screen to save nothing.
+   */
+  const [opened, setOpened] = useState<string[]>(() => [
+    ...new Set(rows.map((row) => row.language.id)),
+  ])
   const [configuring, setConfiguring] = useState<CourseRow | null>(null)
   const [creating, setCreating] = useState(false)
   const [touched, setTouched] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+
+  const searching = query.trim().length > 0
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase()
@@ -62,6 +74,18 @@ export function CoursesView({
     }
     return [...map.values()].sort((a, b) => a.name.localeCompare(b.name))
   }, [filtered])
+
+  const allOpen = byLanguage.length > 0 && opened.length >= byLanguage.length
+
+  function toggleAll() {
+    setOpened(allOpen ? [] : byLanguage.map((entry) => entry.id))
+  }
+
+  function toggleLanguage(id: string) {
+    setOpened((current) =>
+      current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
+    )
+  }
 
   function saveOptions(course: CourseRow, options: CourseOptions) {
     setCourses((current) =>
@@ -143,68 +167,138 @@ export function CoursesView({
           />
         </Card>
       ) : (
-        <Card>
-          <TableShell>
-            <thead>
-              <tr>
-                <th className={thClass}>{t('courses.col_course')}</th>
-                <th className={thClass}>{t('courses.col_level')}</th>
-                <th className={thClass}>{t('courses.col_load')}</th>
-                <th className={thClass}>{t('courses.col_min_age')}</th>
-                <th className={thClass}>{t('courses.col_class_groups')}</th>
-                <th className={thClass}>{t('courses.col_status')}</th>
-              </tr>
-            </thead>
-            {byLanguage.map((entry) => (
-              <tbody key={entry.id}>
+        <>
+          <div className="flex flex-wrap items-baseline gap-x-3">
+            <span className="text-sm text-muted-foreground">
+              {t('courses.course_count', { count: filtered.length })}
+            </span>
+            {/* Hidden while searching: with the result already open, the
+                control would toggle a state nothing on screen reflects. */}
+            {!searching && byLanguage.length > 1 && (
+              <button
+                type="button"
+                onClick={toggleAll}
+                className="ml-auto text-xs font-semibold text-muted-foreground transition hover:text-brand-blue"
+              >
+                {t(allOpen ? 'courses.collapse_all' : 'courses.expand_all')}
+              </button>
+            )}
+          </div>
+
+          <Card>
+            <TableShell fixed>
+              <colgroup>
+                <col className="w-[36%]" />
+                <col className="w-[12%]" />
+                <col className="w-[16%]" />
+                <col className="w-[12%]" />
+                <col className="w-[24%]" />
+              </colgroup>
+              <thead>
                 <tr>
-                  <td
-                    colSpan={6}
-                    className="border-y border-line bg-slate-50/80 px-4 py-1.5"
-                  >
-                    <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      {entry.name}
-                    </span>
-                  </td>
+                  <th className={thClass}>{t('courses.col_course')}</th>
+                  <th className={thClass}>{t('courses.col_level')}</th>
+                  {/* Units live in the header, not repeated down every cell. */}
+                  <th className={thClass}>{t('courses.col_load')}</th>
+                  <th className={thClass}>{t('courses.col_class_groups')}</th>
+                  <th className={thClass}>{t('courses.col_status')}</th>
                 </tr>
-                {entry.courses.map((course) => (
-                  <tr key={course.id} {...rowProps(course)}>
-                    <td className={`${tdClass} font-semibold`}>{course.name}</td>
-                    <td className={`${tdClass} text-sm text-muted-foreground`}>
-                      {course.level}
-                    </td>
-                    <td
-                      className={`${tdClass} whitespace-nowrap text-sm tabular-nums text-muted-foreground`}
-                    >
-                      {t('courses.load_value', {
-                        modules: course.modules,
-                        hours: course.totalHours,
-                      })}
-                    </td>
-                    <td
-                      className={`${tdClass} whitespace-nowrap text-sm tabular-nums text-muted-foreground`}
-                    >
-                      {t('courses.min_age_value', { age: course.minAge })}
-                    </td>
-                    <td
-                      className={`${tdClass} whitespace-nowrap text-sm tabular-nums text-muted-foreground`}
-                    >
-                      {t('courses.class_group_count', {
-                        count: course.classGroupCount,
-                      })}
-                    </td>
-                    <td className={tdClass}>
-                      <StatusBadge
-                        tone={course.active ? 'success' : 'neutral'}
-                        label={t(course.active ? 'courses.active' : 'courses.inactive')}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            ))}
-          </TableShell>
-        </Card>
+              </thead>
+              {byLanguage.map((entry) => {
+                /* A search that hid its own matches behind a closed fold would
+                   read as no result at all. */
+                const open = searching || opened.includes(entry.id)
+                const classGroups = entry.courses.reduce(
+                  (total, course) => total + course.classGroupCount,
+                  0,
+                )
+                return (
+                  <tbody key={entry.id}>
+                    {/* Language divider doubles as the fold control. One table
+                        for every language keeps the columns aligned. */}
+                    <tr>
+                      <td colSpan={5} className="border-y border-line bg-slate-50/80 p-0">
+                        {searching ? (
+                          <span className="flex w-full items-center gap-2 px-4 py-1.5">
+                            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                              {entry.name}
+                            </span>
+                            <span className="text-xs text-muted-foreground/70">
+                              {t('courses.course_count', { count: entry.courses.length })}
+                            </span>
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => toggleLanguage(entry.id)}
+                            aria-expanded={open}
+                            className="flex w-full items-center gap-2 px-4 py-1.5 text-left transition hover:bg-slate-100 focus:outline-none focus-visible:bg-slate-100"
+                          >
+                            <BoIcon
+                              name="chevron-down"
+                              size={14}
+                              className={`text-muted-foreground transition-transform ${
+                                open ? '' : '-rotate-90'
+                              }`}
+                            />
+                            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                              {entry.name}
+                            </span>
+                            <span className="text-xs text-muted-foreground/70">
+                              {t('courses.course_count', { count: entry.courses.length })}
+                            </span>
+                            <span className="ml-auto text-xs tabular-nums text-muted-foreground/70">
+                              {t('courses.class_group_count', { count: classGroups })}
+                            </span>
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+
+                    {open &&
+                      entry.courses.map((course) => (
+                        <tr key={course.id} {...rowProps(course)}>
+                          <td className={`${tdClass} font-semibold`}>{course.name}</td>
+                          <td className={`${tdClass} text-sm text-muted-foreground`}>
+                            {course.level}
+                          </td>
+                          <td
+                            className={`${tdClass} whitespace-nowrap text-sm tabular-nums text-muted-foreground`}
+                          >
+                            {t('courses.load_value', {
+                              modules: course.modules,
+                              hours: course.totalHours,
+                            })}
+                          </td>
+                          <td
+                            className={`${tdClass} whitespace-nowrap text-sm tabular-nums text-muted-foreground`}
+                          >
+                            {course.classGroupCount}
+                          </td>
+                          {/* Both states read, but only the exception is worth
+                              a badge: a pill worn by almost every row stops
+                              carrying information. */}
+                          <td className={tdClass}>
+                            {course.active ? (
+                              <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                                {t('courses.active')}
+                              </span>
+                            ) : (
+                              <StatusBadge
+                                tone="neutral"
+                                label={t('courses.inactive')}
+                              />
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                )
+              })}
+            </TableShell>
+          </Card>
+        </>
       )}
 
       <CourseOptionsSheet

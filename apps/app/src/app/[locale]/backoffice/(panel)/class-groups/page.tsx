@@ -6,6 +6,7 @@ import {
 } from '@/lib/backoffice/mock-data'
 import { canCreateClassGroup } from '@/lib/backoffice/permissions'
 import { MockNotice, PageHeader } from '@/components/backoffice/ui'
+import { SectionTabs } from '@/components/backoffice/section-tabs'
 import { ClassGroupsView } from './class-groups-view'
 
 /**
@@ -30,8 +31,14 @@ export default async function ClassGroupsPage({
   return (
     <div className="flex flex-col gap-5">
       <PageHeader
-        title={t('class_groups.title')}
+        title={t('nav.academic')}
         subtitle={t('class_groups.subtitle')}
+      />
+      <SectionTabs
+        tabs={[
+          { href: '/backoffice/class-groups', label: t('class_groups.title') },
+          { href: '/backoffice/courses', label: t('courses.title') },
+        ]}
       />
       <MockNotice label={t('common.mock_notice')} />
       <ClassGroupsView

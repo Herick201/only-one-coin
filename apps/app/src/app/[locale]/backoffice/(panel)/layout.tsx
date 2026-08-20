@@ -75,11 +75,16 @@ export default async function BackofficePanelLayout({
       label: t('nav.group_academic'),
       items: [
         {
+          /* One entry for the two screens the section is made of. They are
+             read together — a course is what a class group is an instance of —
+             and two sibling items reading "Turmas" and "Cursos" looked like
+             the same destination twice. The tab strip on the pages carries
+             the split. */
           key: 'class_groups',
           href: '/backoffice/class-groups',
-          label: t('nav.class_groups'),
+          alsoMatches: ['/backoffice/courses'],
+          label: t('nav.academic'),
         },
-        { key: 'courses', href: '/backoffice/courses', label: t('nav.courses') },
         {
           key: 'teachers',
           href: '/backoffice/teachers',
