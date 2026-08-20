@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { getStaffSession, listCourses } from '@/lib/backoffice/mock-data'
 import { canConfigureCourse, canCreateCourse } from '@/lib/backoffice/permissions'
 import { MockNotice, PageHeader } from '@/components/backoffice/ui'
+import { SectionTabs } from '@/components/backoffice/section-tabs'
 import { CoursesView } from './courses-view'
 
 /**
@@ -27,7 +28,13 @@ export default async function CoursesPage({
 
   return (
     <div className="flex flex-col gap-5">
-      <PageHeader title={t('courses.title')} subtitle={t('courses.subtitle')} />
+      <PageHeader title={t('nav.academic')} subtitle={t('courses.subtitle')} />
+      <SectionTabs
+        tabs={[
+          { href: '/backoffice/class-groups', label: t('class_groups.title') },
+          { href: '/backoffice/courses', label: t('courses.title') },
+        ]}
+      />
       <MockNotice label={t('common.mock_notice')} />
       <CoursesView
         rows={listCourses()}
