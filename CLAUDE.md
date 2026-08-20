@@ -228,6 +228,8 @@ Regra de fronteira, vale pra qualquer contexto novo (não só `example`): `packa
 
 **Exceção documentada à regra acima:** o vocabulário de erro HTTP (`packages/domain/src/shared/base/errors/` — `HttpError`, `UnauthorizedError`, `ForbiddenError`, `NotFoundError`, `UnableToProcessEntryError`) carrega uma noção de HTTP (`status`) dentro do pacote de domínio. Decisão consciente pra reaproveitar o mesmo vocabulário entre `apps/api` e qualquer bounded context futuro, em vez de duplicar a classe do lado de fora. Nada além dessas classes pode importar ou expor tipo de framework — o resto do pacote continua puro.
 
+**Biblioteca embutida no processo nunca responde HTTP com o shape dela própria.** Better Auth (e qualquer outra lib embutida que fale HTTP direto, ver `CLAUDE.md` §3) roda dentro de `apps/api`, mas isso não abre exceção ao contrato de erro (`docs/ARCHITECTURE.md` §5.7): a mensagem/código nativo do provedor nunca chega ao cliente como está — sempre traduzido pro envelope `{status, reason, path?, errorId?}` do projeto antes de sair, e o texto original (se não puramente técnico) fica só no log do servidor (`CLAUDE.md` §4, "zero string de UI... inclui mensagem de erro de API"; §6, "stack trace ao usuário proibido"). Implementação: `apps/api/src/http/auth/AuthCatchAllRoute.ts`.
+
 ---
 
 ## 6. Erros proibidos

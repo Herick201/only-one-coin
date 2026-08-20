@@ -26,10 +26,14 @@ staff) · Sentry + PostHog.
 
 Postgres (Neon), hospedagem de `apps/api` (Fly.io), storage de comprovante
 (Tigris), caixa de e-mail (Zoho Mail) e auth (Better Auth) já estão
-decididos (`docs/ARCHITECTURE.md` §5). Auth ainda não está implementado —
-Postgres local já existe (abaixo), mas o adapter concreto do Better Auth em
-si ainda não foi escrito. Domínio e fila já existem, independentes dessa
-escolha:
+decididos (`docs/ARCHITECTURE.md` §5). O adapter de auth já está
+implementado (`docs/ARCHITECTURE.md` §5.6): sign-up/sign-in/sessão testados
+ponta a ponta, `role` protegido, erros do provedor traduzidos pro envelope do
+projeto (§5.7), docs interativas mescladas no Swagger. As telas de login
+(`apps/app`) continuam mockadas — wiring real, MFA e redirect por `role`
+pertencem à Sessão 31 do `ROADMAP.md`, que depende de peças que ainda não
+existem (autorização deny-by-default da Sessão 8, `audit_log` da Sessão 7).
+Domínio e fila já existem, independentes dessa escolha:
 
 - `apps/landing` — site público (Astro).
 - `apps/app` — Next.js App Router: layout, roteamento, i18n trilíngue e as telas
@@ -74,16 +78,18 @@ escolha:
   vocabulário de erro HTTP reutilizável (`shared/base/errors/`).
 - `packages/queue` — contrato de fila compartilhado (BullMQ/Redis).
 - `packages/db` — Postgres local via `compose.yml` (`postgres:18-alpine`) +
-  schema/migrations com Drizzle Kit (`docs/ARCHITECTURE.md` §5.8). Só a
-  migration baseline vazia por enquanto — o modelo acadêmico e de pessoas
+  schema/migrations com Drizzle Kit (`docs/ARCHITECTURE.md` §5.8). Migration
+  baseline vazia + schema do Better Auth (`user`/`session`/`account`/
+  `verification`, `0001_better_auth_core.sql`). Modelo acadêmico e de pessoas
   entra nas próximas sessões do `ROADMAP.md`.
 - `apps/api` — Fastify expondo `@ooc/domain` via HTTP e rodando os workers de
-  fila. Persistência ainda em memória (`InMemoryExampleRepository`) — ainda
-  não fala com o Postgres local. Já tem error handler global + logger
-  compartilhado (`container.logger`) via `infra/plugins/`.
+  fila. Better Auth embutido (`infra/auth/`), fala com o Postgres local via
+  `pg.Pool`. Persistência de negócio ainda em memória
+  (`InMemoryExampleRepository`). Error handler global + logger compartilhado
+  (`container.logger`) via `infra/plugins/`, incluindo a tradução dos erros
+  do Better Auth pro mesmo envelope.
 
 **A reconstruir** (volta quando o Neon de staging/produção for provisionado,
-`ROADMAP.md` Sessão 13): storage, OCR e notificações reais. Adapter real do
-Better Auth (`apps/api/src/infra/auth/`) e migrations do modelo de negócio já
-podem começar — Postgres local existe. Autorização é feita na camada de
-aplicação (`apps/api`), não em RLS — ver `CLAUDE.md` §8.
+`ROADMAP.md` Sessão 13): storage, OCR e notificações reais. Migrations do
+modelo de negócio já podem começar — Postgres local existe. Autorização é
+feita na camada de aplicação (`apps/api`), não em RLS — ver `CLAUDE.md` §8.
