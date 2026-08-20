@@ -44,6 +44,13 @@ export interface StaffUser {
   lastName: string
   email: string
   role: StaffRole
+  /**
+   * The teacher record behind the account, when the role is `teacher`. This is
+   * what scopes the panel to their own class groups — read from the
+   * authenticated user's row on every sensitive request, never from anything
+   * the client sends (CLAUDE.md §8).
+   */
+  teacherId: string | null
 }
 
 /**
@@ -474,6 +481,78 @@ export type CertificateBlockReason =
   | 'already_issued'
 
 /* -------------------------------------------------------------------------- */
+/* Teachers — who runs the class groups                                        */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Out of the roster does not delete anything: a teacher who stopped teaching
+ * still signed the grades of every class group they ran, and those class groups
+ * keep pointing at them. Same treatment as `CourseRow.active`.
+ */
+export type TeacherStatus = 'active' | 'inactive'
+
+/**
+ * One window a teacher is free to take a class group in, on a weekday, in
+ * America/Lima. `HH:mm`, end exclusive — the same shape as
+ * `ClassGroupRow.startTime`, so a class group can be laid over the window it
+ * was allocated into (`docs/REQUISITOS.md` RF03).
+ */
+export interface AvailabilitySlot {
+  weekday: Weekday
+  startTime: string
+  endTime: string
+}
+
+/** One row of the teacher directory. */
+export interface TeacherRow {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  status: TeacherStatus
+  /**
+   * Languages the teacher is cleared to run a class group in — catalogue rows,
+   * never a translated enum: the Asociación runs ~10 languages and opens new
+   * ones, and nothing language-specific belongs in the code (CLAUDE.md §1).
+   */
+  languages: CourseLanguage[]
+  /**
+   * ISO 3166-1 alpha-2, resolved to a country name by the reader's locale.
+   * Carried because origin is a selling point in the catalog — the Italian
+   * class group is advertised with a "docente ítalo-peruano"
+   * (`docs/REGRAS-NEGOCIO.md` §3, `docs/REQUISITOS.md` RF03) — not only
+   * because it is personal data.
+   */
+  nationality: string
+  /** Class groups still enrolling or running. */
+  activeClassGroups: number
+  /** Seats taken across those class groups — the teaching load, in people. */
+  studentCount: number
+  /** Final grades still open across the class groups they run. */
+  pendingGrades: number
+  /** Finished class groups of theirs still owing a certificate. */
+  pendingCertificates: number
+  joinedAt: string
+}
+
+/**
+ * Full teacher file. The class groups are the ones already allocated to them;
+ * the availability is what the next allocation is drawn from — the two are read
+ * together, which is why the file carries both.
+ */
+export interface TeacherDetail extends TeacherRow {
+  availability: AvailabilitySlot[]
+  classGroups: ClassGroupRow[]
+}
+
+/** What the creation form fills in. The rest is derived from the class groups. */
+export type NewTeacher = Pick<
+  TeacherRow,
+  'firstName' | 'lastName' | 'email' | 'phone' | 'nationality' | 'languages'
+> & { availability: AvailabilitySlot[] }
+
+/* -------------------------------------------------------------------------- */
 /* Payments — the ledger, the human decision and the validation parameters     */
 /* -------------------------------------------------------------------------- */
 
@@ -629,4 +708,103 @@ export interface PaymentSettings {
   escalationConfidence: number
   /** Days a reserved seat survives without an approved payment. */
   reservationDays: number
+}
+
+/* -------------------------------------------------------------------------- */
+/* Enrollments — who holds a seat, across every class group                    */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * One line of the enrollment ledger. Deliberately not the same shape as
+ * `EnrollmentHistoryItem`: that one is read from inside a student's file, where
+ * the person is already known, and this one is read across the institution,
+ * where the person is the first thing the row has to say.
+ */
+export interface EnrollmentRow {
+  id: string
+  studentId: string
+  studentName: string
+  courseName: string
+  /** Null when no class group roster claims this enrollment (mock gap only). */
+  classGroupId: string | null
+  classGroupName: string
+  teacherName: string
+  /** Null for a course no longer in the catalog — history keeps its own name. */
+  language: CourseLanguage | null
+  modality: ClassModality
+  academicPeriodName: string
+  status: EnrollmentStatus
+  seatStatus: SeatStatus
+  planName: string
+  /** Frozen price version at enrollment time (CLAUDE.md §5). */
+  planPriceId: string
+  amountCents: number
+  currency: 'PEN'
+  paymentStatus: PaymentStatus
+  paymentMethod: PaymentMethod
+  operationNumber: string | null
+  createdAt: string
+  paidAt: string | null
+  progressPct: number | null
+}
+
+/**
+ * Headline numbers of the section, scoped to the academic period for the same
+ * reason the payment ones are (`PaymentMetrics`): the ciclo is what the
+ * institution closes against, and a daily count reads as zero on a Sunday.
+ */
+export interface EnrollmentMetrics {
+  periodName: string
+  total: number
+  active: number
+  /** Seats held by an enrollment whose payment is not settled yet. */
+  reserved: number
+  /** Of those, the ones the cron releases within a day. */
+  expiringSoon: number
+  /** Seats already handed back — a rejected payment or an expired reservation. */
+  released: number
+}
+
+/**
+ * A seat held while the money is still open. The reservation expires after
+ * `PaymentSettings.reservationDays` and a cron hands the seat back
+ * (CLAUDE.md §5) — which is why this is a screen and not a filter: nobody
+ * chases a deadline they have to remember to filter for.
+ */
+export interface SeatReservation {
+  enrollmentId: string
+  studentId: string
+  studentName: string
+  courseName: string
+  classGroupName: string
+  classGroupId: string | null
+  paymentStatus: PaymentStatus
+  /** Why the receipt is sitting with a human, when it is. */
+  flag: ReviewFlag | null
+  amountCents: number
+  currency: 'PEN'
+  reservedAt: string
+  /** When the cron releases the seat if nothing settles the payment. */
+  expiresAt: string
+  /** Whole hours to `expiresAt`; negative once the deadline has passed. */
+  hoursLeft: number
+}
+
+/** A plan as the enrollment form reads it: the price in force, never editable. */
+export interface PlanPrice {
+  courseName: string
+  planName: string
+  planPriceId: string
+  amountCents: number
+  currency: 'PEN'
+}
+
+/** What the backoffice form needs to open an enrollment over an existing student. */
+export interface NewEnrollmentInput {
+  studentId: string
+  classGroupId: string
+  method: PaymentMethod
+  operationNumber: string
+  /** Whether the staff member attached the receipt image while filling this in. */
+  receiptAttached: boolean
 }

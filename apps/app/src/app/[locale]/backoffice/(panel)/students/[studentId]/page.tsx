@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
-import { getStudent } from '@/lib/backoffice/mock-data'
+import { getStaffSession, getStudent } from '@/lib/backoffice/mock-data'
+import { canBrowseStudents } from '@/lib/backoffice/permissions'
 import { initials } from '@/lib/format'
 import { Card, MockNotice, StatusBadge } from '@/components/backoffice/ui'
 import { studentTone } from '@/components/backoffice/status-tone'
@@ -21,6 +22,8 @@ export default async function StudentDetailPage({
   const { locale, studentId } = await params
   setRequestLocale(locale)
   const t = await getTranslations('bo')
+
+  if (!canBrowseStudents(getStaffSession().role)) notFound()
 
   const student = getStudent(studentId)
   if (!student) notFound()

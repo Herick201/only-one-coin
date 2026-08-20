@@ -4,8 +4,11 @@ import {
   getStaffSession,
   listPayments,
 } from '@/lib/backoffice/mock-data'
-import { canConfigurePayments } from '@/lib/backoffice/permissions'
-import { MockNotice, PageHeader } from '@/components/backoffice/ui'
+import {
+  canConfigurePayments,
+  canReviewPayments,
+} from '@/lib/backoffice/permissions'
+import { EmptyState, MockNotice, PageHeader } from '@/components/backoffice/ui'
 import { SectionTabs } from '@/components/backoffice/section-tabs'
 import { PaymentsView } from './payments-view'
 
@@ -28,6 +31,22 @@ export default async function PaymentsPage({
   const t = await getTranslations('bo')
 
   const staff = getStaffSession()
+
+  if (!canReviewPayments(staff.role)) {
+    return (
+      <div className="flex flex-col gap-5">
+        <PageHeader title={t('payments.title')} subtitle={t('payments.subtitle')} />
+        {/* Money is not the teacher's half of the panel — they run a class
+            group. The screen says so; the role on the route in `apps/api` is
+            what enforces it (CLAUDE.md §8). */}
+        <EmptyState
+          icon="shield"
+          title={t('payments.locked_title')}
+          body={t('payments.locked_body')}
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-5">

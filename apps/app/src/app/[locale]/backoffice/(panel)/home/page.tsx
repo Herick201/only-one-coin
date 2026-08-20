@@ -23,6 +23,7 @@ import {
   getSeatWatch,
   getStaffSession,
 } from '@/lib/backoffice/mock-data'
+import { isRestrictedToOwnClassGroups } from '@/lib/backoffice/permissions'
 import { formatDate, formatDateTime, formatMoney, type Locale } from '@/lib/format'
 import { reviewFlagTone, seatPressureTone } from '@/components/backoffice/status-tone'
 import { StatusPill, toneBar } from '@/components/backoffice/status-pill'
@@ -38,6 +39,7 @@ import {
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { TeacherHome } from './teacher-home'
 
 /**
  * Backoffice home. Two jobs: surface what needs a human right now (the receipt
@@ -55,6 +57,13 @@ export default async function BackofficeHomePage({
   const t = await getTranslations('bo')
 
   const staff = getStaffSession()
+
+  /* A teacher gets their own home, not this one with the money removed — see
+     `TeacherHome` for why it is a separate screen. */
+  if (isRestrictedToOwnClassGroups(staff.role)) {
+    return <TeacherHome staff={staff} locale={locale} />
+  }
+
   const metrics = getDashboardMetrics()
   const queue = getReviewQueue()
   const seats = getSeatWatch()

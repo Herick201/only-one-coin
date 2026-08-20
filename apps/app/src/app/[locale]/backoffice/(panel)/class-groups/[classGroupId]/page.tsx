@@ -2,9 +2,9 @@ import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
 import {
-  getClassGroup,
+  getClassGroupFor,
   getStaffSession,
-  listClassGroups,
+  listClassGroupsFor,
 } from '@/lib/backoffice/mock-data'
 import { canManageEnrollment } from '@/lib/backoffice/permissions'
 import {
@@ -38,10 +38,13 @@ export default async function ClassGroupDetailPage({
   setRequestLocale(locale)
   const t = await getTranslations('bo')
 
-  const group = getClassGroup(classGroupId)
-  if (!group) notFound()
-
   const staff = getStaffSession()
+
+  /* Somebody else's class group answers exactly like one that does not exist.
+     Hiding the link would stop nobody — the id in the URL is guessable
+     (anti-IDOR, CLAUDE.md §8). */
+  const group = getClassGroupFor(staff, classGroupId)
+  if (!group) notFound()
 
   const deadline = addBusinessDays(
     group.endDate,
@@ -117,7 +120,7 @@ export default async function ClassGroupDetailPage({
 
       <ClassGroupCertificates
         group={group}
-        classGroups={listClassGroups()}
+        classGroups={listClassGroupsFor(staff)}
         canManage={canManageEnrollment(staff.role)}
         // Date only: the deadline is a calendar day, not an instant.
         deadlineIso={deadline.toISOString().slice(0, 10)}

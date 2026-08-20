@@ -1,9 +1,13 @@
 import type {
   AuditEntry,
+  AvailabilitySlot,
   ClassGroupDetail,
   ClassGroupRow,
+  CourseLanguage,
   CourseRow,
   DashboardMetrics,
+  EnrollmentMetrics,
+  EnrollmentRow,
   DocumentDelivery,
   DocumentItem,
   EnrollmentHistoryItem,
@@ -12,13 +16,17 @@ import type {
   PaymentMetrics,
   PaymentRow,
   PaymentSettings,
+  PlanPrice,
   ReceiptExtraction,
   ReviewFlag,
   ReviewQueueItem,
+  SeatReservation,
   SeatWatchItem,
   StaffUser,
   StudentDetail,
   StudentRow,
+  TeacherDetail,
+  TeacherRow,
 } from './types'
 
 /**
@@ -31,14 +39,27 @@ import type {
  * America/Lima. Names are fictional.
  */
 
-/** Signed-in staff member driving the mocked session. */
+/**
+ * Signed-in staff member driving the mocked session.
+ *
+ * One place decides the role, and the whole panel follows it: the sidebar, the
+ * home, and every screen that narrows to a teacher's own class groups. Flip
+ * `role` to `'teacher'` (and give `teacherId` a value from the roster below) to
+ * see the restricted view.
+ *
+ * There is deliberately no switch for this on screen. The client never picks
+ * its own role — the real session reads it from the protected table on every
+ * sensitive request, server-side (CLAUDE.md §8), and a demo toggle is exactly
+ * the shortcut that survives into production.
+ */
 export function getStaffSession(): StaffUser {
   return {
     id: 'staff_01',
     firstName: 'Lucía',
     lastName: 'Ramírez',
     email: 'lucia.ramirez@onlyonecoin.edu.pe',
-    role: 'admin',
+    role: 'teacher',
+    teacherId: 'tea_03',
   }
 }
 
@@ -2306,6 +2327,290 @@ export function getClassGroup(id: string): ClassGroupDetail | undefined {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Teachers                                                                    */
+/* -------------------------------------------------------------------------- */
+
+/** Weekly availability, written the way the schedule is spoken about. */
+function slots(
+  weekdays: AvailabilitySlot['weekday'][],
+  startTime: string,
+  endTime: string,
+): AvailabilitySlot[] {
+  return weekdays.map((weekday) => ({ weekday, startTime, endTime }))
+}
+
+/**
+ * Teacher roster. Everything countable — class groups, students, pending
+ * grades, pending certificates — is derived from `classGroups` below rather
+ * than written here, so the roster can never disagree with the class group
+ * list about who teaches what.
+ *
+ * The nationalities are not decoration: the catalog advertises the Italian
+ * class group with a "docente ítalo-peruano" (`docs/REGRAS-NEGOCIO.md` §3), so
+ * origin is catalogue data the ficha carries (`docs/REQUISITOS.md` RF03).
+ */
+const teachers: (Omit<
+  TeacherDetail,
+  'activeClassGroups' | 'studentCount' | 'pendingGrades' | 'pendingCertificates' | 'classGroups'
+>)[] = [
+  {
+    id: 'tea_01',
+    firstName: 'Carlos',
+    lastName: 'Meza',
+    email: 'carlos.meza@onlyonecoin.edu.pe',
+    phone: '+51 987 112 340',
+    status: 'active',
+    languages: [LANGUAGES.en],
+    nationality: 'PE',
+    joinedAt: '2023-03-06',
+    availability: [
+      ...slots(['mon', 'wed'], '17:00', '21:00'),
+      ...slots(['sat'], '08:00', '13:00'),
+    ],
+  },
+  {
+    id: 'tea_02',
+    firstName: 'Andrea',
+    lastName: 'Solís',
+    email: 'andrea.solis@onlyonecoin.edu.pe',
+    phone: '+51 954 208 771',
+    status: 'active',
+    languages: [LANGUAGES.en],
+    nationality: 'PE',
+    joinedAt: '2024-01-15',
+    availability: [
+      ...slots(['tue', 'thu'], '18:00', '22:00'),
+      ...slots(['sat'], '08:00', '17:00'),
+    ],
+  },
+  {
+    id: 'tea_03',
+    firstName: 'Paola',
+    lastName: 'Benítez',
+    email: 'paola.benitez@onlyonecoin.edu.pe',
+    phone: '+51 943 771 020',
+    status: 'active',
+    languages: [LANGUAGES.it],
+    nationality: 'IT',
+    joinedAt: '2022-08-22',
+    availability: [
+      ...slots(['mon', 'wed'], '18:00', '22:00'),
+      ...slots(['tue', 'thu'], '18:00', '21:00'),
+    ],
+  },
+  {
+    id: 'tea_04',
+    firstName: 'Marion',
+    lastName: 'Lefèvre',
+    email: 'marion.lefevre@onlyonecoin.edu.pe',
+    phone: '+51 921 664 508',
+    status: 'active',
+    languages: [LANGUAGES.fr],
+    nationality: 'FR',
+    joinedAt: '2024-06-03',
+    availability: [
+      ...slots(['tue', 'thu'], '18:00', '21:00'),
+      ...slots(['sat'], '14:00', '18:00'),
+    ],
+  },
+  {
+    id: 'tea_05',
+    firstName: 'Rosa',
+    lastName: 'Ccahuana',
+    email: 'rosa.ccahuana@onlyonecoin.edu.pe',
+    phone: '+51 968 330 194',
+    status: 'active',
+    languages: [LANGUAGES.qu],
+    nationality: 'PE',
+    joinedAt: '2023-09-11',
+    availability: [
+      ...slots(['tue'], '17:00', '20:00'),
+      ...slots(['sat'], '09:00', '13:00'),
+    ],
+  },
+  {
+    id: 'tea_06',
+    firstName: 'Klaus',
+    lastName: 'Brenner',
+    email: 'klaus.brenner@onlyonecoin.edu.pe',
+    phone: '+51 917 245 883',
+    status: 'active',
+    languages: [LANGUAGES.de],
+    nationality: 'DE',
+    joinedAt: '2025-02-17',
+    availability: [...slots(['mon', 'wed'], '18:00', '22:00')],
+  },
+  {
+    id: 'tea_07',
+    firstName: 'Bruno',
+    lastName: 'Antunes',
+    email: 'bruno.antunes@onlyonecoin.edu.pe',
+    phone: '+51 902 517 466',
+    status: 'active',
+    languages: [LANGUAGES.pt],
+    nationality: 'BR',
+    joinedAt: '2025-07-28',
+    availability: [...slots(['sat'], '08:00', '13:00')],
+  },
+  /* Cleared and free: on the roster, no class group this period. This is what
+     the allocation screen is looking for, so it must not read as inactive. */
+  {
+    id: 'tea_08',
+    firstName: 'Ana',
+    lastName: 'Beltrán',
+    email: 'ana.beltran@onlyonecoin.edu.pe',
+    phone: '+51 939 802 115',
+    status: 'active',
+    languages: [LANGUAGES.en, LANGUAGES.pt],
+    nationality: 'PE',
+    joinedAt: '2022-04-04',
+    availability: [
+      ...slots(['mon', 'tue', 'wed', 'thu'], '15:00', '19:00'),
+      ...slots(['fri'], '15:00', '18:00'),
+    ],
+  },
+  {
+    id: 'tea_09',
+    firstName: 'Nilda',
+    lastName: 'Puma',
+    email: 'nilda.puma@onlyonecoin.edu.pe',
+    phone: '+51 995 118 727',
+    status: 'active',
+    languages: [LANGUAGES.qu],
+    nationality: 'PE',
+    joinedAt: '2024-10-19',
+    availability: [...slots(['fri'], '17:00', '21:00'), ...slots(['sun'], '09:00', '12:00')],
+  },
+  /* Off the roster. Their finished class groups still carry their name, which
+     is exactly why the record is kept instead of deleted. */
+  {
+    id: 'tea_10',
+    firstName: 'Paolo',
+    lastName: 'Grimaldi',
+    email: 'paolo.grimaldi@onlyonecoin.edu.pe',
+    phone: '+51 911 470 663',
+    status: 'inactive',
+    languages: [LANGUAGES.it],
+    nationality: 'IT',
+    joinedAt: '2021-05-10',
+    availability: [],
+  },
+  {
+    id: 'tea_11',
+    firstName: 'Katrin',
+    lastName: 'Wolf',
+    email: 'katrin.wolf@onlyonecoin.edu.pe',
+    phone: '+51 928 355 041',
+    status: 'inactive',
+    languages: [LANGUAGES.de],
+    nationality: 'DE',
+    joinedAt: '2021-11-02',
+    availability: [],
+  },
+  {
+    id: 'tea_12',
+    firstName: 'Claire',
+    lastName: 'Dubois',
+    email: 'claire.dubois@onlyonecoin.edu.pe',
+    phone: '+51 906 229 318',
+    status: 'inactive',
+    languages: [LANGUAGES.fr],
+    nationality: 'FR',
+    joinedAt: '2020-09-14',
+    availability: [],
+  },
+]
+
+/** Still enrolling or running — what counts as load right now. */
+function isRunning(group: Pick<ClassGroupRow, 'status'>): boolean {
+  return group.status === 'enrolling' || group.status === 'in_progress'
+}
+
+function teacherLoad(teacherId: string) {
+  const own = classGroups.filter((group) => group.teacherId === teacherId)
+  const running = own.filter(isRunning)
+  return {
+    activeClassGroups: running.length,
+    studentCount: running.reduce((sum, group) => sum + group.seatsTaken, 0),
+    pendingGrades: own.reduce(
+      (sum, group) =>
+        sum + group.students.filter((student) => student.gradeStatus === 'pending').length,
+      0,
+    ),
+    pendingCertificates: own.reduce((sum, group) => sum + group.pendingCertificates, 0),
+  }
+}
+
+export function listTeachers(): TeacherRow[] {
+  return teachers
+    .map(({ availability, ...teacher }) => {
+      void availability
+      return { ...teacher, ...teacherLoad(teacher.id) }
+    })
+    .sort(
+      (a, b) =>
+        a.lastName.localeCompare(b.lastName) || a.firstName.localeCompare(b.firstName),
+    )
+}
+
+export function getTeacher(id: string): TeacherDetail | undefined {
+  const teacher = teachers.find((item) => item.id === id)
+  if (!teacher) return undefined
+  return {
+    ...teacher,
+    ...teacherLoad(teacher.id),
+    /* Running first, then the finished ones that still owe a certificate:
+       the file is opened either to allocate the next class group or to close
+       the last one. */
+    classGroups: classGroups
+      .filter((group) => group.teacherId === id)
+      .map(({ students, ...row }) => {
+        void students
+        return row
+      })
+      .sort(
+        (a, b) =>
+          Number(isRunning(b)) - Number(isRunning(a)) ||
+          b.pendingCertificates - a.pendingCertificates ||
+          b.startDate.localeCompare(a.startDate),
+      ),
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Scoped reads — a teacher sees their own class groups, nobody else's         */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The class groups a staff member may list. For a teacher that is their own and
+ * only their own (`docs/ARCHITECTURE.md` §RBAC): the filter is built from the
+ * session's `teacherId`, never from anything the client sent (CLAUDE.md §8).
+ *
+ * Here it narrows a mocked array; in production the same rule is the usecase in
+ * `packages/domain` behind `apps/api`, and that one is what enforces it.
+ */
+export function listClassGroupsFor(staff: StaffUser): ClassGroupRow[] {
+  const rows = listClassGroups()
+  if (staff.role !== 'teacher') return rows
+  return rows.filter((group) => group.teacherId === staff.teacherId)
+}
+
+/**
+ * Reading one class group under the same rule. A teacher asking for somebody
+ * else's gets nothing back — not a hidden button, nothing: guessing the id in
+ * the URL is the whole point of the check (anti-IDOR, CLAUDE.md §8).
+ */
+export function getClassGroupFor(
+  staff: StaffUser,
+  id: string,
+): ClassGroupDetail | undefined {
+  const group = getClassGroup(id)
+  if (!group) return undefined
+  if (staff.role === 'teacher' && group.teacherId !== staff.teacherId) return undefined
+  return group
+}
+
+/* -------------------------------------------------------------------------- */
 /* Payments                                                                    */
 /* -------------------------------------------------------------------------- */
 
@@ -2565,4 +2870,179 @@ export function listReceiptExtractions(): Record<string, ReceiptExtraction> {
   return Object.fromEntries(
     listReviewQueue().map((item) => [item.id, extractionOf(item)]),
   )
+}
+
+/* -------------------------------------------------------------------------- */
+/* Enrollments — the ledger of seats, and the reservations still open          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The price in force per course this period. One entry, not a range: there is
+ * no discount and no negotiated value (CLAUDE.md §1), so what the backoffice
+ * form offers is the same number the student saw on the public page. The real
+ * source is the versioned price table, and the enrollment freezes the
+ * `plan_price_id` in force (CLAUDE.md §5) — which is why the id travels with
+ * the amount and never gets recomputed from it.
+ */
+const PLAN_PRICES: Record<string, { amountCents: number; planPriceId: string }> = {
+  'Inglés Básico A1': { amountCents: 6990, planPriceId: 'pp_en_a1_v3' },
+  'Inglés Intermedio B1': { amountCents: 7990, planPriceId: 'pp_en_b1_v2' },
+  'Inglés Introductorio': { amountCents: 4990, planPriceId: 'pp_en_int_v1' },
+  'Francés Inicial': { amountCents: 6490, planPriceId: 'pp_fr_i_v2' },
+  'Alemán Inicial': { amountCents: 6990, planPriceId: 'pp_de_i_v1' },
+  'Italiano Inicial': { amountCents: 6490, planPriceId: 'pp_it_i_v1' },
+  'Portugués Inicial': { amountCents: 5990, planPriceId: 'pp_pt_i_v2' },
+  'Quechua Conversacional': { amountCents: 5490, planPriceId: 'pp_qu_i_v1' },
+  'Chino Mandarín Básico': { amountCents: 7490, planPriceId: 'pp_zh_b_v1' },
+}
+
+/** The only plan sold today — the whole package, one payment (CLAUDE.md §1). */
+const PLAN_NAME = 'Paquete completo'
+
+/**
+ * What a course costs right now. Returns null rather than a fallback price: a
+ * form that invents an amount is a form that can under-charge somebody, and
+ * "this course has no price in force" is the honest answer to give the reader.
+ */
+export function getPlanPrice(courseName: string): PlanPrice | null {
+  const price = PLAN_PRICES[courseName]
+  if (!price) return null
+  return {
+    courseName,
+    planName: PLAN_NAME,
+    planPriceId: price.planPriceId,
+    amountCents: price.amountCents,
+    currency: 'PEN',
+  }
+}
+
+/** Every price in force, for the form that has to show one without guessing. */
+export function listPlanPrices(): PlanPrice[] {
+  return Object.keys(PLAN_PRICES)
+    .map((courseName) => getPlanPrice(courseName))
+    .filter((price): price is PlanPrice => price !== null)
+}
+
+/** Course name → the catalog's language, for the ledger filter. */
+function languageOf(courseName: string): CourseLanguage | null {
+  return courses.find((course) => course.name === courseName)?.language ?? null
+}
+
+/**
+ * Enrollment id → the class group whose roster claims it. The roster is the
+ * join the real schema has as a foreign key; here it is the only honest link,
+ * because two class groups of the same course share a course name and would
+ * otherwise be told apart by a label.
+ */
+function classGroupOf(enrollmentId: string): ClassGroupDetail | undefined {
+  return classGroups.find((group) =>
+    group.students.some((student) => student.enrollmentId === enrollmentId),
+  )
+}
+
+/**
+ * Every enrollment in the institution, newest first — the seat side of what the
+ * payments ledger shows as money. The two are deliberately separate screens:
+ * `payments` is agnostic of origin and counts constancias alongside courses
+ * (CLAUDE.md §5), while this one only ever counts people sitting in a class
+ * group, which is what coordination closes the period against.
+ */
+export function listEnrollments(): EnrollmentRow[] {
+  const rows: EnrollmentRow[] = []
+
+  for (const student of students) {
+    const studentName = `${student.firstName} ${student.lastName}`
+    for (const item of student.enrollments) {
+      const group = classGroupOf(item.id)
+      rows.push({
+        id: item.id,
+        studentId: student.id,
+        studentName,
+        courseName: item.courseName,
+        classGroupId: group?.id ?? null,
+        classGroupName: item.classGroupName,
+        teacherName: item.teacherName,
+        language: group?.language ?? languageOf(item.courseName),
+        modality: item.modality,
+        academicPeriodName: item.academicPeriodName,
+        status: item.status,
+        seatStatus: item.seatStatus,
+        planName: item.planName,
+        planPriceId: item.planPriceId,
+        amountCents: item.amountCents,
+        currency: item.currency,
+        paymentStatus: item.paymentStatus,
+        paymentMethod: item.paymentMethod,
+        operationNumber: item.operationNumber,
+        createdAt: item.createdAt,
+        paidAt: item.paidAt,
+        progressPct: item.progressPct,
+      })
+    }
+  }
+
+  return rows.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+}
+
+/** An hour, in milliseconds — the unit the reservation countdown is read in. */
+const HOUR_MS = 3_600_000
+
+/** Inside this many hours of expiry, a reservation is worth chasing today. */
+export const RESERVATION_WARNING_HOURS = 24
+
+/**
+ * The seats currently held by an unsettled payment, soonest to expire first.
+ * The deadline is the reservation window from the payment settings
+ * (CLAUDE.md §5) counted from when the seat was taken — the same number the
+ * cron releases against, read from one place so the screen cannot promise a
+ * day the job does not honour.
+ *
+ * `now` is a parameter so the page passes the request's clock: computing it
+ * inside a component would hydrate a different countdown than it rendered.
+ */
+export function listSeatReservations(now: Date = new Date()): SeatReservation[] {
+  const windowMs = getPaymentSettings().reservationDays * 24 * HOUR_MS
+  const queue = listReviewQueue()
+
+  return listEnrollments()
+    .filter((row) => row.seatStatus === 'reserved')
+    .map((row) => {
+      const expiresAt = new Date(new Date(row.createdAt).getTime() + windowMs)
+      const open = queue.find(
+        (item) =>
+          item.studentId === row.studentId && item.courseName === row.courseName,
+      )
+      return {
+        enrollmentId: row.id,
+        studentId: row.studentId,
+        studentName: row.studentName,
+        courseName: row.courseName,
+        classGroupName: row.classGroupName,
+        classGroupId: row.classGroupId,
+        paymentStatus: row.paymentStatus,
+        flag: open?.flag ?? null,
+        amountCents: row.amountCents,
+        currency: row.currency,
+        reservedAt: row.createdAt,
+        expiresAt: expiresAt.toISOString(),
+        hoursLeft: Math.floor((expiresAt.getTime() - now.getTime()) / HOUR_MS),
+      }
+    })
+    .sort((a, b) => a.expiresAt.localeCompare(b.expiresAt))
+}
+
+/** Period figures for the section header. */
+export function getEnrollmentMetrics(now: Date = new Date()): EnrollmentMetrics {
+  const rows = listEnrollments()
+  const reservations = listSeatReservations(now)
+  return {
+    periodName: PERIOD,
+    total: rows.length,
+    active: rows.filter((row) => row.status === 'active').length,
+    reserved: reservations.length,
+    expiringSoon: reservations.filter(
+      (item) => item.hoursLeft <= RESERVATION_WARNING_HOURS,
+    ).length,
+    released: rows.filter((row) => row.seatStatus === 'released').length,
+  }
 }

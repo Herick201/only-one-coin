@@ -64,3 +64,54 @@ export function canReviewPayments(role: StaffRole): boolean {
 export function canConfigurePayments(role: StaffRole): boolean {
   return role === 'admin'
 }
+
+/**
+ * Who opens the teacher roster. A teacher is on it, they do not run it: hiring,
+ * allocation and availability are coordination's, and treasury has no business
+ * in the academic side at all.
+ */
+export function canManageTeachers(role: StaffRole): boolean {
+  return role === 'admin' || role === 'coordinator'
+}
+
+/**
+ * Who registers a new teacher. Admin only, for the same reason as a course: a
+ * teacher record is an account that will read student grades, and creating one
+ * is one step away from creating staff — which `CLAUDE.md` §8 puts behind a
+ * dedicated usecase with fresh re-authentication, admin only.
+ */
+export function canCreateTeacher(role: StaffRole): boolean {
+  return role === 'admin'
+}
+
+/**
+ * Who may browse the whole student directory. A teacher sees the students of
+ * their own class groups, reached through the class group — never a roster of
+ * every student in the institution.
+ */
+export function canBrowseStudents(role: StaffRole): boolean {
+  return role !== 'teacher'
+}
+
+/**
+ * Whether the panel must be narrowed to the signed-in teacher's own class
+ * groups (`docs/ARCHITECTURE.md` §RBAC). The screen honours it so the reader is
+ * not shown doors that would fail; the enforcing check compares the
+ * authenticated `teacher_id` against the class group inside the usecase, and it
+ * is the only one that counts (CLAUDE.md §8).
+ */
+export function isRestrictedToOwnClassGroups(role: StaffRole): boolean {
+  return role === 'teacher'
+}
+
+/**
+ * Who may open an enrollment from the panel. The documented way in is the
+ * student filling `/matricula` themselves (CLAUDE.md §1); this is the exception
+ * for the sale that closed on WhatsApp and never reached the form, so it stays
+ * with the two roles that already answer for a seat. Tesorería settles money
+ * and must not also be the one who creates what it settles, and a teacher runs
+ * a class group without filling it.
+ */
+export function canCreateEnrollment(role: StaffRole): boolean {
+  return role === 'admin' || role === 'coordinator'
+}
