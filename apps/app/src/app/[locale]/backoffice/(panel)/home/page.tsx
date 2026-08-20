@@ -40,6 +40,7 @@ import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { TeacherHome } from './teacher-home'
+import { AutoGrid } from '@/components/layout/auto-grid'
 
 /**
  * Backoffice home. Two jobs: surface what needs a human right now (the receipt
@@ -190,7 +191,7 @@ export default async function BackofficeHomePage({
       </p>
 
       {/* Headline numbers */}
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <AutoGrid as="section" min="15rem" gap="gap-3">
         {stats.map(({ label, value, hint, icon: Icon, accent }) => (
           <Card key={label} className="gap-0 py-4">
             <CardContent className="flex items-start justify-between gap-3 px-4">
@@ -209,7 +210,7 @@ export default async function BackofficeHomePage({
             </CardContent>
           </Card>
         ))}
-      </section>
+      </AutoGrid>
 
       {/* Human review queue — the core of the backoffice (CLAUDE.md §5). */}
       <section>
@@ -353,7 +354,7 @@ export default async function BackofficeHomePage({
             <ArrowRight className="size-3.5" />
           </Link>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <AutoGrid min="20rem" gap="gap-3">
           {seats.map((group) => {
             const tone = seatPressureTone(group.seatsTaken, group.capacity)
             const full = group.seatsTaken >= group.capacity
@@ -400,7 +401,7 @@ export default async function BackofficeHomePage({
               </Card>
             )
           })}
-        </div>
+        </AutoGrid>
       </section>
 
       {/* Module doors — everything the backoffice will manage. */}
@@ -410,7 +411,7 @@ export default async function BackofficeHomePage({
           {t('modules.title')}
         </h2>
         <p className="mb-3 text-sm text-muted-foreground">{t('modules.subtitle')}</p>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <AutoGrid min="18rem" gap="gap-3">
           {modules.map(({ href, label, body, icon: Icon, ready }) => {
             const inner = (
               <>
@@ -456,7 +457,7 @@ export default async function BackofficeHomePage({
               </div>
             )
           })}
-        </div>
+        </AutoGrid>
       </section>
     </div>
   )

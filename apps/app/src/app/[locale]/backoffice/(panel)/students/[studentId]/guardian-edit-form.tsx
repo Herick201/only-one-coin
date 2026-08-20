@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import type { GuardianRelationship, NationalIdType } from '@/lib/backoffice/types'
 import { BoIcon } from '@/components/backoffice/icons'
 import { COUNTRIES, DEFAULT_COUNTRY, flagEmoji, joinPhone, splitPhone } from '@/lib/geo'
+import { AutoGrid } from '@/components/layout/auto-grid'
 
 /**
  * What staff may correct about the guardian. The consent record is deliberately
@@ -77,7 +78,7 @@ export function GuardianEditForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <AutoGrid min="15rem">
         <label className={labelClass}>
           {t('student_file.field_first_name')}
           <input
@@ -169,7 +170,7 @@ export function GuardianEditForm({
             />
           </span>
         </label>
-      </div>
+      </AutoGrid>
 
       <p className="flex items-start gap-2 rounded-lg border border-dashed border-line bg-sky-soft px-3 py-2 text-xs text-muted-foreground">
         <BoIcon name="shield" size={14} className="mt-0.5 shrink-0" />

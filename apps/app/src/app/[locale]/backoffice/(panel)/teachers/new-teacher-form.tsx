@@ -11,6 +11,7 @@ import { COUNTRIES, countryName, DEFAULT_COUNTRY, flagEmoji } from '@/lib/geo'
 import { Card } from '@/components/backoffice/ui'
 import { BoIcon } from '@/components/backoffice/icons'
 import { AvailabilityFields, slotsAreValid } from './availability-fields'
+import { AutoGrid } from '@/components/layout/auto-grid'
 
 const fieldClass =
   'rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink outline-none transition focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15'
@@ -90,7 +91,7 @@ export function NewTeacherForm({
     <Card className="p-5">
       <p className="mb-4 text-sm font-semibold text-ink">{t('teachers.new_title')}</p>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <AutoGrid min="15rem" gap="gap-3">
         <label className="flex flex-col gap-1">
           <span className={labelClass}>{t('teachers.field_first_name')}</span>
           <input
@@ -143,7 +144,7 @@ export function NewTeacherForm({
             className={fieldClass}
           />
         </label>
-      </div>
+      </AutoGrid>
 
       <div className="mt-5 border-t border-line pt-5">
         <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">

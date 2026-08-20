@@ -6,6 +6,7 @@ import type { Locale } from '@/lib/portal/types'
 import { Card, ProgressBar, SectionTitle, StatusBadge } from '@/components/portal/ui'
 import { enrollmentTone } from '@/components/portal/status-tone'
 import { Icon, type IconName } from '@/components/portal/icons'
+import { AutoGrid } from '@/components/layout/auto-grid'
 
 export default async function DashboardPage({
   params,
@@ -54,7 +55,7 @@ export default async function DashboardPage({
         </div>
         {nextClass ? (
           <Card className="overflow-hidden">
-            <div className="flex flex-col gap-4 bg-brand-blue p-5 text-white sm:flex-row sm:items-center sm:justify-between sm:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-4 bg-brand-blue p-5 text-white sm:p-6">
               <div className="flex flex-col gap-1">
                 <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/80">
                   <Icon name="calendar" size={16} />
@@ -110,7 +111,7 @@ export default async function DashboardPage({
             <Icon name="chevron-right" size={16} />
           </Link>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <AutoGrid min="18rem">
           {current.map((e) => (
             <Card key={e.id} as="article" className="flex flex-col gap-3 p-5">
               <div className="flex items-start justify-between gap-3">
@@ -142,7 +143,7 @@ export default async function DashboardPage({
               </Link>
             </Card>
           ))}
-        </div>
+        </AutoGrid>
       </section>
 
       {/* Quick actions */}
@@ -150,7 +151,7 @@ export default async function DashboardPage({
         <div className="mb-3">
           <SectionTitle>{t('dashboard.quick_actions_title')}</SectionTitle>
         </div>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <AutoGrid min="14rem" gap="gap-3">
           {quickActions.map((a) => (
             <Link
               key={a.href}
@@ -168,7 +169,7 @@ export default async function DashboardPage({
               />
             </Link>
           ))}
-        </div>
+        </AutoGrid>
       </section>
     </div>
   )

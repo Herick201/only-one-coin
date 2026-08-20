@@ -20,10 +20,13 @@ import {
   TableShell,
   tdClass,
   thClass,
+  Toolbar,
+  toolbarSearchClass,
 } from '@/components/backoffice/ui'
 import { paymentTone } from '@/components/backoffice/status-tone'
 import { BoIcon } from '@/components/backoffice/icons'
 import { PaymentDetailDialog } from './payment-detail-dialog'
+import { AutoGrid } from '@/components/layout/auto-grid'
 
 type StatusFilter = PaymentStatus | 'all'
 type MethodFilter = PaymentMethod | 'all'
@@ -133,7 +136,7 @@ export function PaymentsView({
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <AutoGrid as="section" min="15rem" gap="gap-3">
         <StatCard
           icon="alert"
           tone="warning"
@@ -164,12 +167,12 @@ export function PaymentsView({
           value={String(metrics.rejected)}
           hint={t('payments.metric_rejected_hint')}
         />
-      </section>
+      </AutoGrid>
 
       {/* Toolbar */}
       <div className="flex flex-col gap-3">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-          <label className="relative flex-1 lg:max-w-sm">
+        <Toolbar>
+          <label className={toolbarSearchClass}>
             <span className="sr-only">{t('payments.search_label')}</span>
             <BoIcon
               name="search"
@@ -214,7 +217,7 @@ export function PaymentsView({
             <BoIcon name="sort" size={16} />
             {t(sort === 'newest' ? 'payments.sort_newest' : 'payments.sort_oldest')}
           </button>
-        </div>
+        </Toolbar>
 
         {filtersOpen && (
           <Card className="flex flex-col gap-3 p-3">

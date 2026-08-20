@@ -257,7 +257,19 @@ export default async function BackofficePanelLayout({
               </div>
             </header>
 
-            <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+            {/*
+              The panel is a work surface, not a reading column: it grows with
+              the monitor instead of parking a 72rem block in the middle of a
+              wide screen while the tables inside it scroll sideways. The cap
+              only stops the rows from becoming unscannable on a very wide one.
+
+              `@container/page` names this column so anything below can size
+              itself against the space it actually gets. The viewport is the
+              wrong ruler here — the same 1280px window gives ~1000px with the
+              sidebar open and ~1170px with it collapsed, and a `xl:` rule
+              cannot tell those apart.
+            */}
+            <main className="@container/page mx-auto w-full max-w-[100rem] px-4 py-6 sm:px-6 lg:px-8">
               {children}
             </main>
           </SidebarInset>

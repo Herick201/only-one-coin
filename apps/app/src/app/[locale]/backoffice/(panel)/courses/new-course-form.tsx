@@ -10,6 +10,7 @@ import type {
 import { Card } from '@/components/backoffice/ui'
 import { BoIcon } from '@/components/backoffice/icons'
 import { CourseOptionFields, DEFAULT_COURSE_OPTIONS } from './course-option-fields'
+import { AutoGrid } from '@/components/layout/auto-grid'
 
 const fieldClass =
   'rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink outline-none transition focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15'
@@ -64,7 +65,7 @@ export function NewCourseForm({
     <Card className="p-5">
       <p className="mb-4 text-sm font-semibold text-ink">{t('courses.new_title')}</p>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <AutoGrid min="15rem" gap="gap-3">
         <label className="flex flex-col gap-1">
           <span className={labelClass}>{t('courses.field_language')}</span>
           <select
@@ -99,7 +100,7 @@ export function NewCourseForm({
             className={fieldClass}
           />
         </label>
-      </div>
+      </AutoGrid>
 
       <div className="mt-5 border-t border-line pt-5">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">

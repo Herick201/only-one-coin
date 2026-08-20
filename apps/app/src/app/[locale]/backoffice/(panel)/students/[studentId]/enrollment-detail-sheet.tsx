@@ -17,6 +17,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
+import { AutoGrid } from '@/components/layout/auto-grid'
 
 /**
  * Everything behind one row of the enrollment table: class group, money trail
@@ -78,7 +79,7 @@ export function EnrollmentDetailSheet({
                 <SectionTitle icon="courses">
                   {t('student_file.section_course')}
                 </SectionTitle>
-                <dl className="mt-3 grid gap-4 sm:grid-cols-2">
+                <AutoGrid as="dl" min="12rem" className="mt-3">
                   <Field label={t('student_file.field_class_group')}>
                     {enrollment.classGroupName}
                   </Field>
@@ -94,14 +95,14 @@ export function EnrollmentDetailSheet({
                   <Field label={t('student_file.field_plan')}>
                     {enrollment.planName}
                   </Field>
-                </dl>
+                </AutoGrid>
               </section>
 
               <section>
                 <SectionTitle icon="payments">
                   {t('student_file.section_payment')}
                 </SectionTitle>
-                <dl className="mt-3 grid gap-4 sm:grid-cols-2">
+                <AutoGrid as="dl" min="12rem" className="mt-3">
                   <Field label={t('student_file.field_payment_status')}>
                     <StatusBadge
                       tone={paymentTone[enrollment.paymentStatus]}
@@ -128,7 +129,7 @@ export function EnrollmentDetailSheet({
                       ? formatDateTime(enrollment.paidAt, locale)
                       : t('student_file.not_paid')}
                   </Field>
-                </dl>
+                </AutoGrid>
                 <p className="mt-3 text-xs text-muted-foreground">
                   {t('student_file.frozen_price')}
                 </p>
@@ -138,11 +139,11 @@ export function EnrollmentDetailSheet({
                 <SectionTitle icon="enrollments">
                   {t('student_file.section_enrollment')}
                 </SectionTitle>
-                <dl className="mt-3 grid gap-4 sm:grid-cols-2">
+                <AutoGrid as="dl" min="12rem" className="mt-3">
                   <Field label={t('student_file.col_created')}>
                     {formatDate(enrollment.createdAt, locale)}
                   </Field>
-                </dl>
+                </AutoGrid>
                 <div className="mt-4">
                   <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     {t('student_file.field_progress')}

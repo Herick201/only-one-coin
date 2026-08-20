@@ -14,9 +14,12 @@ import {
   TableShell,
   tdClass,
   thClass,
+  Toolbar,
+  toolbarSearchClass,
 } from '@/components/backoffice/ui'
 import { classGroupTone, seatPressureTone } from '@/components/backoffice/status-tone'
 import { BoIcon } from '@/components/backoffice/icons'
+import { AutoGrid } from '@/components/layout/auto-grid'
 
 type Sort = 'newest' | 'oldest'
 
@@ -228,8 +231,8 @@ export function ClassGroupsView({
     <div className="flex flex-col gap-5">
       {/* Toolbar */}
       <div className="flex flex-col gap-3">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-          <label className="relative flex-1 lg:max-w-sm">
+        <Toolbar>
+          <label className={toolbarSearchClass}>
             <span className="sr-only">{t('class_groups.search_label')}</span>
             <BoIcon
               name="search"
@@ -283,7 +286,7 @@ export function ClassGroupsView({
               {t('class_groups.new_class_group')}
             </button>
           )}
-        </div>
+        </Toolbar>
 
         {filtersOpen && (
           <Card className="flex flex-wrap items-end gap-3 p-4">
@@ -727,8 +730,8 @@ function NewClassGroupForm({
         {t('class_groups.new_title')}
       </p>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <label className="flex flex-col gap-1 sm:col-span-2">
+      <AutoGrid min="15rem" gap="gap-3">
+        <label className="col-span-full flex flex-col gap-1">
           <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             {t('class_groups.field_course')}
           </span>
@@ -881,7 +884,7 @@ function NewClassGroupForm({
             </select>
           </span>
         </label>
-      </div>
+      </AutoGrid>
 
       <fieldset className="mt-3">
         <legend className="mb-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">

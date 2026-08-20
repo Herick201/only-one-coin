@@ -13,6 +13,7 @@ import { formatMoney, type Locale } from '@/lib/format'
 import { paymentMethodLabel } from '@/lib/payment-method'
 import { Card, StatusBadge } from '@/components/backoffice/ui'
 import { BoIcon } from '@/components/backoffice/icons'
+import { AutoGrid } from '@/components/layout/auto-grid'
 
 const fieldClass =
   'rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink outline-none transition focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15'
@@ -248,7 +249,7 @@ export function NewEnrollmentForm({
             {t('new_enrollment.no_open_class_groups')}
           </p>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2">
+          <AutoGrid min="18rem" gap="gap-3">
             <label className="flex flex-col gap-1">
               <span className={labelClass}>
                 {t('new_enrollment.field_class_group')}
@@ -289,7 +290,7 @@ export function NewEnrollmentForm({
                 />
               </dl>
             )}
-          </div>
+          </AutoGrid>
         )}
 
         {/* The price, shown and not asked for. */}
@@ -325,7 +326,7 @@ export function NewEnrollmentForm({
           {t('new_enrollment.step_receipt')}
         </p>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <AutoGrid min="15rem" gap="gap-3">
           <label className="flex flex-col gap-1">
             <span className={labelClass}>{t('new_enrollment.field_method')}</span>
             <select
@@ -380,7 +381,7 @@ export function NewEnrollmentForm({
               )}
             </button>
           </label>
-        </div>
+        </AutoGrid>
 
         <p className="mt-3 flex items-start gap-2 rounded-lg border border-dashed border-line bg-sky-soft px-3 py-2 text-xs text-muted-foreground">
           <BoIcon name="shield" size={14} className="mt-0.5 shrink-0" />

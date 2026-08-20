@@ -26,6 +26,7 @@ import { EnrollmentDetailSheet } from './enrollment-detail-sheet'
 import { GuardianEditForm, type EditableGuardian } from './guardian-edit-form'
 import { StudentDocuments } from './student-documents'
 import { StudentEditForm, type EditableStudent } from './student-edit-form'
+import { AutoGrid } from '@/components/layout/auto-grid'
 
 type Tab = 'data' | 'enrollments' | 'documents' | 'activity'
 
@@ -165,7 +166,7 @@ export function StudentFile({ student }: { student: StudentDetail }) {
               />
             ) : (
               <>
-                <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <AutoGrid as="dl" min="17rem">
                   <Field label={t('student_file.field_first_name')}>
                     {draft.firstName}
                   </Field>
@@ -192,7 +193,7 @@ export function StudentFile({ student }: { student: StudentDetail }) {
                   <Field label={t('student_file.field_last_activity')}>
                     {formatDateTime(student.lastActivityAt, locale)}
                   </Field>
-                </dl>
+                </AutoGrid>
                 {savedAt && (
                   <p className="mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
                     <BoIcon name="alert" size={14} className="mt-0.5 shrink-0" />
@@ -235,7 +236,7 @@ export function StudentFile({ student }: { student: StudentDetail }) {
                     }}
                   />
                 ) : (
-                  <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <AutoGrid as="dl" min="17rem">
                     <Field label={t('student_file.field_guardian_name')}>
                       {`${guardianDraft.firstName} ${guardianDraft.lastName}`}
                     </Field>
@@ -251,7 +252,7 @@ export function StudentFile({ student }: { student: StudentDetail }) {
                     <Field label={t('student_file.field_phone')}>
                       {guardianDraft.phone}
                     </Field>
-                  </dl>
+                  </AutoGrid>
                 )}
                 {guardianSavedAt && !editingGuardian && (
                   <p className="mt-4 flex items-start gap-2 rounded-lg border border-dashed border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">

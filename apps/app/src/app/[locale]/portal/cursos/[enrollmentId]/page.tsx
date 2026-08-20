@@ -64,8 +64,8 @@ export default async function CourseDetailPage({
         </div>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="flex flex-col gap-6 lg:col-span-2">
+      <div className="grid gap-6 @4xl/page:grid-cols-3">
+        <div className="flex flex-col gap-6 @4xl/page:col-span-2">
           {/* About */}
           <Card className="p-5 sm:p-6">
             <SectionTitle>{t('course_detail.about_title')}</SectionTitle>

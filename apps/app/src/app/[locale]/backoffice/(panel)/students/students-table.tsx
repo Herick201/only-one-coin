@@ -13,6 +13,8 @@ import {
   TableShell,
   tdClass,
   thClass,
+  Toolbar,
+  toolbarSearchClass,
 } from '@/components/backoffice/ui'
 import { studentTone } from '@/components/backoffice/status-tone'
 import { BoIcon } from '@/components/backoffice/icons'
@@ -128,8 +130,8 @@ export function StudentsTable({ rows }: { rows: StudentRow[] }) {
     <div className="flex flex-col gap-4">
       {/* Toolbar */}
       <div className="flex flex-col gap-3">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-          <label className="relative flex-1 lg:max-w-sm">
+        <Toolbar>
+          <label className={toolbarSearchClass}>
             <span className="sr-only">{t('students.search_label')}</span>
             <BoIcon
               name="search"
@@ -163,7 +165,7 @@ export function StudentsTable({ rows }: { rows: StudentRow[] }) {
               </span>
             )}
           </button>
-        </div>
+        </Toolbar>
 
         {filtersOpen && (
           <Card className="flex flex-wrap items-center gap-1.5 p-3">
