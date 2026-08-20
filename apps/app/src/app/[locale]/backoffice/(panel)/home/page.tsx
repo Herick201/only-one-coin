@@ -126,6 +126,7 @@ export default async function BackofficeHomePage({
       label: t('nav.payments'),
       body: t('modules.payments'),
       icon: CreditCard,
+      ready: true,
     },
     {
       href: '/backoffice/courses',

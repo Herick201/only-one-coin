@@ -39,8 +39,13 @@ escolha:
   turmas (`/backoffice/class-groups`, com lista paginada, ficha da turma,
   emissão de certificados em lote e procedimentos por matrícula — mover,
   congelar, retirar), cursos (`/backoffice/courses`, catálogo com opções por
-  curso) e a fila de revisão de comprovantes (`/backoffice/payments/review`,
-  com busca, filtro por motivo e paginação). Toda escrita é estado local. Os demais módulos do painel aparecem
+  curso) e pagamentos (`/backoffice/payments`: livro de todos os pagamentos —
+  matrícula e trâmite — com métricas do ciclo, busca e filtros por estado, meio
+  e conceito; `/backoffice/payments/review`, a fila de revisão humana com a
+  ficha de decisão do comprovante — extração campo a campo com confiança,
+  segunda leitura quando os modelos divergem, aprovar/recusar com motivo; e
+  `/backoffice/payments/settings`, os parâmetros de validação — tolerância de
+  valor, confiança mínima e validade da reserva). Toda escrita é estado local. Os demais módulos do painel aparecem
   listados como "pronto/em breve".
   UI em shadcn/ui sobre Tailwind v4; os tokens de marca vivem em `globals.css`
   (paleta da landing, tipografia Inter). A landing segue com Fredoka/Poppins —

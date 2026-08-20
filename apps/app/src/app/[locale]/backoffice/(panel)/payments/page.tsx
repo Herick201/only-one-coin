@@ -1,8 +1,8 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import {
+  getPaymentMetrics,
   getStaffSession,
-  listReceiptExtractions,
-  listReviewQueue,
+  listPayments,
 } from '@/lib/backoffice/mock-data'
 import {
   canConfigurePayments,
@@ -10,20 +10,18 @@ import {
 } from '@/lib/backoffice/permissions'
 import { MockNotice, PageHeader } from '@/components/backoffice/ui'
 import { SectionTabs } from '@/components/backoffice/section-tabs'
-import { ReviewQueueView } from './review-queue-view'
+import { PaymentsView } from './payments-view'
 
 /**
- * The human review queue in full — what the home card previews. Everything the
- * OCR ladder could not settle on its own ends here (CLAUDE.md §5): a mismatch
- * against the frozen plan price, low confidence on a critical field, an
- * illegible image, a repeated receipt, or two model families disagreeing.
+ * Payments, the whole ledger. One section, three screens: what came in, what
+ * is still waiting on a human, and the parameters that decide which is which.
  *
  * The list is a client component so search, filters and paging work with no
- * backend; the data and the role gate come from the server. Each row carries
- * its extraction, so opening one shows the image next to what the model read
- * without a second round trip.
+ * backend; the data and the role gates come from the server. Hiding a tab or a
+ * button is a screen convenience — the enforcing check is the role declared on
+ * the route in `apps/api` (CLAUDE.md §8).
  */
-export default async function PaymentsReviewPage({
+export default async function PaymentsPage({
   params,
 }: {
   params: Promise<{ locale: string }>
@@ -36,7 +34,7 @@ export default async function PaymentsReviewPage({
 
   return (
     <div className="flex flex-col gap-5">
-      <PageHeader title={t('review.title')} subtitle={t('review.subtitle')} />
+      <PageHeader title={t('payments.title')} subtitle={t('payments.subtitle')} />
       <SectionTabs
         tabs={[
           {
@@ -56,9 +54,9 @@ export default async function PaymentsReviewPage({
         ]}
       />
       <MockNotice label={t('common.mock_notice')} />
-      <ReviewQueueView
-        rows={listReviewQueue()}
-        extractions={listReceiptExtractions()}
+      <PaymentsView
+        rows={listPayments()}
+        metrics={getPaymentMetrics()}
         canReview={canReviewPayments(staff.role)}
       />
     </div>

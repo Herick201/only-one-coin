@@ -3,7 +3,12 @@
 import { useMemo, useState, type MouseEvent } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { Link, useRouter } from '@/i18n/navigation'
-import type { ReviewFlag, ReviewQueueItem } from '@/lib/backoffice/types'
+import type {
+  ReceiptExtraction,
+  ReviewDecision,
+  ReviewFlag,
+  ReviewQueueItem,
+} from '@/lib/backoffice/types'
 import { formatDateTime, formatMoney, type Locale } from '@/lib/format'
 import { paymentMethodLabel } from '@/lib/payment-method'
 import {
@@ -15,8 +20,10 @@ import {
   tdClass,
   thClass,
 } from '@/components/backoffice/ui'
+import { Toast } from '@/components/backoffice/controls'
 import { reviewFlagTone } from '@/components/backoffice/status-tone'
 import { BoIcon } from '@/components/backoffice/icons'
+import { ReceiptReviewSheet } from './receipt-review-sheet'
 
 type FlagFilter = ReviewFlag | 'all'
 
@@ -37,14 +44,33 @@ const PAGE_SIZE = 15
  * is a student waiting, and the promise on the home card is that the queue is
  * worked from the oldest one.
  *
+ * The row triages; the decision happens in the sheet, next to the image and to
+ * what the model read. Settling a receipt from a list, on a flag alone, is how
+ * a mismatch gets approved because the row looked like the one above it.
+ *
  * Filtering and paging run in the browser only because the dataset is mocked;
  * with the real API this becomes a server query (up to 20k receipts a month in
  * peak season, CLAUDE.md §1).
  */
-export function ReviewQueueView({ rows }: { rows: ReviewQueueItem[] }) {
+export function ReviewQueueView({
+  rows,
+  extractions,
+  canReview,
+}: {
+  rows: ReviewQueueItem[]
+  /** The extraction behind each queued receipt, keyed by the queue row. */
+  extractions: Record<string, ReceiptExtraction>
+  canReview: boolean
+}) {
   const t = useTranslations('bo')
   const locale = useLocale() as Locale
   const router = useRouter()
+
+  /** A settled receipt leaves the queue — that is the whole point of settling
+   *  it. No server yet, so the removal lives here (see the mock notice). */
+  const [queue, setQueue] = useState<ReviewQueueItem[]>(rows)
+  const [reviewing, setReviewing] = useState<string | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
 
   const [query, setQuery] = useState('')
   const [flag, setFlag] = useState<FlagFilter>('all')
@@ -53,15 +79,15 @@ export function ReviewQueueView({ rows }: { rows: ReviewQueueItem[] }) {
   const [page, setPage] = useState(0)
 
   const counts = useMemo(() => {
-    const seed = { all: rows.length } as Record<FlagFilter, number>
+    const seed = { all: queue.length } as Record<FlagFilter, number>
     for (const value of FLAG_FILTERS) if (value !== 'all') seed[value] = 0
-    for (const row of rows) seed[row.flag] += 1
+    for (const row of queue) seed[row.flag] += 1
     return seed
-  }, [rows])
+  }, [queue])
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase()
-    const list = rows.filter((row) => {
+    const list = queue.filter((row) => {
       if (flag !== 'all' && row.flag !== flag) return false
       if (!needle) return true
       return [row.studentName, row.courseName, row.operationNumber ?? '']
@@ -72,7 +98,7 @@ export function ReviewQueueView({ rows }: { rows: ReviewQueueItem[] }) {
     // The server hands the list over oldest first; newest is a reversal, not a
     // second sort key.
     return sort === 'oldest' ? list : [...list].reverse()
-  }, [rows, query, flag, sort])
+  }, [queue, query, flag, sort])
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const currentPage = Math.min(page, pageCount - 1)
@@ -91,6 +117,18 @@ export function ReviewQueueView({ rows }: { rows: ReviewQueueItem[] }) {
     setPage(0)
   }
 
+  function decide(paymentId: string, decision: ReviewDecision) {
+    setQueue((current) => current.filter((row) => row.id !== paymentId))
+    setReviewing(null)
+    setToast(
+      t(
+        decision.kind === 'approve'
+          ? 'receipt_review.approved_toast'
+          : 'receipt_review.rejected_toast',
+      ),
+    )
+  }
+
   /**
    * The whole row opens the student file, but the name stays a real link so
    * the keyboard, the screen reader and ctrl+click keep working — the row
@@ -100,7 +138,7 @@ export function ReviewQueueView({ rows }: { rows: ReviewQueueItem[] }) {
     return {
       className: 'cursor-pointer transition hover:bg-sky-soft',
       onClick: (event: MouseEvent<HTMLTableRowElement>) => {
-        if ((event.target as HTMLElement).closest('a')) return
+        if ((event.target as HTMLElement).closest('a,button')) return
         router.push(`/backoffice/students/${studentId}`)
       },
     }
@@ -197,12 +235,12 @@ export function ReviewQueueView({ rows }: { rows: ReviewQueueItem[] }) {
         {pageRows.length === 0 ? (
           <div className="p-4">
             <EmptyState
-              icon={rows.length === 0 ? 'check' : 'search'}
+              icon={queue.length === 0 ? 'check' : 'search'}
               title={t(
-                rows.length === 0 ? 'review.empty_title' : 'review_queue.empty_search_title',
+                queue.length === 0 ? 'review.empty_title' : 'review_queue.empty_search_title',
               )}
               body={t(
-                rows.length === 0 ? 'review.empty_body' : 'review_queue.empty_search_body',
+                queue.length === 0 ? 'review.empty_body' : 'review_queue.empty_search_body',
               )}
             />
           </div>
@@ -217,6 +255,9 @@ export function ReviewQueueView({ rows }: { rows: ReviewQueueItem[] }) {
                   <th className={thClass}>{t('review.col_extraction')}</th>
                   <th className={thClass}>{t('review_queue.col_operation')}</th>
                   <th className={thClass}>{t('review.col_submitted')}</th>
+                  <th className={thClass}>
+                    <span className="sr-only">{t('common.actions')}</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -285,6 +326,18 @@ export function ReviewQueueView({ rows }: { rows: ReviewQueueItem[] }) {
                       >
                         {formatDateTime(row.submittedAt, locale)}
                       </td>
+                      <td className={`${tdClass} whitespace-nowrap text-right`}>
+                        {canReview && extractions[row.id] && (
+                          <button
+                            type="button"
+                            onClick={() => setReviewing(row.id)}
+                            className="inline-flex items-center gap-1 rounded-lg border border-line px-2.5 py-1.5 text-sm font-semibold text-brand-blue transition hover:border-brand-blue hover:bg-sky"
+                          >
+                            {t('receipt_review.open')}
+                            <BoIcon name="chevron-right" size={14} />
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   )
                 })}
@@ -307,6 +360,13 @@ export function ReviewQueueView({ rows }: { rows: ReviewQueueItem[] }) {
           </>
         )}
       </Card>
+
+      <ReceiptReviewSheet
+        extraction={reviewing ? (extractions[reviewing] ?? null) : null}
+        onClose={() => setReviewing(null)}
+        onDecide={decide}
+      />
+      <Toast message={toast} onDismiss={() => setToast(null)} />
     </div>
   )
 }
