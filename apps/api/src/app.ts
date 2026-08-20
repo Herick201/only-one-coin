@@ -3,9 +3,11 @@ import fastify, { type FastifyInstance } from "fastify";
 import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from "fastify-type-provider-zod";
 import errorHandlerPlugin from "@/infra/plugins/errorHandler.js";
 import swaggerPlugin from "@/infra/plugins/swagger.js";
+import { mergeAuthIntoSwagger } from "@/infra/plugins/authSwagger.js";
 import { rootRoute } from "@/http/RootRoute.js";
 import { healthCheckRoute } from "@/http/HealthCheckRoute.js";
 import { createExampleRoute } from "@/http/example/CreateExampleRoute.js";
+import { registerAuthRoutes } from "@/http/auth/AuthCatchAllRoute.js";
 import { container } from "@/container.js";
 
 export async function buildApp(): Promise<FastifyInstance> {
@@ -18,6 +20,7 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   if (!container.production) {
     await app.register(swaggerPlugin);
+    await mergeAuthIntoSwagger(app, container.auth);
   }
 
   app.after(() => {
@@ -26,6 +29,9 @@ export async function buildApp(): Promise<FastifyInstance> {
     // common routes
     provider.route(rootRoute);
     provider.route(healthCheckRoute);
+
+    // auth routes
+    registerAuthRoutes(app, container.auth);
 
     // api routes, prefixed with /api/v1
     provider.register(
