@@ -11,6 +11,7 @@ import type {
   ReviewFlag,
   SeatStatus,
   StudentStatus,
+  TeacherStatus,
 } from '@/lib/backoffice/types'
 
 /** Maps domain enums to a visual tone. No UI copy here — labels come from i18n. */
@@ -18,6 +19,12 @@ import type {
 export const studentTone: Record<StudentStatus, Tone> = {
   active: 'success',
   under_review: 'warning',
+  inactive: 'neutral',
+}
+
+/** Off the roster is not an alarm — it is a record kept on purpose. */
+export const teacherTone: Record<TeacherStatus, Tone> = {
+  active: 'success',
   inactive: 'neutral',
 }
 

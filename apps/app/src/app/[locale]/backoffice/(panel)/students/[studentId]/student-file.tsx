@@ -23,6 +23,7 @@ import {
 } from '@/components/backoffice/status-tone'
 import { BoIcon } from '@/components/backoffice/icons'
 import { EnrollmentDetailSheet } from './enrollment-detail-sheet'
+import { GuardianEditForm, type EditableGuardian } from './guardian-edit-form'
 import { StudentDocuments } from './student-documents'
 import { StudentEditForm, type EditableStudent } from './student-edit-form'
 
@@ -65,6 +66,23 @@ export function StudentFile({ student }: { student: StudentDetail }) {
     city: student.city,
   })
   const [savedAt, setSavedAt] = useState<string | null>(null)
+  const [editingGuardian, setEditingGuardian] = useState(false)
+  const [guardianDraft, setGuardianDraft] = useState<EditableGuardian | null>(
+    student.guardian
+      ? {
+          firstName: student.guardian.firstName,
+          lastName: student.guardian.lastName,
+          relationship: student.guardian.relationship,
+          nationalIdType: student.guardian.nationalIdType,
+          nationalId: student.guardian.nationalId,
+          email: student.guardian.email,
+          phone: student.guardian.phone,
+        }
+      : null,
+  )
+  const [guardianSavedAt, setGuardianSavedAt] = useState<string | null>(null)
+  /** Read-only next to the editable fields — never part of the draft. */
+  const consent = student.guardian?.consent ?? null
   /** Enrollment whose detail panel is open — the table shows status only. */
   const [openEnrollmentId, setOpenEnrollmentId] = useState<string | null>(null)
 
@@ -189,32 +207,64 @@ export function StudentFile({ student }: { student: StudentDetail }) {
 
           {/* Guardian — central flow: most of the audience is a minor. */}
           <Card className="p-5">
-            <div className="mb-4">
+            <div className="mb-4 flex items-center justify-between gap-3">
               <SectionTitle icon="guardian">
                 {t('student_file.guardian_title')}
               </SectionTitle>
+              {guardianDraft && !editingGuardian && (
+                <button
+                  type="button"
+                  onClick={() => setEditingGuardian(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs font-semibold text-brand-blue transition hover:bg-sky"
+                >
+                  <BoIcon name="edit" size={14} />
+                  {t('student_file.guardian_edit')}
+                </button>
+              )}
             </div>
-            {student.guardian ? (
+            {guardianDraft ? (
               <>
-                <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  <Field label={t('student_file.field_guardian_name')}>
-                    {`${student.guardian.firstName} ${student.guardian.lastName}`}
-                  </Field>
-                  <Field label={t('student_file.field_relationship')}>
-                    {t(`relationship.${student.guardian.relationship}`)}
-                  </Field>
-                  <Field label={t(`national_id_type.${student.guardian.nationalIdType}`)}>
-                    <span className="tabular-nums">{student.guardian.nationalId}</span>
-                  </Field>
-                  <Field label={t('student_file.field_email')}>
-                    {student.guardian.email}
-                  </Field>
-                  <Field label={t('student_file.field_phone')}>
-                    {student.guardian.phone}
-                  </Field>
-                </dl>
+                {editingGuardian ? (
+                  <GuardianEditForm
+                    value={guardianDraft}
+                    onCancel={() => setEditingGuardian(false)}
+                    onSave={(next) => {
+                      setGuardianDraft(next)
+                      setEditingGuardian(false)
+                      setGuardianSavedAt(new Date().toISOString())
+                    }}
+                  />
+                ) : (
+                  <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <Field label={t('student_file.field_guardian_name')}>
+                      {`${guardianDraft.firstName} ${guardianDraft.lastName}`}
+                    </Field>
+                    <Field label={t('student_file.field_relationship')}>
+                      {t(`relationship.${guardianDraft.relationship}`)}
+                    </Field>
+                    <Field label={t(`national_id_type.${guardianDraft.nationalIdType}`)}>
+                      <span className="tabular-nums">{guardianDraft.nationalId}</span>
+                    </Field>
+                    <Field label={t('student_file.field_email')}>
+                      {guardianDraft.email}
+                    </Field>
+                    <Field label={t('student_file.field_phone')}>
+                      {guardianDraft.phone}
+                    </Field>
+                  </dl>
+                )}
+                {guardianSavedAt && !editingGuardian && (
+                  <p className="mt-4 flex items-start gap-2 rounded-lg border border-dashed border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                    <BoIcon name="alert" size={14} className="mt-0.5 shrink-0" />
+                    {t('student_file.saved_local_only', {
+                      time: formatDateTime(guardianSavedAt, locale),
+                    })}
+                  </p>
+                )}
+                {/* Consent stays read-only in both modes: it records that a
+                    person accepted a text, not a field staff may set. */}
                 <div className="mt-4 rounded-lg border border-line bg-sky-soft p-3">
-                  {student.guardian.consent ? (
+                  {consent ? (
                     <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                       <StatusBadge
                         tone="success"
@@ -222,12 +272,9 @@ export function StudentFile({ student }: { student: StudentDetail }) {
                       />
                       <span>
                         {t('student_file.consent_detail', {
-                          version: student.guardian.consent.version,
-                          date: formatDateTime(
-                            student.guardian.consent.acceptedAt,
-                            locale,
-                          ),
-                          ip: student.guardian.consent.ip,
+                          version: consent.version,
+                          date: formatDateTime(consent.acceptedAt, locale),
+                          ip: consent.ip,
                         })}
                       </span>
                     </div>
