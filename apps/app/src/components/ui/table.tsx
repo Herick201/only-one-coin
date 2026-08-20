@@ -8,7 +8,9 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <div
       data-slot="table-container"
-      className="relative w-full overflow-x-auto"
+      // Thin, always-drawn scrollbar: overlay scrollbars hide until you
+      // already scrolled, so a table wider than its column just looks cut off.
+      className="relative w-full overflow-x-auto [scrollbar-width:thin]"
     >
       <table
         data-slot="table"

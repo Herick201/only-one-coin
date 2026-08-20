@@ -319,7 +319,13 @@ function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
     <main
       data-slot="sidebar-inset"
       className={cn(
-        "relative flex w-full flex-1 flex-col bg-background md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2",
+        // `min-w-0` is load-bearing: as a flex item its automatic minimum size
+        // is the min-content width of the page inside it, so one unshrinkable
+        // cell (a table, a long id) makes the inset wider than the space left
+        // by the sidebar and pushes the WHOLE document into horizontal scroll
+        // — sticky header and all. With it, the overflow stays where it was
+        // meant to, inside the scroll container that owns it.
+        "relative flex w-full min-w-0 flex-1 flex-col bg-background md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2",
         className
       )}
       {...props}
