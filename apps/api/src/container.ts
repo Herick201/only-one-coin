@@ -1,5 +1,7 @@
+import type { FastifyBaseLogger } from "fastify";
 import { CreateExampleUseCase, type IExampleRepository } from "@ooc/domain";
 import { loadConfig, type Config } from "./config.js";
+import { createLogger } from "./infra/logger.js";
 import { InMemoryExampleRepository } from "./infra/persistence/example/InMemoryExampleRepository.js";
 
 export interface AppRepositories {
@@ -15,12 +17,14 @@ export interface AppUseCases {
 export interface AppContainer {
   production: boolean;
   config: Config;
+  logger: FastifyBaseLogger;
   repositories: AppRepositories;
   useCases: AppUseCases;
 }
 
 function buildContainer(): AppContainer {
   const config = loadConfig();
+  const logger = createLogger(config);
 
   // Repositories
   const exampleRepository = new InMemoryExampleRepository();
@@ -31,6 +35,7 @@ function buildContainer(): AppContainer {
   return {
     production: config.NODE_ENV === "production",
     config,
+    logger,
     repositories: {
       example: exampleRepository,
     },

@@ -1,11 +1,12 @@
-import pino from "pino";
 import { createRedisConnection } from "@ooc/queue";
-import { loadConfig } from "./config.js";
+import { container } from "./container.js";
 import { startSendEmailWorker } from "./workers/send-email.worker.js";
 
-const config = loadConfig();
-const logger = pino();
-const connection = createRedisConnection(config.REDIS_URL);
+const {
+  config: { REDIS_URL },
+  logger,
+} = container;
+const connection = createRedisConnection(REDIS_URL);
 
 const sendEmailWorker = startSendEmailWorker(connection, logger);
 

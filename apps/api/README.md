@@ -27,8 +27,8 @@ Só existe script de `dev` por enquanto — build de produção (bundling,
 ```
 src/
   config.ts             # env validada com zod no boot (NODE_ENV, PORT, HOST, REDIS_URL)
-  container.ts           # composition root — monta repositórios e usecases de @ooc/domain
-  app.ts                  # build do Fastify (zod type provider, swagger fora de produção, rotas)
+  container.ts           # composition root — monta logger, repositórios e usecases de @ooc/domain
+  app.ts                  # build do Fastify (zod type provider, swagger fora de produção, rotas) — usa container.logger via loggerInstance, genReqId gera UUID real
   http/
     RootRoute.ts             # rota raiz
     HealthCheckRoute.ts       # /health
@@ -36,9 +36,12 @@ src/
   workers/
     send-email.worker.ts       # consome a fila send-email de @ooc/queue — hoje só loga (stub)
   infra/
+    logger.ts                     # pino compartilhado (container.logger) — mesma instância usada pelo Fastify (request.log) e por futuros repositórios/workers
     persistence/example/InMemoryExampleRepository.ts   # implementação em memória do IExampleRepository (stub deliberado)
     plugins/swagger.ts           # plugin do @fastify/swagger + swagger-ui
+    plugins/errorHandler.ts       # setErrorHandler global — mapeia HttpError (@ooc/domain) e erro de validação zod pro envelope de ErrorResponseSchema
   shared/http/RouteBuilder.ts     # builder fluente de rota (method/body/params/query/response/handler) — específico de HTTP, por isso não mora em @ooc/domain
+  shared/http/ErrorResponseSchema.ts  # schema zod do contrato público de erro ({ status, reason, path, errorId }) — sem message livre (CLAUDE.md §4)
 ```
 
 ## Pendências conhecidas (fora do escopo deste scaffold)

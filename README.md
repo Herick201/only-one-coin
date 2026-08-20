@@ -16,18 +16,20 @@ backoffice administrativo e módulo de e-mail.
 ## Stack
 
 Astro (site público) · Next.js App Router (portal + backoffice) · Fastify
-(`apps/api`, hospedado no Fly.io) · Postgres gerenciado (Neon) · Tigris
-(storage de comprovante, nativo do Fly.io) · Netlify (landing + app) · Redis
-(Upstash) + BullMQ · Gemini (OCR) · Brevo (e-mail transacional/campanhas) +
-Zoho Mail (caixa de e-mail de staff) · Sentry + PostHog.
+(`apps/api`, hospedado no Fly.io) · Postgres gerenciado (Neon) · Better Auth
+(embutido em `apps/api`) · Tigris (storage de comprovante, nativo do
+Fly.io) · Netlify (landing + app) · Redis (Upstash) + BullMQ · Gemini (OCR) ·
+Brevo (e-mail transacional/campanhas) + Zoho Mail (caixa de e-mail de
+staff) · Sentry + PostHog.
 
 ## Estado atual
 
 Postgres (Neon), hospedagem de `apps/api` (Fly.io), storage de comprovante
-(Tigris) e caixa de e-mail (Zoho Mail) já estão decididos
-(`docs/ARCHITECTURE.md` §5) mas ainda não implementados — sem banco real,
-sem auth real. Só auth segue sem provedor escolhido. Domínio e fila já
-existem, independentes dessa escolha:
+(Tigris), caixa de e-mail (Zoho Mail) e auth (Better Auth) já estão
+decididos (`docs/ARCHITECTURE.md` §5) mas o auth ainda não está
+implementado — sem banco real ainda, o adapter concreto do Better Auth
+depende do Postgres local existir primeiro. Domínio e fila já existem,
+independentes dessa escolha:
 
 - `apps/landing` — site público (Astro).
 - `apps/app` — Next.js App Router: layout, roteamento, i18n trilíngue e as telas
@@ -43,13 +45,16 @@ existem, independentes dessa escolha:
   (paleta da landing, tipografia Inter). A landing segue com Fredoka/Poppins —
   público diferente.
 - `packages/domain` — domínio DDD puro (entidades, usecases, portas de
-  repositório), sem framework nem provedor de banco.
+  repositório), sem framework nem provedor de banco. Já inclui a porta de
+  identidade/auth (`identity/`, ver `packages/domain/README.md`) e um
+  vocabulário de erro HTTP reutilizável (`shared/base/errors/`).
 - `packages/queue` — contrato de fila compartilhado (BullMQ/Redis).
 - `apps/api` — Fastify expondo `@ooc/domain` via HTTP e rodando os workers de
   fila. Persistência ainda em memória (`InMemoryExampleRepository`) até o
-  banco Neon ser provisionado.
+  banco Neon ser provisionado. Já tem error handler global + logger
+  compartilhado (`container.logger`) via `infra/plugins/`.
 
-**A reconstruir** (volta quando banco/storage forem provisionados e auth for
-escolhido): banco e migrations, auth real, storage, OCR e notificações
-reais. Autorização é feita na camada de aplicação (`apps/api`), não em RLS —
-ver `CLAUDE.md` §8.
+**A reconstruir** (volta quando banco for provisionado): migrations, adapter
+real do Better Auth (`apps/api/src/infra/auth/`), storage, OCR e
+notificações reais. Autorização é feita na camada de aplicação (`apps/api`),
+não em RLS — ver `CLAUDE.md` §8.
