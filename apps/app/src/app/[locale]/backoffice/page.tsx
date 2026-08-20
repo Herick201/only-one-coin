@@ -73,10 +73,10 @@ export default async function BackofficePage({
           <Image
             src="/brand/logo.png"
             alt="Only One Coin"
-            width={163}
-            height={94}
+            width={768}
+            height={127}
             priority
-            className="h-14 w-auto"
+            className="h-9 w-auto"
           />
         </div>
 
@@ -115,9 +115,9 @@ export default async function BackofficePage({
           <Image
             src="/brand/logo.png"
             alt="Only One Coin"
-            width={163}
-            height={94}
-            className="h-10 w-auto lg:hidden"
+            width={768}
+            height={127}
+            className="h-7 w-auto lg:hidden"
           />
           <span className="hidden lg:inline" />
           <LanguageGlobe />
