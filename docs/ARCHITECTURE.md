@@ -15,7 +15,7 @@ pnpm workspaces com dois grupos, no mesmo padrão do diagrama do `CLAUDE.md` §3
 | `apps/landing` (`@ooc/landing`) | Site público, Astro estático | Nenhum pacote interno | Implementado |
 | `apps/app` (`@ooc/app`) | Next.js App Router — portal do aluno + backoffice | Nenhum pacote interno hoje | Mockup, sem acesso a dado real |
 | `apps/api` (`@ooc/api`) | Fastify — expõe `@ooc/domain` via HTTP, roda os workers de `@ooc/queue` | `@ooc/domain`, `@ooc/queue` | Scaffold rodando local, persistência em memória |
-| `packages/domain` (`@ooc/domain`) | DDD puro — entidades, usecases, portas de repositório | Nenhum (núcleo — não depende de nada do monorepo) | Scaffold com contexto de exemplo |
+| `packages/domain` (`@ooc/domain`) | DDD puro — entidades, usecases, portas de repositório | Nenhum (núcleo — não depende de nada do monorepo) | Scaffold com contexto de exemplo + porta de identidade (auth) + vocabulário de erro HTTP |
 | `packages/queue` (`@ooc/queue`) | Contrato de fila compartilhado (schemas zod, producers) | Nenhum pacote interno (só `bullmq`/`ioredis`/`zod`) | Scaffold com job de exemplo |
 | `packages/db`, `notifications`, `ocr`, `i18n`, `shared` | Reservados no diagrama do `CLAUDE.md` §3 | — | Ainda não criados |
 
@@ -160,9 +160,49 @@ Empate técnico em egress (o fator que mais pesava no critério "barato com o te
 
 Descartados sem chegar a comparar de perto: AWS S3/`sa-east-1` e Google Cloud Storage/`southamerica-east1` (cobram egress ~US$0,11-0,12/GB — o backoffice reabrindo comprovante em volume tornaria isso caro com o tempo); Backblaze B2 e Wasabi (sem região LatAm, egress grátis só por acordo de parceria condicional); DigitalOcean Spaces (sem região LatAm — mais perto é Toronto).
 
-### 5.5 Ainda em aberto — auth
+### 5.5 Auth — Better Auth (fechado)
 
-Postgres, hospedagem de `apps/api`, storage e caixa de e-mail estão fechados. **Auth** (login de `student`/`guardian`/staff) continua sem provedor — ver `CLAUDE.md` §3, "Decisão em aberto — auth".
+Postgres, hospedagem de `apps/api`, storage, caixa de e-mail e agora auth (login de `student`/`guardian`/staff) estão todos fechados.
+
+| Critério | **Better Auth (escolhido)** | Alternativa mais robusta — Clerk/Auth0 |
+| --- | --- | --- |
+| Modelo | Biblioteca embutida no processo do backend — roda dentro de `apps/api` (Fastify), como qualquer outra dependência de infra | Serviço hospedado externo — auth vive fora do monorepo, numa conta de terceiro |
+| Banco | Aceita conexão Postgres existente (adapter, não ORM próprio obrigatório) — mesma instância Neon de tudo o resto | Banco de usuários próprio do provedor, fora do controle do time |
+| Leitura de sessão | `auth.api.getSession()` bate no banco a cada chamada — nunca JWT cego confiado no cliente (casa direto com `CLAUDE.md` §8, "apps/api lê o role do registro autenticado no banco a cada requisição sensível") | Depende do provedor — geralmente JWT de vida curta, exige lógica própria de revalidação |
+| Campo `role` protegido | `additionalFields.role` com `input:false` — API pública de signup/update não aceita esse campo, só escrita server-side | Também suportado, mas acoplado ao painel/API do provedor |
+| Por que não a alternativa agora | — | Clerk já tinha sido avaliado e descartado antes (`CLAUDE.md` §3); custo e acoplamento a um provedor hospedado não se justificam pro volume do projeto (`CLAUDE.md` §1), e Better Auth já resolve as regras duras de `CLAUDE.md` §8 sem sair do monorepo |
+
+Detalhe completo do padrão de integração (fronteira com `packages/domain`, como `apps/app` fala com o auth sem tocar banco, migration, bootstrap do primeiro admin): §5.6 abaixo.
+
+### 5.6 Padrão de integração — Better Auth
+
+**Fronteira com `packages/domain` (DDD puro).** Better Auth nunca é importado por `packages/domain` — o pacote só define a porta:
+
+| Peça | Onde mora | Por quê |
+| --- | --- | --- |
+| Contrato de "usuário autenticado atual", `role`, portas de sessão/promoção (`ICurrentSessionPort`, `IUserRoleRepository`, `IAuditLogRepository`, `IFreshAuthVerifier`, `PromoteUserRoleUseCase`) | `packages/domain/src/identity/` | Só interfaces/tipos/orquestração — zero import de `better-auth`, zero I/O |
+| Instância do `betterAuth()`, handler `/api/auth/*`, leitura de `auth.api.getSession`, escrita na coluna `role` | `apps/api/src/infra/auth/` e `apps/api/src/infra/persistence/identity/` | Implementação concreta — ainda não criada, depende de Postgres local existir (Sessão 3 do `ROADMAP.md`) |
+| Nada | `apps/app` | Nunca instancia `betterAuth()` nem toca banco |
+
+`ICurrentSessionPort.resolve(sessionToken: string)` recebe uma **string opaca** (o valor do cookie), não `Headers`/`FastifyRequest` — quem extrai o cookie da requisição é a camada HTTP em `apps/api`. Isso é o que preserva a pureza do domínio: ele não sabe o que é HTTP.
+
+**`role` como coluna nativa, não `user_roles` separada.** Decisão fechada: `role` fica em `additionalFields.role` na própria tabela `user` do Better Auth (`input:false`), não numa tabela `user_roles` à parte. Motivo: `input:false` já impede escrita client-side, e `auth.api.getSession()` já bate no banco a cada leitura — isso satisfaz literalmente as regras duras de `CLAUDE.md` §8 sem precisar de uma segunda tabela desincronizada da tabela `user`. A promoção de papel (`PromoteUserRoleUseCase`) escreve direto na coluna `role`, nunca pela rota pública de update de usuário do Better Auth (bloqueada por `input:false`).
+
+**Reautenticação fresca na promoção é responsabilidade nossa.** O plugin `admin` do Better Auth exige que quem chama `setRole` já esteja autenticado como admin, mas **não** garante reautenticação fresca sozinho. `PromoteUserRoleUseCase` (`packages/domain/src/identity/`) impõe isso via `IFreshAuthVerifier` antes de mudar o `role` e gravar o `audit_log` — o adapter concreto em `apps/api` envolve a escrita do `role` + o append do `audit_log` na mesma transação de banco (o usecase não sabe de transação, só a ordem de chamadas).
+
+**`apps/app` nunca fala direto com o banco — padrão "client separado".** Better Auth roda só dentro de `apps/api`. `apps/app` propaga a sessão via **proxy same-origin**: `apps/app/src/app/api/auth/[...all]/route.ts` recebe a requisição do browser em `aula.onlyonecoin.edu.pe/api/auth/*`, encaminha pra `apps/api` (`API_INTERNAL_URL`, env server-side do Next, nunca exposta ao browser), propaga `Set-Cookie` de volta. Mantém o cookie de sessão same-origin do ponto de vista do browser — mais simples e mais seguro que apontar o browser direto pro domínio do Fly.io. Redirect por `role` continua sempre server-side (`CLAUDE.md` §8): `apps/app` resolve o `role` chamando `apps/api`, nunca o banco.
+
+**Migration entra na esteira normal.** O CLI do Better Auth (`generate`) produz SQL revisável, não roda sozinho em runtime — esse SQL é copiado como migration versionada dentro de `packages/db` (a nascer na Sessão 3 do `ROADMAP.md`), na mesma numeração/ferramenta das demais migrations do projeto. Não há duas esteiras de migration.
+
+**Bootstrap do primeiro admin, em dois passos** (`CLAUDE.md` §8): (1) criar a conta pelo fluxo normal do Better Auth, garantindo hash de senha compatível com login futuro — `role` nasce no `defaultValue` de menor privilégio, `input:false` ignora qualquer `role` no payload; (2) uma migration versionada (`UPDATE "user" SET role = 'admin' WHERE email = $1`) promove esse usuário específico — única exceção documentada a "só o usecase promove".
+
+**Bloqueado até Postgres local existir (Sessão 3 do `ROADMAP.md`):** instalar `better-auth`, os adapters reais em `apps/api/src/infra/`, a rota catch-all `/api/auth/*`, o wiring em `container.ts`, as envs `DATABASE_URL`/`BETTER_AUTH_SECRET`, e o proxy em `apps/app`. Pertence à Sessão 3 e à Sessão 31 (`ROADMAP.md`, "Shell e autenticação").
+
+### 5.7 Contrato de erro da API
+
+Vocabulário reutilizável em `packages/domain/src/shared/base/errors/`: `HttpError` (base, `status` default 500) e as subclasses genéricas `UnauthorizedError` (401), `ForbiddenError` (403), `NotFoundError` (404), `UnableToProcessEntryError` (422 — regra de negócio recusa uma requisição bem formada). Exceção documentada à regra "domínio nunca sabe de HTTP" — `CLAUDE.md` §5.
+
+Envelope de resposta pública (`apps/api/src/shared/http/ErrorResponseSchema.ts`, aplicado via `setErrorHandler` global em `apps/api/src/infra/plugins/errorHandler.ts`): `{ status, reason, path?, errorId? }`. Sem `message` livre no contrato — `reason` é a chave estável que `apps/app` resolve pra texto localizado via `packages/i18n` (`CLAUDE.md` §4, "zero string de UI... inclui mensagem de erro de API"); `message` (herdado de `Error`) fica só em log/Sentry. Erro inesperado (não tipado) responde 500 com `errorId` = `request.id` (Fastify, UUID gerado por requisição via `genReqId`, compartilhado por todo log daquela requisição via `container.logger`) — nunca stack trace ao usuário (`CLAUDE.md` §6).
 
 ---
 

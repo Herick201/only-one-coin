@@ -70,7 +70,7 @@ Se algo parecer exigir um desses, **pare e pergunte**.
 | Hospedagem | **Netlify** (landing + app) · **Fly.io** (`apps/api`, região GRU/São Paulo — VM always-on, roda os workers de fila) |
 | Banco | **Postgres** gerenciado — **Neon** (`sa-east-1`/São Paulo) |
 | Storage (comprovante + backup) | **Tigris** (nativo do Fly.io — `fly storage create`, S3-compatible, egress zero) — mesmo bucket-provider pros dois usos, sem conta separada |
-| Auth | Decisão em aberto — ver abaixo |
+| Auth | **Better Auth** — biblioteca embutida no processo de `apps/api` (Fastify), nunca instanciada em `apps/app` |
 | Fila | **Redis (Upstash) + BullMQ** — workers em `apps/api` |
 | OCR / IA | **Gemini 3.1 Flash-Lite** (nível 1) · modelo de outra família (nível 2) |
 | E-mail (transacional/campanhas) | **Brevo**, atrás de adapter |
@@ -79,11 +79,11 @@ Se algo parecer exigir um desses, **pare e pergunte**.
 | Captcha | **Cloudflare Turnstile** |
 | Backup | `pg_dump` → **Tigris** via Scheduled Function (mesmo storage do comprovante) |
 | Observabilidade | **Sentry** + **PostHog** (EU Cloud) |
-| Realtime | a decidir — depende do provedor de auth (único item de infra ainda em aberto) |
+| Realtime | a decidir — item de infra que segue em aberto por conta própria |
 
-Não trocar nada disso sem me perguntar. Já foram avaliadas e descartadas: Vercel, Clerk, Pinecone, Resend, Cloudflare CDN. O provedor de backend gerenciado que havia sido escolhido foi **removido**; Postgres, hospedagem de `apps/api`, storage de comprovante e caixa de e-mail já foram refechados (acima, sessão 17/08/2026 — critério e alternativas comparadas em `docs/ARCHITECTURE.md` §5). Só auth segue em aberto (ver abaixo).
+Não trocar nada disso sem me perguntar. Já foram avaliadas e descartadas: Vercel, Clerk, Pinecone, Resend, Cloudflare CDN. O provedor de backend gerenciado que havia sido escolhido foi **removido**; Postgres, hospedagem de `apps/api`, storage de comprovante, caixa de e-mail e auth já foram refechados (acima, sessão 17/08/2026 para os quatro primeiros, `docs/ARCHITECTURE.md` §5; auth fechado depois — ver abaixo e `docs/ARCHITECTURE.md` §5.6).
 
-**Decisão em aberto — auth.** O provedor removido cobria Postgres, auth e storage juntos; Postgres e storage já foram resolvidos (Neon e Tigris, acima). **Auth** ainda não tem provedor escolhido. Não escolher, não instalar SDK, não escrever código acoplado a um provedor. Se algo travar por isso, **pare e pergunte**.
+**Decisão fechada — auth.** O provedor removido cobria Postgres, auth e storage juntos; os três já foram resolvidos (Neon, Better Auth e Tigris, acima). Better Auth é uma **biblioteca embutida no processo do backend**, não um serviço hospedado externo — roda dentro do próprio `apps/api`, aceita conexão Postgres existente, e o campo `role` fica travado contra escrita client-side (`additionalFields.role`, `input:false`). Padrão de integração completo (porta em `packages/domain`, adapter em `apps/api/src/infra`, `apps/app` nunca instanciando o provedor) em `docs/ARCHITECTURE.md` §5.6.
 
 **Decisão fechada — modelo de autorização.** Autorização vive na **camada de aplicação** (`apps/api`, ver §8), não em RLS — motivo e comparação de caminhos em `docs/ARCHITECTURE.md` §2. RLS pode voltar depois como camada extra de defesa, mas nunca como o mecanismo de aceite documentado.
 
@@ -225,6 +225,8 @@ Templates versionados no repositório, não desenhados só no painel do Brevo.
 
 Regra de fronteira, vale pra qualquer contexto novo (não só `example`): `packages/domain` é DDD puro (portas e adaptadores) — nunca importa Fastify, provedor de banco ou Redis, só define a **interface** de repositório. A implementação concreta mora na infra de quem consome (`apps/api/src/infra/`). Detalhe de padrão (`BaseModel`/`BaseUseCase`, `RouteBuilder`, `container.ts`, entrypoints) está em `packages/domain/README.md` e `apps/api/README.md` — não duplicado aqui. Estrutura e dependência entre os pacotes: `docs/ARCHITECTURE.md` §1.
 
+**Exceção documentada à regra acima:** o vocabulário de erro HTTP (`packages/domain/src/shared/base/errors/` — `HttpError`, `UnauthorizedError`, `ForbiddenError`, `NotFoundError`, `UnableToProcessEntryError`) carrega uma noção de HTTP (`status`) dentro do pacote de domínio. Decisão consciente pra reaproveitar o mesmo vocabulário entre `apps/api` e qualquer bounded context futuro, em vez de duplicar a classe do lado de fora. Nada além dessas classes pode importar ou expor tipo de framework — o resto do pacote continua puro.
+
 ---
 
 ## 6. Erros proibidos
@@ -309,15 +311,15 @@ Um **único backend de auth** (um só provedor de auth, um só registro de usuá
 
 O `role` **nunca** mora em lugar que o próprio usuário escreve. Regras duras:
 
-- `role` vive em tabela protegida (ex.: `user_roles`). `apps/api` **não expõe rota genérica de `UPDATE`** nela — a única forma de mudar `role` é um usecase dedicado de promoção (não um `PATCH` de usuário comum), nem para o próprio dono, nem para admin comum fora desse fluxo.
-- **Nunca** guardar `role` em algo editável pelo usuário (ex.: `user_metadata` de provedores de auth que expõem isso). Se o provedor de auth suportar custom claim, ele é preenchido **server-side**, a partir da tabela protegida.
+- `role` vive em coluna protegida na própria tabela `user` gerenciada pelo Better Auth (`additionalFields.role`, `input:false` — API pública de signup/update não aceita esse campo). `apps/api` **não expõe rota genérica de `UPDATE`** nela — a única forma de mudar `role` é um usecase dedicado de promoção (não um `PATCH` de usuário comum), nem para o próprio dono, nem para admin comum fora desse fluxo.
+- **Nunca** guardar `role` em algo editável pelo usuário (ex.: `user_metadata` de provedores de auth que expõem isso). `input:false` garante que o `role` do Better Auth é preenchido **server-side**, nunca a partir do payload de cadastro/perfil do usuário.
 - `apps/api` lê o `role` a partir do registro do usuário autenticado no banco a cada requisição sensível — **nunca** de header/JWT montado pelo cliente.
 - Toda mudança de cargo → `audit_log` append-only.
 
 **Modelo de criação de staff (fechado):**
 
 1. **Bootstrap:** o primeiro `admin` nasce por **migration versionada**.
-2. **Depois:** **só `admin`** cria/promove staff, pela UI, via usecase dedicado (`packages/domain`) que exige **re-autenticação fresca** do admin. Nenhum outro papel promove ninguém. (Sob RLS/Supabase isso seria uma função `SECURITY DEFINER` no banco — agora é um usecase em `apps/api`, mesma regra, camada diferente.)
+2. **Depois:** **só `admin`** cria/promove staff, pela UI, via usecase dedicado (`PromoteUserRoleUseCase`, `packages/domain/src/identity/`) que exige **re-autenticação fresca** do admin. Nenhum outro papel promove ninguém. O plugin `admin` do Better Auth não garante reautenticação fresca sozinho — é o usecase, não o provedor, que impõe essa checagem antes de escrever o `role`.
 
 ---
 
