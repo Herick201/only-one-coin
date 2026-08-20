@@ -10,6 +10,8 @@ import {
   TableShell,
   tdClass,
   thClass,
+  Toolbar,
+  toolbarSearchClass,
 } from '@/components/backoffice/ui'
 import { BoIcon } from '@/components/backoffice/icons'
 import { Toast } from '@/components/backoffice/controls'
@@ -108,8 +110,8 @@ export function CoursesView({
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-        <label className="relative flex-1 lg:max-w-sm">
+      <Toolbar>
+        <label className={toolbarSearchClass}>
           <span className="sr-only">{t('courses.search_label')}</span>
           <BoIcon
             name="search"
@@ -135,7 +137,7 @@ export function CoursesView({
             {t('courses.new_course')}
           </button>
         )}
-      </div>
+      </Toolbar>
 
       {creating && (
         <NewCourseForm

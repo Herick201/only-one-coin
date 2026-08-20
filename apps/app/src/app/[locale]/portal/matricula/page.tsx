@@ -12,6 +12,7 @@ import {
 import { enrollmentTone, paymentTone, seatTone } from '@/components/portal/status-tone'
 import { Icon } from '@/components/portal/icons'
 import { paymentMethodLabel } from '@/lib/payment-method'
+import { AutoGrid } from '@/components/layout/auto-grid'
 
 /** Which payment states get a contextual note, and its tone. */
 const noteFor: Partial<Record<PaymentStatus, { key: string; tone: 'success' | 'warning' | 'danger' }>> = {
@@ -72,7 +73,7 @@ export default async function EnrollmentPage({
                   />
                 </div>
 
-                <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
+                <AutoGrid as="dl" min="9rem" gap="gap-x-6 gap-y-3" className="mt-4">
                   <Field label={t('enrollments.code_label')}>
                     <span className="font-mono text-xs">{e.code}</span>
                   </Field>
@@ -80,7 +81,7 @@ export default async function EnrollmentPage({
                   <Field label={t('enrollments.price_label')}>
                     {formatMoney(e.payment.amountCents, e.payment.currency, locale)}
                   </Field>
-                </dl>
+                </AutoGrid>
 
                 {/* Payment receipt */}
                 <div className="mt-5 rounded-xl border border-line bg-sky-soft p-4">
@@ -94,7 +95,7 @@ export default async function EnrollmentPage({
                       label={t(`payment_status.${e.payment.status}`)}
                     />
                   </div>
-                  <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
+                  <AutoGrid as="dl" min="9rem" gap="gap-x-6 gap-y-3" className="mt-3">
                     <Field label={t('payment_method.label')}>
                       {paymentMethodLabel[e.payment.method]}
                     </Field>
@@ -112,7 +113,7 @@ export default async function EnrollmentPage({
                         dot={false}
                       />
                     </Field>
-                  </dl>
+                  </AutoGrid>
                   {e.payment.paidAt && (
                     <p className="mt-3 text-xs text-muted-foreground">
                       {t('enrollments.paid_on', {

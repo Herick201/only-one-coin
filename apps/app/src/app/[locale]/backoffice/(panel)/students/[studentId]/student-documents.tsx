@@ -18,6 +18,7 @@ import {
 import { Card, EmptyState, SectionTitle, StatusBadge } from '@/components/backoffice/ui'
 import { deliveryTone, documentTone, paymentTone } from '@/components/backoffice/status-tone'
 import { BoIcon } from '@/components/backoffice/icons'
+import { AutoGrid } from '@/components/layout/auto-grid'
 
 const DOCUMENT_TYPES: DocumentType[] = ['enrollment_certificate', 'certificate']
 
@@ -117,7 +118,7 @@ export function StudentDocuments({ student }: { student: StudentDetail }) {
             <p className="mb-3 text-sm font-semibold text-ink">
               {t('student_file.issue_title')}
             </p>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <AutoGrid min="18rem" gap="gap-3">
               <label className="flex flex-col gap-1">
                 <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {t('student_file.issue_type')}
@@ -150,7 +151,7 @@ export function StudentDocuments({ student }: { student: StudentDetail }) {
                   ))}
                 </select>
               </label>
-            </div>
+            </AutoGrid>
 
             <p className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
               <BoIcon name="email" size={14} className="mt-0.5 shrink-0" />

@@ -16,6 +16,7 @@ import {
 } from '@/components/backoffice/ui'
 import { classGroupTone, seatPressureTone } from '@/components/backoffice/status-tone'
 import { BoIcon } from '@/components/backoffice/icons'
+import { AutoGrid } from '@/components/layout/auto-grid'
 
 /**
  * The home a teacher gets. Not the coordinator's home with the money taken out:
@@ -58,7 +59,7 @@ export async function TeacherHome({
 
       <MockNotice label={t('common.mock_notice')} />
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <AutoGrid as="section" min="15rem" gap="gap-3">
         <StatCard
           icon="courses"
           label={t('teacher_home.metric_class_groups')}
@@ -88,7 +89,7 @@ export async function TeacherHome({
           hint={t('teacher_home.metric_pending_certificates_hint')}
           tone={teacher?.pendingCertificates ? 'warning' : 'neutral'}
         />
-      </section>
+      </AutoGrid>
 
       {/* What still owes a certificate comes first: it is the only thing here
           with a deadline attached. */}
@@ -103,7 +104,7 @@ export async function TeacherHome({
               {t('teacher_home.owing_subtitle')}
             </p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <AutoGrid min="20rem" gap="gap-3">
             {owing.map((group) => (
               <Card key={group.id} className="p-4">
                 <div className="flex items-start justify-between gap-3">
@@ -127,7 +128,7 @@ export async function TeacherHome({
                 </div>
               </Card>
             ))}
-          </div>
+          </AutoGrid>
         </section>
       )}
 

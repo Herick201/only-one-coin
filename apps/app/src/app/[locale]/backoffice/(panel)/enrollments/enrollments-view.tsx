@@ -22,6 +22,8 @@ import {
   TableShell,
   tdClass,
   thClass,
+  Toolbar,
+  toolbarSearchClass,
 } from '@/components/backoffice/ui'
 import { Toast } from '@/components/backoffice/controls'
 import {
@@ -32,6 +34,7 @@ import {
 import { BoIcon } from '@/components/backoffice/icons'
 import { EnrollmentDetailDialog } from './enrollment-detail-dialog'
 import { NewEnrollmentForm } from './new-enrollment-form'
+import { AutoGrid } from '@/components/layout/auto-grid'
 
 type StatusFilter = EnrollmentStatus | 'all'
 type SeatFilter = SeatStatus | 'all'
@@ -175,7 +178,7 @@ export function EnrollmentsView({
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <AutoGrid as="section" min="15rem" gap="gap-3">
         <StatCard
           icon="enrollments"
           tone="info"
@@ -209,12 +212,12 @@ export function EnrollmentsView({
           value={String(metrics.released)}
           hint={t('enrollments.metric_released_hint')}
         />
-      </section>
+      </AutoGrid>
 
       {/* Toolbar */}
       <div className="flex flex-col gap-3">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-          <label className="relative flex-1 lg:max-w-sm">
+        <Toolbar>
+          <label className={toolbarSearchClass}>
             <span className="sr-only">{t('enrollments.search_label')}</span>
             <BoIcon
               name="search"
@@ -274,7 +277,7 @@ export function EnrollmentsView({
               {t('enrollments.new_enrollment')}
             </button>
           )}
-        </div>
+        </Toolbar>
 
         {filtersOpen && (
           <Card className="flex flex-col gap-3 p-3">

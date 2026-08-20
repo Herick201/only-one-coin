@@ -133,7 +133,10 @@ export default async function PortalLayout({
 
       {/* Content */}
       <div className="lg:pl-64">
-        <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
+        {/* `@container/page` names the reading column. The viewport is the
+            wrong ruler once a 16rem sidebar sits beside it: at 1024px the
+            window says "large screen" while the column has 688px to give. */}
+        <main className="@container/page mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
           {children}
         </main>
       </div>

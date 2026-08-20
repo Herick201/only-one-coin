@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl'
 import type { CertificateRule, CourseOptions } from '@/lib/backoffice/types'
 import { Toggle } from '@/components/backoffice/controls'
+import { AutoGrid, fullRowClass } from '@/components/layout/auto-grid'
 
 const CERTIFICATE_RULES: CertificateRule[] = ['automatic', 'exam_required']
 
@@ -36,9 +37,10 @@ export function CourseOptionFields({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Driven by a prop, not a breakpoint: the sheet is narrow at every
-          viewport width, so `lg:` would widen it on a large screen too. */}
-      <div className={`grid gap-3 sm:grid-cols-2 ${wide ? 'lg:grid-cols-3' : ''}`}>
+      {/* The prop only sets how tight the columns may get: the sheet is
+          narrow at every viewport width, so it packs the fields closer rather
+          than waiting for a screen size that never arrives there. */}
+      <AutoGrid min={wide ? '14rem' : '11rem'} gap="gap-3">
         <label className="flex flex-col gap-1">
           <span className={labelClass}>{t('course_options.min_age')}</span>
           <input
@@ -79,7 +81,7 @@ export function CourseOptionFields({
             one reads as a different rule. The hint carries the meaning the
             short label drops. */}
         <label
-          className={`flex flex-col gap-1 sm:col-span-2 ${wide ? 'lg:col-span-3' : ''}`}
+          className={`flex flex-col gap-1 ${fullRowClass}`}
         >
           <span className={labelClass}>{t('course_options.certificate_rule')}</span>
           <select
@@ -99,7 +101,7 @@ export function CourseOptionFields({
             {t(`certificate_rule_hint.${value.certificateRule}`)}
           </span>
         </label>
-      </div>
+      </AutoGrid>
 
       <fieldset className="flex flex-col gap-3">
         <legend className={`mb-1 ${labelClass}`}>

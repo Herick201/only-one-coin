@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { cn } from '@/lib/utils'
 import { BoIcon, type BoIconName } from './icons'
 
 /**
@@ -10,6 +11,26 @@ import { BoIcon, type BoIconName } from './icons'
  */
 
 export type Tone = 'success' | 'warning' | 'danger' | 'neutral' | 'info'
+
+/**
+ * Filter bar above a table: a search field that takes the slack and controls
+ * that wrap under it instead of squeezing. Wrapping is the breakpoint here —
+ * it fires off the real width, not off a window size.
+ */
+export function Toolbar({
+  children,
+  className,
+}: {
+  children: ReactNode
+  className?: string
+}) {
+  return (
+    <div className={cn('flex flex-wrap items-center gap-3', className)}>{children}</div>
+  )
+}
+
+/** Search field inside a `Toolbar`: grows into the slack, wraps before it starves. */
+export const toolbarSearchClass = 'relative min-w-60 max-w-sm flex-1'
 
 const toneClasses: Record<Tone, string> = {
   success: 'bg-emerald-50 text-emerald-700 ring-emerald-600/15',
@@ -72,8 +93,8 @@ export function PageHeader({
   actions?: ReactNode
 }) {
   return (
-    <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-      <div>
+    <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
+      <div className="min-w-72 flex-1">
         <h1 className="text-xl font-semibold tracking-tight text-ink sm:text-2xl">
           {title}
         </h1>
@@ -195,7 +216,11 @@ export function TableShell({
   fixed?: boolean
 }) {
   return (
-    <div className="overflow-x-auto">
+    // A table that does not fit has to say so. Overlay scrollbars stay hidden
+    // until you already scrolled, so a clipped last column reads as a bug
+    // rather than as "there is more to the right" — `scrollbar-width: thin`
+    // keeps the track drawn.
+    <div className="overflow-x-auto [scrollbar-width:thin]">
       <table
         className={`w-full min-w-[46rem] border-collapse text-left text-sm ${
           fixed ? 'table-fixed' : ''

@@ -12,6 +12,7 @@ import {
 } from '@/components/portal/ui'
 import { enrollmentTone } from '@/components/portal/status-tone'
 import { Icon } from '@/components/portal/icons'
+import { AutoGrid } from '@/components/layout/auto-grid'
 
 export default async function CoursesPage({
   params,
@@ -44,7 +45,7 @@ export default async function CoursesPage({
             const firstSlot = e.classGroup.schedule[0]
             return (
               <Card key={e.id} as="li" className="p-5 sm:p-6">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="text-lg font-semibold text-ink">
@@ -62,7 +63,7 @@ export default async function CoursesPage({
                       {e.classGroup.name}
                     </p>
 
-                    <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:max-w-md">
+                    <AutoGrid as="dl" min="9rem" gap="gap-x-6 gap-y-3" className="mt-4 max-w-md text-sm">
                       <div>
                         <dt className="text-xs font-medium text-muted-foreground">
                           {t('common.teacher')}
@@ -99,7 +100,7 @@ export default async function CoursesPage({
                           })}
                         </dd>
                       </div>
-                    </dl>
+                    </AutoGrid>
 
                     {e.progressPct !== null && (
                       <div className="mt-4 sm:max-w-md">

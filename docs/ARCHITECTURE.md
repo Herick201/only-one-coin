@@ -246,3 +246,73 @@ Preços detalhados e fontes: `docs/INFRAESTRUTURA.md`. Três colunas — **free 
 | **Total produção** | — | **~US$86-88/mês** | **~US$120-125/mês** | Neon domina os dois cenários (~65-90% do total); Brevo é o item que mais varia entre normal e pico |
 
 **Leitura**: Neon é o único item praticamente **fixo** (não varia com matrícula — é o preço do compute sempre ligado). Brevo é o item mais **sensível ao volume** — passa de grátis pra ~US$29/mês só em pico, porque envio transacional escala 1:1 com matrícula. Tigris cresce devagar e nunca fica caro porque reteve a versão pequena da imagem, não a original.
+
+---
+
+## 7. Shell e layout das telas (`apps/app`) — fechado 20/08/2026
+
+Regra curta e as primitivas estão em `CLAUDE.md` §5 ("Layout das telas"). Aqui
+fica o porquê, que é o que evita a próxima tela nascer torta pelo mesmo motivo.
+
+### O que quebrava
+
+O painel e o portal têm shell: uma sidebar fixa ao lado de uma coluna de
+conteúdo. Toda decisão de layout, porém, estava escrita em breakpoint de
+**viewport** (`sm:`, `lg:`, `xl:`), e a tela nunca recebe o viewport:
+
+| Janela | Sidebar do painel | Coluna real |
+| --- | --- | --- |
+| 1280px | aberta (13,5rem) | ~1000px |
+| 1280px | recolhida (3rem) | ~1170px |
+| 1920px | aberta | ~1704px (antes: travada em 1152px pelo `max-w-6xl`) |
+
+Três consequências, todas visíveis:
+
+1. **`xl:grid-cols-4` disparava a 1280px de janela** e espremia quatro cards em
+   ~1000px de coluna, truncando os rótulos. Recolher a sidebar liberava 170px e
+   nada mudava — o breakpoint não enxerga a sidebar.
+2. **`max-w-6xl` (72rem) travava a coluna em 1152px.** Num monitor largo sobrava
+   gutter dos dois lados enquanto a tabela dentro da coluna cortava a última
+   coluna e rolava na horizontal.
+3. **`SidebarInset` não tinha `min-w-0`.** Como item de flex, seu tamanho mínimo
+   automático é o `min-content` do conteúdo: uma célula que não encolhia deixava
+   o inset mais largo que o espaço disponível e empurrava o **documento inteiro**
+   pra rolagem horizontal — header sticky e seletor de idioma junto. Medido em
+   `/backoffice/home` a 1280px: `documentElement.scrollWidth` = 1360.
+
+### O que passou a valer
+
+- **`min-w-0` no `SidebarInset`** (`components/ui/sidebar.tsx`). O overflow volta
+  pra dentro do wrapper que o possui. É o item que sozinho mata a rolagem
+  horizontal de página em toda tela do painel, presente e futura.
+- **Coluna do painel fluida** — `max-w-[100rem]` (1600px) no lugar de
+  `max-w-6xl`. O painel é ferramenta de trabalho, não coluna de leitura: cresce
+  com o monitor. O teto existe só porque linha muito longa deixa de ser
+  escaneável. O portal segue em `max-w-5xl` — ali a leitura é o produto.
+- **`AutoGrid`** (`components/layout/auto-grid.tsx`) —
+  `repeat(auto-fit, minmax(min(<min>, 100%), 1fr))`. Substitui a família
+  `sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4` em toda grade de cards e de
+  campos. Sem breakpoint: o número de colunas é recalculado a cada resize e a
+  cada toggle da sidebar. O `min(…, 100%)` impede overflow quando o container é
+  mais estreito que o mínimo pedido.
+- **`Toolbar` + `toolbarSearchClass`** (`components/backoffice/ui.tsx`) — a linha
+  de busca/filtros usa `flex-wrap` em vez de `flex-col lg:flex-row`.
+- **`@container/page`** declarado no `<main>` dos dois shells, pros casos que
+  `auto-fit` não expressa (split assimétrico 2fr/1fr — ex.: detalhe de curso no
+  portal, `@4xl/page:grid-cols-3`).
+- **Scrollbar fina e sempre desenhada** nos wrappers de tabela
+  (`[scrollbar-width:thin]`). Overlay scrollbar só aparece depois que você rola,
+  então tabela cortada lia como bug em vez de "tem mais coisa à direita".
+
+### Onde breakpoint de viewport continua certo
+
+Quando a tela **é** a janela, sem shell em volta: o split da tela de login
+(`/backoffice`, `lg:grid-cols-[1.05fr_0.95fr]`). Fora disso, breakpoint de
+viewport dentro de `portal/` ou `backoffice/(panel)/` é sinal de tela que vai
+quebrar em monitor diferente.
+
+### Verificação
+
+Varredura das 18 rotas de `apps/app` (13 do painel, 5 do portal) em 1920, 1600,
+1440, 1280, 1024, 820 e 500px — 126 combinações, **zero** com
+`documentElement.scrollWidth > viewport`.

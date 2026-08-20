@@ -17,6 +17,8 @@ import {
   TableShell,
   tdClass,
   thClass,
+  Toolbar,
+  toolbarSearchClass,
 } from '@/components/backoffice/ui'
 import { teacherTone } from '@/components/backoffice/status-tone'
 import { BoIcon } from '@/components/backoffice/icons'
@@ -133,8 +135,8 @@ export function TeachersView({
     <div className="flex flex-col gap-4">
       {/* Toolbar */}
       <div className="flex flex-col gap-3">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-          <label className="relative flex-1 lg:max-w-sm">
+        <Toolbar>
+          <label className={toolbarSearchClass}>
             <span className="sr-only">{t('teachers.search_label')}</span>
             <BoIcon
               name="search"
@@ -182,7 +184,7 @@ export function TeachersView({
               {t('teachers.new')}
             </button>
           )}
-        </div>
+        </Toolbar>
 
         {filtersOpen && (
           <Card className="flex flex-wrap items-center gap-1.5 p-3">

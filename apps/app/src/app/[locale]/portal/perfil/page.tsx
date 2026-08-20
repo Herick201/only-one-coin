@@ -4,6 +4,7 @@ import { formatDate } from '@/lib/portal/format'
 import type { Locale } from '@/lib/portal/types'
 import { Card, Field, PageHeader, SectionTitle } from '@/components/portal/ui'
 import { Icon } from '@/components/portal/icons'
+import { AutoGrid } from '@/components/layout/auto-grid'
 
 export default async function ProfilePage({
   params,
@@ -22,7 +23,7 @@ export default async function ProfilePage({
     <div>
       <PageHeader title={t('profile.title')} subtitle={t('profile.subtitle')} />
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <AutoGrid min="24rem" gap="gap-6">
         {/* Personal details */}
         <Card className="p-5 sm:p-6">
           <div className="flex items-center justify-between">
@@ -34,7 +35,7 @@ export default async function ProfilePage({
               </span>
             )}
           </div>
-          <dl className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <AutoGrid as="dl" min="13rem" className="mt-4">
             <Field label={t('profile.full_name')}>
               {student.firstName} {student.lastName}
             </Field>
@@ -46,7 +47,7 @@ export default async function ProfilePage({
             <Field label={t('profile.birth_date_label')}>
               {formatDate(student.birthDate, locale)}
             </Field>
-          </dl>
+          </AutoGrid>
         </Card>
 
         {/* Guardian */}
@@ -54,7 +55,7 @@ export default async function ProfilePage({
           <SectionTitle>{t('profile.guardian_title')}</SectionTitle>
           {guardian ? (
             <>
-              <dl className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <AutoGrid as="dl" min="13rem" className="mt-4">
                 <Field label={t('profile.full_name')}>
                   {guardian.firstName} {guardian.lastName}
                 </Field>
@@ -66,7 +67,7 @@ export default async function ProfilePage({
                 </Field>
                 <Field label={t('profile.email_label')}>{guardian.email}</Field>
                 <Field label={t('profile.phone_label')}>{guardian.phone}</Field>
-              </dl>
+              </AutoGrid>
 
               <div className="mt-5 rounded-xl bg-sky-soft p-4">
                 <div className="flex items-center gap-2 text-sm font-semibold text-ink">
@@ -96,7 +97,7 @@ export default async function ProfilePage({
             <p className="mt-3 text-sm text-muted-foreground">{t('profile.guardian_none')}</p>
           )}
         </Card>
-      </div>
+      </AutoGrid>
 
       <p className="mt-6 text-center text-xs text-muted-foreground">
         {t('profile.edit_note')}

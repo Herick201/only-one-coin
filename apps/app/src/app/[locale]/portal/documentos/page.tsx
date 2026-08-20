@@ -10,6 +10,7 @@ import {
 } from '@/components/portal/ui'
 import { documentTone } from '@/components/portal/status-tone'
 import { Icon } from '@/components/portal/icons'
+import { AutoGrid } from '@/components/layout/auto-grid'
 
 export default async function DocumentsPage({
   params,
@@ -39,7 +40,7 @@ export default async function DocumentsPage({
           icon={<Icon name="documents" size={24} />}
         />
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2">
+        <AutoGrid as="ul" min="18rem">
           {documents.map((doc) => (
             <Card key={doc.id} as="li" className="flex flex-col gap-4 p-5">
               <div className="flex items-start gap-3">
@@ -88,7 +89,7 @@ export default async function DocumentsPage({
               )}
             </Card>
           ))}
-        </ul>
+        </AutoGrid>
       )}
     </div>
   )

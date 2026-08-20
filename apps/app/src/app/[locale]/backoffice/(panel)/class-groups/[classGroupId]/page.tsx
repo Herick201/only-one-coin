@@ -23,6 +23,7 @@ import {
 import { classGroupTone, seatPressureTone } from '@/components/backoffice/status-tone'
 import { BoIcon } from '@/components/backoffice/icons'
 import { ClassGroupCertificates } from './class-group-certificates'
+import { AutoGrid } from '@/components/layout/auto-grid'
 
 /**
  * One class group. The deadline is computed here, on the server, and handed
@@ -84,7 +85,7 @@ export default async function ClassGroupDetailPage({
         {/* Period lives in the subtitle above, so it is not repeated here. The
             date range is split in two fields on purpose: as one string it hit
             the field's truncation and lost the end date. */}
-        <dl className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <AutoGrid as="dl" min="17rem" className="mt-5">
           <Field label={t('class_group.field_code')}>
             <span className="tabular-nums">{group.code}</span>
           </Field>
@@ -113,7 +114,7 @@ export default async function ClassGroupDetailPage({
               />
             </dd>
           </div>
-        </dl>
+        </AutoGrid>
       </Card>
 
       <MockNotice label={t('common.mock_notice')} />

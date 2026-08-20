@@ -26,6 +26,7 @@ import { Toast } from '@/components/backoffice/controls'
 import { classGroupTone, seatPressureTone } from '@/components/backoffice/status-tone'
 import { BoIcon } from '@/components/backoffice/icons'
 import { AvailabilityFields, slotsAreValid } from '../availability-fields'
+import { AutoGrid } from '@/components/layout/auto-grid'
 
 type Tab = 'data' | 'availability' | 'class_groups'
 
@@ -155,7 +156,7 @@ export function TeacherFile({
 
           {editingData ? (
             <div className="flex flex-col gap-4">
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <AutoGrid min="15rem" gap="gap-3">
                 <label className="flex flex-col gap-1">
                   <span className={labelClass}>{t('teachers.field_email')}</span>
                   <input
@@ -188,7 +189,7 @@ export function TeacherFile({
                     ))}
                   </select>
                 </label>
-              </div>
+              </AutoGrid>
 
               <div>
                 <p className={`${labelClass} mb-2`}>{t('teachers.field_languages')}</p>
@@ -240,7 +241,7 @@ export function TeacherFile({
               </div>
             </div>
           ) : (
-            <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <AutoGrid as="dl" min="17rem">
               <Field label={t('teachers.field_email')}>{email}</Field>
               <Field label={t('teachers.field_phone')}>{phone}</Field>
               <Field label={t('teachers.field_nationality')}>
@@ -258,7 +259,7 @@ export function TeacherFile({
                   students: teacher.studentCount,
                 })}
               </Field>
-            </dl>
+            </AutoGrid>
           )}
         </Card>
       )}
@@ -314,7 +315,7 @@ export function TeacherFile({
               {/* The week, with what was already allocated laid on top: the
                   question this answers is where the next class group fits,
                   not what the teacher wrote down. */}
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+              <AutoGrid min="6rem" gap="gap-2">
                 {columns.map((column) => (
                   <div
                     key={column.weekday}
@@ -355,7 +356,7 @@ export function TeacherFile({
                     ))}
                   </div>
                 ))}
-              </div>
+              </AutoGrid>
 
               <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                 <span className="inline-flex items-center gap-1.5">

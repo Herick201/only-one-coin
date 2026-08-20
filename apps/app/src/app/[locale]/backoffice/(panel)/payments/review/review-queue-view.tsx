@@ -17,6 +17,8 @@ import {
   TableShell,
   tdClass,
   thClass,
+  Toolbar,
+  toolbarSearchClass,
 } from '@/components/backoffice/ui'
 import { Toast } from '@/components/backoffice/controls'
 import { reviewFlagTone } from '@/components/backoffice/status-tone'
@@ -154,8 +156,8 @@ export function ReviewQueueView({
     <div className="flex flex-col gap-4">
       {/* Toolbar */}
       <div className="flex flex-col gap-3">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-          <label className="relative flex-1 lg:max-w-sm">
+        <Toolbar>
+          <label className={toolbarSearchClass}>
             <span className="sr-only">{t('review_queue.search_label')}</span>
             <BoIcon
               name="search"
@@ -203,7 +205,7 @@ export function ReviewQueueView({
               sort === 'oldest' ? 'review_queue.sort_oldest' : 'review_queue.sort_newest',
             )}
           </button>
-        </div>
+        </Toolbar>
 
         {/* One axis only: the flag is what tells one case from another here. */}
         {filtersOpen && (
