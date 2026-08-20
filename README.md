@@ -35,7 +35,12 @@ pertencem à Sessão 31 do `ROADMAP.md`, que depende de peças que ainda não
 existem (autorização deny-by-default da Sessão 8, `audit_log` da Sessão 7).
 Domínio e fila já existem, independentes dessa escolha:
 
-- `apps/landing` — site público (Astro).
+- `apps/landing` — site público (Astro), trilíngue. Camada de SEO montada: título e
+  descrição por página nos três idiomas (`src/i18n/ui.ts`), `canonical` + `hreflang`
+  + `x-default` + Open Graph no `Base.astro`, `sitemap.xml` e `llms.txt` gerados a
+  partir do mesmo registro de rotas (`src/seo/routes.ts`) e da tabela de preços, e
+  JSON-LD de `EducationalOrganization`, `Course` e `FAQPage`. `/blog` e `/comunidad`
+  seguem `noindex` enquanto forem placeholder.
 - `apps/app` — Next.js App Router: layout, roteamento, i18n trilíngue e as telas
   em **mockup** (sem acesso a dados). Portal do aluno (`/portal`) e backoffice
   (`/backoffice` para login; painel em `/backoffice/home`). No backoffice já

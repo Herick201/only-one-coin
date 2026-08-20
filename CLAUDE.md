@@ -34,6 +34,7 @@ Venda por WhatsApp (humano, fora do sistema)
 - **Sem descontos.** Nunca. O preço vigente do plano é o valor esperado, sempre.
 - O aluno compra um **paquete** (ex.: conjunto de módulos) ou o **curso completo**. Nunca aula avulsa.
 - **Vários idiomas** (~10) e várias turmas por idioma. Nada específico de idioma no código.
+- **Toda aula é online.** 100% virtual, via Google Meet + Classroom, turma sempre grupal e horário fixo durante o módulo (`docs/REGRAS-NEGOCIO.md` §8). Não existe modalidade presencial, e a **sede é escritório administrativo — não faz atendimento presencial** (§9). Nada na plataforma pode oferecer aula presencial, sede de estudo ou endereço de comparecimento ao aluno; texto público que sugira isso é bug de conteúdo.
 - Cada **período de venda** tem seus próprios cursos, horários, datas de início e vagas.
 - Idade mínima por curso. **Boa parte do público é menor de idade** → consentimento do apoderado é fluxo central.
 - Volume: **5.000/mês** em escala normal (9 meses/ano) · **até 20.000/mês** em escala pico / temporada alta (3 meses/ano).
