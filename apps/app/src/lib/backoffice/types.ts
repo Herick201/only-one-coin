@@ -267,6 +267,8 @@ export interface ReviewQueueItem {
   /** What the receipt says vs. what the frozen plan price says. */
   amountCents: number
   expectedAmountCents: number
+  /** Null when the extraction could not read it — an illegible receipt. */
+  operationNumber: string | null
   flag: ReviewFlag
   /** OCR ladder tier that produced the extraction (0–3). */
   tier: number

@@ -66,6 +66,21 @@
       "see_all": "See the full queue",
       "showing": "Showing {shown} of {total} receipts"
     },
+    "review_queue": {
+      "search_label": "Search receipt",
+      "search_placeholder": "Student, course or operation number",
+      "filters": "Filters",
+      "filter_all": "All",
+      "sort_oldest": "Oldest first",
+      "sort_newest": "Newest first",
+      "col_operation": "Operation",
+      "no_operation": "No number",
+      "empty_search_title": "No results",
+      "empty_search_body": "Try another student, course or operation number, or clear the reason filter.",
+      "page_prev": "Previous",
+      "page_next": "Next",
+      "page_status": "Page {page} of {pages}"
+    },
     "review_flag": {
       "amount_mismatch": "Amount mismatch",
       "low_confidence": "Low confidence",
@@ -79,7 +94,8 @@
       "full": "Full",
       "available": "{count} left",
       "taken": "{taken} of {capacity}",
-      "starts": "Starts {date}"
+      "starts": "Starts {date}",
+      "see_all": "View all courses"
     },
     "modules": {
       "title": "Modules",

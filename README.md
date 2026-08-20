@@ -38,8 +38,9 @@ escolha:
   existem: alunos (`/backoffice/students`, com ficha, histórico e edição),
   turmas (`/backoffice/class-groups`, com lista paginada, ficha da turma,
   emissão de certificados em lote e procedimentos por matrícula — mover,
-  congelar, retirar) e cursos (`/backoffice/courses`, catálogo com opções por
-  curso). Toda escrita é estado local. Os demais módulos do painel aparecem
+  congelar, retirar), cursos (`/backoffice/courses`, catálogo com opções por
+  curso) e a fila de revisão de comprovantes (`/backoffice/payments/review`,
+  com busca, filtro por motivo e paginação). Toda escrita é estado local. Os demais módulos do painel aparecem
   listados como "pronto/em breve".
   UI em shadcn/ui sobre Tailwind v4; os tokens de marca vivem em `globals.css`
   (paleta da landing, tipografia Inter). A landing segue com Fredoka/Poppins —
