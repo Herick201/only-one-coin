@@ -44,3 +44,22 @@ export function canCreateCourse(role: StaffRole): boolean {
 export function canConfigureCourse(role: StaffRole): boolean {
   return role === 'admin' || role === 'coordinator'
 }
+
+/**
+ * Who may settle a receipt the ladder could not. Tesorería and aprobación
+ * masiva exist for exactly this; a teacher runs a class group and never touches
+ * money. The enforcing check is the role declared on the `apps/api` usecase —
+ * this only decides whether the button is drawn (CLAUDE.md §8).
+ */
+export function canReviewPayments(role: StaffRole): boolean {
+  return role !== 'teacher'
+}
+
+/**
+ * Who may change the validation parameters — the tolerance is what decides
+ * whether a receipt passes on its own, so it belongs with whoever answers for
+ * the money, not with whoever works the queue.
+ */
+export function canConfigurePayments(role: StaffRole): boolean {
+  return role === 'admin' || role === 'treasury'
+}

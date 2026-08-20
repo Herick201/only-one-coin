@@ -63,10 +63,12 @@ export default async function BackofficePanelLayout({
           soon: true,
         },
         {
+          /* One entry for the three screens of the section — the ledger, the
+             review queue and the validation parameters. The badge is the queue
+             count: what the panel is opened for on a busy day. */
           key: 'payments',
           href: '/backoffice/payments',
           label: t('nav.payments'),
-          soon: true,
           badge: pendingReview,
         },
       ],
