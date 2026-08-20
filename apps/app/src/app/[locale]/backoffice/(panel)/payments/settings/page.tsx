@@ -40,15 +40,18 @@ export default async function PaymentSettingsPage({
             exact: true,
           },
           { href: '/backoffice/payments/review', label: t('payments.tab_review') },
-          ...(allowed
-            ? [
-                {
-                  href: '/backoffice/payments/settings',
-                  label: t('payments.tab_settings'),
-                },
-              ]
-            : []),
         ]}
+        /* The parameters are not a third place to work — they are what the
+           other two run on, and only administration changes them. */
+        action={
+          allowed
+            ? {
+                href: '/backoffice/payments/settings',
+                label: t('payments.settings_action'),
+                icon: 'settings',
+              }
+            : undefined
+        }
       />
       <MockNotice label={t('common.mock_notice')} />
       {allowed ? (

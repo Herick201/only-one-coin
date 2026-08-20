@@ -40,15 +40,18 @@ export default async function PaymentsPage({
             exact: true,
           },
           { href: '/backoffice/payments/review', label: t('payments.tab_review') },
-          ...(canConfigurePayments(staff.role)
-            ? [
-                {
-                  href: '/backoffice/payments/settings',
-                  label: t('payments.tab_settings'),
-                },
-              ]
-            : []),
         ]}
+        /* The parameters are not a third place to work — they are what the
+           other two run on, and only administration changes them. */
+        action={
+          canConfigurePayments(staff.role)
+            ? {
+                href: '/backoffice/payments/settings',
+                label: t('payments.settings_action'),
+                icon: 'settings',
+              }
+            : undefined
+        }
       />
       <MockNotice label={t('common.mock_notice')} />
       <PaymentsView rows={listPayments()} metrics={getPaymentMetrics()} />

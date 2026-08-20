@@ -74,8 +74,6 @@
       "filter_all": "Todos",
       "sort_oldest": "Mais antigos",
       "sort_newest": "Mais recentes",
-      "col_operation": "Operação",
-      "no_operation": "Sem número",
       "empty_search_title": "Nenhum resultado",
       "empty_search_body": "Tente outro aluno, curso ou número de operação, ou remova o filtro de motivo.",
       "page_prev": "Anteriores",
@@ -277,7 +275,7 @@
       "subtitle": "Tudo que entrou por matrícula e por trâmite, com o estado de cada comprovante.",
       "tab_ledger": "Pagamentos",
       "tab_review": "Fila de revisão",
-      "tab_settings": "Validação",
+      "settings_action": "Parâmetros de validação",
       "metric_in_review": "Em revisão",
       "metric_in_review_hint": "O mais antigo espera {hours} h",
       "metric_approved": "Aprovados",
@@ -383,8 +381,8 @@
       "cancel": "Descartar",
       "saved_toast": "Parâmetros aplicados só na tela. Ainda não há servidor conectado.",
       "audit_notice": "Mudar um parâmetro vale para os comprovantes que chegarem depois: nunca revalida um pagamento já resolvido.",
-      "locked_title": "Só administração e tesouraria",
-      "locked_body": "Estes parâmetros decidem o que é aprovado sem ninguém olhar. Quem muda é quem responde pelo dinheiro."
+      "locked_title": "Só administração",
+      "locked_body": "Estes parâmetros decidem o que é aprovado sem ninguém olhar. Só quem administra a plataforma os muda."
     },
     "seat_status": {
       "reserved": "Reservada",

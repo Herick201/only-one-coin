@@ -56,10 +56,11 @@ export function canReviewPayments(role: StaffRole): boolean {
 }
 
 /**
- * Who may change the validation parameters — the tolerance is what decides
- * whether a receipt passes on its own, so it belongs with whoever answers for
- * the money, not with whoever works the queue.
+ * Who may change the validation parameters. Admin only: the tolerance and the
+ * minimum confidence decide what the platform approves with nobody looking, so
+ * moving them is worth more than any single approval — including tesorería's,
+ * which settles receipts one by one under exactly these numbers.
  */
 export function canConfigurePayments(role: StaffRole): boolean {
-  return role === 'admin' || role === 'treasury'
+  return role === 'admin'
 }

@@ -74,8 +74,6 @@
       "filter_all": "All",
       "sort_oldest": "Oldest first",
       "sort_newest": "Newest first",
-      "col_operation": "Operation",
-      "no_operation": "No number",
       "empty_search_title": "No results",
       "empty_search_body": "Try another student, course or operation number, or clear the reason filter.",
       "page_prev": "Previous",
@@ -277,7 +275,7 @@
       "subtitle": "Everything paid for an enrollment or a procedure, with the state of each receipt.",
       "tab_ledger": "Payments",
       "tab_review": "Review queue",
-      "tab_settings": "Validation",
+      "settings_action": "Validation parameters",
       "metric_in_review": "In review",
       "metric_in_review_hint": "Oldest waiting {hours} h",
       "metric_approved": "Approved",
@@ -383,8 +381,8 @@
       "cancel": "Discard",
       "saved_toast": "Parameters applied on screen only. No server is connected yet.",
       "audit_notice": "Changing a parameter applies to receipts arriving afterwards: it never revalidates a payment already settled.",
-      "locked_title": "Administration and treasury only",
-      "locked_body": "These parameters decide what gets approved unseen. They are changed by whoever answers for the money."
+      "locked_title": "Administration only",
+      "locked_body": "These parameters decide what gets approved unseen. Only whoever administers the platform changes them."
     },
     "seat_status": {
       "reserved": "Reserved",
