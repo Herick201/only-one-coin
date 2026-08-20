@@ -472,3 +472,161 @@ export type CertificateBlockReason =
   | 'enrollment_not_completed'
   | 'exam_not_approved'
   | 'already_issued'
+
+/* -------------------------------------------------------------------------- */
+/* Payments — the ledger, the human decision and the validation parameters     */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * What a payment is for. `payments` is agnostic of origin (CLAUDE.md §5): an
+ * enrollment and a paid procedure (the constancia, `docs/REGRAS-NEGOCIO.md`
+ * §5) travel the same states and the same OCR ladder. A discriminated union
+ * instead of a loose string so the document type reaches the screen as a code
+ * the locale resolves, never as text (CLAUDE.md §4).
+ */
+export type PaymentConcept =
+  | { kind: 'course'; courseName: string }
+  | { kind: 'document'; type: DocumentType }
+
+/** One line of the payment ledger. */
+export interface PaymentRow {
+  id: string
+  studentId: string
+  studentName: string
+  concept: PaymentConcept
+  status: PaymentStatus
+  /** Null while the student has not uploaded a receipt yet. */
+  method: PaymentMethod | null
+  /** What the receipt says — equals the expected value once approved. */
+  amountCents: number
+  /** The frozen plan price / procedure fee it is checked against. */
+  expectedAmountCents: number
+  currency: 'PEN'
+  operationNumber: string | null
+  submittedAt: string
+  /** When a human or the ladder settled it. Null while it is still open. */
+  decidedAt: string | null
+  decidedByName: string | null
+  /** Only while under review — why the ladder handed it to a human. */
+  flag: ReviewFlag | null
+}
+
+/**
+ * Headline numbers of the payments section. Scoped to the academic period, not
+ * to "today": the period is what the treasury closes against, and a daily
+ * figure on a screen nobody opens on a Sunday reads as zero collection.
+ */
+export interface PaymentMetrics {
+  inReview: number
+  oldestPendingHours: number
+  approved: number
+  collectedCents: number
+  rejected: number
+  periodName: string
+}
+
+/** A field the extraction reads off the receipt. */
+export type ExtractionField =
+  | 'operation_number'
+  | 'amount'
+  | 'paid_at'
+  | 'payer_name'
+  | 'method'
+
+/**
+ * What the model read, kept as domain data rather than as a formatted string:
+ * money is cents, an instant is ISO, the rail is a code. The sheet renders it
+ * in the reader's locale (CLAUDE.md §4) — a mock that stores "S/ 69,90" would
+ * print the same in the three languages.
+ */
+export type ExtractedValue =
+  | { kind: 'text'; text: string }
+  | { kind: 'money'; amountCents: number; currency: 'PEN' }
+  | { kind: 'timestamp'; iso: string }
+  | { kind: 'method'; method: PaymentMethod }
+  /** The model could not read the field — that is a value, not a missing one. */
+  | { kind: 'unreadable' }
+
+export interface ExtractedField {
+  field: ExtractionField
+  value: ExtractedValue
+  /** Per-field confidence, 0–1 — recorded on every extraction (CLAUDE.md §5). */
+  confidence: number
+}
+
+/**
+ * Everything a human needs to settle one receipt: the image, what the model
+ * read off it, and what the system expected. Deciding is the one action that
+ * cannot be taken from the student file — it is a usecase of its own with its
+ * own audit entry (CLAUDE.md §8).
+ */
+export interface ReceiptExtraction {
+  paymentId: string
+  studentId: string
+  studentName: string
+  concept: PaymentConcept
+  flag: ReviewFlag
+  /** OCR ladder tier that produced this extraction, 0–3. */
+  tier: number
+  /** Brand name of the model — a proper noun, like the payment rails. */
+  modelName: string
+  modelVersion: string
+  /**
+   * Processed image (downscaled, grayscale, EXIF stripped — CLAUDE.md §5) held
+   * for 5 years. In production a signed URL of 5 minutes, scoped to the
+   * student (CLAUDE.md §8); null here because no storage is wired yet.
+   */
+  imageUrl: string | null
+  fields: ExtractedField[]
+  amountCents: number
+  expectedAmountCents: number
+  /** Tolerance in force when the receipt was validated — a backoffice setting. */
+  toleranceCents: number
+  method: PaymentMethod
+  submittedAt: string
+  /** Tier 0: the pHash matched a receipt already approved. */
+  duplicateOf: {
+    studentName: string
+    operationNumber: string | null
+    approvedAt: string
+  } | null
+  /**
+   * Tier 2 reading from a model of another family. Agreement is the criterion,
+   * never the more expensive model (CLAUDE.md §5) — so both readings are shown
+   * side by side and the vendor is not what settles it.
+   */
+  secondOpinion: {
+    operationNumber: string | null
+    amountCents: number
+    confidence: number
+  } | null
+}
+
+/** Why a human turned a receipt down — recorded with the rejection. */
+export type RejectionReason =
+  | 'amount_mismatch'
+  | 'illegible'
+  | 'duplicate'
+  | 'not_a_receipt'
+  | 'other'
+
+/** The human decision over a receipt. Approving carries no reason: the tier
+ *  ladder already said why it was here, and the audit entry records who. */
+export type ReviewDecision =
+  | { kind: 'approve' }
+  | { kind: 'reject'; reason: RejectionReason; note: string }
+
+/**
+ * The parameters the payment pipeline reads instead of constants in the code.
+ * Tolerance is required to live here (CLAUDE.md §5); the other two are the
+ * numbers `CLAUDE.md` already fixes (the 5-day reservation, the confidence
+ * that escalates) and still to be confirmed as editable.
+ */
+export interface PaymentSettings {
+  /** How far a receipt may fall from the frozen price and still pass. */
+  toleranceCents: number
+  /** Below this per-field confidence the ladder escalates, 0–1. */
+  escalationConfidence: number
+  /** Days a reserved seat survives without an approved payment. */
+  reservationDays: number
+}
