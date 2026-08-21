@@ -9,7 +9,7 @@ const c = t.courses;
 const courses = courseSlugs.map((slug) => ({
   slug,
   name: t.courses.list[slug],
-  href: withLang(lang, `/cursos/${slug}`),
+  href: withLang(lang, `/courses/${slug}`),
   price: formatPEN(coursePrices[slug], lang),
 }));
 ---

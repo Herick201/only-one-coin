@@ -139,8 +139,13 @@ img {
   color: var(--on-blue);
   box-shadow: var(--shadow-blue);
 }
+/* Blue -> yellow on hover, mirroring the backoffice primary button
+   (`hover:bg-brand-yellow hover:text-ink`, apps/app). Same token on both
+   sides, so the two surfaces keep reading as one product. */
 .btn-primary:hover {
-  background: var(--blue-deep);
+  background: var(--yellow);
+  color: var(--ink);
+  box-shadow: var(--shadow-yellow);
   transform: translateY(-2px);
 }
 .btn-yellow {

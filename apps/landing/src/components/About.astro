@@ -1,0 +1,466 @@
+---
+import { Image } from "astro:assets";
+import { org } from "../i18n/ui";
+import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
+import teamPhoto from "../assets/photos/about-team.jpg";
+import coinPhoto from "../assets/photos/about-coin.jpg";
+import onlinePhoto from "../assets/photos/about-online.jpg";
+import valuesPhoto from "../assets/photos/about-teaching.jpg";
+import supportPhoto from "../assets/photos/about-support.jpg";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const a = t.pages.about;
+
+// The "how long we have been doing this" claim is counted, never typed: one
+// constant (org.foundedYear) instead of a number that quietly rots every year.
+const years = new Date().getFullYear() - org.foundedYear;
+const lead = a.lead.replace("{years}", String(years));
+
+// Icons (Lucide) for mission / vision and for the four values, in the same
+// order as `a.values`. Not translatable content, so they live here.
+const missionIcon =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>';
+const visionIcon =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
+const valueIcons = [
+  // users (inclusión)
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  // badge-check (calidad)
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 15 5l4-.6.6 4L23 12l-3.4 3.6-.6 4-4-.6L12 22l-3-3-4 .6-.6-4L1 12l3.4-3.6L5 4.4l4 .6Z"/><path d="m9 12 2 2 4-4"/></svg>',
+  // heart-handshake (compromiso)
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7Z"/><path d="m12 5.4 2.6 2.6a1.8 1.8 0 0 1-2.6 2.6L10.8 9.4"/></svg>',
+  // rocket (innovación)
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 16.5c-1.5 1.3-2 5-2 5s3.7-.5 5-2c.7-.8.7-2 0-2.8a2 2 0 0 0-3 0Z"/><path d="M12 15 9 12a11 11 0 0 1 2-6.6C13.4 2.2 17 2 21 2c0 4-.2 7.6-3.4 10A11 11 0 0 1 12 15Z"/><path d="M9 12H5s.5-2.6 2-3.5c1.7-1 4 0 4 0"/><path d="M12 15v4s2.6-.5 3.5-2c1-1.7 0-4 0-4"/></svg>',
+];
+---
+
+<!-- Intro: who we are + the team -->
+<section class="section about-intro">
+  <span class="blob intro-blob" aria-hidden="true"></span>
+  <div class="container intro-grid">
+    <div class="intro-copy">
+      <span class="eyebrow">{a.eyebrow}</span>
+      <h1 class="section-title">
+        {a.titlePre}<span class="accent">{a.titleAccent}</span>{a.titlePost}
+      </h1>
+      <p class="lead">{lead}</p>
+      <p class="text-muted">{a.lead2}</p>
+      <div class="intro-actions">
+        <a href={withLang(lang, "/courses")} class="btn btn-yellow">{t.hero.ctaCourses}</a>
+        <a href={withLang(lang, "/contact")} class="btn btn-outline">{t.nav.contact}</a>
+      </div>
+    </div>
+
+    <div class="photo-stack">
+      <div class="photo-frame">
+        <Image
+          src={teamPhoto}
+          alt={a.teamAlt}
+          widths={[420, 640, 900]}
+          sizes="(max-width: 900px) 92vw, 480px"
+          format="webp"
+          quality={78}
+          loading="eager"
+        />
+      </div>
+      <div class="photo-inset">
+        <Image
+          src={coinPhoto}
+          alt={a.coinAlt}
+          widths={[280, 460]}
+          sizes="240px"
+          format="webp"
+          quality={78}
+        />
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Why us: the teaching side -->
+<section class="section about-why">
+  <!-- The row is text on one side and a photo on the other, so the far corner
+       reads as blank page. Brand furniture fills it instead of a third tinted
+       band — the section stays white and the page keeps its light/tinted rhythm. -->
+  <img
+    class="why-watermark"
+    src="/brand/logo-mark.png"
+    alt=""
+    aria-hidden="true"
+    width="192"
+    height="66"
+    loading="lazy"
+  />
+  <span class="blob why-blob" aria-hidden="true"></span>
+  <div class="container why-grid">
+    <span class="dots why-dots" aria-hidden="true"></span>
+    <div class="photo-frame why-photo">
+      <Image
+        src={onlinePhoto}
+        alt={a.whyAlt}
+        widths={[420, 640, 900]}
+        sizes="(max-width: 900px) 92vw, 460px"
+        format="webp"
+        quality={78}
+        loading="lazy"
+      />
+    </div>
+    <div class="why-copy">
+      <h2 class="section-title small">{a.whyTitle}</h2>
+      <p class="text-muted">{a.whyText}</p>
+      <p class="text-muted">{a.whyText2}</p>
+
+      <div class="photo-frame why-photo-side">
+        <Image
+          src={supportPhoto}
+          alt={a.whyAlt2}
+          widths={[340, 520, 720]}
+          sizes="(max-width: 800px) 92vw, 360px"
+          format="webp"
+          quality={78}
+          loading="lazy"
+        />
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Mission / vision -->
+<section class="section about-mv">
+  <div class="container mv-grid">
+    <article class="mv-card">
+      <div class="mv-icon" set:html={missionIcon} />
+      <h2>{a.missionTitle}</h2>
+      <p>{a.missionText}</p>
+    </article>
+    <article class="mv-card">
+      <div class="mv-icon" set:html={visionIcon} />
+      <h2>{a.visionTitle}</h2>
+      <p>{a.visionText}</p>
+    </article>
+  </div>
+</section>
+
+<!-- Values -->
+<section class="section about-values">
+  <div class="container">
+    <div class="values-head">
+      <h2 class="section-title">
+        {a.valuesTitlePre}<span class="accent">{a.valuesTitleAccent}</span>{a.valuesTitlePost}
+      </h2>
+      <p class="text-muted">{a.valuesLead}</p>
+    </div>
+
+    <div class="values-banner photo-frame">
+      <Image
+        src={valuesPhoto}
+        alt={a.valuesAlt}
+        widths={[640, 960, 1280]}
+        sizes="(max-width: 1180px) 92vw, 1080px"
+        format="webp"
+        quality={78}
+        loading="lazy"
+      />
+    </div>
+
+    <div class="value-cards">
+      {
+        a.values.map((value, i) => (
+          <article class="value-card">
+            <div class="value-icon" set:html={valueIcons[i]} />
+            <h3>{value.title}</h3>
+            <p class="text-muted">{value.text}</p>
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  /* ---------- intro ---------- */
+  .about-intro {
+    position: relative;
+    overflow: hidden;
+    padding-block: 64px 88px;
+    background:
+      radial-gradient(50% 55% at 92% 4%, rgba(255, 201, 60, 0.16), transparent 60%),
+      var(--sky-soft);
+  }
+  .intro-blob {
+    width: 320px;
+    height: 320px;
+    top: -140px;
+    left: -110px;
+    background: var(--blue);
+    opacity: 0.12;
+  }
+  /* auto-fit, not a breakpoint: the column splits when there is room for two
+     readable columns, and stacks when there isn't. */
+  .intro-grid,
+  .why-grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+    gap: 54px;
+    align-items: center;
+  }
+  .eyebrow {
+    display: inline-block;
+    margin-bottom: 14px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: var(--cream);
+    color: var(--yellow-deep);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .lead {
+    margin-top: 18px;
+    font-size: 1.12rem;
+    color: var(--ink);
+  }
+  .intro-copy p + p {
+    margin-top: 12px;
+  }
+  .intro-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 28px;
+  }
+
+  /* ---------- shared photo frame ---------- */
+  .photo-frame {
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    background: var(--paper);
+  }
+  .photo-frame :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .photo-stack {
+    position: relative;
+  }
+  .photo-stack .photo-frame {
+    aspect-ratio: 4 / 5;
+  }
+  /* The coin is the whole brand story, so it gets its own card overlapping the
+     team shot instead of another row. Dropped when there is no room to overlap
+     without covering faces. */
+  .photo-inset {
+    position: absolute;
+    left: -26px;
+    bottom: -26px;
+    width: 240px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 5px solid var(--paper);
+    box-shadow: var(--shadow-md);
+  }
+  .photo-inset :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    aspect-ratio: 3 / 2;
+  }
+
+  /* ---------- why us ---------- */
+  .about-why {
+    position: relative;
+    overflow: hidden;
+    background: var(--paper);
+    padding-block: 88px;
+  }
+  /* Big, quiet, and bleeding off the edge: at this opacity it reads as texture,
+     not as a second logo competing with the header. */
+  .why-watermark {
+    position: absolute;
+    /* Pushed well off the corner on purpose: a mark that fits entirely on the
+       page reads as a second logo, a cropped one reads as texture. */
+    right: -150px;
+    bottom: -120px;
+    width: min(760px, 62vw);
+    height: auto;
+    opacity: 0.06;
+    pointer-events: none;
+    user-select: none;
+  }
+  .why-blob {
+    width: 300px;
+    height: 300px;
+    top: -90px;
+    left: -120px;
+    background: var(--yellow);
+    opacity: 0.22;
+  }
+  .why-grid {
+    position: relative;
+  }
+  /* Same dot grid as the hero, so the page speaks the homepage's language. */
+  .why-dots {
+    position: absolute;
+    z-index: 1;
+    left: -26px;
+    bottom: -26px;
+    width: 108px;
+    height: 108px;
+    background-image: radial-gradient(var(--blue) 2.4px, transparent 2.4px);
+    background-size: 16px 16px;
+    opacity: 0.3;
+  }
+  .why-photo {
+    position: relative;
+    z-index: 1;
+    aspect-ratio: 4 / 5;
+    max-height: 560px;
+  }
+  /* Above the decoration, always: the dot grid sits in the grid's bottom-left,
+     which is beside the photo in two columns but behind the copy in one. */
+  .why-copy {
+    position: relative;
+    z-index: 2;
+  }
+  /* The row needs 2x330px + 54px gap + 48px padding before it can hold two
+     columns; below that it stacks and the dots have nothing to decorate. */
+  @media (max-width: 800px) {
+    .why-dots {
+      display: none;
+    }
+  }
+  .section-title.small {
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    margin-bottom: 18px;
+  }
+  .why-copy p + p {
+    margin-top: 12px;
+  }
+  /* Small and off to the side: it fills the gap under the copy without
+     competing with the tall photo across the row. */
+  .why-photo-side {
+    margin-top: 28px;
+    width: min(360px, 100%);
+    aspect-ratio: 3 / 2;
+  }
+
+  /* ---------- mission / vision ---------- */
+  .about-mv {
+    background: var(--sky);
+    padding-block: 78px;
+  }
+  .mv-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 26px;
+  }
+  .mv-card {
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 36px 32px;
+    box-shadow: var(--shadow-sm);
+  }
+  .mv-icon {
+    width: 62px;
+    height: 62px;
+    display: grid;
+    place-items: center;
+    border-radius: 18px;
+    background: var(--sky);
+    color: var(--blue);
+    margin-bottom: 18px;
+  }
+  .mv-card:nth-child(even) .mv-icon {
+    background: var(--cream);
+    color: var(--yellow-deep);
+  }
+  .mv-icon :global(svg) {
+    width: 30px;
+    height: 30px;
+  }
+  .mv-card h2 {
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+  }
+  .mv-card p {
+    color: var(--text-muted);
+  }
+
+  /* ---------- values ---------- */
+  .about-values {
+    background: var(--paper);
+    padding-block: 88px;
+  }
+  .values-head {
+    max-width: 760px;
+    margin-inline: auto;
+    text-align: center;
+  }
+  .values-head p {
+    margin-top: 16px;
+  }
+  .values-banner {
+    margin-top: 46px;
+    aspect-ratio: 21 / 8;
+    max-height: 380px;
+  }
+  .value-cards {
+    margin-top: 40px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 24px;
+  }
+  .value-card {
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 30px 26px;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  }
+  .value-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-md);
+    border-color: transparent;
+  }
+  .value-icon {
+    width: 56px;
+    height: 56px;
+    display: grid;
+    place-items: center;
+    border-radius: 16px;
+    background: var(--sky);
+    color: var(--blue);
+    margin-bottom: 16px;
+  }
+  .value-card:nth-child(even) .value-icon {
+    background: var(--cream);
+    color: var(--yellow-deep);
+  }
+  .value-icon :global(svg) {
+    width: 27px;
+    height: 27px;
+  }
+  .value-card h3 {
+    font-size: 1.15rem;
+    margin-bottom: 8px;
+  }
+
+  @media (max-width: 620px) {
+    .photo-inset {
+      display: none;
+    }
+    .values-banner {
+      aspect-ratio: 4 / 3;
+    }
+  }
+</style>

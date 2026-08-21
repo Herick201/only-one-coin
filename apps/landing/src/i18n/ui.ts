@@ -20,19 +20,25 @@ export const htmlLang = {
 
 export type Lang = keyof typeof languages;
 
-// Canonical course slugs. Stable across locales (used to build /cursos/<slug>
+// Canonical course slugs. Stable across locales (used to build /courses/<slug>
 // and by the language finder). The display name is localized per dictionary.
 export const courseSlugs = [
-  "ingles",
-  "frances",
-  "italiano",
-  "aleman",
-  "portugues",
-  "chino-mandarin",
-  "coreano",
+  "english",
+  "french",
+  "italian",
+  "german",
+  "portuguese",
+  "mandarin-chinese",
+  "korean",
 ] as const;
 
 export type CourseSlug = (typeof courseSlugs)[number];
+
+// Anchor names for the two audience blocks on a course page, in the order they
+// are listed in `courses.detail.audiences`. They end up in the address bar, so
+// they read as words, never as an index (CLAUDE.md §4: no technical id ever
+// reaches the user). The homepage "Programas" cards link straight to them.
+export const audienceAnchors = ["kids", "teens-and-adults"] as const;
 
 // Full-package ("paquete completo", pago único) price per course, in PEN.
 // Source: the merchant e-commerce catalog. Display copy only — the actual
@@ -41,33 +47,73 @@ export type CourseSlug = (typeof courseSlugs)[number];
 // from the monthly modality (≈S/20 / 20 sesiones = 1 sol por sesión), NOT from
 // these package prices — never present a course as costing only S/1.
 export const coursePrices: Record<CourseSlug, number> = {
-  "ingles": 69.9,
-  "frances": 80,
-  "italiano": 80,
-  "aleman": 30,
-  "portugues": 80,
-  "chino-mandarin": 95,
-  "coreano": 60,
+  "english": 69.9,
+  "french": 80,
+  "italian": 80,
+  "german": 30,
+  "portuguese": 80,
+  "mandarin-chinese": 95,
+  "korean": 60,
 };
 
+// Legal identity and contact channels of the Asociación. Language-agnostic
+// data — the same digits, address and handles in every locale — so it lives
+// here once instead of being retyped inside each dictionary. The legal pages
+// interpolate these through the {ruc} / {address} / {site} / {phones} /
+// {email} tokens in `i18n/legal.ts`.
+export const org = {
+  ruc: "20610561463",
+  address:
+    "Av. Manuel Murillo, Condominio Gral Manuel Murillo 180, Chorrillos, Lima, Perú",
+  site: "onlyonecoin.edu.pe",
+  // Stored in display form, country code included: every surface that shows a
+  // number shows the same one, and `tel:` links are derived by stripping the
+  // separators rather than by re-assembling the number.
+  phones: ["+51 968 464 483", "+51 945 713 465", "+51 962 985 106"],
+  // The institutional address, given by the Asociación (21/08/2026) — it
+  // replaces the "tencionalcliente1@" that appeared in the legal copy we were
+  // sent. Institutional on purpose: this is the address printed in the terms
+  // and in the privacy policy as the channel for data-rights requests, so it
+  // has to outlive whoever is answering it. One constant, so the contact page
+  // and both legal pages can never disagree.
+  email: "Admin@onlyonecoin.edu.pe",
+  /** WhatsApp number in wa.me form (country code + number, digits only). */
+  whatsapp: "51951153323",
+  // TODO: confirm with the Asociación. Derived, not told to us: the previous
+  // WordPress site claimed "4 años" while it was published in 2024, which puts
+  // the start at 2020. The /about copy counts from here instead of hardcoding
+  // a number, so the page stops aging the moment this value is right.
+  foundedYear: 2020,
+  /** Profiles the Asociación actually runs. Rendered in the footer AND
+      declared as `sameAs` in the Organization JSON-LD, so they live once. */
+  social: {
+    facebook: "https://www.facebook.com/onlyonecoin",
+    instagram: "https://www.instagram.com/onlyonecoin.pe/",
+    linkedin: "https://www.linkedin.com/company/organizacion-de-onlyonecoin/",
+  },
+} as const;
+
+/** Full wa.me link for the floating button and the course CTAs. */
+export const whatsappUrl = `https://wa.me/${org.whatsapp}`;
+
 // Country (ISO 3166-1 alpha-2) -> suggested course slug for the geo finder.
-// Fallback is always "ingles" (the flagship). Kept small and legible on
+// Fallback is always "english" (the flagship). Kept small and legible on
 // purpose; unknown countries get the flagship.
 export const geoSuggestion: Record<string, CourseSlug> = {
-  PE: "ingles",
-  BR: "portugues",
-  PT: "portugues",
-  FR: "frances",
-  BE: "frances",
-  IT: "italiano",
-  DE: "aleman",
-  AT: "aleman",
-  CH: "aleman",
-  CN: "chino-mandarin",
-  TW: "chino-mandarin",
-  KR: "coreano",
-  US: "ingles",
-  GB: "ingles",
+  PE: "english",
+  BR: "portuguese",
+  PT: "portuguese",
+  FR: "french",
+  BE: "french",
+  IT: "italian",
+  DE: "german",
+  AT: "german",
+  CH: "german",
+  CN: "mandarin-chinese",
+  TW: "mandarin-chinese",
+  KR: "korean",
+  US: "english",
+  GB: "english",
 };
 
 export const content = {
@@ -105,6 +151,26 @@ export const content = {
         title: "Comunidad de alumnos en todo el Perú — Only One Coin",
         description:
           "Miles de estudiantes de todo el Perú aprenden idiomas online con la Asociación Only One Coin. Conoce nuestra comunidad y súmate.",
+      },
+      terms: {
+        title: "Términos y condiciones de uso — Only One Coin",
+        description:
+          "Términos y condiciones de uso del sitio web de la Asociación Only One Coin Perú: servicios, registro de usuarios, propiedad intelectual, responsabilidad y ley aplicable.",
+      },
+      privacy: {
+        title: "Política de privacidad — Only One Coin",
+        description:
+          "Cómo la Asociación Only One Coin Perú recopila, usa, almacena y protege tus datos personales, y cómo ejercer tus derechos de acceso, rectificación, cancelación y oposición.",
+      },
+      about: {
+        title: "Nosotros — Asociación Only One Coin Perú",
+        description:
+          "Conoce a la Asociación Only One Coin Perú: educación accesible para todos, clases de inglés desde S/1.00 por sesión, y nuestra misión, visión y valores.",
+      },
+      contact: {
+        title: "Contacto — Asociación Only One Coin Perú",
+        description:
+          "Escríbenos por WhatsApp, llámanos o envíanos un correo. Atención de lunes a viernes para matrícula, horarios y cursos disponibles.",
       },
     },
     nav: {
@@ -176,13 +242,13 @@ export const content = {
           tag: "100% online",
           title: "Niños (6-12 años)",
           text: "Un primer contacto con el inglés a través del juego, la música y actividades diseñadas para su edad.",
-          href: "/cursos/ingles",
+          href: "/courses/english#kids",
         },
         {
           tag: "Todos los niveles",
           title: "Jóvenes y Adultos (13 años en adelante)",
           text: "Programa estructurado por niveles para lograr fluidez real, con enfoque conversacional.",
-          href: "/cursos/ingles",
+          href: "/courses/english#teens-and-adults",
         },
       ],
     },
@@ -230,6 +296,9 @@ export const content = {
       titleAccent: "dudas",
       titlePost: "",
       lead: "Todo lo que necesitas saber sobre nuestros cursos, la matrícula y los talleres gratuitos.",
+      ctaTitle: "¿No encuentras tu respuesta?",
+      ctaText: "Escríbenos por WhatsApp y te ayudamos con la matrícula, los horarios y todo lo demás.",
+      ctaButton: "Escríbenos por WhatsApp",
       items: [
         { q: "¿Cuánto cuesta y cómo funciona el pago?", a: "Cada curso tiene un paquete completo de pago único (por ejemplo, Inglés cuesta S/69.90), que incluye matrícula, material, certificado y talleres. También existe una modalidad mensual que equivale a 1 sol por sesión. Sin mensualidades ocultas ni cobros sorpresa." },
         { q: "¿Desde qué edad puedo matricularme?", a: "Recibimos alumnos desde los 6 años en adelante. Hay grupos pensados para niños y grupos para jóvenes y adultos." },
@@ -249,13 +318,13 @@ export const content = {
     },
     courses: {
       list: {
-        "ingles": "Inglés",
-        "frances": "Francés",
-        "italiano": "Italiano",
-        "aleman": "Alemán",
-        "portugues": "Portugués",
-        "chino-mandarin": "Chino Mandarín",
-        "coreano": "Coreano",
+        "english": "Inglés",
+        "french": "Francés",
+        "italian": "Italiano",
+        "german": "Alemán",
+        "portuguese": "Portugués",
+        "mandarin-chinese": "Chino Mandarín",
+        "korean": "Coreano",
       },
       indexEyebrow: "Nuestros idiomas",
       indexTitlePre: "Elige el idioma que ",
@@ -308,6 +377,63 @@ export const content = {
         lead: "Miles de estudiantes de todo el Perú aprenden con nosotros. Únete, comparte tu experiencia y sigue creciendo.",
         soonTitle: "Muy pronto",
         soonText: "Estamos construyendo el espacio de nuestra comunidad. Mientras tanto, síguenos en nuestras redes sociales.",
+      },
+      about: {
+        eyebrow: "Asociación Only One Coin",
+        titlePre: "Educación accesible ",
+        titleAccent: "para todos",
+        titlePost: "",
+        // {years} is filled from `org.foundedYear` so the claim never goes stale.
+        lead: "En la Asociación Only One Coin creemos firmemente que la educación es un derecho fundamental y no un privilegio. Con esta visión, llevamos {years} años ofreciendo clases de inglés a un precio simbólico de S/1.00 por sesión.",
+        lead2: "Nuestro compromiso es brindar a niños, jóvenes y adultos de todas las edades y niveles sociales la oportunidad de aprender y crecer, sin barreras económicas.",
+        teamAlt: "Equipo de la Asociación Only One Coin en su oficina de Lima",
+        coinAlt: "Una moneda de un sol: el precio simbólico de cada sesión",
+        whyTitle: "¿Por qué elegirnos?",
+        whyText: "Nuestro equipo de profesores está altamente calificado y comprometido con la enseñanza. Utilizamos métodos innovadores y dinámicos para asegurar que cada estudiante aprenda de manera efectiva y disfrute del proceso.",
+        whyText2: "Queremos que cada persona que pase por nuestras clases salga con más que solo conocimientos de inglés: salga con confianza y preparación para enfrentar los desafíos del futuro.",
+        whyAlt: "Docente de Only One Coin dictando una clase online",
+        whyAlt2: "Dos integrantes del equipo de Only One Coin resolviendo una consulta",
+        missionTitle: "Misión",
+        missionText: "Facilitar el acceso al aprendizaje del inglés y otras habilidades fundamentales a través de un modelo educativo innovador y asequible para todos.",
+        visionTitle: "Visión",
+        visionText: "Ser la academia de idiomas líder en Perú, reconocida por nuestro compromiso con la educación accesible y de calidad, y por nuestro impacto positivo en la vida de nuestros estudiantes.",
+        valuesTitlePre: "Nuestros ",
+        valuesTitleAccent: "valores",
+        valuesTitlePost: "",
+        valuesLead: "Nuestros valores son el pilar fundamental de todo lo que hacemos. Creemos en la educación accesible y de calidad, y nos esforzamos por inculcar estos principios en cada aspecto de nuestro servicio. A través de ellos buscamos no solo enseñar inglés, sino también inspirar a nuestros estudiantes a alcanzar su máximo potencial y contribuir positivamente a sus comunidades.",
+        valuesAlt: "Dos alumnas de Only One Coin estudiando juntas",
+        values: [
+          {
+            title: "Inclusión",
+            text: "Abrimos la puerta a estudiantes de todas las edades y de todo el Perú, sin barreras económicas ni geográficas.",
+          },
+          {
+            title: "Calidad",
+            text: "Nos esforzamos por ofrecer lo mejor en enseñanza y recursos educativos.",
+          },
+          {
+            title: "Compromiso",
+            text: "Estamos dedicados a la mejora continua y al éxito de nuestros estudiantes.",
+          },
+          {
+            title: "Innovación",
+            text: "Apostamos por métodos de enseñanza modernos y creativos que hacen del aprendizaje una experiencia dinámica y efectiva, adaptándonos a las necesidades cambiantes de nuestros estudiantes.",
+          },
+        ],
+      },
+      contact: {
+        eyebrow: "Contacto",
+        titlePre: "¿Cómo podemos ",
+        titleAccent: "ayudarte",
+        titlePost: "?",
+        lead: "Resolvemos tus dudas sobre matrícula, horarios y cursos disponibles. Elige el canal que te resulte más cómodo.",
+        waTitle: "WhatsApp",
+        waText: "La forma más rápida de llegar a nosotros. Te respondemos dentro del horario de atención.",
+        waButton: "Escríbenos por WhatsApp",
+        phonesTitle: "Teléfonos",
+        emailTitle: "Correo electrónico",
+        emailText: "Para consultas formales y para ejercer tus derechos sobre tus datos personales.",
+        onlineNote: "Todas nuestras clases son 100% online y la atención también es remota: no realizamos atención presencial en nuestra oficina.",
       },
     },
     footer: {
@@ -369,6 +495,26 @@ export const content = {
         title: "Our student community across Peru — Only One Coin",
         description:
           "Thousands of students across Peru learn languages online with the Only One Coin Association. Meet our community and join in.",
+      },
+      terms: {
+        title: "Terms and conditions of use — Only One Coin",
+        description:
+          "Terms and conditions for using the Only One Coin Perú Association website: services, user registration, intellectual property, liability and governing law.",
+      },
+      privacy: {
+        title: "Privacy policy — Only One Coin",
+        description:
+          "How the Only One Coin Perú Association collects, uses, stores and protects your personal data, and how to exercise your access, rectification, erasure and objection rights.",
+      },
+      about: {
+        title: "About us — Only One Coin Perú Association",
+        description:
+          "Meet the Only One Coin Perú Association: accessible education for everyone, English classes from S/1.00 a session, and our mission, vision and values.",
+      },
+      contact: {
+        title: "Contact — Only One Coin Perú Association",
+        description:
+          "Message us on WhatsApp, call us or send an email. We answer Monday to Friday about enrolment, schedules and available courses.",
       },
     },
     nav: {
@@ -440,13 +586,13 @@ export const content = {
           tag: "100% online",
           title: "Children (ages 6-12)",
           text: "A first contact with English through play, music and activities designed for their age.",
-          href: "/cursos/ingles",
+          href: "/courses/english#kids",
         },
         {
           tag: "All levels",
           title: "Teens & Adults (13 and up)",
           text: "A leveled program structured to reach real fluency, with a conversational focus.",
-          href: "/cursos/ingles",
+          href: "/courses/english#teens-and-adults",
         },
       ],
     },
@@ -494,6 +640,9 @@ export const content = {
       titleAccent: "questions",
       titlePost: "",
       lead: "Everything you need to know about our courses, enrollment and free workshops.",
+      ctaTitle: "Still have a question?",
+      ctaText: "Message us on WhatsApp and we'll help you with enrolment, schedules and anything else.",
+      ctaButton: "Message us on WhatsApp",
       items: [
         { q: "How much does it cost and how does payment work?", a: "Each course has a full package with a single payment (for example, English is S/69.90), including enrollment, materials, certificate and workshops. There's also a monthly modality that works out to 1 sol per session. No hidden monthly fees or surprise charges." },
         { q: "From what age can I enroll?", a: "We welcome students from 6 years old and up. There are groups designed for children and groups for teens and adults." },
@@ -513,13 +662,13 @@ export const content = {
     },
     courses: {
       list: {
-        "ingles": "English",
-        "frances": "French",
-        "italiano": "Italian",
-        "aleman": "German",
-        "portugues": "Portuguese",
-        "chino-mandarin": "Mandarin Chinese",
-        "coreano": "Korean",
+        "english": "English",
+        "french": "French",
+        "italian": "Italian",
+        "german": "German",
+        "portuguese": "Portuguese",
+        "mandarin-chinese": "Mandarin Chinese",
+        "korean": "Korean",
       },
       indexEyebrow: "Our languages",
       indexTitlePre: "Choose the language you ",
@@ -572,6 +721,62 @@ export const content = {
         lead: "Thousands of students across Peru learn with us. Join in, share your experience and keep growing.",
         soonTitle: "Coming soon",
         soonText: "We're building our community space. In the meantime, follow us on our social media.",
+      },
+      about: {
+        eyebrow: "Only One Coin Association",
+        titlePre: "Accessible education ",
+        titleAccent: "for everyone",
+        titlePost: "",
+        lead: "At the Only One Coin Association we firmly believe that education is a fundamental right, not a privilege. With that in mind, we have spent {years} years offering English classes at a symbolic price of S/1.00 a session.",
+        lead2: "Our commitment is to give children, teenagers and adults of every age and background the chance to learn and grow, with no financial barriers.",
+        teamAlt: "The Only One Coin Association team at their office in Lima",
+        coinAlt: "A one-sol coin: the symbolic price of each session",
+        whyTitle: "Why choose us?",
+        whyText: "Our teachers are highly qualified and committed to teaching. We use innovative, dynamic methods so that every student learns effectively and enjoys the process.",
+        whyText2: "We want everyone who goes through our classes to leave with more than English: to leave with the confidence and preparation to face what comes next.",
+        whyAlt: "An Only One Coin teacher running an online class",
+        whyAlt2: "Two Only One Coin team members working through a question together",
+        missionTitle: "Mission",
+        missionText: "To open up the learning of English and other fundamental skills through an educational model that is innovative and affordable for everyone.",
+        visionTitle: "Vision",
+        visionText: "To be the leading language academy in Peru, recognised for our commitment to accessible, quality education and for our positive impact on our students' lives.",
+        valuesTitlePre: "Our ",
+        valuesTitleAccent: "values",
+        valuesTitlePost: "",
+        valuesLead: "Our values are the foundation of everything we do. We believe in accessible, quality education, and we work to carry those principles into every part of our service. Through them we aim not only to teach English, but to inspire our students to reach their full potential and give back to their communities.",
+        valuesAlt: "Two Only One Coin students studying together",
+        values: [
+          {
+            title: "Inclusion",
+            text: "We open the door to students of every age and from every corner of Peru, with no financial or geographic barriers.",
+          },
+          {
+            title: "Quality",
+            text: "We strive to offer the best in teaching and educational resources.",
+          },
+          {
+            title: "Commitment",
+            text: "We are dedicated to continuous improvement and to our students' success.",
+          },
+          {
+            title: "Innovation",
+            text: "We back modern, creative teaching methods that make learning dynamic and effective, adapting to our students' changing needs.",
+          },
+        ],
+      },
+      contact: {
+        eyebrow: "Contact",
+        titlePre: "How can we ",
+        titleAccent: "help you",
+        titlePost: "?",
+        lead: "We answer questions about enrolment, schedules and available courses. Pick whichever channel suits you best.",
+        waTitle: "WhatsApp",
+        waText: "The fastest way to reach us. We reply within our business hours.",
+        waButton: "Message us on WhatsApp",
+        phonesTitle: "Phone",
+        emailTitle: "Email",
+        emailText: "For formal enquiries and to exercise your rights over your personal data.",
+        onlineNote: "All our classes are 100% online and support is remote too: we do not receive students at our office.",
       },
     },
     footer: {
@@ -633,6 +838,26 @@ export const content = {
         title: "Comunidade de alunos em todo o Peru — Only One Coin",
         description:
           "Milhares de estudantes de todo o Peru aprendem idiomas online com a Associação Only One Coin. Conheça a nossa comunidade e participe.",
+      },
+      terms: {
+        title: "Termos e condições de uso — Only One Coin",
+        description:
+          "Termos e condições de uso do site da Associação Only One Coin Peru: serviços, cadastro de usuários, propriedade intelectual, responsabilidade e lei aplicável.",
+      },
+      privacy: {
+        title: "Política de privacidade — Only One Coin",
+        description:
+          "Como a Associação Only One Coin Peru coleta, usa, armazena e protege seus dados pessoais, e como exercer seus direitos de acesso, retificação, cancelamento e oposição.",
+      },
+      about: {
+        title: "Sobre nós — Associação Only One Coin Peru",
+        description:
+          "Conheça a Associação Only One Coin Peru: educação acessível para todos, aulas de inglês a partir de S/1,00 por sessão, e nossa missão, visão e valores.",
+      },
+      contact: {
+        title: "Contato — Associação Only One Coin Peru",
+        description:
+          "Fale com a gente no WhatsApp, ligue ou mande um e-mail. Atendimento de segunda a sexta sobre matrícula, horários e cursos disponíveis.",
       },
     },
     nav: {
@@ -704,13 +929,13 @@ export const content = {
           tag: "100% online",
           title: "Crianças (6-12 anos)",
           text: "Um primeiro contato com o inglês por meio de brincadeiras, música e atividades pensadas para a idade.",
-          href: "/cursos/ingles",
+          href: "/courses/english#kids",
         },
         {
           tag: "Todos os níveis",
           title: "Jovens e Adultos (13 anos ou mais)",
           text: "Programa estruturado por níveis para alcançar fluência real, com foco conversacional.",
-          href: "/cursos/ingles",
+          href: "/courses/english#teens-and-adults",
         },
       ],
     },
@@ -758,6 +983,9 @@ export const content = {
       titleAccent: "dúvidas",
       titlePost: "",
       lead: "Tudo o que você precisa saber sobre nossos cursos, a matrícula e as oficinas gratuitas.",
+      ctaTitle: "Não achou sua resposta?",
+      ctaText: "Fale com a gente no WhatsApp: ajudamos com matrícula, horários e o que mais precisar.",
+      ctaButton: "Falar no WhatsApp",
       items: [
         { q: "Quanto custa e como funciona o pagamento?", a: "Cada curso tem um pacote completo em pagamento único (por exemplo, Inglês custa S/69,90), que inclui matrícula, material, certificado e oficinas. Também existe uma modalidade mensal que equivale a 1 sol por sessão. Sem mensalidades ocultas nem cobranças-surpresa." },
         { q: "A partir de que idade posso me matricular?", a: "Recebemos alunos a partir dos 6 anos. Há turmas pensadas para crianças e turmas para jovens e adultos." },
@@ -777,13 +1005,13 @@ export const content = {
     },
     courses: {
       list: {
-        "ingles": "Inglês",
-        "frances": "Francês",
-        "italiano": "Italiano",
-        "aleman": "Alemão",
-        "portugues": "Português",
-        "chino-mandarin": "Chinês Mandarim",
-        "coreano": "Coreano",
+        "english": "Inglês",
+        "french": "Francês",
+        "italian": "Italiano",
+        "german": "Alemão",
+        "portuguese": "Português",
+        "mandarin-chinese": "Chinês Mandarim",
+        "korean": "Coreano",
       },
       indexEyebrow: "Nossos idiomas",
       indexTitlePre: "Escolha o idioma que ",
@@ -836,6 +1064,62 @@ export const content = {
         lead: "Milhares de estudantes de todo o Peru aprendem com a gente. Participe, compartilhe sua experiência e continue crescendo.",
         soonTitle: "Em breve",
         soonText: "Estamos construindo o espaço da nossa comunidade. Enquanto isso, siga a gente nas redes sociais.",
+      },
+      about: {
+        eyebrow: "Associação Only One Coin",
+        titlePre: "Educação acessível ",
+        titleAccent: "para todos",
+        titlePost: "",
+        lead: "Na Associação Only One Coin acreditamos firmemente que a educação é um direito fundamental, e não um privilégio. Com essa visão, há {years} anos oferecemos aulas de inglês a um preço simbólico de S/1,00 por sessão.",
+        lead2: "Nosso compromisso é dar a crianças, jovens e adultos de todas as idades e classes sociais a oportunidade de aprender e crescer, sem barreiras econômicas.",
+        teamAlt: "Equipe da Associação Only One Coin no escritório em Lima",
+        coinAlt: "Uma moeda de um sol: o preço simbólico de cada sessão",
+        whyTitle: "Por que nos escolher?",
+        whyText: "Nosso time de professores é altamente qualificado e comprometido com o ensino. Usamos métodos inovadores e dinâmicos para garantir que cada estudante aprenda de forma efetiva e aproveite o processo.",
+        whyText2: "Queremos que cada pessoa que passa pelas nossas turmas saia com mais do que conhecimento de inglês: saia com confiança e preparo para encarar os desafios que vêm pela frente.",
+        whyAlt: "Professora da Only One Coin dando uma aula online",
+        whyAlt2: "Dois integrantes da equipe da Only One Coin resolvendo uma dúvida juntos",
+        missionTitle: "Missão",
+        missionText: "Facilitar o acesso ao aprendizado do inglês e de outras habilidades fundamentais por meio de um modelo educativo inovador e acessível para todos.",
+        visionTitle: "Visão",
+        visionText: "Ser a academia de idiomas líder no Peru, reconhecida pelo nosso compromisso com a educação acessível e de qualidade, e pelo impacto positivo na vida dos nossos estudantes.",
+        valuesTitlePre: "Nossos ",
+        valuesTitleAccent: "valores",
+        valuesTitlePost: "",
+        valuesLead: "Nossos valores são o pilar de tudo o que fazemos. Acreditamos em educação acessível e de qualidade, e nos esforçamos para levar esses princípios a cada aspecto do nosso serviço. Através deles buscamos não só ensinar inglês, mas inspirar nossos estudantes a alcançar seu máximo potencial e a contribuir positivamente com suas comunidades.",
+        valuesAlt: "Duas alunas da Only One Coin estudando juntas",
+        values: [
+          {
+            title: "Inclusão",
+            text: "Abrimos a porta para estudantes de todas as idades e de todo o Peru, sem barreiras econômicas nem geográficas.",
+          },
+          {
+            title: "Qualidade",
+            text: "Nos esforçamos para oferecer o melhor em ensino e recursos educacionais.",
+          },
+          {
+            title: "Compromisso",
+            text: "Somos dedicados à melhoria contínua e ao sucesso dos nossos estudantes.",
+          },
+          {
+            title: "Inovação",
+            text: "Apostamos em métodos de ensino modernos e criativos, que tornam o aprendizado dinâmico e efetivo, adaptando-se às necessidades em mudança dos nossos estudantes.",
+          },
+        ],
+      },
+      contact: {
+        eyebrow: "Contato",
+        titlePre: "Como podemos ",
+        titleAccent: "ajudar você",
+        titlePost: "?",
+        lead: "Tiramos suas dúvidas sobre matrícula, horários e cursos disponíveis. Escolha o canal que for mais confortável pra você.",
+        waTitle: "WhatsApp",
+        waText: "O jeito mais rápido de falar com a gente. Respondemos dentro do horário de atendimento.",
+        waButton: "Falar no WhatsApp",
+        phonesTitle: "Telefones",
+        emailTitle: "E-mail",
+        emailText: "Para consultas formais e para exercer seus direitos sobre seus dados pessoais.",
+        onlineNote: "Todas as nossas aulas são 100% online e o atendimento também é remoto: não recebemos alunos no escritório.",
       },
     },
     footer: {

@@ -1,0 +1,129 @@
+---
+import { org } from "../i18n/ui";
+import { legalContent, type LegalKind } from "../i18n/legal";
+import { getLangFromUrl } from "../i18n/utils";
+
+interface Props {
+  kind: LegalKind;
+}
+
+const { kind } = Astro.props;
+const lang = getLangFromUrl(Astro.url);
+const doc = legalContent[lang][kind];
+
+// The legal copy carries placeholders instead of retyping the Asociación's
+// identity in all three locales (see i18n/legal.ts). Resolved once, here.
+const tokens: Record<string, string> = {
+  "{ruc}": org.ruc,
+  "{address}": org.address,
+  "{site}": org.site,
+  "{phones}": org.phones.join(" / "),
+  "{email}": org.email,
+};
+
+const fill = (text: string): string =>
+  Object.entries(tokens).reduce((out, [token, value]) => out.replaceAll(token, value), text);
+---
+
+<section class="section legal">
+  <span class="blob legal-blob" aria-hidden="true"></span>
+  <div class="container">
+    <article class="legal-doc">
+      <h1>{doc.title}</h1>
+
+      {
+        doc.intro.map((block) =>
+          block.kind === "p" ? (
+            <p>{fill(block.text)}</p>
+          ) : (
+            <ul>{block.items.map((item) => <li>{fill(item)}</li>)}</ul>
+          ),
+        )
+      }
+
+      {
+        doc.sections.map((section) => (
+          <section class="legal-section">
+            <h2>{section.heading}</h2>
+            {section.blocks.map((block) =>
+              block.kind === "p" ? (
+                <p>{fill(block.text)}</p>
+              ) : (
+                <ul>{block.items.map((item) => <li>{fill(item)}</li>)}</ul>
+              ),
+            )}
+          </section>
+        ))
+      }
+    </article>
+  </div>
+</section>
+
+<style>
+  .legal {
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(50% 55% at 92% 4%, rgba(255, 201, 60, 0.14), transparent 60%),
+      var(--sky-soft);
+  }
+  .legal-blob {
+    width: 300px;
+    height: 300px;
+    top: -130px;
+    left: -90px;
+    background: var(--blue);
+    opacity: 0.12;
+  }
+  .legal-doc {
+    position: relative;
+    z-index: 1;
+    /* A measure, not a breakpoint: legal text is read line by line, so the
+       column is capped in characters and centred whatever the viewport is. */
+    max-width: 74ch;
+    margin-inline: auto;
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: clamp(28px, 5vw, 56px);
+  }
+  .legal-doc h1 {
+    font-size: clamp(1.7rem, 3.4vw, 2.4rem);
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .legal-section {
+    margin-top: 34px;
+  }
+  .legal-doc h2 {
+    font-family: var(--font);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 10px;
+  }
+  .legal-doc p {
+    margin: 0 0 12px;
+    color: var(--text-muted);
+    line-height: 1.75;
+  }
+  .legal-doc p:last-child {
+    margin-bottom: 0;
+  }
+  .legal-doc ul {
+    margin: 0 0 12px;
+    padding-left: 1.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+  .legal-doc ul:last-child {
+    margin-bottom: 0;
+  }
+  .legal-doc li::marker {
+    color: var(--blue);
+  }
+</style>

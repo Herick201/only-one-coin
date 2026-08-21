@@ -7,12 +7,12 @@ const t = useTranslations(lang);
 const fd = t.finder;
 
 // Server-rendered default (works without JS); the client refines by geo.
-const defaultSlug = "ingles" as const;
+const defaultSlug = "english" as const;
 
 const courses = courseSlugs.map((slug) => ({
   slug,
   name: t.courses.list[slug],
-  href: withLang(lang, `/cursos/${slug}`),
+  href: withLang(lang, `/courses/${slug}`),
 }));
 
 // Config the client script reads (non-executable JSON — CSP-safe).
@@ -35,7 +35,7 @@ const clientConfig = {
         </p>
         <p class="reco-pre">{fd.recommendPre}</p>
         <p class="reco-lang" data-finder-name>{courses.find((c) => c.slug === defaultSlug)?.name}</p>
-        <a class="btn btn-yellow reco-cta" data-finder-cta href={withLang(lang, `/cursos/${defaultSlug}`)}>
+        <a class="btn btn-yellow reco-cta" data-finder-cta href={withLang(lang, `/courses/${defaultSlug}`)}>
           <span>{fd.viewCourse}</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
         </a>
@@ -46,7 +46,7 @@ const clientConfig = {
         <div class="lang-chips">
           {courses.map((c) => <a class="chip" data-slug={c.slug} href={c.href}>{c.name}</a>)}
         </div>
-        <a class="all-link" href={withLang(lang, "/cursos")}>{fd.allCourses} →</a>
+        <a class="all-link" href={withLang(lang, "/courses")}>{fd.allCourses} →</a>
       </div>
     </div>
   </div>

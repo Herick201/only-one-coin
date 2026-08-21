@@ -6,23 +6,27 @@ import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 
+// Top-level links only. Contact is reachable from the footer and from the
+// CTA at the bottom of every page, so it does not need a slot up here.
 const nav = [
   { label: t.nav.home, href: withLang(lang, "/") },
-  { label: t.nav.about, href: withLang(lang, "/nosotros") },
-  { label: t.nav.contact, href: withLang(lang, "/contacto") },
+  { label: t.nav.about, href: withLang(lang, "/about") },
 ];
 
 const courses = courseSlugs.map((slug) => ({
   label: t.courses.list[slug],
-  href: withLang(lang, `/cursos/${slug}`),
+  href: withLang(lang, `/courses/${slug}`),
 }));
-const coursesHref = withLang(lang, "/cursos");
+const coursesHref = withLang(lang, "/courses");
 
-// "Recursos" dropdown — community / blog / FAQ, one page each.
+// "Recursos" dropdown — community / blog / FAQ / contact, one page each.
+// Rendered by both the desktop dropdown and the mobile drawer, so this array
+// is the only place an entry has to be added.
 const resources = [
-  { label: t.nav.community, href: withLang(lang, "/comunidad") },
+  { label: t.nav.community, href: withLang(lang, "/community") },
   { label: t.nav.blog, href: withLang(lang, "/blog") },
-  { label: t.nav.faq, href: withLang(lang, "/preguntas-frecuentes") },
+  { label: t.nav.faq, href: withLang(lang, "/faq") },
+  { label: t.nav.contact, href: withLang(lang, "/contact") },
 ];
 const resourcesHref = resources[0].href;
 ---
@@ -63,12 +67,11 @@ const resourcesHref = resources[0].href;
         </div>
       </details>
 
-      <a href={nav[2].href}>{nav[2].label}</a>
     </nav>
 
     <div class="header-actions">
       <LanguageSwitcher />
-      <a href={withLang(lang, "/mi-cuenta")} class="btn btn-primary login-btn">
+      <a href={withLang(lang, "/portal")} class="btn btn-primary login-btn">
         <span>{t.nav.portal}</span>
         <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M5 12h14"></path>
@@ -110,8 +113,7 @@ const resourcesHref = resources[0].href;
         </div>
       </details>
 
-      <a href={nav[2].href}>{nav[2].label}</a>
-      <a href={withLang(lang, "/mi-cuenta")} class="btn btn-primary m-portal">{t.nav.portal}</a>
+      <a href={withLang(lang, "/portal")} class="btn btn-primary m-portal">{t.nav.portal}</a>
     </nav>
   </div>
 </header>

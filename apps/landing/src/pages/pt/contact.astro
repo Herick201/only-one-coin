@@ -1,11 +1,11 @@
 ---
 import Base from "../../layouts/Base.astro";
-import Faq from "../../components/Faq.astro";
+import Contact from "../../components/Contact.astro";
 import { content } from "../../i18n/ui";
 
-const m = content.pt.meta.faq;
+const m = content.pt.meta.contact;
 ---
 
 <Base title={m.title} description={m.description} waFloat={false}>
-  <Faq />
+  <Contact />
 </Base>
