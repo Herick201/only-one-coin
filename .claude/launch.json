@@ -8,6 +8,12 @@
       "port": 4321
     },
     {
+      "name": "landing-wt",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@ooc/landing", "dev", "--port", "4322"],
+      "port": 4322
+    },
+    {
       "name": "app",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "@ooc/app", "exec", "next", "dev", "--port", "3007"],
