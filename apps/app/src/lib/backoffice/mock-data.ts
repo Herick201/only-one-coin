@@ -2809,6 +2809,7 @@ export function getPaymentSettings(): PaymentSettings {
     toleranceCents: 50,
     escalationConfidence: 0.75,
     reservationDays: 5,
+    checkoutHoldMinutes: 10,
   }
 }
 

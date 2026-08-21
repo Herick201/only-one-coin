@@ -772,6 +772,13 @@ export interface PaymentSettings {
   escalationConfidence: number
   /** Days a reserved seat survives without an approved payment. */
   reservationDays: number
+  /**
+   * Minutes the public checkout holds a seat while the person goes off to pay
+   * (`CLAUDE.md` §5, "Dois relógios"). The short clock of the pair: it runs
+   * from the class group being chosen to the receipt arriving, and `reservationDays`
+   * takes over from there.
+   */
+  checkoutHoldMinutes: number
 }
 
 /* -------------------------------------------------------------------------- */

@@ -1,0 +1,189 @@
+{
+  "enrollment": {
+    "meta": {
+      "title": "Matrícula online — Only One Coin",
+      "description": "Escolha seu curso, reserve sua vaga e envie o comprovante de pagamento em quatro passos."
+    },
+    "brand": {
+      "label": "Matrícula online"
+    },
+    "footer": {
+      "secure": "Conexão segura. Seus dados são usados apenas para a sua matrícula.",
+      "support": "Precisa de ajuda? Fale com a gente pelo WhatsApp."
+    },
+    "step": {
+      "position": "Passo {current} de {total}",
+      "course": {
+        "short": "Curso",
+        "eyebrow": "Passo 1",
+        "title": "O que você quer estudar?",
+        "subtitle": "Escolha o idioma, o curso e o horário. O preço aparece quando você escolhe o horário.",
+        "language_label": "Idioma",
+        "course_label": "Curso",
+        "course_meta": "{level} · {hours} horas · {modules} módulos",
+        "min_age": "A partir de {age} anos",
+        "group_label": "Horário",
+        "group_hint": "Todas as aulas são online, pelo Google Meet. O horário é fixo durante todo o módulo.",
+        "no_groups": "Por enquanto não há horários abertos para este curso. Fale com a gente pelo WhatsApp e avisamos quando abrir o próximo ciclo.",
+        "seats_left": "{count, plural, one {Resta # vaga} other {Restam # vagas}}",
+        "group_full": "Sem vagas",
+        "starts_on": "Começa em {date}",
+        "teacher": "Docente: {name}",
+        "summary_label": "Resumo da sua escolha",
+        "single_payment_note": "Pagamento único. Não há mensalidade nem parcelamento."
+      },
+      "student": {
+        "short": "Dados",
+        "eyebrow": "Passo 2",
+        "title": "Quem vai estudar?",
+        "subtitle": "Estes dados aparecem no seu certificado, então escreva exatamente como está no documento.",
+        "min_age_hint": "Este curso é a partir de {age} anos.",
+        "email_hint": "É por aqui que chegam suas credenciais e o acesso à aula.",
+        "google_hint": "Recomendamos um e-mail do Gmail com espaço disponível: o acesso à aula chega pelo Google Classroom.",
+        "guardian_title": "Dados do responsável",
+        "guardian_subtitle": "O aluno é menor de idade, então precisamos dos dados e do consentimento do responsável.",
+        "consent_label": "Autorizo a matrícula do menor e o tratamento dos seus dados pessoais para fins acadêmicos.",
+        "consent_version": "Texto de consentimento versão {version}. Guardamos a data e a hora do seu aceite."
+      },
+      "payment": {
+        "short": "Pagamento",
+        "eyebrow": "Passo 3",
+        "title": "Pague e envie seu comprovante",
+        "subtitle": "O pagamento é feito no app do seu banco ou do Yape. Aqui a gente só recebe a comprovação.",
+        "amount_label": "Valor a pagar",
+        "amount_hint": "É o preço vigente do pacote. Não aplicamos descontos.",
+        "method_label": "Como você vai pagar?",
+        "method_meta": {
+          "yape": "Pagamento imediato pelo celular",
+          "plin": "Pagamento imediato pelo celular",
+          "bcp": "Transferência ou depósito bancário",
+          "interbank": "Transferência ou depósito bancário"
+        },
+        "account_label": "Dados para pagar por {method}",
+        "holder": "Titular",
+        "number_label": {
+          "yape": "Número do Yape",
+          "plin": "Número do Plin",
+          "bcp": "Número da conta",
+          "interbank": "Número da conta"
+        },
+        "interbank_code": "Código interbancário (CCI)",
+        "exact_amount_warning": "Pague o valor exato. Um valor diferente vai para revisão manual e atrasa sua matrícula.",
+        "proof_label": "Seu comprovante",
+        "proof_hint": "Envie o print ou o comprovante do pagamento. Sem comprovante não conseguimos registrar sua matrícula.",
+        "operation_hint": "Aparece no seu comprovante como número da operação.",
+        "receipt_hint": "Imagem ou PDF, até {size}.",
+        "receipt_preview_alt": "Prévia do comprovante que você enviou"
+      },
+      "review": {
+        "short": "Confirmação",
+        "eyebrow": "Passo 4",
+        "title": "Confira antes de enviar",
+        "subtitle": "Se algo estiver errado, dá para corrigir por aqui.",
+        "course_section": "Curso e horário",
+        "student_section": "Dados do aluno",
+        "guardian_section": "Responsável",
+        "payment_section": "Pagamento",
+        "consent_given": "Aceito (versão {version})",
+        "what_happens": "Ao enviar, sua vaga fica reservada e o comprovante entra em revisão. Você tem até {days} dias para o pagamento ser aprovado; avisamos por e-mail assim que estiver pronto."
+      }
+    },
+    "hold": {
+      "will_start": "Ao continuar, reservamos sua vaga por {minutes} minutos para você pagar com calma.",
+      "active": "Sua vaga está reservada enquanto você paga",
+      "remaining": "Restam {minutes} minutos e {seconds} segundos de reserva",
+      "expired": "O tempo acabou e sua vaga voltou para a turma. Seus dados continuam salvos: escolha um horário de novo para continuar."
+    },
+    "summary": {
+      "course": "Curso",
+      "plan": "Pacote",
+      "schedule": "Horário",
+      "total": "Total",
+      "starts_on": "Início das aulas",
+      "class_group": "Código da turma",
+      "full_name": "Nome completo",
+      "document": "Documento",
+      "email": "E-mail",
+      "birth_date": "Data de nascimento",
+      "consent": "Consentimento",
+      "method": "Meio de pagamento",
+      "operation_number": "Número da operação",
+      "receipt": "Comprovante"
+    },
+    "field": {
+      "first_name": "Nome",
+      "last_name": "Sobrenome",
+      "national_id_type": "Tipo de documento",
+      "national_id": "Número do documento",
+      "birth_date": "Data de nascimento",
+      "email": "E-mail",
+      "relationship": "Parentesco",
+      "operation_number": "Número da operação",
+      "receipt": "Comprovante de pagamento"
+    },
+    "national_id_type": {
+      "DNI": "DNI",
+      "CE": "Carteira de estrangeiro",
+      "passport": "Passaporte"
+    },
+    "relationship": {
+      "mother": "Mãe",
+      "father": "Pai",
+      "legal_guardian": "Responsável legal"
+    },
+    "weekday": {
+      "mon": "Seg",
+      "tue": "Ter",
+      "wed": "Qua",
+      "thu": "Qui",
+      "fri": "Sex",
+      "sat": "Sáb",
+      "sun": "Dom"
+    },
+    "action": {
+      "continue": "Continuar",
+      "back": "Voltar",
+      "edit": "Editar",
+      "submit": "Enviar matrícula",
+      "copy": "Copiar",
+      "copied": "Copiado",
+      "attach_receipt": "Enviar comprovante",
+      "remove_receipt": "Remover o comprovante"
+    },
+    "error": {
+      "required": "Preencha este campo.",
+      "national_id_format": "Confira o número: o DNI tem 8 dígitos.",
+      "email_format": "Escreva um e-mail válido.",
+      "birth_date_range": "Confira a data de nascimento.",
+      "min_age": "A idade mínima deste curso é maior. Escolha outro curso ou fale com a gente.",
+      "consent_required": "Precisamos da autorização do responsável para continuar.",
+      "operation_format": "O número da operação tem entre 6 e 20 caracteres.",
+      "receipt_required": "Envie seu comprovante de pagamento para continuar.",
+      "receipt_type": "Envie uma imagem (JPG, PNG, WEBP, HEIC) ou um PDF.",
+      "receipt_size": "O arquivo está pesado demais. Tente um print mais leve.",
+      "fix_fields": "Confira os campos marcados antes de continuar."
+    },
+    "submitted": {
+      "title": "Recebemos sua matrícula",
+      "subtitle": "Vamos escrever para {email} com o resultado da revisão do seu pagamento.",
+      "reference_label": "Código de acompanhamento",
+      "what_now": "E agora?",
+      "timeline": {
+        "received": {
+          "title": "Recebemos seu comprovante",
+          "body": "Sua vaga ficou reservada no seu nome."
+        },
+        "review": {
+          "title": "Revisamos seu pagamento",
+          "body": "Conferimos o valor e o número da operação. Você tem até {days} dias de reserva enquanto isso."
+        },
+        "credentials": {
+          "title": "Enviamos seus acessos",
+          "body": "Quando o pagamento for aprovado, você recebe por e-mail suas credenciais e o link da aula."
+        }
+      },
+      "summary_label": "O que registramos",
+      "online_note": "Todas as nossas aulas são 100% online, por Google Meet e Google Classroom. Você não precisa ir a nenhuma sede."
+    }
+  }
+}

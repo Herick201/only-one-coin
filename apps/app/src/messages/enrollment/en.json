@@ -1,0 +1,189 @@
+{
+  "enrollment": {
+    "meta": {
+      "title": "Online enrolment — Only One Coin",
+      "description": "Choose your course, hold your seat and send your payment receipt in four steps."
+    },
+    "brand": {
+      "label": "Online enrolment"
+    },
+    "footer": {
+      "secure": "Secure connection. Your data is used only for your enrolment.",
+      "support": "Need help? Message us on WhatsApp."
+    },
+    "step": {
+      "position": "Step {current} of {total}",
+      "course": {
+        "short": "Course",
+        "eyebrow": "Step 1",
+        "title": "What would you like to study?",
+        "subtitle": "Pick the language, the course and the schedule. The price appears once you choose a schedule.",
+        "language_label": "Language",
+        "course_label": "Course",
+        "course_meta": "{level} · {hours} hours · {modules} modules",
+        "min_age": "From age {age}",
+        "group_label": "Schedule",
+        "group_hint": "Every class is online, on Google Meet. The schedule stays the same for the whole module.",
+        "no_groups": "No schedules are open for this course right now. Message us on WhatsApp and we will let you know when the next cycle opens.",
+        "seats_left": "{count, plural, one {# seat left} other {# seats left}}",
+        "group_full": "No seats left",
+        "starts_on": "Starts on {date}",
+        "teacher": "Teacher: {name}",
+        "summary_label": "Your selection",
+        "single_payment_note": "One single payment. No monthly fees, no instalments."
+      },
+      "student": {
+        "short": "Details",
+        "eyebrow": "Step 2",
+        "title": "Who is going to study?",
+        "subtitle": "These details go on your certificate, so write them exactly as they appear on your ID.",
+        "min_age_hint": "This course is for ages {age} and up.",
+        "email_hint": "This is where your credentials and class access will arrive.",
+        "google_hint": "We recommend a Gmail address with free space: class access arrives through Google Classroom.",
+        "guardian_title": "Guardian details",
+        "guardian_subtitle": "The student is under 18, so we need their guardian's details and consent.",
+        "consent_label": "I authorise the minor's enrolment and the processing of their personal data for academic purposes.",
+        "consent_version": "Consent text version {version}. We record the date and time you accepted."
+      },
+      "payment": {
+        "short": "Payment",
+        "eyebrow": "Step 3",
+        "title": "Pay and upload your receipt",
+        "subtitle": "You pay from your bank or Yape app. Here we only receive the proof.",
+        "amount_label": "Amount to pay",
+        "amount_hint": "This is the package price in force. We do not apply discounts.",
+        "method_label": "How will you pay?",
+        "method_meta": {
+          "yape": "Instant payment from your phone",
+          "plin": "Instant payment from your phone",
+          "bcp": "Bank transfer or deposit",
+          "interbank": "Bank transfer or deposit"
+        },
+        "account_label": "Details for paying by {method}",
+        "holder": "Account holder",
+        "number_label": {
+          "yape": "Yape number",
+          "plin": "Plin number",
+          "bcp": "Account number",
+          "interbank": "Account number"
+        },
+        "interbank_code": "Interbank code (CCI)",
+        "exact_amount_warning": "Pay the exact amount. A different amount goes to manual review and delays your enrolment.",
+        "proof_label": "Your receipt",
+        "proof_hint": "Upload the screenshot or voucher of the payment. Without a receipt we cannot register your enrolment.",
+        "operation_hint": "It appears on your payment record as the operation number.",
+        "receipt_hint": "Image or PDF, up to {size}.",
+        "receipt_preview_alt": "Preview of the receipt you uploaded"
+      },
+      "review": {
+        "short": "Confirmation",
+        "eyebrow": "Step 4",
+        "title": "Check before sending",
+        "subtitle": "If anything is wrong, you can fix it from here.",
+        "course_section": "Course and schedule",
+        "student_section": "Student details",
+        "guardian_section": "Guardian",
+        "payment_section": "Payment",
+        "consent_given": "Accepted (version {version})",
+        "what_happens": "When you send, your seat is held and your receipt goes to review. You have up to {days} days for the payment to be approved; we will email you as soon as it is."
+      }
+    },
+    "hold": {
+      "will_start": "When you continue we hold your seat for {minutes} minutes so you can pay without rushing.",
+      "active": "Your seat is held while you pay",
+      "remaining": "{minutes} minutes and {seconds} seconds left on your hold",
+      "expired": "Time ran out and your seat went back to the class. Your details are still saved: pick a schedule again to carry on."
+    },
+    "summary": {
+      "course": "Course",
+      "plan": "Package",
+      "schedule": "Schedule",
+      "total": "Total",
+      "starts_on": "Classes start",
+      "class_group": "Class group code",
+      "full_name": "Full name",
+      "document": "ID document",
+      "email": "Email",
+      "birth_date": "Date of birth",
+      "consent": "Consent",
+      "method": "Payment method",
+      "operation_number": "Operation number",
+      "receipt": "Receipt"
+    },
+    "field": {
+      "first_name": "First name",
+      "last_name": "Last name",
+      "national_id_type": "Document type",
+      "national_id": "Document number",
+      "birth_date": "Date of birth",
+      "email": "Email address",
+      "relationship": "Relationship",
+      "operation_number": "Operation number",
+      "receipt": "Payment receipt"
+    },
+    "national_id_type": {
+      "DNI": "DNI",
+      "CE": "Foreign resident card",
+      "passport": "Passport"
+    },
+    "relationship": {
+      "mother": "Mother",
+      "father": "Father",
+      "legal_guardian": "Legal guardian"
+    },
+    "weekday": {
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat",
+      "sun": "Sun"
+    },
+    "action": {
+      "continue": "Continue",
+      "back": "Back",
+      "edit": "Edit",
+      "submit": "Send enrolment",
+      "copy": "Copy",
+      "copied": "Copied",
+      "attach_receipt": "Upload receipt",
+      "remove_receipt": "Remove the receipt"
+    },
+    "error": {
+      "required": "Please fill in this field.",
+      "national_id_format": "Check the number: a DNI has 8 digits.",
+      "email_format": "Enter a valid email address.",
+      "birth_date_range": "Check the date of birth.",
+      "min_age": "This course has a higher minimum age. Choose another course or message us.",
+      "consent_required": "We need the guardian's authorisation to continue.",
+      "operation_format": "The operation number is between 6 and 20 characters.",
+      "receipt_required": "Upload your payment receipt to continue.",
+      "receipt_type": "Upload an image (JPG, PNG, WEBP, HEIC) or a PDF.",
+      "receipt_size": "That file is too large. Try a lighter screenshot.",
+      "fix_fields": "Please check the highlighted fields before continuing."
+    },
+    "submitted": {
+      "title": "We have your enrolment",
+      "subtitle": "We will write to {email} with the result of your payment review.",
+      "reference_label": "Tracking code",
+      "what_now": "What happens next",
+      "timeline": {
+        "received": {
+          "title": "We received your receipt",
+          "body": "Your seat is held in your name."
+        },
+        "review": {
+          "title": "We review your payment",
+          "body": "We check the amount and the operation number. Your seat is held for up to {days} days while we do."
+        },
+        "credentials": {
+          "title": "We send your access",
+          "body": "Once the payment is approved, you will get your credentials and the class link by email."
+        }
+      },
+      "summary_label": "What we recorded",
+      "online_note": "All our classes are 100% online, on Google Meet and Google Classroom. You never need to travel to a campus."
+    }
+  }
+}
