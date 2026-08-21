@@ -23,9 +23,9 @@ export default async function DashboardPage({
   const hasUnderReview = enrollments.some((e) => e.status === 'under_review')
 
   const quickActions: { href: string; label: string; icon: IconName }[] = [
-    { href: '/portal/documentos', label: t('dashboard.action_documents'), icon: 'documents' },
-    { href: '/portal/matricula', label: t('dashboard.action_enrollments'), icon: 'enrollment' },
-    { href: '/portal/perfil', label: t('dashboard.action_profile'), icon: 'profile' },
+    { href: '/portal/documents', label: t('dashboard.action_documents'), icon: 'documents' },
+    { href: '/portal/enrollment', label: t('dashboard.action_enrollments'), icon: 'enrollment' },
+    { href: '/portal/profile', label: t('dashboard.action_profile'), icon: 'profile' },
   ]
 
   return (
@@ -104,7 +104,7 @@ export default async function DashboardPage({
         <div className="mb-3 flex items-center justify-between">
           <SectionTitle>{t('dashboard.my_courses_title')}</SectionTitle>
           <Link
-            href="/portal/cursos"
+            href="/portal/courses"
             className="inline-flex items-center gap-1 text-sm font-semibold text-brand-blue transition hover:text-brand-blue-deep"
           >
             {t('common.see_all')}
@@ -135,7 +135,7 @@ export default async function DashboardPage({
                 />
               )}
               <Link
-                href={`/portal/cursos/${e.id}`}
+                href={`/portal/courses/${e.id}`}
                 className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-brand-blue transition hover:text-brand-blue-deep"
               >
                 {t('common.view_detail')}

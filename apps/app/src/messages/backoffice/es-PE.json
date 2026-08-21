@@ -474,7 +474,7 @@
     },
     "new_enrollment": {
       "title": "Nueva matrícula",
-      "subtitle": "Para la venta que se cerró por WhatsApp y nunca pasó por el formulario. El camino normal es que el alumno se matricule en /matricula.",
+      "subtitle": "Para la venta que se cerró por WhatsApp y nunca pasó por el formulario. El camino normal es que el alumno se matricule en /enrollment.",
       "step_student": "1 · Alumno",
       "search_student_label": "Buscar alumno",
       "search_student_placeholder": "Nombre o documento",

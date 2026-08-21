@@ -119,7 +119,7 @@ export function canBrowseEnrollments(role: StaffRole): boolean {
 
 /**
  * Who may open an enrollment from the panel. The documented way in is the
- * student filling `/matricula` themselves (CLAUDE.md §1); this is the exception
+ * student filling `/enrollment` themselves (CLAUDE.md §1); this is the exception
  * for the sale that closed on WhatsApp and never reached the form, so it stays
  * with the two roles that already answer for a seat. Tesorería settles money
  * and must not also be the one who creates what it settles, and a teacher runs

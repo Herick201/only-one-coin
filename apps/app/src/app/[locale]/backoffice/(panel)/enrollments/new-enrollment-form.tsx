@@ -28,7 +28,7 @@ const MAX_MATCHES = 6
 
 /**
  * Opening an enrollment from the panel — the exception, not the way in. The
- * documented path is the student filling `/matricula` themselves (CLAUDE.md
+ * documented path is the student filling `/enrollment` themselves (CLAUDE.md
  * §1); this covers the sale that closed on WhatsApp and never reached the form.
  *
  * Three things it deliberately does not do:

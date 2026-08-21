@@ -120,7 +120,7 @@ export default async function CoursesPage({
                       })}
                     </span>
                     <Link
-                      href={`/portal/cursos/${e.id}`}
+                      href={`/portal/courses/${e.id}`}
                       className="inline-flex items-center gap-1.5 rounded-full bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-card transition hover:bg-brand-blue-deep"
                     >
                       {t('common.view_detail')}
