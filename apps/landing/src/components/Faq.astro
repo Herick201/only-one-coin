@@ -1,12 +1,27 @@
 ---
+import { htmlLang } from "../i18n/ui";
 import { getLangFromUrl, useTranslations } from "../i18n/utils";
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const f = t.faq;
+
+// FAQPage structured data, built from the very same items rendered below — the
+// markup and the schema can never disagree, which is what Google checks for.
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  inLanguage: htmlLang[lang],
+  mainEntity: f.items.map((item) => ({
+    "@type": "Question",
+    name: item.q,
+    acceptedAnswer: { "@type": "Answer", text: item.a },
+  })),
+};
 ---
 
 <section class="section faq" id="faq">
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} is:inline />
   <div class="container">
     <h1 class="section-title faq-title">{f.titlePre}<span class="accent">{f.titleAccent}</span>{f.titlePost}</h1>
     <p class="faq-lead text-muted">{f.lead}</p>
