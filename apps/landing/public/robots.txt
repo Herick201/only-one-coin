@@ -1,0 +1,5 @@
+# Asociación Only One Coin Perú — https://onlyonecoin.edu.pe
+User-agent: *
+Allow: /
+
+Sitemap: https://onlyonecoin.edu.pe/sitemap.xml
