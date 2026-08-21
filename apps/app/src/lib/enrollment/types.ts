@@ -144,14 +144,41 @@ export const STEP_ORDER: readonly StepId[] = [
 export interface CourseDraft {
   languageId: string | null
   courseId: string | null
+  /**
+   * Chosen before the schedule, and separately from it. The same course opens
+   * on several dates — start today or with the class group at the end of the
+   * month — and each date carries its own three or four schedules
+   * (`docs/MATRICULA-CHECKOUT.md` §2). Collapsing the two into one long list
+   * is how somebody picks a good time on the wrong date.
+   */
+  startDate: string | null
   classGroupId: string | null
 }
 
+/**
+ * The student, in the shape the Asociación already collects
+ * (`docs/MATRICULA-CHECKOUT.md` §2 carries the column list of the sheet this
+ * replaces). Two of these are not obvious:
+ *
+ * - `fullName` is ONE field, not a nombres/apellidos pair. It is what the
+ *   current form asks for, and re-splitting a Peruvian name (two surnames,
+ *   compound given names) after the fact is guesswork.
+ * - `phone` IS asked here. The "never ask for a phone number" rule
+ *   (`docs/REGRAS-NEGOCIO.md` §5) governs the WhatsApp sales conversation,
+ *   where the number is already known — not the enrollment form, which has
+ *   always had a CELULAR column.
+ */
 export interface StudentDraft {
-  firstName: string
-  lastName: string
+  fullName: string
   nationalIdType: NationalIdType
   nationalId: string
+  /** Mobile number, as the sheet's CELULAR column. */
+  phone: string
+  /**
+   * Must be a personal Gmail account belonging to the student: class access
+   * arrives through Google Classroom, and the form is explicit that
+   * institutional and corporate addresses are refused.
+   */
   email: string
   birthDate: string
 }
@@ -162,11 +189,12 @@ export interface StudentDraft {
  * consent it carries is a legal record, not a checkbox.
  */
 export interface GuardianDraft {
-  firstName: string
-  lastName: string
+  fullName: string
   nationalIdType: NationalIdType
   nationalId: string
   relationship: GuardianRelationship
+  phone: string
+  /** No Gmail constraint here: Classroom access belongs to the student. */
   email: string
   consentAccepted: boolean
 }

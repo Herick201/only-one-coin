@@ -6,11 +6,13 @@ import type { CheckoutDraft, PublicCatalog } from '@/lib/enrollment/types'
 import {
   coursesOfLanguage,
   courseById,
-  groupsOfCourse,
+  groupsOnStartDate,
   hasSeat,
   planOfCourse,
   seatsLeft,
+  startDatesOfCourse,
 } from '@/lib/enrollment/checkout'
+import { scheduleLine } from '@/lib/enrollment/schedule'
 import { formatDate, formatMoney, type Locale } from '@/lib/format'
 import {
   Card,
@@ -30,9 +32,15 @@ const SCARCE_SEATS = 6
  * Step 1 — what is being bought.
  *
  * Runs in the order the WhatsApp funnel already uses
- * (`docs/REGRAS-NEGOCIO.md` §7): language → course → class group, and only then
- * schedule, start date and price. Asking for money before the reader knows what
- * time the class is is how a funnel loses people who would have paid.
+ * (`docs/REGRAS-NEGOCIO.md` §7): language → course → **start date** →
+ * schedule, and only then the price. Asking for money before the reader knows
+ * what time the class is is how a funnel loses people who would have paid.
+ *
+ * The date is its own choice, not a property of the schedule. Coordination
+ * opens the same course on several dates — this week, or the class group at the
+ * end of the month — each with its own three or four hours. Flattening that
+ * into one list of twelve is how somebody picks a convenient hour on a date
+ * they cannot make.
  *
  * Two rules the screen has to keep:
  *
@@ -60,14 +68,18 @@ export function StepCourse({
   const t = useTranslations('enrollment')
   const locale = useLocale() as Locale
 
-  const { languageId, courseId, classGroupId } = draft.course
+  const { languageId, courseId, startDate, classGroupId } = draft.course
   const courses = useMemo(
     () => coursesOfLanguage(catalog, languageId),
     [catalog, languageId],
   )
-  const groups = useMemo(
-    () => groupsOfCourse(catalog, courseId),
+  const startDates = useMemo(
+    () => startDatesOfCourse(catalog, courseId),
     [catalog, courseId],
+  )
+  const groups = useMemo(
+    () => groupsOnStartDate(catalog, courseId, startDate),
+    [catalog, courseId, startDate],
   )
   const course = courseById(catalog, courseId)
   const plan = planOfCourse(catalog, courseId)
@@ -78,14 +90,34 @@ export function StepCourse({
     // the previous language would sit there looking chosen.
     setDraft((prev) => ({
       ...prev,
-      course: { languageId: id, courseId: null, classGroupId: null },
+      course: {
+        languageId: id,
+        courseId: null,
+        startDate: null,
+        classGroupId: null,
+      },
     }))
   }
 
   function pickCourse(id: string) {
     setDraft((prev) => ({
       ...prev,
-      course: { ...prev.course, courseId: id, classGroupId: null },
+      course: {
+        ...prev.course,
+        courseId: id,
+        startDate: null,
+        classGroupId: null,
+      },
+    }))
+  }
+
+  function pickStartDate(date: string) {
+    // A schedule belongs to a date. Keeping the previous class group selected
+    // while the date moves under it is how a summary ends up showing an hour
+    // that does not exist on the date beside it.
+    setDraft((prev) => ({
+      ...prev,
+      course: { ...prev.course, startDate: date, classGroupId: null },
     }))
   }
 
@@ -93,9 +125,16 @@ export function StepCourse({
     setDraft((prev) => ({ ...prev, course: { ...prev.course, classGroupId: id } }))
   }
 
-  function scheduleOf(weekdays: readonly string[], startTime: string, endTime: string) {
-    return `${weekdays.map((day) => t(`weekday.${day}`)).join(' · ')} — ${startTime} a ${endTime}`
-  }
+  const schedule = (group: {
+    weekdays: readonly string[]
+    startTime: string
+    endTime: string
+  }) =>
+    scheduleLine(
+      group as Parameters<typeof scheduleLine>[0],
+      (day) => t(`weekday.${day}`),
+      (vars) => t('schedule_line', vars),
+    )
 
   return (
     <div className="flex flex-col gap-5">
@@ -163,8 +202,45 @@ export function StepCourse({
         </Card>
       )}
 
-      {/* Class group */}
+      {/* Start date — its own choice, before the hour */}
       {course && (
+        <Card className="p-5">
+          <p className="mb-1 text-sm font-semibold text-ink">
+            {t('step.course.start_date_label')}
+          </p>
+          <p className="mb-3 text-xs text-muted-foreground">
+            {t('step.course.start_date_hint')}
+          </p>
+
+          {startDates.length === 0 ? (
+            <Note tone="warning">{t('step.course.no_start_dates')}</Note>
+          ) : (
+            <AutoGrid min="15rem" gap="gap-3">
+              {startDates.map((option) => (
+                <ChoiceCard
+                  key={option.startDate}
+                  selected={startDate === option.startDate}
+                  onSelect={() => pickStartDate(option.startDate)}
+                  title={formatDate(option.startDate, locale)}
+                  meta={t('step.course.schedules_on_date', {
+                    count: option.openGroups,
+                  })}
+                >
+                  {option.seatsLeft <= SCARCE_SEATS && (
+                    <span className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-brand-yellow/20 px-2.5 py-1 text-[11px] font-semibold text-brand-yellow-deep">
+                      <CheckoutIcon name="seat" size={12} />
+                      {t('step.course.seats_left', { count: option.seatsLeft })}
+                    </span>
+                  )}
+                </ChoiceCard>
+              ))}
+            </AutoGrid>
+          )}
+        </Card>
+      )}
+
+      {/* Schedule, within the chosen date */}
+      {course && startDate && (
         <Card className="p-5">
           <p className="mb-1 text-sm font-semibold text-ink">
             {t('step.course.group_label')}
@@ -186,7 +262,7 @@ export function StepCourse({
                     selected={classGroupId === group.id}
                     disabled={!open}
                     onSelect={() => pickGroup(group.id)}
-                    title={scheduleOf(group.weekdays, group.startTime, group.endTime)}
+                    title={schedule(group)}
                     aside={
                       open ? (
                         left <= SCARCE_SEATS ? (
@@ -202,12 +278,6 @@ export function StepCourse({
                     }
                   >
                     <span className="mt-1 flex flex-col gap-0.5 text-xs text-muted-foreground">
-                      <span className="inline-flex items-center gap-1.5">
-                        <CheckoutIcon name="calendar" size={13} />
-                        {t('step.course.starts_on', {
-                          date: formatDate(group.startDate, locale),
-                        })}
-                      </span>
                       <span>
                         {t('step.course.teacher', { name: group.teacherName })}
                       </span>
@@ -230,12 +300,11 @@ export function StepCourse({
           <dl className="divide-y divide-line">
             <SummaryRow label={t('summary.course')}>{course.name}</SummaryRow>
             <SummaryRow label={t('summary.plan')}>{plan.name}</SummaryRow>
+            <SummaryRow label={t('summary.starts_on')}>
+              {formatDate(selectedGroup.startDate, locale)}
+            </SummaryRow>
             <SummaryRow label={t('summary.schedule')}>
-              {scheduleOf(
-                selectedGroup.weekdays,
-                selectedGroup.startTime,
-                selectedGroup.endTime,
-              )}
+              {schedule(selectedGroup)}
             </SummaryRow>
             <SummaryRow label={t('summary.total')} strong>
               {formatMoney(plan.amountCents, plan.currency, locale)}

@@ -4,6 +4,7 @@ import type {
   CatalogClassGroup,
   CatalogCourse,
   CheckoutDraft,
+  CourseDraft,
   EnrollmentSource,
   GuardianDraft,
   PaymentDraft,
@@ -69,11 +70,11 @@ export function resolveCampaign(
 export function resolvePrefill(
   catalog: PublicCatalog,
   params: Record<string, string | undefined>,
-): { languageId: string | null; courseId: string | null; classGroupId: string | null } {
+): CourseDraft {
   const course =
     catalog.courses.find((item) => item.id === params[QUERY_KEYS.course]) ?? null
   if (!course) {
-    return { languageId: null, courseId: null, classGroupId: null }
+    return { languageId: null, courseId: null, startDate: null, classGroupId: null }
   }
   const group =
     catalog.classGroups.find(
@@ -85,6 +86,7 @@ export function resolvePrefill(
   return {
     languageId: course.languageId,
     courseId: course.id,
+    startDate: group?.startDate ?? null,
     classGroupId: group?.id ?? null,
   }
 }
@@ -115,6 +117,60 @@ export function groupsOfCourse(
 ): CatalogClassGroup[] {
   if (!courseId) return []
   return catalog.classGroups.filter((group) => group.courseId === courseId)
+}
+
+/** One entry per date the course opens on, with what is still available on it. */
+export interface StartDateOption {
+  startDate: string
+  /** Schedules on this date that still have a seat. */
+  openGroups: number
+  /** Seats left across the whole date — what "almost gone" is measured on. */
+  seatsLeft: number
+}
+
+/**
+ * The dates a course opens on, soonest first.
+ *
+ * Coordination opens class groups in the panel, and the same course routinely
+ * runs "starts this week" next to "starts at the end of the month", each with
+ * its own three or four schedules. Reading them as one flat list of twelve
+ * options is how somebody picks a convenient hour on a date they cannot make.
+ *
+ * A date with no seat left on any of its schedules is dropped rather than
+ * shown greyed: unlike a single full class group — where seeing that the 07:00
+ * exists is worth something — a dead date teaches the reader nothing.
+ */
+export function startDatesOfCourse(
+  catalog: PublicCatalog,
+  courseId: string | null,
+): StartDateOption[] {
+  const byDate = new Map<string, StartDateOption>()
+  for (const group of groupsOfCourse(catalog, courseId)) {
+    const entry = byDate.get(group.startDate) ?? {
+      startDate: group.startDate,
+      openGroups: 0,
+      seatsLeft: 0,
+    }
+    if (hasSeat(group)) {
+      entry.openGroups += 1
+      entry.seatsLeft += seatsLeft(group)
+    }
+    byDate.set(group.startDate, entry)
+  }
+  return [...byDate.values()]
+    .filter((entry) => entry.openGroups > 0)
+    .sort((a, b) => a.startDate.localeCompare(b.startDate))
+}
+
+export function groupsOnStartDate(
+  catalog: PublicCatalog,
+  courseId: string | null,
+  startDate: string | null,
+): CatalogClassGroup[] {
+  if (!startDate) return []
+  return groupsOfCourse(catalog, courseId).filter(
+    (group) => group.startDate === startDate,
+  )
 }
 
 export function planOfCourse(catalog: PublicCatalog, courseId: string | null) {
@@ -157,15 +213,33 @@ const NATIONAL_ID_RULES = {
 const emailSchema = z.string().trim().email()
 
 /**
- * Access to the class arrives through Google Classroom
- * (`docs/REGRAS-NEGOCIO.md` §7), so a non-Google address is worth a word to the
- * reader — but only a word. Blocking it would turn a delivery preference into a
- * rejected enrollment, and that is the client's call to make, not ours.
+ * The student's address has to be a personal Gmail account, and that is a
+ * gate rather than advice: class access arrives through Google Classroom, and
+ * the enrollment form says it in capitals — institutional and corporate
+ * addresses are refused. A colegio address that stops working in December is
+ * a student who loses the course they paid for.
+ *
+ * The guardian's address is not held to this: Classroom belongs to the student.
  */
-export function looksNonGoogle(email: string): boolean {
-  const trimmed = email.trim().toLowerCase()
-  if (!emailSchema.safeParse(trimmed).success) return false
-  return !/@(gmail\.com|googlemail\.com)$/.test(trimmed)
+export function isGmail(email: string): boolean {
+  return /@gmail\.com$/.test(email.trim().toLowerCase())
+}
+
+/**
+ * Mobile number — the sheet's CELULAR column. Deliberately loose: Peruvian
+ * mobiles are nine digits, but the Asociación does enroll students abroad, and
+ * a regex that only knows Lima turns a paying student away at the last step.
+ * Separators and a country code are allowed and normalised on the server.
+ */
+const PHONE = /^\+?[\d\s-]{9,18}$/
+
+export function digitsOf(phone: string): string {
+  return phone.replace(/\D/g, '')
+}
+
+/** A full name is at least two words: one word is half a name on a certificate. */
+function isFullName(value: string): boolean {
+  return value.trim().split(/\s+/).filter((part) => part.length > 1).length >= 2
 }
 
 export function validateStudent(
@@ -175,16 +249,21 @@ export function validateStudent(
 ): FieldErrors<StudentField> {
   const errors: FieldErrors<StudentField> = {}
 
-  if (draft.firstName.trim().length < 2) errors.firstName = 'required'
-  if (draft.lastName.trim().length < 2) errors.lastName = 'required'
+  if (draft.fullName.trim() === '') errors.fullName = 'required'
+  else if (!isFullName(draft.fullName)) errors.fullName = 'full_name_incomplete'
 
   const id = draft.nationalId.trim()
   if (id === '') errors.nationalId = 'required'
   else if (!NATIONAL_ID_RULES[draft.nationalIdType].test(id))
     errors.nationalId = 'national_id_format'
 
+  if (draft.phone.trim() === '') errors.phone = 'required'
+  else if (!PHONE.test(draft.phone.trim()) || digitsOf(draft.phone).length < 9)
+    errors.phone = 'phone_format'
+
   if (draft.email.trim() === '') errors.email = 'required'
   else if (!emailSchema.safeParse(draft.email).success) errors.email = 'email_format'
+  else if (!isGmail(draft.email)) errors.email = 'email_must_be_gmail'
 
   if (draft.birthDate === '') {
     errors.birthDate = 'required'
@@ -215,13 +294,17 @@ export function isMinor(birthDate: string, now = new Date()): boolean {
 export function validateGuardian(draft: GuardianDraft): FieldErrors<GuardianField> {
   const errors: FieldErrors<GuardianField> = {}
 
-  if (draft.firstName.trim().length < 2) errors.firstName = 'required'
-  if (draft.lastName.trim().length < 2) errors.lastName = 'required'
+  if (draft.fullName.trim() === '') errors.fullName = 'required'
+  else if (!isFullName(draft.fullName)) errors.fullName = 'full_name_incomplete'
 
   const id = draft.nationalId.trim()
   if (id === '') errors.nationalId = 'required'
   else if (!NATIONAL_ID_RULES[draft.nationalIdType].test(id))
     errors.nationalId = 'national_id_format'
+
+  if (draft.phone.trim() === '') errors.phone = 'required'
+  else if (!PHONE.test(draft.phone.trim()) || digitsOf(draft.phone).length < 9)
+    errors.phone = 'phone_format'
 
   if (draft.email.trim() === '') errors.email = 'required'
   else if (!emailSchema.safeParse(draft.email).success) errors.email = 'email_format'
@@ -261,21 +344,26 @@ export function hasErrors(errors: Record<string, string | undefined>): boolean {
 
 export function emptyDraft(source: EnrollmentSource = 'web'): CheckoutDraft {
   return {
-    course: { languageId: null, courseId: null, classGroupId: null },
+    course: {
+      languageId: null,
+      courseId: null,
+      startDate: null,
+      classGroupId: null,
+    },
     student: {
-      firstName: '',
-      lastName: '',
+      fullName: '',
       nationalIdType: 'DNI',
       nationalId: '',
+      phone: '',
       email: '',
       birthDate: '',
     },
     guardian: {
-      firstName: '',
-      lastName: '',
+      fullName: '',
       nationalIdType: 'DNI',
       nationalId: '',
       relationship: 'mother',
+      phone: '',
       email: '',
       consentAccepted: false,
     },

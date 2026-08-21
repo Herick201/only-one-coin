@@ -12,7 +12,6 @@ import {
   courseById,
   hasErrors,
   isMinor,
-  looksNonGoogle,
   validateGuardian,
   validateStudent,
 } from '@/lib/enrollment/checkout'
@@ -35,11 +34,16 @@ const RELATIONSHIPS: GuardianRelationship[] = ['mother', 'father', 'legal_guardi
 /**
  * Step 2 — who is going to study.
  *
+ * The student half mirrors the columns the Asociación already collects
+ * (`docs/MATRICULA-CHECKOUT.md` §2): one full-name field, document, mobile,
+ * birth date, Gmail address.
+ *
  * Three things this screen is opinionated about.
  *
- * **No phone field.** The funnel never asks for a phone during the sale or the
- * payment (`docs/REGRAS-NEGOCIO.md` §5). The rule predates us; the form honours
- * it rather than collecting "just in case".
+ * **The address must be a personal Gmail.** Not advice — a gate. Class access
+ * arrives through Google Classroom, and the current form refuses institutional
+ * and corporate addresses in capitals. A colegio address that stops working in
+ * December is a student who loses the course they paid for.
  *
  * **A minor is the normal case.** Much of the public is under 18
  * (`CLAUDE.md` §1), so the guardian block is not an edge case bolted on — it
@@ -111,33 +115,25 @@ export function StepStudent({
 
       <Card className="p-5">
         <AutoGrid min="15rem" gap="gap-4">
-          <FieldGroup
-            label={t('field.first_name')}
-            htmlFor="first-name"
-            error={err(studentErrors.firstName)}
-          >
-            <TextInput
-              id="first-name"
-              autoComplete="given-name"
-              value={draft.student.firstName}
-              invalid={Boolean(err(studentErrors.firstName))}
-              onChange={(e) => patchStudent({ firstName: e.target.value })}
-            />
-          </FieldGroup>
-
-          <FieldGroup
-            label={t('field.last_name')}
-            htmlFor="last-name"
-            error={err(studentErrors.lastName)}
-          >
-            <TextInput
-              id="last-name"
-              autoComplete="family-name"
-              value={draft.student.lastName}
-              invalid={Boolean(err(studentErrors.lastName))}
-              onChange={(e) => patchStudent({ lastName: e.target.value })}
-            />
-          </FieldGroup>
+          {/* One field, as the current form asks. Full width: a name with two
+              surnames does not fit a half column, and it is the one value that
+              gets printed on a certificate exactly as typed. */}
+          <div className={fullRowClass}>
+            <FieldGroup
+              label={t('field.full_name')}
+              htmlFor="full-name"
+              error={err(studentErrors.fullName)}
+              hint={t('step.student.full_name_hint')}
+            >
+              <TextInput
+                id="full-name"
+                autoComplete="name"
+                value={draft.student.fullName}
+                invalid={Boolean(err(studentErrors.fullName))}
+                onChange={(e) => patchStudent({ fullName: e.target.value })}
+              />
+            </FieldGroup>
+          </div>
 
           <FieldGroup label={t('field.national_id_type')} htmlFor="id-type">
             <SelectInput
@@ -170,6 +166,23 @@ export function StepStudent({
           </FieldGroup>
 
           <FieldGroup
+            label={t('field.phone')}
+            htmlFor="phone"
+            error={err(studentErrors.phone)}
+            hint={t('step.student.phone_hint')}
+          >
+            <TextInput
+              id="phone"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              value={draft.student.phone}
+              invalid={Boolean(err(studentErrors.phone))}
+              onChange={(e) => patchStudent({ phone: e.target.value })}
+            />
+          </FieldGroup>
+
+          <FieldGroup
             label={t('field.birth_date')}
             htmlFor="birth-date"
             error={err(studentErrors.birthDate) ?? err(studentErrors.minAge)}
@@ -192,15 +205,7 @@ export function StepStudent({
             label={t('field.email')}
             htmlFor="email"
             error={err(studentErrors.email)}
-            /* Classroom is where the class actually lives
-               (`docs/REGRAS-NEGOCIO.md` §7), so a non-Google address is worth
-               saying out loud — and no more than that. Blocking it would turn
-               a delivery preference into a rejected enrollment. */
-            hint={
-              looksNonGoogle(draft.student.email)
-                ? t('step.student.google_hint')
-                : t('step.student.email_hint')
-            }
+            hint={t('step.student.email_hint')}
           >
             <TextInput
               id="email"
@@ -225,31 +230,20 @@ export function StepStudent({
           </p>
 
           <AutoGrid min="15rem" gap="gap-4">
-            <FieldGroup
-              label={t('field.first_name')}
-              htmlFor="guardian-first-name"
-              error={err(guardianErrors.firstName)}
-            >
-              <TextInput
-                id="guardian-first-name"
-                value={draft.guardian.firstName}
-                invalid={Boolean(err(guardianErrors.firstName))}
-                onChange={(e) => patchGuardian({ firstName: e.target.value })}
-              />
-            </FieldGroup>
-
-            <FieldGroup
-              label={t('field.last_name')}
-              htmlFor="guardian-last-name"
-              error={err(guardianErrors.lastName)}
-            >
-              <TextInput
-                id="guardian-last-name"
-                value={draft.guardian.lastName}
-                invalid={Boolean(err(guardianErrors.lastName))}
-                onChange={(e) => patchGuardian({ lastName: e.target.value })}
-              />
-            </FieldGroup>
+            <div className={fullRowClass}>
+              <FieldGroup
+                label={t('field.full_name')}
+                htmlFor="guardian-full-name"
+                error={err(guardianErrors.fullName)}
+              >
+                <TextInput
+                  id="guardian-full-name"
+                  value={draft.guardian.fullName}
+                  invalid={Boolean(err(guardianErrors.fullName))}
+                  onChange={(e) => patchGuardian({ fullName: e.target.value })}
+                />
+              </FieldGroup>
+            </div>
 
             <FieldGroup label={t('field.relationship')} htmlFor="relationship">
               <SelectInput
@@ -300,9 +294,28 @@ export function StepStudent({
             </FieldGroup>
 
             <FieldGroup
+              label={t('field.phone')}
+              htmlFor="guardian-phone"
+              error={err(guardianErrors.phone)}
+            >
+              <TextInput
+                id="guardian-phone"
+                type="tel"
+                inputMode="tel"
+                value={draft.guardian.phone}
+                invalid={Boolean(err(guardianErrors.phone))}
+                onChange={(e) => patchGuardian({ phone: e.target.value })}
+              />
+            </FieldGroup>
+
+            {/* No Gmail rule on this one: Classroom belongs to the student.
+                This address is where the Asociación reaches a responsible
+                adult, and forcing a provider on it only loses that contact. */}
+            <FieldGroup
               label={t('field.email')}
               htmlFor="guardian-email"
               error={err(guardianErrors.email)}
+              hint={t('step.student.guardian_email_hint')}
             >
               <TextInput
                 id="guardian-email"

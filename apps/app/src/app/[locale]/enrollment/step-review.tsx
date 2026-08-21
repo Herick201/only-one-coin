@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import type { CheckoutDraft, PublicCatalog, StepId } from '@/lib/enrollment/types'
 import { courseById, groupById, planOfCourse } from '@/lib/enrollment/checkout'
+import { scheduleLine } from '@/lib/enrollment/schedule'
 import { formatDate, formatMoney, type Locale } from '@/lib/format'
 import { paymentMethodLabel } from '@/lib/payment-method'
 import {
@@ -79,7 +80,11 @@ export function StepReview({
           {group && (
             <>
               <SummaryRow label={t('summary.schedule')}>
-                {`${group.weekdays.map((d) => t(`weekday.${d}`)).join(' · ')} — ${group.startTime} a ${group.endTime}`}
+                {scheduleLine(
+                  group,
+                  (day) => t(`weekday.${day}`),
+                  (vars) => t('schedule_line', vars),
+                )}
               </SummaryRow>
               <SummaryRow label={t('summary.starts_on')}>
                 {formatDate(group.startDate, locale)}
@@ -100,11 +105,12 @@ export function StepReview({
         />
         <dl className="divide-y divide-line">
           <SummaryRow label={t('summary.full_name')}>
-            {`${draft.student.firstName} ${draft.student.lastName}`}
+            {draft.student.fullName}
           </SummaryRow>
           <SummaryRow label={t('summary.document')}>
             {`${t(`national_id_type.${draft.student.nationalIdType}`)} ${draft.student.nationalId}`}
           </SummaryRow>
+          <SummaryRow label={t('summary.phone')}>{draft.student.phone}</SummaryRow>
           <SummaryRow label={t('summary.email')}>{draft.student.email}</SummaryRow>
           <SummaryRow label={t('summary.birth_date')}>
             {draft.student.birthDate
@@ -120,13 +126,16 @@ export function StepReview({
             </p>
             <dl className="divide-y divide-line">
               <SummaryRow label={t('summary.full_name')}>
-                {`${draft.guardian.firstName} ${draft.guardian.lastName}`}
+                {draft.guardian.fullName}
               </SummaryRow>
               <SummaryRow label={t('field.relationship')}>
                 {t(`relationship.${draft.guardian.relationship}`)}
               </SummaryRow>
               <SummaryRow label={t('summary.document')}>
                 {`${t(`national_id_type.${draft.guardian.nationalIdType}`)} ${draft.guardian.nationalId}`}
+              </SummaryRow>
+              <SummaryRow label={t('summary.phone')}>
+                {draft.guardian.phone}
               </SummaryRow>
               <SummaryRow label={t('summary.email')}>
                 {draft.guardian.email}

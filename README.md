@@ -46,8 +46,11 @@ Domínio e fila já existem, independentes dessa escolha:
   em **mockup** (sem acesso a dados). Portal do aluno (`/portal`), backoffice
   (`/backoffice` para login; painel em `/backoffice/home`) e a **matrícula
   pública** (`/enrollment`). O checkout público é o wizard de 4 passos —
-  curso/turma, dados do aluno (com bloco do apoderado e consentimento quando
-  menor), pagamento com comprovante obrigatório, e revisão/envio — com **dois
+  curso + data de início + horário (escolhas separadas, porque o mesmo curso
+  abre em várias datas), dados do aluno nos campos que a Asociación já coleta
+  hoje (nome completo num campo só, documento, celular, nascimento e Gmail
+  obrigatório) mais o bloco do apoderado com consentimento quando menor,
+  pagamento com comprovante obrigatório, e revisão/envio — com **dois
   modos de entrada** na mesma tela: aberto da landing começa no passo 1, e
   aberto pelo link do vendedor (`?course=&group=&src=whatsapp`) chega com o
   passo 1 respondido e cai no passo 2. A vaga é presa no checkout com relógio
