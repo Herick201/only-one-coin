@@ -17,6 +17,19 @@ const a = t.pages.about;
 const years = new Date().getFullYear() - org.foundedYear;
 const lead = a.lead.replace("{years}", String(years));
 
+// The partner brand is written once in `org.partner` and interpolated into the
+// locale copy, so a rename or a domain change never leaves one language behind.
+const partnerName = org.partner.name;
+const partnerTitleAccent = a.partnerTitleAccent.replace("{partner}", partnerName);
+const partnerText = a.partnerText.replaceAll("{partner}", partnerName);
+const partnerCta = a.partnerCta.replace("{partner}", partnerName);
+// The wordmark is set the way NR Labs sets it — ink letters, blue dot — so the
+// title shows the brand instead of the Asociación's yellow-underlined accent.
+// Split on the dot rather than hardcoding "NR" / "Labs": the styling follows
+// `org.partner.name`, and a partner without a dot in its name still renders.
+const [wordmarkHead, ...wordmarkRest] = partnerTitleAccent.split(".");
+const wordmarkTail = wordmarkRest.join(".");
+
 // Icons (Lucide) for mission / vision and for the four values, in the same
 // order as `a.values`. Not translatable content, so they live here.
 const missionIcon =
@@ -174,6 +187,36 @@ const valueIcons = [
           </article>
         ))
       }
+    </div>
+  </div>
+</section>
+
+<!-- Strategic technology partner: who built the platform and keeps it running.
+     Closes the page on purpose — it is context about the Asociación, not a
+     claim about the courses. -->
+<section class="section about-partner">
+  <div class="container partner-grid">
+    <a class="partner-logo" href={org.partner.url} target="_blank" rel="noopener">
+      <img
+        src="/brand/nr-labs-lockup-ink.png"
+        alt={partnerName}
+        width="455"
+        height="160"
+        loading="lazy"
+      />
+    </a>
+
+    <div class="partner-copy">
+      <span class="eyebrow">{a.partnerEyebrow}</span>
+      <h2 class="section-title small">
+        {a.partnerTitlePre}<span class="wordmark"
+          >{wordmarkHead}{wordmarkTail && <span class="wordmark-dot">.</span>}{wordmarkTail}</span
+        >
+      </h2>
+      <p class="text-muted">{partnerText}</p>
+      <a class="btn btn-outline partner-cta" href={org.partner.url} target="_blank" rel="noopener">
+        {partnerCta}
+      </a>
     </div>
   </div>
 </section>
@@ -455,12 +498,83 @@ const valueIcons = [
     margin-bottom: 8px;
   }
 
+  /* ---------- strategic partner ---------- */
+  .about-partner {
+    padding-block: 24px 88px;
+  }
+  /* auto-fit, not a breakpoint: the logo sits beside the copy while there is
+     room for two readable columns, and stacks above it when there isn't. */
+  .partner-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 40px;
+    align-items: center;
+    padding: 38px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--sky-soft);
+  }
+  .partner-logo {
+    display: grid;
+    place-items: center;
+    padding: 30px;
+    border-radius: var(--radius);
+    background: var(--paper);
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+  }
+  .partner-logo:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+  }
+  .partner-logo img {
+    /* Ink-on-transparent lockup, sized by width so the 455x160 art keeps its
+       ratio inside the card. */
+    width: 100%;
+    max-width: 320px;
+    height: auto;
+    display: block;
+  }
+  /* NR Labs' own brand colours, sampled from the lockup art. Literal hex on
+     purpose: these belong to the partner, not to the Only One Coin palette, so
+     they must not follow a token when our own brand shifts. */
+  .wordmark {
+    color: #0b0d0c;
+    white-space: nowrap;
+    position: relative;
+  }
+  /* Same hand-drawn underline `.section-title .accent` draws in global.css,
+     redrawn here instead of reusing `.accent`: that rule also forces the word
+     blue, which would overwrite the partner's own letter colour. */
+  .wordmark::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -0.14em;
+    height: 0.16em;
+    border-radius: 999px;
+    background: var(--yellow);
+  }
+  .wordmark-dot {
+    color: #0041b3;
+  }
+  .partner-copy p {
+    margin-top: 12px;
+  }
+  .partner-cta {
+    margin-top: 24px;
+  }
+
   @media (max-width: 620px) {
     .photo-inset {
       display: none;
     }
     .values-banner {
       aspect-ratio: 4 / 3;
+    }
+    .partner-grid {
+      padding: 24px;
     }
   }
 </style>

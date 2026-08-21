@@ -91,6 +91,14 @@ export const org = {
     instagram: "https://www.instagram.com/onlyonecoin.pe/",
     linkedin: "https://www.linkedin.com/company/organizacion-de-onlyonecoin/",
   },
+  /** Strategic technology partner: designed and built this platform and keeps
+      it evolving. Name and URL live here once — the footer credit and the
+      /about band read them, so a rename or a domain change is a one-line edit. */
+  partner: {
+    // Written the way the brand writes it: the dot is part of the wordmark.
+    name: "NR.Labs",
+    url: "https://nrlabsdigital.com",
+  },
 } as const;
 
 /** Full wa.me link for the floating button and the course CTAs. */
@@ -420,6 +428,13 @@ export const content = {
             text: "Apostamos por métodos de enseñanza modernos y creativos que hacen del aprendizaje una experiencia dinámica y efectiva, adaptándonos a las necesidades cambiantes de nuestros estudiantes.",
           },
         ],
+        partnerEyebrow: "Socio estratégico",
+        // {partner} is filled from `org.partner.name`, so the brand is written
+        // once and a rename never leaves a locale behind.
+        partnerTitlePre: "Tecnología con propósito, junto a ",
+        partnerTitleAccent: "{partner}",
+        partnerText: "{partner} es nuestro socio estratégico en tecnología: diseñó y desarrolló la plataforma digital de la Asociación, y acompaña su evolución para que estudiar con nosotros sea simple desde cualquier lugar del mundo.",
+        partnerCta: "Conocer a {partner}",
       },
       contact: {
         eyebrow: "Contacto",
@@ -454,6 +469,7 @@ export const content = {
       copyOrg: "Asociación Only One Coin",
       rights: "Todos los derechos reservados",
       madeIn: "Hecho con ❤ en el Perú",
+      partnerLabel: "Plataforma desarrollada por nuestro socio estratégico",
     },
     common: {
       waAria: "Escríbenos por WhatsApp",
@@ -763,6 +779,13 @@ export const content = {
             text: "We back modern, creative teaching methods that make learning dynamic and effective, adapting to our students' changing needs.",
           },
         ],
+        partnerEyebrow: "Strategic partner",
+        // {partner} is filled from `org.partner.name`, so the brand is written
+        // once and a rename never leaves a locale behind.
+        partnerTitlePre: "Technology with purpose, alongside ",
+        partnerTitleAccent: "{partner}",
+        partnerText: "{partner} is our strategic technology partner: they designed and built the Association's digital platform, and they keep it evolving so that studying with us is simple from anywhere in the world.",
+        partnerCta: "Meet {partner}",
       },
       contact: {
         eyebrow: "Contact",
@@ -797,6 +820,7 @@ export const content = {
       copyOrg: "Only One Coin Association",
       rights: "All rights reserved",
       madeIn: "Made with ❤ in Peru",
+      partnerLabel: "Platform built by our strategic partner",
     },
     common: {
       waAria: "Message us on WhatsApp",
@@ -1106,6 +1130,13 @@ export const content = {
             text: "Apostamos em métodos de ensino modernos e criativos, que tornam o aprendizado dinâmico e efetivo, adaptando-se às necessidades em mudança dos nossos estudantes.",
           },
         ],
+        partnerEyebrow: "Parceiro estratégico",
+        // {partner} is filled from `org.partner.name`, so the brand is written
+        // once and a rename never leaves a locale behind.
+        partnerTitlePre: "Tecnologia com propósito, ao lado de ",
+        partnerTitleAccent: "{partner}",
+        partnerText: "{partner} é nosso parceiro estratégico de tecnologia: desenhou e desenvolveu a plataforma digital da Associação e acompanha a sua evolução para que estudar com a gente seja simples de qualquer lugar do mundo.",
+        partnerCta: "Conhecer a {partner}",
       },
       contact: {
         eyebrow: "Contato",
@@ -1140,6 +1171,7 @@ export const content = {
       copyOrg: "Associação Only One Coin",
       rights: "Todos os direitos reservados",
       madeIn: "Feito com ❤ no Peru",
+      partnerLabel: "Plataforma desenvolvida pelo nosso parceiro estratégico",
     },
     common: {
       waAria: "Fale conosco no WhatsApp",
