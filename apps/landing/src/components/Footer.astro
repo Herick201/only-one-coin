@@ -82,6 +82,22 @@ const socials = [
     </div>
   </div>
 
+  <!-- Strategic partner credit. Its own strip rather than a third item in the
+       bottom bar: the credit belongs to NR Labs, not to the Asociación's
+       copyright line, and the lockup needs room to stay legible. -->
+  <div class="container footer-partner">
+    <span class="partner-label">{f.partnerLabel}</span>
+    <a class="partner-link" href={org.partner.url} target="_blank" rel="noopener">
+      <img
+        src="/brand/nr-labs-lockup.png"
+        alt={org.partner.name}
+        width="318"
+        height="112"
+        loading="lazy"
+      />
+    </a>
+  </div>
+
   <div class="container footer-bottom">
     <span>© {year} {f.copyOrg} — {f.rights}</span>
     <span class="made-in">{f.madeIn}</span>
@@ -180,10 +196,44 @@ const socials = [
     color: var(--ink);
     transform: translateY(-3px);
   }
+  .footer-partner {
+    position: relative;
+    z-index: 1;
+    margin-top: 44px;
+    padding-block: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    text-align: center;
+  }
+  .partner-label {
+    font-size: 0.82rem;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.5);
+  }
+  .partner-link {
+    display: inline-flex;
+    align-items: center;
+    opacity: 0.8;
+    transition: opacity 0.16s ease, transform 0.16s ease;
+  }
+  .partner-link:hover {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+  .partner-link img {
+    /* Cream-on-transparent lockup: sized by height so the 318x112 art keeps
+       its ratio next to the label. */
+    height: 30px;
+    width: auto;
+    display: block;
+  }
   .footer-bottom {
     position: relative;
     z-index: 1;
-    margin-top: 48px;
     padding-block: 22px;
     border-top: 1px solid rgba(255, 255, 255, 0.12);
     font-size: 0.85rem;
