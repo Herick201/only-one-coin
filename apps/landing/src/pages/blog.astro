@@ -3,9 +3,9 @@ import Base from "../layouts/Base.astro";
 import InfoPage from "../components/InfoPage.astro";
 import { content, defaultLang } from "../i18n/ui";
 
-const title = `${content[defaultLang].nav.blog} — Only One Coin`;
+const m = content[defaultLang].meta.blog;
 ---
 
-<Base title={title}>
+<Base title={m.title} description={m.description} noindex>
   <InfoPage kind="blog" />
 </Base>

@@ -3,9 +3,9 @@ import Base from "../../layouts/Base.astro";
 import Faq from "../../components/Faq.astro";
 import { content } from "../../i18n/ui";
 
-const title = `${content.pt.nav.faq} — Only One Coin`;
+const m = content.pt.meta.faq;
 ---
 
-<Base title={title}>
+<Base title={m.title} description={m.description}>
   <Faq />
 </Base>

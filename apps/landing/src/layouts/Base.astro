@@ -1,19 +1,71 @@
 ---
 import "../styles/global.css";
+import { getImage } from "astro:assets";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
-import { htmlLang } from "../i18n/ui";
-import { getLangFromUrl, useTranslations } from "../i18n/utils";
+import heroPhoto from "../assets/photos/hero.jpg";
+import { htmlLang, languages, type Lang } from "../i18n/ui";
+import { getLangFromUrl, switchLangPath, useTranslations } from "../i18n/utils";
 
 interface Props {
   title?: string;
   description?: string;
+  /** Thin or placeholder pages opt out of the index until they have content. */
+  noindex?: boolean;
 }
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 
-const { title = t.meta.title, description = t.meta.description } = Astro.props;
+const {
+  title = t.meta.title,
+  description = t.meta.description,
+  noindex = false,
+} = Astro.props;
+
+// Canonical form for every URL we emit (canonical, hreflang, sitemap, JSON-LD):
+// absolute, no trailing slash except the root. One shape, so Google never sees
+// two addresses for the same page.
+const canonicalPath = Astro.url.pathname.replace(/(.)\/$/, "$1");
+const canonical = new URL(canonicalPath, Astro.site).href;
+
+// hreflang: every locale of THIS page, plus x-default pointing at the default
+// locale. Without it the three translations compete as duplicate content.
+const alternates = (Object.keys(languages) as Lang[]).map((code) => ({
+  code,
+  hreflang: htmlLang[code],
+  href: new URL(switchLangPath(Astro.url, code).replace(/(.)\/$/, "$1"), Astro.site).href,
+}));
+const xDefault = alternates.find((a) => a.code === "es")!.href;
+
+// Social card: the hero photo cropped to the 1200x630 the crawlers expect.
+const ogImage = await getImage({
+  src: heroPhoto,
+  width: 1200,
+  height: 630,
+  format: "jpg",
+  fit: "cover",
+});
+const ogImageUrl = new URL(ogImage.src, Astro.site).href;
+
+const orgJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "EducationalOrganization",
+  name: "Asociación Only One Coin Perú",
+  alternateName: t.meta.siteName,
+  url: new URL("/", Astro.site).href,
+  logo: new URL("/brand/logo.png", Astro.site).href,
+  description: t.meta.description,
+  identifier: "RUC 20610561463",
+  address: {
+    "@type": "PostalAddress",
+    addressCountry: "PE",
+  },
+  areaServed: {
+    "@type": "Country",
+    name: "Perú",
+  },
+};
 ---
 
 <!doctype html>
@@ -24,11 +76,42 @@ const { title = t.meta.title, description = t.meta.description } = Astro.props;
     <link rel="icon" type="image/png" href="/brand/favicon.png" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex, follow" />}
+
+    {
+      alternates.map((a) => (
+        <link rel="alternate" hreflang={a.hreflang} href={a.href} />
+      ))
+    }
+    <link rel="alternate" hreflang="x-default" href={xDefault} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={t.meta.siteName} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={htmlLang[lang].replace("-", "_")} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={t.meta.imageAlt} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl} />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
+    />
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify(orgJsonLd)}
+      is:inline
     />
   </head>
   <body>

@@ -3,9 +3,9 @@ import Base from "../../layouts/Base.astro";
 import InfoPage from "../../components/InfoPage.astro";
 import { content } from "../../i18n/ui";
 
-const title = `${content.en.nav.community} — Only One Coin`;
+const m = content.en.meta.community;
 ---
 
-<Base title={title}>
+<Base title={m.title} description={m.description} noindex>
   <InfoPage kind="community" />
 </Base>

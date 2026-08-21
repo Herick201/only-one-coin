@@ -1,8 +1,9 @@
 ---
 import Base from "../../layouts/Base.astro";
 import CourseDetail from "../../components/CourseDetail.astro";
-import { content, courseSlugs, defaultLang } from "../../i18n/ui";
+import { content, coursePrices, courseSlugs, defaultLang } from "../../i18n/ui";
 import type { CourseSlug } from "../../i18n/ui";
+import { formatPEN } from "../../i18n/utils";
 
 export function getStaticPaths() {
   return courseSlugs.map((slug) => ({ params: { slug } }));
@@ -10,9 +11,13 @@ export function getStaticPaths() {
 
 const { slug } = Astro.params as { slug: CourseSlug };
 const name = content[defaultLang].courses.list[slug];
-const title = `${name} — Only One Coin`;
+const price = formatPEN(coursePrices[slug], defaultLang);
+const m = content[defaultLang].meta.course;
+
+const title = `${m.titlePre}${name}${m.titleMid}${price}${m.titlePost}`;
+const description = `${m.descPre}${name}${m.descMid}${price}${m.descPost}`;
 ---
 
-<Base title={title}>
+<Base title={title} description={description}>
   <CourseDetail slug={slug} />
 </Base>
