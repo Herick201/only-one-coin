@@ -1,0 +1,11 @@
+---
+import Base from "../layouts/Base.astro";
+import LegalPage from "../components/LegalPage.astro";
+import { content, defaultLang } from "../i18n/ui";
+
+const m = content[defaultLang].meta.terms;
+---
+
+<Base title={m.title} description={m.description}>
+  <LegalPage kind="terms" />
+</Base>

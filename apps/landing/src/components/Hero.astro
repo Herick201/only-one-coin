@@ -26,8 +26,8 @@ const h = t.hero;
       </h1>
       <p class="hero-sub" set:html={h.subHtml} />
       <div class="hero-actions">
-        <a href={withLang(lang, "/matricula")} class="btn btn-yellow">{h.ctaEnroll}</a>
-        <a href={withLang(lang, "/cursos")} class="btn btn-outline">{h.ctaCourses}</a>
+        <a href={withLang(lang, "/enrollment")} class="btn btn-yellow">{h.ctaEnroll}</a>
+        <a href={withLang(lang, "/courses")} class="btn btn-outline">{h.ctaCourses}</a>
       </div>
       <p class="price-note" set:html={h.packageNote} />
     </div>
@@ -39,7 +39,7 @@ const h = t.hero;
         <Image
           src={heroPhoto}
           alt={h.imgAlt}
-          widths={[480, 768, 1024, 1280]}
+          widths={[480, 768, 820]}
           sizes="(max-width: 900px) 92vw, 560px"
           format="webp"
           quality={78}
@@ -175,8 +175,8 @@ const h = t.hero;
   .hero-badge {
     position: absolute;
     z-index: 3;
-    left: -14px;
-    bottom: -30px;
+    left: -58px;
+    bottom: -72px;
     max-width: 320px;
     background: var(--blue);
     color: #fff;

@@ -474,7 +474,7 @@
     },
     "new_enrollment": {
       "title": "New enrollment",
-      "subtitle": "For the sale that closed on WhatsApp and never reached the form. The normal way in is the student enrolling at /matricula.",
+      "subtitle": "For the sale that closed on WhatsApp and never reached the form. The normal way in is the student enrolling at /enrollment.",
       "step_student": "1 · Student",
       "search_student_label": "Search student",
       "search_student_placeholder": "Name or document",

@@ -1,0 +1,239 @@
+---
+import { org, whatsappUrl } from "../i18n/ui";
+import { getLangFromUrl, useTranslations } from "../i18n/utils";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const c = t.pages.contact;
+
+// No form on purpose: the sale happens on WhatsApp (CLAUDE.md §1), so a form
+// would only create an inbox nobody owns — plus a captcha, an endpoint and PII
+// to retain under Ley 29733. This page lists the channels that already exist.
+// The office address is deliberately absent: the sede is administrative and
+// takes no students (CLAUDE.md §1 §9); it stays in the legal pages only.
+const phoneHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, "")}`;
+
+const [emailUser, emailDomain] = org.email.split("@");
+
+const icons = {
+  phone:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z"/></svg>',
+  mail:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg>',
+  clock:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
+};
+---
+
+<section class="section contact">
+  <span class="blob contact-blob" aria-hidden="true"></span>
+  <div class="container">
+    <header class="contact-head">
+      <span class="eyebrow">{c.eyebrow}</span>
+      <h1 class="section-title">
+        {c.titlePre}<span class="accent">{c.titleAccent}</span>{c.titlePost}
+      </h1>
+      <p class="text-muted contact-lead">{c.lead}</p>
+    </header>
+
+    <!-- WhatsApp first and biggest: it is the channel the Asociación actually
+         sells on, so it gets the blue card and everything else gets a tile. -->
+    <div class="wa-card">
+      <span class="blob wa-card-blob" aria-hidden="true"></span>
+      <div class="wa-card-inner">
+        <div>
+          <h2>{c.waTitle}</h2>
+          <p>{c.waText}</p>
+        </div>
+        <a class="btn btn-yellow" href={whatsappUrl} target="_blank" rel="noopener">
+          <svg width="18" height="18" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
+            <path d="M16.004 0h-.008C7.174 0 0 7.176 0 16c0 3.5 1.13 6.744 3.05 9.38L1.05 31.3l6.13-1.96A15.9 15.9 0 0 0 16.004 32C24.826 32 32 24.822 32 16S24.826 0 16.004 0zm9.31 22.6c-.386 1.09-1.92 1.996-3.144 2.26-.836.178-1.928.32-5.604-1.204-4.7-1.948-7.726-6.724-7.962-7.034-.226-.31-1.9-2.53-1.9-4.826 0-2.296 1.166-3.42 1.636-3.9.386-.394.84-.573 1.318-.573.154 0 .293.008.418.014.386.016.58.04.834.646.316.76 1.086 2.656 1.178 2.84.094.184.188.436.062.744-.118.316-.222.436-.406.65-.184.214-.36.378-.544.606-.168.198-.358.41-.146.776.212.36.94 1.55 2.02 2.51 1.394 1.24 2.556 1.628 2.96 1.796.3.124.66.094.88-.14.28-.3.622-.798.97-1.29.246-.354.558-.398.88-.276.328.116 2.076.98 2.436 1.16.36.18.598.264.686.41.088.152.088.868-.298 1.958z"></path>
+          </svg>
+          <span>{c.waButton}</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="channels">
+      <article class="channel">
+        <div class="channel-icon" set:html={icons.phone} />
+        <h2>{c.phonesTitle}</h2>
+        <ul>
+          {org.phones.map((phone) => <li><a href={phoneHref(phone)}>{phone}</a></li>)}
+        </ul>
+      </article>
+
+      <article class="channel">
+        <div class="channel-icon" set:html={icons.mail} />
+        <h2>{c.emailTitle}</h2>
+        <p>
+          <a href={`mailto:${org.email}`} class="channel-link">{emailUser}@<wbr />{emailDomain}</a>
+        </p>
+        <p class="text-muted channel-note">{c.emailText}</p>
+      </article>
+
+      <article class="channel">
+        <div class="channel-icon" set:html={icons.clock} />
+        <h2>{t.footer.hoursLabel}</h2>
+        <p>{t.footer.hours}</p>
+        <p class="text-muted channel-note">{c.onlineNote}</p>
+      </article>
+    </div>
+
+    <p class="contact-org" set:html={t.footer.orgHtml} />
+  </div>
+</section>
+
+<style>
+  .contact {
+    position: relative;
+    overflow: hidden;
+    padding-block: 64px 88px;
+    background:
+      radial-gradient(50% 55% at 92% 4%, rgba(255, 201, 60, 0.16), transparent 60%),
+      var(--sky-soft);
+  }
+  .contact-blob {
+    width: 320px;
+    height: 320px;
+    top: -140px;
+    left: -110px;
+    background: var(--blue);
+    opacity: 0.12;
+  }
+  .contact-head {
+    position: relative;
+    z-index: 1;
+    max-width: 700px;
+    margin-inline: auto;
+    text-align: center;
+  }
+  .eyebrow {
+    display: inline-block;
+    margin-bottom: 14px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: var(--cream);
+    color: var(--yellow-deep);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .contact-lead {
+    margin-top: 16px;
+    font-size: 1.08rem;
+  }
+
+  .wa-card {
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    margin: 46px auto 0;
+    background: linear-gradient(135deg, var(--blue), var(--blue-deep));
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-blue);
+    padding: 40px 44px;
+  }
+  .wa-card-blob {
+    width: 220px;
+    height: 220px;
+    top: -110px;
+    right: -60px;
+    background: var(--yellow);
+    opacity: 0.28;
+  }
+  /* Wraps when the row runs out of room, not at a viewport number. */
+  .wa-card-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 22px;
+  }
+  .wa-card h2 {
+    color: #fff;
+    font-size: clamp(1.3rem, 2.4vw, 1.7rem);
+    margin-bottom: 6px;
+  }
+  .wa-card p {
+    color: rgba(255, 255, 255, 0.86);
+    max-width: 42ch;
+  }
+
+  .channels {
+    position: relative;
+    z-index: 1;
+    margin-top: 26px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+  }
+  .channel {
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 30px 26px;
+    box-shadow: var(--shadow-sm);
+  }
+  .channel-icon {
+    width: 54px;
+    height: 54px;
+    display: grid;
+    place-items: center;
+    border-radius: 16px;
+    background: var(--sky);
+    color: var(--blue);
+    margin-bottom: 16px;
+  }
+  .channel:nth-child(even) .channel-icon {
+    background: var(--cream);
+    color: var(--yellow-deep);
+  }
+  .channel-icon :global(svg) {
+    width: 26px;
+    height: 26px;
+  }
+  .channel h2 {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+  }
+  .channel ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .channel a {
+    color: var(--blue-deep);
+    font-weight: 600;
+    transition: color 0.15s ease;
+  }
+  .channel a:hover {
+    color: var(--yellow-deep);
+  }
+  .channel-link {
+    /* Sized to clear the address on one line at three columns. If a fallback
+       font ever renders wider, the <wbr> after the "@" is the fallback break —
+       so the worst case is two readable halves, never a split domain. */
+    font-size: 0.88rem;
+    overflow-wrap: break-word;
+  }
+  .channel-note {
+    margin-top: 10px;
+    font-size: 0.92rem;
+  }
+
+  .contact-org {
+    position: relative;
+    z-index: 1;
+    margin-top: 40px;
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+</style>

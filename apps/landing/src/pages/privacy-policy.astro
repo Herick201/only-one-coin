@@ -1,11 +1,11 @@
 ---
 import Base from "../layouts/Base.astro";
-import Faq from "../components/Faq.astro";
+import LegalPage from "../components/LegalPage.astro";
 import { content, defaultLang } from "../i18n/ui";
 
-const m = content[defaultLang].meta.faq;
+const m = content[defaultLang].meta.privacy;
 ---
 
 <Base title={m.title} description={m.description}>
-  <Faq />
+  <LegalPage kind="privacy" />
 </Base>

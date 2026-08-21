@@ -1,5 +1,5 @@
 ---
-import { courseSlugs } from "../i18n/ui";
+import { courseSlugs, org } from "../i18n/ui";
 import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
 
 const lang = getLangFromUrl(Astro.url);
@@ -9,31 +9,27 @@ const year = new Date().getFullYear();
 
 const courseLangs = courseSlugs.map((slug) => ({
   name: t.courses.list[slug],
-  href: withLang(lang, `/cursos/${slug}`),
+  href: withLang(lang, `/courses/${slug}`),
 }));
 
-// Social links. TODO: replace "#" with the Asociación's real profile URLs.
-// Icons are not translatable content, so they live here, not in i18n.
+// Social links. Icons are not translatable content, so they live here, not in
+// i18n. Only the profiles the Asociación actually runs are listed — an empty
+// tile that links nowhere costs more trust than a missing network.
 const socials = [
   {
     name: "Facebook",
-    href: "#",
+    href: org.social.facebook,
     icon: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.2c-1.2 0-1.6.8-1.6 1.6V12h2.7l-.4 2.9h-2.3v7A10 10 0 0 0 22 12z"/></svg>',
   },
   {
     name: "Instagram",
-    href: "#",
+    href: org.social.instagram,
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><line x1="17.5" y1="6.5" x2="17.5" y2="6.5"/></svg>',
   },
   {
-    name: "TikTok",
-    href: "#",
-    icon: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.5 3c.3 2.1 1.5 3.4 3.5 3.6v2.4c-1.2.1-2.3-.3-3.5-1v5.8c0 3.4-2.5 5.7-5.6 5.4-2.8-.3-4.6-2.7-4.2-5.6.3-2.3 2.3-4 4.7-3.9v2.5c-.4-.1-.9-.2-1.3-.1-1 .2-1.7 1.1-1.5 2.2.1 1 1 1.7 2 1.6 1.1-.1 1.8-1 1.8-2.2V3h3.9z"/></svg>',
-  },
-  {
-    name: "YouTube",
-    href: "#",
-    icon: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23 12s0-3.2-.4-4.7a2.5 2.5 0 0 0-1.8-1.8C19.3 5.1 12 5.1 12 5.1s-7.3 0-8.8.4A2.5 2.5 0 0 0 1.4 7.3C1 8.8 1 12 1 12s0 3.2.4 4.7a2.5 2.5 0 0 0 1.8 1.8c1.5.4 8.8.4 8.8.4s7.3 0 8.8-.4a2.5 2.5 0 0 0 1.8-1.8C23 15.2 23 12 23 12zM9.8 15.3V8.7l5.7 3.3-5.7 3.3z"/></svg>',
+    name: "LinkedIn",
+    href: org.social.linkedin,
+    icon: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.94 5a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM7 8.48H3V21h4V8.48zm6.32 0H9.34V21h3.94v-6.57c0-3.66 4.77-3.96 4.77 0V21H22v-7.93c0-6.17-7.06-5.94-8.72-2.91l.04-1.68z"/></svg>',
   },
 ];
 ---
@@ -59,9 +55,8 @@ const socials = [
     <div class="col">
       <h3>{f.col1Title}</h3>
       <ul>
-        <li><a href={withLang(lang, "/nosotros")}>{f.about}</a></li>
-        <li><a href={withLang(lang, "/cursos")}>{f.courses}</a></li>
-        <li><a href={withLang(lang, "/contacto")}>{f.contact}</a></li>
+        <li><a href={withLang(lang, "/about")}>{f.about}</a></li>
+        <li><a href={withLang(lang, "/courses")}>{f.courses}</a></li>
       </ul>
     </div>
 
@@ -75,14 +70,14 @@ const socials = [
     <div class="col">
       <h3>{f.col2Title}</h3>
       <ul>
-        <li><a href={withLang(lang, "/contacto")}>{f.contact}</a></li>
+        <li><a href={withLang(lang, "/contact")}>{f.contact}</a></li>
         <li class="muted">{f.hoursLabel}</li>
         <li class="muted">{f.hours}</li>
       </ul>
       <h3 class="legal-title">{f.legalTitle}</h3>
       <ul>
-        <li><a href={withLang(lang, "/politicas-de-privacidad")}>{f.privacy}</a></li>
-        <li><a href={withLang(lang, "/terminos-y-condiciones")}>{f.terms}</a></li>
+        <li><a href={withLang(lang, "/privacy-policy")}>{f.privacy}</a></li>
+        <li><a href={withLang(lang, "/terms-and-conditions")}>{f.terms}</a></li>
       </ul>
     </div>
   </div>

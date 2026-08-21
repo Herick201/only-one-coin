@@ -33,7 +33,7 @@ export default async function CourseDetailPage({
   return (
     <div className="flex flex-col gap-6">
       <Link
-        href="/portal/cursos"
+        href="/portal/courses"
         className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground transition hover:text-ink"
       >
         <Icon name="arrow-left" size={16} />

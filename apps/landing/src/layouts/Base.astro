@@ -3,8 +3,8 @@ import "../styles/global.css";
 import { getImage } from "astro:assets";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
-import heroPhoto from "../assets/photos/hero.jpg";
-import { htmlLang, languages, type Lang } from "../i18n/ui";
+import socialPhoto from "../assets/photos/about-teaching.jpg";
+import { htmlLang, languages, org, whatsappUrl, type Lang } from "../i18n/ui";
 import { getLangFromUrl, switchLangPath, useTranslations } from "../i18n/utils";
 
 interface Props {
@@ -12,6 +12,9 @@ interface Props {
   description?: string;
   /** Thin or placeholder pages opt out of the index until they have content. */
   noindex?: boolean;
+  /** Pages that already offer WhatsApp inline turn the floating bubble off,
+      so the same action is not on screen twice. */
+  waFloat?: boolean;
 }
 
 const lang = getLangFromUrl(Astro.url);
@@ -21,6 +24,7 @@ const {
   title = t.meta.title,
   description = t.meta.description,
   noindex = false,
+  waFloat = true,
 } = Astro.props;
 
 // Canonical form for every URL we emit (canonical, hreflang, sitemap, JSON-LD):
@@ -39,8 +43,9 @@ const alternates = (Object.keys(languages) as Lang[]).map((code) => ({
 const xDefault = alternates.find((a) => a.code === "es")!.href;
 
 // Social card: the hero photo cropped to the 1200x630 the crawlers expect.
+// Language-neutral on purpose: the card is shared from all three locales.
 const ogImage = await getImage({
-  src: heroPhoto,
+  src: socialPhoto,
   width: 1200,
   height: 630,
   format: "jpg",
@@ -56,7 +61,10 @@ const orgJsonLd = {
   url: new URL("/", Astro.site).href,
   logo: new URL("/brand/logo.png", Astro.site).href,
   description: t.meta.description,
-  identifier: "RUC 20610561463",
+  identifier: `RUC ${org.ruc}`,
+  // Ties this site to the Asociación's real profiles, so crawlers treat them
+  // as one entity instead of four unrelated pages.
+  sameAs: Object.values(org.social),
   address: {
     "@type": "PostalAddress",
     addressCountry: "PE",
@@ -120,18 +128,22 @@ const orgJsonLd = {
       <slot />
     </main>
     <Footer />
-    <a
-      class="wa-float"
-      href="https://wa.me/51999999999"
-      target="_blank"
-      rel="noopener"
-      aria-label={t.common.waAria}
-    >
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="#fff" aria-hidden="true">
-        <path
-          d="M16.004 0h-.008C7.174 0 0 7.176 0 16c0 3.5 1.13 6.744 3.05 9.38L1.05 31.3l6.13-1.96A15.9 15.9 0 0 0 16.004 32C24.826 32 32 24.822 32 16S24.826 0 16.004 0zm9.31 22.6c-.386 1.09-1.92 1.996-3.144 2.26-.836.178-1.928.32-5.604-1.204-4.7-1.948-7.726-6.724-7.962-7.034-.226-.31-1.9-2.53-1.9-4.826 0-2.296 1.166-3.42 1.636-3.9.386-.394.84-.573 1.318-.573.154 0 .293.008.418.014.386.016.58.04.834.646.316.76 1.086 2.656 1.178 2.84.094.184.188.436.062.744-.118.316-.222.436-.406.65-.184.214-.36.378-.544.606-.168.198-.358.41-.146.776.212.36.94 1.55 2.02 2.51 1.394 1.24 2.556 1.628 2.96 1.796.3.124.66.094.88-.14.28-.3.622-.798.97-1.29.246-.354.558-.398.88-.276.328.116 2.076.98 2.436 1.16.36.18.598.264.686.41.088.152.088.868-.298 1.958z"
-        ></path>
-      </svg>
-    </a>
+    {
+      waFloat && (
+      <a
+        class="wa-float"
+        href={whatsappUrl}
+        target="_blank"
+        rel="noopener"
+        aria-label={t.common.waAria}
+      >
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="#fff" aria-hidden="true">
+          <path
+            d="M16.004 0h-.008C7.174 0 0 7.176 0 16c0 3.5 1.13 6.744 3.05 9.38L1.05 31.3l6.13-1.96A15.9 15.9 0 0 0 16.004 32C24.826 32 32 24.822 32 16S24.826 0 16.004 0zm9.31 22.6c-.386 1.09-1.92 1.996-3.144 2.26-.836.178-1.928.32-5.604-1.204-4.7-1.948-7.726-6.724-7.962-7.034-.226-.31-1.9-2.53-1.9-4.826 0-2.296 1.166-3.42 1.636-3.9.386-.394.84-.573 1.318-.573.154 0 .293.008.418.014.386.016.58.04.834.646.316.76 1.086 2.656 1.178 2.84.094.184.188.436.062.744-.118.316-.222.436-.406.65-.184.214-.36.378-.544.606-.168.198-.358.41-.146.776.212.36.94 1.55 2.02 2.51 1.394 1.24 2.556 1.628 2.96 1.796.3.124.66.094.88-.14.28-.3.622-.798.97-1.29.246-.354.558-.398.88-.276.328.116 2.076.98 2.436 1.16.36.18.598.264.686.41.088.152.088.868-.298 1.958z"
+          ></path>
+        </svg>
+      </a>
+      )
+    }
   </body>
 </html>

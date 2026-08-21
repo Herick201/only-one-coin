@@ -1,5 +1,5 @@
 ---
-import { htmlLang } from "../i18n/ui";
+import { htmlLang, whatsappUrl } from "../i18n/ui";
 import { getLangFromUrl, useTranslations } from "../i18n/utils";
 
 const lang = getLangFromUrl(Astro.url);
@@ -42,12 +42,74 @@ const faqJsonLd = {
         ))
       }
     </div>
+
+    <!-- Replaces the floating bubble on this page (Base `waFloat={false}`):
+         one obvious way out of an unanswered question, not two. Same blue card
+         as CtaConsulta, so it reads as the site's CTA and not a stray widget. -->
+    <aside class="faq-cta">
+      <span class="blob faq-cta-blob" aria-hidden="true"></span>
+      <div class="faq-cta-inner">
+        <div class="faq-cta-copy">
+          <h2>{f.ctaTitle}</h2>
+          <p>{f.ctaText}</p>
+        </div>
+        <a class="btn btn-yellow faq-cta-btn" href={whatsappUrl} target="_blank" rel="noopener">
+          <svg width="19" height="19" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
+            <path d="M16.004 0h-.008C7.174 0 0 7.176 0 16c0 3.5 1.13 6.744 3.05 9.38L1.05 31.3l6.13-1.96A15.9 15.9 0 0 0 16.004 32C24.826 32 32 24.822 32 16S24.826 0 16.004 0zm9.31 22.6c-.386 1.09-1.92 1.996-3.144 2.26-.836.178-1.928.32-5.604-1.204-4.7-1.948-7.726-6.724-7.962-7.034-.226-.31-1.9-2.53-1.9-4.826 0-2.296 1.166-3.42 1.636-3.9.386-.394.84-.573 1.318-.573.154 0 .293.008.418.014.386.016.58.04.834.646.316.76 1.086 2.656 1.178 2.84.094.184.188.436.062.744-.118.316-.222.436-.406.65-.184.214-.36.378-.544.606-.168.198-.358.41-.146.776.212.36.94 1.55 2.02 2.51 1.394 1.24 2.556 1.628 2.96 1.796.3.124.66.094.88-.14.28-.3.622-.798.97-1.29.246-.354.558-.398.88-.276.328.116 2.076.98 2.436 1.16.36.18.598.264.686.41.088.152.088.868-.298 1.958z"></path>
+          </svg>
+          <span>{f.ctaButton}</span>
+        </a>
+      </div>
+    </aside>
   </div>
 </section>
 
 <style>
   .faq {
     background: var(--sky-soft);
+  }
+  .faq-cta {
+    position: relative;
+    overflow: hidden;
+    margin: 52px auto 0;
+    max-width: 900px;
+    background: linear-gradient(135deg, var(--blue), var(--blue-deep));
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-blue);
+    padding: 40px 44px;
+  }
+  .faq-cta-blob {
+    width: 220px;
+    height: 220px;
+    top: -110px;
+    right: -60px;
+    background: var(--yellow);
+    opacity: 0.28;
+  }
+  /* Wraps when the row runs out of room, not when the window crosses a number. */
+  .faq-cta-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 22px;
+  }
+  .faq-cta-copy {
+    flex: 1 1 300px;
+  }
+  .faq-cta h2 {
+    color: #fff;
+    font-size: clamp(1.3rem, 2.4vw, 1.7rem);
+    margin-bottom: 6px;
+  }
+  .faq-cta p {
+    color: rgba(255, 255, 255, 0.86);
+    max-width: 44ch;
+  }
+  .faq-cta-btn {
+    flex: 0 0 auto;
   }
   .faq-title {
     text-align: center;

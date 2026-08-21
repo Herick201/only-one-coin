@@ -1,0 +1,11 @@
+---
+import Base from "../layouts/Base.astro";
+import Faq from "../components/Faq.astro";
+import { content, defaultLang } from "../i18n/ui";
+
+const m = content[defaultLang].meta.faq;
+---
+
+<Base title={m.title} description={m.description} waFloat={false}>
+  <Faq />
+</Base>
