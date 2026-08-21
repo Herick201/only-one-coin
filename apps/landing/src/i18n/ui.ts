@@ -173,7 +173,7 @@ export const content = {
       viewCourse: "Ver curso",
       items: [
         {
-          tag: "Presencial y virtual",
+          tag: "100% online",
           title: "Niños (6-12 años)",
           text: "Un primer contacto con el inglés a través del juego, la música y actividades diseñadas para su edad.",
           href: "/cursos/ingles",
@@ -437,7 +437,7 @@ export const content = {
       viewCourse: "View course",
       items: [
         {
-          tag: "In-person & online",
+          tag: "100% online",
           title: "Children (ages 6-12)",
           text: "A first contact with English through play, music and activities designed for their age.",
           href: "/cursos/ingles",
@@ -701,7 +701,7 @@ export const content = {
       viewCourse: "Ver curso",
       items: [
         {
-          tag: "Presencial e online",
+          tag: "100% online",
           title: "Crianças (6-12 anos)",
           text: "Um primeiro contato com o inglês por meio de brincadeiras, música e atividades pensadas para a idade.",
           href: "/cursos/ingles",
