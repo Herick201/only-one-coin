@@ -9,7 +9,7 @@ import type {
   ReviewDecision,
 } from '@/lib/backoffice/types'
 import { formatDate, formatDateTime, formatMoney, type Locale } from '@/lib/format'
-import { paymentMethodLabel } from '@/lib/payment-method'
+import { formatPaymentMethod } from '@/lib/payment-method'
 import { SectionTitle, StatusBadge } from '@/components/backoffice/ui'
 import { reviewFlagTone } from '@/components/backoffice/status-tone'
 import { BoIcon } from '@/components/backoffice/icons'
@@ -79,7 +79,7 @@ export function ReceiptReviewDialog({
       case 'timestamp':
         return formatDateTime(field.iso, locale)
       case 'method':
-        return paymentMethodLabel[field.method]
+        return formatPaymentMethod(field.method, null, t('payment_method.other'))
       case 'unreadable':
         return t('receipt_review.unreadable')
     }

@@ -81,6 +81,20 @@ export interface BoNavGroup {
   items: BoNavItem[]
 }
 
+/**
+ * The panel's own type scale for the rail. The shadcn primitive is sized for a
+ * dense app chrome — 12px group labels, 14px items — and this is a panel people
+ * read all day, on the office screens the Asociación actually has. One notch up
+ * on each, with the row and the glyph grown to match so the label does not sit
+ * cramped against an icon that stayed behind.
+ *
+ * `size-8!` on the icon rail comes from the primitive and stays: collapsed, the
+ * button is a square target, not a row.
+ */
+const groupLabelClass = 'text-[13px] text-slate-400'
+
+const menuItemClass = 'h-9 text-[15px] [&_svg]:size-[18px]'
+
 function isActive(pathname: string, item: Pick<BoNavItem, 'href' | 'alsoMatches'>) {
   return [item.href, ...(item.alsoMatches ?? [])].some(
     (href) => pathname === href || pathname.startsWith(`${href}/`),
@@ -146,15 +160,15 @@ export function BoSidebar({
             >
               <SidebarGroup>
                 {!group.label ? null : iconRail ? (
-                  <SidebarGroupLabel className="text-slate-400">
+                  <SidebarGroupLabel className={groupLabelClass}>
                     {group.label}
                   </SidebarGroupLabel>
                 ) : (
-                  <SidebarGroupLabel asChild className="text-slate-400">
+                  <SidebarGroupLabel asChild className={groupLabelClass}>
                     <CollapsibleTrigger className="w-full gap-1.5 transition hover:bg-white/5 hover:text-slate-200">
                       <span className="truncate">{group.label}</span>
                       {!open && pending > 0 && (
-                        <span className="text-[11px] font-semibold text-amber-300">
+                        <span className="text-xs font-semibold text-amber-300">
                           {pending}
                         </span>
                       )}
@@ -179,7 +193,7 @@ export function BoSidebar({
                               <SidebarMenuButton
                                 disabled
                                 tooltip={`${item.label} — ${soonLabel}`}
-                                className="cursor-default pr-7 text-slate-500 opacity-70 hover:bg-transparent hover:text-slate-500"
+                                className={`${menuItemClass} cursor-default pr-7 text-slate-500 opacity-70 hover:bg-transparent hover:text-slate-500`}
                               >
                                 <Icon />
                                 <span className="truncate">{item.label}</span>
@@ -200,6 +214,7 @@ export function BoSidebar({
                               asChild
                               isActive={active}
                               tooltip={item.label}
+                              className={menuItemClass}
                             >
                               <Link href={item.href}>
                                 <Icon />
@@ -207,7 +222,7 @@ export function BoSidebar({
                               </Link>
                             </SidebarMenuButton>
                             {item.badge !== undefined && item.badge > 0 && (
-                              <SidebarMenuBadge className="text-amber-300">
+                              <SidebarMenuBadge className="text-[13px] text-amber-300">
                                 {item.badge}
                               </SidebarMenuBadge>
                             )}

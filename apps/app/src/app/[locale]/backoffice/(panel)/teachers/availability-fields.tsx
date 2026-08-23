@@ -119,7 +119,10 @@ export function AvailabilityFields({
             onClick={() => onChange(value.filter((_, i) => i !== index))}
             aria-label={t('availability.remove')}
             title={t('availability.remove')}
-            className="grid h-8 w-8 place-items-center rounded-lg text-muted-foreground transition hover:bg-cream hover:text-red-600"
+            /* Red at rest, not only on hover: it is the one control on the row
+               that destroys something, and a grey × next to two dropdowns
+               reads as decoration until it has already fired. */
+            className="grid h-8 w-8 place-items-center rounded-lg text-red-600 transition hover:bg-red-50 hover:text-red-700"
           >
             <BoIcon name="close" size={16} />
           </button>

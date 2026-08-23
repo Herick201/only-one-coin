@@ -3,34 +3,39 @@
 import { useMemo, useState, type MouseEvent } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { Link, useRouter } from '@/i18n/navigation'
-import type {
-  CourseLanguage,
-  TeacherRow,
-  TeacherStatus,
-} from '@/lib/backoffice/types'
+import type { CourseLanguage, TeacherRow } from '@/lib/backoffice/types'
+import { contractAlert } from '@/lib/backoffice/contract'
 import { countryName, flagEmoji } from '@/lib/geo'
 import {
   Card,
   EmptyState,
   Pager,
-  StatusBadge,
   TableShell,
   tdClass,
   thClass,
   Toolbar,
   toolbarSearchClass,
 } from '@/components/backoffice/ui'
-import { teacherTone } from '@/components/backoffice/status-tone'
+import { ContractBadge } from '@/components/backoffice/contract-badge'
 import { BoIcon } from '@/components/backoffice/icons'
 import { NewTeacherForm } from './new-teacher-form'
 
-type StatusFilter = TeacherStatus | 'all'
-
-const STATUS_FILTERS: StatusFilter[] = ['all', 'active', 'inactive']
+/**
+ * The roster is who can be given a class group tomorrow; the other tab is
+ * everybody who used to be. Two tabs rather than a status filter because these
+ * are two different jobs — allocating and looking something up — and a filter
+ * chip made the second one feel like a slice of the first.
+ */
+type Tab = 'roster' | 'inactive'
 
 const ALL = 'all'
 
 const PAGE_SIZE = 15
+
+/** Lapsing, lapsed, or never filed — the three that are somebody's errand. */
+function needsContractAttention(daysLeft: number | null): boolean {
+  return contractAlert(daysLeft) !== 'valid'
+}
 
 const selectClass =
   'rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink outline-none transition focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15'
@@ -59,24 +64,39 @@ export function TeachersView({
   const router = useRouter()
 
   const [created, setCreated] = useState<TeacherRow[]>([])
+  const [tab, setTab] = useState<Tab>('roster')
   const [query, setQuery] = useState('')
-  const [status, setStatus] = useState<StatusFilter>('all')
   const [language, setLanguage] = useState(ALL)
   const [freeOnly, setFreeOnly] = useState(false)
+  /**
+   * Contracts that need chasing — lapsing, lapsed, or never filed. One filter
+   * rather than three: whoever opens it is doing the same job in all three
+   * cases, and three chips for one errand is three chips nobody clicks.
+   */
+  const [contractOnly, setContractOnly] = useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [page, setPage] = useState(0)
   const [creating, setCreating] = useState(false)
 
   const all = useMemo(() => [...created, ...rows], [created, rows])
 
+  /** The tab is the first cut; every filter and count below reads this list. */
+  const scoped = useMemo(
+    () =>
+      all.filter((row) =>
+        tab === 'roster' ? row.status === 'active' : row.status === 'inactive',
+      ),
+    [all, tab],
+  )
+
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase()
-    return all.filter((row) => {
-      if (status !== 'all' && row.status !== status) return false
+    return scoped.filter((row) => {
       if (language !== ALL && !row.languages.some((item) => item.id === language)) {
         return false
       }
-      if (freeOnly && (row.activeClassGroups > 0 || row.status !== 'active')) return false
+      if (freeOnly && row.activeClassGroups > 0) return false
+      if (contractOnly && !needsContractAttention(row.contractDaysLeft)) return false
       if (!needle) return true
       return [
         `${row.firstName} ${row.lastName}`,
@@ -88,25 +108,35 @@ export function TeachersView({
         .toLowerCase()
         .includes(needle)
     })
-  }, [all, query, status, language, freeOnly])
+  }, [scoped, query, language, freeOnly, contractOnly])
 
   const counts = useMemo(
     () => ({
-      all: all.length,
-      active: all.filter((row) => row.status === 'active').length,
+      roster: all.filter((row) => row.status === 'active').length,
       inactive: all.filter((row) => row.status === 'inactive').length,
     }),
     [all],
   )
 
   const freeCount = useMemo(
-    () =>
-      all.filter((row) => row.status === 'active' && row.activeClassGroups === 0).length,
-    [all],
+    () => scoped.filter((row) => row.activeClassGroups === 0).length,
+    [scoped],
   )
 
+  const contractCount = useMemo(
+    () => scoped.filter((row) => needsContractAttention(row.contractDaysLeft)).length,
+    [scoped],
+  )
+
+  /* Two of the three filters are questions about somebody who is still
+     teaching. Off the roster they would filter a list on a fact that is the
+     same for every row in it. */
+  const onRoster = tab === 'roster'
+
   const activeFilters =
-    (status !== 'all' ? 1 : 0) + (language !== ALL ? 1 : 0) + (freeOnly ? 1 : 0)
+    (language !== ALL ? 1 : 0) +
+    (onRoster && freeOnly ? 1 : 0) +
+    (onRoster && contractOnly ? 1 : 0)
 
   /** A filter that shrinks the list can leave the page behind it. */
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
@@ -131,8 +161,44 @@ export function TeachersView({
     }
   }
 
+  function openTab(next: Tab) {
+    setTab(next)
+    setPage(0)
+    // Filters that mean nothing off the roster do not follow the reader there.
+    if (next !== 'roster') {
+      setFreeOnly(false)
+      setContractOnly(false)
+    }
+  }
+
   return (
     <div className="flex flex-col gap-4">
+      {/* Not `SectionTabs`: those are real routes, and these two are one list
+          cut two ways — the same page, the same filters, no URL to bookmark. */}
+      <nav className="-mt-2 flex items-center gap-1 border-b border-line">
+        {(['roster', 'inactive'] as Tab[]).map((value) => {
+          const active = tab === value
+          return (
+            <button
+              key={value}
+              type="button"
+              onClick={() => openTab(value)}
+              aria-current={active ? 'page' : undefined}
+              className={`-mb-px flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-semibold transition ${
+                active
+                  ? 'border-brand-blue text-brand-blue'
+                  : 'border-transparent text-muted-foreground hover:border-line hover:text-ink'
+              }`}
+            >
+              {t(value === 'roster' ? 'teachers.tab_roster' : 'teachers.tab_inactive')}
+              <span className={active ? 'text-brand-blue/60' : 'text-slate-400'}>
+                {counts[value]}
+              </span>
+            </button>
+          )
+        })}
+      </nav>
+
       {/* Toolbar */}
       <div className="flex flex-col gap-3">
         <Toolbar>
@@ -188,35 +254,7 @@ export function TeachersView({
 
         {filtersOpen && (
           <Card className="flex flex-wrap items-center gap-1.5 p-3">
-            {STATUS_FILTERS.map((value) => {
-              const active = status === value
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => {
-                    setStatus(value)
-                    setPage(0)
-                  }}
-                  aria-pressed={active}
-                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                    active
-                      ? 'bg-brand-blue text-white'
-                      : 'border border-line bg-white text-muted-foreground hover:bg-cream hover:text-ink'
-                  }`}
-                >
-                  {value === 'all'
-                    ? t('teachers.filter_all')
-                    : t(`teacher_status.${value}`)}
-                  <span className={active ? 'text-white/70' : 'text-slate-400'}>
-                    {counts[value]}
-                  </span>
-                </button>
-              )
-            })}
-
-            <span aria-hidden="true" className="mx-1 h-5 w-px bg-line" />
-
+            {onRoster && (
             <button
               type="button"
               onClick={() => {
@@ -235,8 +273,30 @@ export function TeachersView({
                 {freeCount}
               </span>
             </button>
+            )}
 
-            <span aria-hidden="true" className="mx-1 h-5 w-px bg-line" />
+            {onRoster && (
+            <button
+              type="button"
+              onClick={() => {
+                setContractOnly(!contractOnly)
+                setPage(0)
+              }}
+              aria-pressed={contractOnly}
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                contractOnly
+                  ? 'bg-brand-blue text-white'
+                  : 'border border-line bg-white text-muted-foreground hover:bg-cream hover:text-ink'
+              }`}
+            >
+              {t('teachers.filter_contract')}
+              <span className={contractOnly ? 'text-white/70' : 'text-slate-400'}>
+                {contractCount}
+              </span>
+            </button>
+            )}
+
+            {onRoster && <span aria-hidden="true" className="mx-1 h-5 w-px bg-line" />}
 
             <label className="flex items-center gap-2">
               <span className="sr-only">{t('teachers.filter_language')}</span>
@@ -276,9 +336,17 @@ export function TeachersView({
         {pageRows.length === 0 ? (
           <div className="p-4">
             <EmptyState
-              icon="search"
-              title={t('teachers.empty_title')}
-              body={t('teachers.empty_body')}
+              icon={scoped.length === 0 ? 'teachers' : 'search'}
+              title={t(
+                scoped.length === 0 && !onRoster
+                  ? 'teachers.empty_inactive_title'
+                  : 'teachers.empty_title',
+              )}
+              body={t(
+                scoped.length === 0 && !onRoster
+                  ? 'teachers.empty_inactive_body'
+                  : 'teachers.empty_body',
+              )}
             />
           </div>
         ) : (
@@ -291,9 +359,20 @@ export function TeachersView({
                   <th className={`${thClass} text-right`}>
                     {t('teachers.col_class_groups')}
                   </th>
-                  <th className={`${thClass} text-right`}>{t('teachers.col_students')}</th>
+                  {/* Head-count and contract are questions about somebody who
+                      is still teaching; off the roster every row answers them
+                      the same way, and a column of zeros is a column of noise.
+                      "Pendiente" stays: whoever left still owing grades or
+                      certificates is exactly who must not go quiet. */}
+                  {onRoster && (
+                    <th className={`${thClass} text-right`}>
+                      {t('teachers.col_students')}
+                    </th>
+                  )}
                   <th className={thClass}>{t('teachers.col_pending')}</th>
-                  <th className={thClass}>{t('teachers.col_status')}</th>
+                  {onRoster && (
+                    <th className={thClass}>{t('teachers.col_contract')}</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -338,11 +417,13 @@ export function TeachersView({
                         </span>
                       )}
                     </td>
-                    <td
-                      className={`${tdClass} text-right text-sm tabular-nums text-muted-foreground`}
-                    >
-                      {row.studentCount}
-                    </td>
+                    {onRoster && (
+                      <td
+                        className={`${tdClass} text-right text-sm tabular-nums text-muted-foreground`}
+                      >
+                        {row.studentCount}
+                      </td>
+                    )}
                     <td className={`${tdClass} whitespace-nowrap text-xs`}>
                       <span className="flex flex-col leading-tight">
                         {row.pendingGrades > 0 && (
@@ -362,12 +443,19 @@ export function TeachersView({
                         )}
                       </span>
                     </td>
-                    <td className={tdClass}>
-                      <StatusBadge
-                        tone={teacherTone[row.status]}
-                        label={t(`teacher_status.${row.status}`)}
-                      />
-                    </td>
+                    {/* The contract sits on the row, not only in the ficha:
+                        a teacher running a class group on a lapsed contract is
+                        the institution's exposure, and nobody opens twelve
+                        fichas to find out. Off the roster there is nothing to
+                        watch — the tab already said so. */}
+                    {onRoster && (
+                      <td className={tdClass}>
+                        <ContractBadge
+                          contract={row.contract}
+                          daysLeft={row.contractDaysLeft}
+                        />
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

@@ -94,6 +94,18 @@ export function canBrowseStudents(role: StaffRole): boolean {
 }
 
 /**
+ * Who registers a student by hand. The documented way in is the student filling
+ * `/enrollment` themselves (CLAUDE.md §1); this covers the person who closed the
+ * sale on WhatsApp and never reached the form. It stays with the two roles that
+ * answer for the academic side, because a registration carries the guardian
+ * record and the consent behind it (Ley 29733, CLAUDE.md §8) — tesorería
+ * settles money, and a teacher reaches a student through their class group.
+ */
+export function canCreateStudent(role: StaffRole): boolean {
+  return role === 'admin' || role === 'coordinator'
+}
+
+/**
  * Whether the panel must be narrowed to the signed-in teacher's own class
  * groups (`docs/ARCHITECTURE.md` §3). The screen honours it so the reader is
  * not shown doors that would fail; the enforcing check compares the

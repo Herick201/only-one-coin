@@ -3,7 +3,7 @@
 import { useLocale, useTranslations } from 'next-intl'
 import type { PaymentRow } from '@/lib/backoffice/types'
 import { formatDateTime, formatMoney, type Locale } from '@/lib/format'
-import { paymentMethodLabel } from '@/lib/payment-method'
+import { formatPaymentMethod } from '@/lib/payment-method'
 import { SectionTitle, StatusBadge } from '@/components/backoffice/ui'
 import { paymentTone, reviewFlagTone } from '@/components/backoffice/status-tone'
 import { BoIcon } from '@/components/backoffice/icons'
@@ -110,7 +110,11 @@ export function PaymentDetailDialog({
                     label={t('payments.filter_method')}
                     value={
                       payment.method
-                        ? paymentMethodLabel[payment.method]
+                        ? formatPaymentMethod(
+                            payment.method,
+                            null,
+                            t('payment_method.other'),
+                          )
                         : t('payments.no_method')
                     }
                   />

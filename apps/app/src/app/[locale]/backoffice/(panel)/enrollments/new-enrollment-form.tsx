@@ -10,8 +10,13 @@ import type {
   StudentRow,
 } from '@/lib/backoffice/types'
 import { formatMoney, type Locale } from '@/lib/format'
-import { paymentMethodLabel } from '@/lib/payment-method'
-import { Card, StatusBadge } from '@/components/backoffice/ui'
+import { formatPaymentMethod } from '@/lib/payment-method'
+import {
+  Card,
+  OptionalMark,
+  RequiredMark,
+  StatusBadge,
+} from '@/components/backoffice/ui'
 import { BoIcon } from '@/components/backoffice/icons'
 import { AutoGrid } from '@/components/layout/auto-grid'
 
@@ -21,7 +26,13 @@ const fieldClass =
 const labelClass =
   'text-xs font-medium uppercase tracking-wide text-muted-foreground'
 
-const METHODS: PaymentMethod[] = ['yape', 'plin', 'bcp', 'interbank']
+/**
+ * The four rails, and `other` for the deposit that came through none of them —
+ * a bank nobody listed, a transfer from abroad. `other` is not a fifth brand:
+ * picking it asks for the text that names it, because "other" on a ledger line
+ * is a question nobody can answer six months later.
+ */
+const METHODS: PaymentMethod[] = ['yape', 'plin', 'bcp', 'interbank', 'other']
 
 /** Enough matches to recognise the right person, few enough to read at a glance. */
 const MAX_MATCHES = 6
@@ -68,6 +79,7 @@ export function NewEnrollmentForm({
   const [studentId, setStudentId] = useState<string | null>(null)
   const [classGroupId, setClassGroupId] = useState('')
   const [method, setMethod] = useState<PaymentMethod>('yape')
+  const [methodDetail, setMethodDetail] = useState('')
   const [operationNumber, setOperationNumber] = useState('')
   const [receiptAttached, setReceiptAttached] = useState(false)
 
@@ -108,11 +120,26 @@ export function NewEnrollmentForm({
     ? `${group.weekdays.map((day) => t(`weekday.${day}`)).join('/')} · ${group.startTime}`
     : ''
 
-  /** No price in force means no enrollment: guessing an amount undercharges. */
-  const ready = student !== null && group !== null && plan !== null
+  /**
+   * Everything the form asks for is required, and the button is where that is
+   * enforced: a seat opened without the operation number is a payment tesorería
+   * cannot match against a bank statement, and it lands in the review queue
+   * anyway — one field short of settleable.
+   *
+   * The price is in the list for a different reason: no price in force means no
+   * enrollment at all, because guessing an amount undercharges.
+   */
+  const detailNeeded = method === 'other'
+  const missing =
+    student === null ||
+    group === null ||
+    plan === null ||
+    operationNumber.trim() === '' ||
+    (detailNeeded && methodDetail.trim() === '')
+  const ready = !missing
 
   function submit() {
-    if (!student || !group || !plan) return
+    if (!ready || !student || !group || !plan) return
     const now = new Date().toISOString()
     onCreate({
       id: `enr_local_${student.id}_${group.id}`,
@@ -137,7 +164,9 @@ export function NewEnrollmentForm({
       // for the student to send it. Never `approved` from here.
       paymentStatus: receiptAttached ? 'under_review' : 'pending',
       paymentMethod: method,
-      operationNumber: operationNumber.trim() === '' ? null : operationNumber.trim(),
+      // The rails name themselves; `other` is only ever as good as the text.
+      paymentMethodDetail: method === 'other' ? methodDetail.trim() : null,
+      operationNumber: operationNumber.trim(),
       createdAt: now,
       paidAt: null,
       progressPct: null,
@@ -185,22 +214,26 @@ export function NewEnrollmentForm({
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            <label className="relative">
-              <span className="sr-only">
+            <label className="flex flex-col gap-1 sm:max-w-md">
+              <span className={labelClass}>
                 {t('new_enrollment.search_student_label')}
+                <RequiredMark label={t('common.required')} />
               </span>
-              <BoIcon
-                name="search"
-                size={16}
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-              />
-              <input
-                type="search"
-                value={studentQuery}
-                onChange={(event) => setStudentQuery(event.target.value)}
-                placeholder={t('new_enrollment.search_student_placeholder')}
-                className={`${fieldClass} w-full pl-9 sm:max-w-md`}
-              />
+              <span className="relative">
+                <BoIcon
+                  name="search"
+                  size={16}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+                <input
+                  type="search"
+                  value={studentQuery}
+                  onChange={(event) => setStudentQuery(event.target.value)}
+                  placeholder={t('new_enrollment.search_student_placeholder')}
+                  aria-required="true"
+                  className={`${fieldClass} w-full pl-9`}
+                />
+              </span>
             </label>
 
             {studentQuery.trim() !== '' &&
@@ -253,10 +286,13 @@ export function NewEnrollmentForm({
             <label className="flex flex-col gap-1">
               <span className={labelClass}>
                 {t('new_enrollment.field_class_group')}
+                <RequiredMark label={t('common.required')} />
               </span>
               <select
                 value={classGroupId}
                 onChange={(event) => setClassGroupId(event.target.value)}
+                required
+                aria-required="true"
                 className={fieldClass}
               >
                 <option value="">
@@ -328,31 +364,60 @@ export function NewEnrollmentForm({
 
         <AutoGrid min="15rem" gap="gap-3">
           <label className="flex flex-col gap-1">
-            <span className={labelClass}>{t('new_enrollment.field_method')}</span>
+            <span className={labelClass}>
+              {t('new_enrollment.field_method')}
+              <RequiredMark label={t('common.required')} />
+            </span>
             <select
               value={method}
               onChange={(event) => setMethod(event.target.value as PaymentMethod)}
+              required
+              aria-required="true"
               className={fieldClass}
             >
               {METHODS.map((value) => (
                 /* Rail names are proper nouns — never translated
-                   (CLAUDE.md §4 glossary). */
+                   (CLAUDE.md §4 glossary); `other` is the one entry that has a
+                   word instead of a brand. */
                 <option key={value} value={value}>
-                  {paymentMethodLabel[value]}
+                  {formatPaymentMethod(value, null, t('new_enrollment.method_other'))}
                 </option>
               ))}
             </select>
           </label>
 
+          {/* Only once "other" is picked, and required from that moment: a
+              ledger line reading "other" and nothing else is a question
+              nobody can answer six months later. */}
+          {detailNeeded && (
+            <label className="flex flex-col gap-1">
+              <span className={labelClass}>
+                {t('new_enrollment.field_method_other')}
+                <RequiredMark label={t('common.required')} />
+              </span>
+              <input
+                value={methodDetail}
+                onChange={(event) => setMethodDetail(event.target.value)}
+                placeholder={t('new_enrollment.method_other_placeholder')}
+                required
+                aria-required="true"
+                className={fieldClass}
+              />
+            </label>
+          )}
+
           <label className="flex flex-col gap-1">
             <span className={labelClass}>
               {t('new_enrollment.field_operation')}
+              <RequiredMark label={t('common.required')} />
             </span>
             <input
               value={operationNumber}
               onChange={(event) => setOperationNumber(event.target.value)}
               placeholder={t('new_enrollment.operation_placeholder')}
-              className={fieldClass}
+              required
+              aria-required="true"
+              className={`${fieldClass} tabular-nums`}
             />
           </label>
 
@@ -362,6 +427,7 @@ export function NewEnrollmentForm({
           <label className="flex flex-col gap-1">
             <span className={labelClass}>
               {t('new_enrollment.attach_receipt')}
+              <OptionalMark label={t('common.optional')} />
             </span>
             <button
               type="button"
@@ -393,7 +459,7 @@ export function NewEnrollmentForm({
         </p>
       </section>
 
-      <div className="mt-5 flex items-center gap-2 border-t border-line pt-4">
+      <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-line pt-4">
         <button
           type="button"
           disabled={!ready}
@@ -410,6 +476,12 @@ export function NewEnrollmentForm({
         >
           {t('new_enrollment.cancel')}
         </button>
+        {/* A button that greys out without saying why reads as broken. */}
+        {!ready && (
+          <span className="text-xs text-muted-foreground">
+            {t('new_enrollment.missing_fields')}
+          </span>
+        )}
       </div>
     </Card>
   )

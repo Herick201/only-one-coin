@@ -105,8 +105,8 @@ export default async function BackofficePanelLayout({
       ],
     },
     {
-      key: 'daily',
-      label: t('nav.group_daily'),
+      key: 'operations',
+      label: t('nav.group_operations'),
       items: [
         { key: 'students', href: '/backoffice/students', label: t('nav.students') },
         {
@@ -181,10 +181,10 @@ export default async function BackofficePanelLayout({
         />
       </span>
       <span className="flex min-w-0 flex-col leading-tight group-data-[collapsible=icon]:hidden">
-        <span className="truncate text-sm font-semibold text-white">
+        <span className="truncate text-[15px] font-semibold text-white">
           Only One Coin
         </span>
-        <span className="truncate text-[11px] font-medium text-slate-400">
+        <span className="truncate text-xs font-medium text-slate-400">
           {t('brand.panel_label')}
         </span>
       </span>
@@ -200,10 +200,10 @@ export default async function BackofficePanelLayout({
           </AvatarFallback>
         </Avatar>
         <span className="flex min-w-0 flex-col leading-tight group-data-[collapsible=icon]:hidden">
-          <span className="truncate text-sm font-semibold text-white">
+          <span className="truncate text-[15px] font-semibold text-white">
             {`${staff.firstName} ${staff.lastName}`}
           </span>
-          <span className="truncate text-[11px] text-slate-400">
+          <span className="truncate text-xs text-slate-400">
             {t(`role.${staff.role}`)}
           </span>
         </span>
@@ -213,9 +213,9 @@ export default async function BackofficePanelLayout({
         <button
           type="submit"
           title={t('nav.logout')}
-          className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm font-semibold text-slate-400 transition hover:bg-white/5 hover:text-red-300 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+          className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-[15px] font-semibold text-slate-400 transition hover:bg-white/5 hover:text-red-300 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
         >
-          <LogOut className="size-4 shrink-0" />
+          <LogOut className="size-[18px] shrink-0" />
           <span className="group-data-[collapsible=icon]:hidden">
             {t('nav.logout')}
           </span>

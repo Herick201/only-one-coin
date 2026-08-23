@@ -16,8 +16,10 @@ import {
   Toolbar,
   toolbarSearchClass,
 } from '@/components/backoffice/ui'
+import { Toast } from '@/components/backoffice/controls'
 import { studentTone } from '@/components/backoffice/status-tone'
 import { BoIcon } from '@/components/backoffice/icons'
+import { NewStudentForm } from './new-student-form'
 
 type StatusFilter = StudentStatus | 'all'
 
@@ -40,10 +42,21 @@ const PAGE_SIZE = 15
  * one click away in the ficha: repeating them per row made every line three
  * lines tall and pushed the table off the screen.
  */
-export function StudentsTable({ rows }: { rows: StudentRow[] }) {
+export function StudentsTable({
+  rows,
+  canCreate,
+}: {
+  rows: StudentRow[]
+  canCreate: boolean
+}) {
   const t = useTranslations('bo')
   const locale = useLocale() as Locale
   const router = useRouter()
+  /* No server yet, so a registration lands at the top of the list and nowhere
+     else (see the mock notice above the table). */
+  const [directory, setDirectory] = useState<StudentRow[]>(rows)
+  const [creating, setCreating] = useState(false)
+  const [toast, setToast] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [status, setStatus] = useState<StatusFilter>('all')
   /**
@@ -57,7 +70,7 @@ export function StudentsTable({ rows }: { rows: StudentRow[] }) {
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase()
-    return rows.filter((row) => {
+    return directory.filter((row) => {
       if (status !== 'all' && row.status !== status) return false
       if (minorsOnly && !row.isMinor) return false
       if (!needle) return true
@@ -72,18 +85,21 @@ export function StudentsTable({ rows }: { rows: StudentRow[] }) {
         .toLowerCase()
         .includes(needle)
     })
-  }, [rows, query, status, minorsOnly])
+  }, [directory, query, status, minorsOnly])
 
   const counts = useMemo(() => {
     return {
-      all: rows.length,
-      active: rows.filter((r) => r.status === 'active').length,
-      under_review: rows.filter((r) => r.status === 'under_review').length,
-      inactive: rows.filter((r) => r.status === 'inactive').length,
+      all: directory.length,
+      active: directory.filter((r) => r.status === 'active').length,
+      under_review: directory.filter((r) => r.status === 'under_review').length,
+      inactive: directory.filter((r) => r.status === 'inactive').length,
     } satisfies Record<StatusFilter, number>
-  }, [rows])
+  }, [directory])
 
-  const minorCount = useMemo(() => rows.filter((r) => r.isMinor).length, [rows])
+  const minorCount = useMemo(
+    () => directory.filter((r) => r.isMinor).length,
+    [directory],
+  )
   const activeFilters = (status !== 'all' ? 1 : 0) + (minorsOnly ? 1 : 0)
 
   /** A filter or a search that shrinks the list can leave the page behind it. */
@@ -165,6 +181,21 @@ export function StudentsTable({ rows }: { rows: StudentRow[] }) {
               </span>
             )}
           </button>
+
+          {/* The exception path, not the way in: most students arrive by
+              filling `/enrollment` themselves (CLAUDE.md §1). Hidden from
+              whoever may not use it — the enforcing check is the role on the
+              route in `apps/api` (CLAUDE.md §8). */}
+          {canCreate && !creating && (
+            <button
+              type="button"
+              onClick={() => setCreating(true)}
+              className="ml-auto inline-flex items-center gap-1.5 self-start rounded-lg bg-brand-blue px-3 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-deep"
+            >
+              <BoIcon name="plus" size={16} />
+              {t('students.new_student')}
+            </button>
+          )}
         </Toolbar>
 
         {filtersOpen && (
@@ -211,6 +242,18 @@ export function StudentsTable({ rows }: { rows: StudentRow[] }) {
           </Card>
         )}
       </div>
+
+      {creating && (
+        <NewStudentForm
+          onCancel={() => setCreating(false)}
+          onCreate={(student) => {
+            setDirectory((current) => [student, ...current])
+            setCreating(false)
+            setPage(0)
+            setToast(t('new_student.created_local_only'))
+          }}
+        />
+      )}
 
       <Card>
         {pageRows.length === 0 ? (
@@ -299,6 +342,8 @@ export function StudentsTable({ rows }: { rows: StudentRow[] }) {
           </>
         )}
       </Card>
+
+      <Toast message={toast} onDismiss={() => setToast(null)} />
     </div>
   )
 }

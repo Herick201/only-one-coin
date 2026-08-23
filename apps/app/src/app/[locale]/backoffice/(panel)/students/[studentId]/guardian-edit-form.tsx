@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import type { GuardianRelationship, NationalIdType } from '@/lib/backoffice/types'
 import { BoIcon } from '@/components/backoffice/icons'
-import { COUNTRIES, DEFAULT_COUNTRY, flagEmoji, joinPhone, splitPhone } from '@/lib/geo'
+import { PhoneField } from '@/components/backoffice/phone-field'
 import { AutoGrid } from '@/components/layout/auto-grid'
 
 /**
@@ -44,20 +44,10 @@ export function GuardianEditForm({
 }) {
   const t = useTranslations('bo')
   const [draft, setDraft] = useState<EditableGuardian>(value)
-  const [phoneCountry, setPhoneCountry] = useState(
-    () => splitPhone(value.phone, DEFAULT_COUNTRY).country,
-  )
-  const [phoneNumber, setPhoneNumber] = useState(() => splitPhone(value.phone).number)
   const [pending, setPending] = useState(false)
 
   function set<K extends keyof EditableGuardian>(key: K, next: EditableGuardian[K]) {
     setDraft((prev) => ({ ...prev, [key]: next }))
-  }
-
-  function setPhone(country: string, number: string) {
-    setPhoneCountry(country)
-    setPhoneNumber(number)
-    set('phone', joinPhone(country, number))
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -146,29 +136,11 @@ export function GuardianEditForm({
         </label>
         <label className={labelClass}>
           {t('student_file.field_phone')}
-          <span className="flex gap-2">
-            <select
-              className={`${fieldClass} w-28 shrink-0`}
-              value={phoneCountry}
-              onChange={(e) => setPhone(e.target.value, phoneNumber)}
-              aria-label={t('student_file.field_dial_code')}
-            >
-              {COUNTRIES.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {`${flagEmoji(c.code)} ${c.dial}`}
-                </option>
-              ))}
-            </select>
-            <input
-              type="tel"
-              inputMode="tel"
-              className={`${fieldClass} min-w-0 flex-1`}
-              value={phoneNumber}
-              onChange={(e) => setPhone(phoneCountry, e.target.value)}
-              placeholder={t('student_file.phone_placeholder')}
-              required
-            />
-          </span>
+          <PhoneField
+            value={draft.phone}
+            onChange={(next) => set('phone', next)}
+            required
+          />
         </label>
       </AutoGrid>
 

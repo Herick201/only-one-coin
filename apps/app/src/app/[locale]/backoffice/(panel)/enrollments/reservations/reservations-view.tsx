@@ -8,6 +8,7 @@ import { formatDateTime, formatMoney, type Locale } from '@/lib/format'
 import {
   Card,
   EmptyState,
+  rowActionClass,
   StatusBadge,
   TableShell,
   tdClass,
@@ -128,10 +129,18 @@ export function ReservationsView({
                 <td className={`${tdClass} whitespace-nowrap text-right`}>
                   {/* Settling it is the review queue's job, next to the image
                       and what the model read — never a click on this list
-                      (CLAUDE.md §8). */}
+                      (CLAUDE.md §8). What the click owes the reader is *this*
+                      receipt: dropping them into the queue to find the same
+                      row again is asking them to do the search twice. When
+                      nothing has been uploaded yet there is no receipt to
+                      open, and the queue itself is the honest destination. */}
                   <Link
-                    href="/backoffice/payments/review"
-                    className="inline-flex items-center gap-1 text-sm font-semibold text-brand-blue transition hover:text-brand-blue-deep"
+                    href={
+                      row.reviewId
+                        ? `/backoffice/payments/review?receipt=${row.reviewId}`
+                        : '/backoffice/payments/review'
+                    }
+                    className={rowActionClass}
                   >
                     {t('reservations.open_review')}
                     <BoIcon name="chevron-right" size={14} />

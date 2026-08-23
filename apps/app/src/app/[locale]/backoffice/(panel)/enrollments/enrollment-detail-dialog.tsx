@@ -4,7 +4,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import type { EnrollmentRow } from '@/lib/backoffice/types'
 import { formatDateTime, formatMoney, type Locale } from '@/lib/format'
-import { paymentMethodLabel } from '@/lib/payment-method'
+import { formatPaymentMethod } from '@/lib/payment-method'
 import { SectionTitle, StatusBadge } from '@/components/backoffice/ui'
 import {
   enrollmentTone,
@@ -142,10 +142,15 @@ export function EnrollmentDetailDialog({
                     )}
                   />
                   {/* Rail names are proper nouns — never translated
-                      (CLAUDE.md §4 glossary). */}
+                      (CLAUDE.md §4 glossary); anything else prints what the
+                      person who recorded it wrote. */}
                   <DataRow
                     label={t('enrollment_detail.field_method')}
-                    value={paymentMethodLabel[enrollment.paymentMethod]}
+                    value={formatPaymentMethod(
+                      enrollment.paymentMethod,
+                      enrollment.paymentMethodDetail,
+                      t('payment_method.other'),
+                    )}
                   />
                   <DataRow
                     label={t('enrollment_detail.field_operation')}

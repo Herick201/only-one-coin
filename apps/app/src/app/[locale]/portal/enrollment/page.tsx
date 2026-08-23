@@ -11,7 +11,7 @@ import {
 } from '@/components/portal/ui'
 import { enrollmentTone, paymentTone, seatTone } from '@/components/portal/status-tone'
 import { Icon } from '@/components/portal/icons'
-import { paymentMethodLabel } from '@/lib/payment-method'
+import { formatPaymentMethod } from '@/lib/payment-method'
 import { AutoGrid } from '@/components/layout/auto-grid'
 
 /** Which payment states get a contextual note, and its tone. */
@@ -97,7 +97,11 @@ export default async function EnrollmentPage({
                   </div>
                   <AutoGrid as="dl" min="9rem" gap="gap-x-6 gap-y-3" className="mt-3">
                     <Field label={t('payment_method.label')}>
-                      {paymentMethodLabel[e.payment.method]}
+                      {formatPaymentMethod(
+                        e.payment.method,
+                        null,
+                        t('payment_method.other'),
+                      )}
                     </Field>
                     {e.payment.operationNumber && (
                       <Field label={t('enrollments.operation_number')}>
