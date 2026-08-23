@@ -73,7 +73,14 @@ Domínio e fila já existem, independentes dessa escolha:
   grade da semana com as turmas já atribuídas sobrepostas — e as turmas do
   docente. A ficha é onde se tira alguém do quadro e se devolve: a confirmação
   avisa quantas turmas em andamento ainda apontam para ele, e o contrato deixa
-  de ser vigiado enquanto estiver inativo). O papel `teacher` já entra numa
+  de ser vigiado enquanto estiver inativo) e correio (`/backoffice/emails`: o
+  catálogo dos e-mails transacionais — o que dispara cada um, destinatário,
+  estado, enviados/entregues dos últimos 30 dias e versão do template —, com um
+  painel por e-mail que mostra a prévia renderizada do template versionado do
+  repositório (dados de exemplo, nunca de aluno real), liga/desliga o envio
+  automático e manda uma prova para até 5 endereços. Não existe botão de enviar
+  por aluno: e-mail transacional é consequência do que aconteceu no domínio.
+  Campanhas ainda não existem). O papel `teacher` já entra numa
   **visão restrita**: menu reduzido,
   home própria (turmas, alunos, notas e certificados pendentes dele), só as
   próprias turmas na lista e na ficha da turma, e alunos/pagamentos bloqueados —

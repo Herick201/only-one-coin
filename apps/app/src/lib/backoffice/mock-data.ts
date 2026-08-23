@@ -10,6 +10,8 @@ import type {
   EnrollmentRow,
   DocumentDelivery,
   DocumentItem,
+  EmailFlow,
+  EmailMetrics,
   EnrollmentHistoryItem,
   ExtractionField,
   PaymentMethod,
@@ -3236,5 +3238,146 @@ export function getEnrollmentMetrics(now: Date = new Date()): EnrollmentMetrics 
       (item) => item.hoursLeft <= RESERVATION_WARNING_HOURS,
     ).length,
     released: rows.filter((row) => row.seatStatus === 'released').length,
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* E-mail                                                                      */
+/* -------------------------------------------------------------------------- */
+
+/** The window every figure on the e-mail screen is measured over. */
+const EMAIL_WINDOW_DAYS = 30
+
+/**
+ * One sample per audience, shared by every flow written to it. The preview is
+ * read by staff to check wording, so it renders over invented people — a real
+ * student's name has no business on that screen (CLAUDE.md §8).
+ */
+const studentSample = {
+  studentName: 'María Fernanda Quispe Rojas',
+  guardianName: 'Rosa Elena Rojas Sánchez',
+  courseName: 'Inglés Básico A1',
+  classGroupName: 'A1 — Lun/Mié 18:00',
+  amountCents: 6990,
+  date: '2026-09-07T23:00:00Z',
+}
+
+/**
+ * The transactional catalog. Every entry is an e-mail that leaves on its own,
+ * as the consequence of something the domain did — there is no send button per
+ * message (`docs/DOCUMENTOS-E-CERTIFICADOS.md` §4).
+ *
+ * The counts are the last 30 days as the provider reported them back. They sit
+ * next to each other on purpose: a flow whose bounces climb is one whose
+ * addresses are wrong, and that only shows against its own volume.
+ */
+export function listEmailFlows(): EmailFlow[] {
+  return [
+    {
+      template: 'enrollment_submitted',
+      audience: 'student',
+      enabled: true,
+      version: 4,
+      updatedAt: '2026-08-04T14:20:00Z',
+      metrics: { sent: 4128, delivered: 4061, bounced: 54, failed: 13 },
+      sample: studentSample,
+    },
+    {
+      template: 'payment_under_review',
+      audience: 'student',
+      enabled: true,
+      version: 2,
+      updatedAt: '2026-07-22T16:05:00Z',
+      metrics: { sent: 612, delivered: 604, bounced: 6, failed: 2 },
+      sample: studentSample,
+    },
+    {
+      template: 'payment_approved',
+      audience: 'student',
+      enabled: true,
+      version: 5,
+      updatedAt: '2026-08-11T11:40:00Z',
+      metrics: { sent: 3907, delivered: 3854, bounced: 41, failed: 12 },
+      sample: studentSample,
+    },
+    {
+      template: 'payment_rejected',
+      audience: 'student',
+      enabled: true,
+      version: 3,
+      updatedAt: '2026-07-30T09:15:00Z',
+      metrics: { sent: 214, delivered: 209, bounced: 4, failed: 1 },
+      sample: studentSample,
+    },
+    {
+      template: 'credentials_issued',
+      audience: 'student',
+      enabled: true,
+      version: 6,
+      updatedAt: '2026-08-14T18:30:00Z',
+      metrics: { sent: 3891, delivered: 3822, bounced: 57, failed: 12 },
+      sample: studentSample,
+    },
+    {
+      template: 'guardian_consent_reminder',
+      audience: 'guardian',
+      enabled: true,
+      version: 2,
+      updatedAt: '2026-07-18T13:00:00Z',
+      metrics: { sent: 486, delivered: 470, bounced: 14, failed: 2 },
+      sample: studentSample,
+    },
+    {
+      template: 'seat_reservation_expiring',
+      audience: 'student',
+      enabled: true,
+      version: 1,
+      updatedAt: '2026-08-16T10:05:00Z',
+      metrics: { sent: 173, delivered: 171, bounced: 2, failed: 0 },
+      sample: studentSample,
+    },
+    {
+      /* Off in the mock so the screen has to say what that costs: three days
+         before the class group starts, nobody gets the Classroom link
+         (`docs/REGRAS-NEGOCIO.md` §8). A paused flow is not a quiet flow. */
+      template: 'class_access_ready',
+      audience: 'student',
+      enabled: false,
+      version: 2,
+      updatedAt: '2026-08-02T15:45:00Z',
+      metrics: { sent: 0, delivered: 0, bounced: 0, failed: 0 },
+      sample: studentSample,
+    },
+    {
+      template: 'enrollment_certificate_issued',
+      audience: 'student',
+      enabled: true,
+      version: 3,
+      updatedAt: '2026-08-09T12:10:00Z',
+      metrics: { sent: 96, delivered: 95, bounced: 1, failed: 0 },
+      sample: studentSample,
+    },
+    {
+      template: 'certificate_issued',
+      audience: 'student',
+      enabled: true,
+      version: 4,
+      updatedAt: '2026-08-12T17:25:00Z',
+      metrics: { sent: 341, delivered: 336, bounced: 4, failed: 1 },
+      sample: studentSample,
+    },
+  ]
+}
+
+/** The header figures — the same window, summed over the catalog. */
+export function getEmailMetrics(): EmailMetrics {
+  const flows = listEmailFlows()
+  return {
+    windowDays: EMAIL_WINDOW_DAYS,
+    sent: flows.reduce((total, flow) => total + flow.metrics.sent, 0),
+    delivered: flows.reduce((total, flow) => total + flow.metrics.delivered, 0),
+    bounced: flows.reduce((total, flow) => total + flow.metrics.bounced, 0),
+    failed: flows.reduce((total, flow) => total + flow.metrics.failed, 0),
+    paused: flows.filter((flow) => !flow.enabled).length,
   }
 }

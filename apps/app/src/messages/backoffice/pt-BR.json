@@ -108,7 +108,7 @@
       "payments": "Comprovantes, aprovação, recusa e tolerância de validação.",
       "courses": "Cursos, turmas, horários, vagas e datas de início.",
       "teachers": "Docentes e as turmas sob responsabilidade de cada um.",
-      "email": "E-mails transacionais e campanhas, com templates versionados.",
+      "email": "Os e-mails automáticos: o que dispara cada um, o modelo versionado e como chegaram.",
       "reports": "Matrículas, receita e ocupação por curso e período.",
       "staff": "Usuários do painel, cargos e dois fatores.",
       "settings": "Períodos de venda, preços vigentes e parâmetros de validação."
@@ -560,9 +560,151 @@
       "attachment_uploaded": "Arquivo anexado"
     },
     "email_template": {
-      "guardian_consent_reminder": "Lembrete de consentimento do responsável",
-      "enrollment_certificate_issued": "Envio de constancia de matrícula",
-      "certificate_issued": "Envio de certificado de conclusão"
+      "enrollment_submitted": "Matrícula recebida",
+      "payment_under_review": "Comprovante em revisão",
+      "payment_approved": "Pagamento aprovado",
+      "payment_rejected": "Pagamento rejeitado",
+      "credentials_issued": "Credenciais de acesso",
+      "guardian_consent_reminder": "Lembrete de consentimento",
+      "seat_reservation_expiring": "Vaga a vencer",
+      "class_access_ready": "Acesso à sala virtual",
+      "enrollment_certificate_issued": "Constancia de matrícula",
+      "certificate_issued": "Certificado de conclusão"
+    },
+    "email_trigger": {
+      "enrollment_submitted": "Assim que o aluno envia o formulário de matrícula.",
+      "payment_under_review": "Quando o comprovante fica esperando uma pessoa.",
+      "payment_approved": "Quando o pagamento é aprovado e a vaga é confirmada.",
+      "payment_rejected": "Quando a revisão rejeita o comprovante.",
+      "credentials_issued": "Quando o acesso ao portal do aluno é criado.",
+      "guardian_consent_reminder": "Quando o aluno é menor de idade e falta o consentimento do apoderado.",
+      "seat_reservation_expiring": "Um dia antes de o sistema liberar a vaga reservada.",
+      "class_access_ready": "Três dias antes do início da turma, com o link de acesso.",
+      "enrollment_certificate_issued": "Quando a constancia solicitada é emitida.",
+      "certificate_issued": "Quando a coordenação emite o certificado da turma."
+    },
+    "email_audience": {
+      "student": "Aluno",
+      "guardian": "Apoderado"
+    },
+    "email_preview": {
+      "enrollment_submitted": {
+        "subject": "Recebemos sua matrícula em {course}",
+        "p1": "Olá {name}: registramos seu pedido de matrícula em {course} ({classGroup}) e já temos seu comprovante de {amount}.",
+        "p2": "Estamos conferindo. Escrevemos de novo assim que terminar; não é preciso enviar nada outra vez.",
+        "cta": "Ver o estado da minha matrícula"
+      },
+      "payment_under_review": {
+        "subject": "Seu comprovante está em revisão",
+        "p1": "Olá {name}: alguém da equipe está revisando o comprovante que você enviou por {course}. É um passo normal quando a imagem não fica clara.",
+        "p2": "Sua vaga em {classGroup} fica reservada enquanto isso.",
+        "cta": "Ver o estado do meu pagamento"
+      },
+      "payment_approved": {
+        "subject": "Seu pagamento foi aprovado: sua vaga em {course} está garantida",
+        "p1": "Olá {name}: aprovamos seu pagamento de {amount} e sua vaga em {classGroup} foi confirmada.",
+        "p2": "As aulas começam em {date}. Dias antes você recebe o acesso à sala virtual, no mesmo e-mail.",
+        "cta": "Ver minha matrícula"
+      },
+      "payment_rejected": {
+        "subject": "Não conseguimos validar seu comprovante",
+        "p1": "Olá {name}: revisamos o comprovante que você enviou por {course} e não conseguimos validá-lo.",
+        "p2": "Fale com a gente pelo WhatsApp que resolvemos juntos. Tenha o número da operação à mão.",
+        "cta": "Ver o detalhe do meu pagamento"
+      },
+      "credentials_issued": {
+        "subject": "Seus dados de acesso ao portal do aluno",
+        "p1": "Olá {name}: você já pode entrar no portal com o e-mail que usou na matrícula. Lá estão seu curso, seu horário e seus documentos.",
+        "p2": "Na primeira vez pediremos uma senha nova. Não compartilhe este e-mail com ninguém.",
+        "cta": "Entrar no portal"
+      },
+      "guardian_consent_reminder": {
+        "subject": "Falta o seu consentimento para a matrícula de {name}",
+        "p1": "Olá {guardian}: {name} se matriculou em {course} e, por ser menor de idade, precisamos do seu consentimento para tratar os dados dele (Ley 29733).",
+        "p2": "É um formulário de um minuto. Sem ele não conseguimos completar a matrícula.",
+        "cta": "Dar meu consentimento"
+      },
+      "seat_reservation_expiring": {
+        "subject": "Sua vaga em {course} vence amanhã",
+        "p1": "Olá {name}: guardamos sua vaga em {classGroup} enquanto o pagamento é confirmado, e o prazo termina amanhã.",
+        "p2": "Se você já pagou, mande o número da operação pelo WhatsApp que revisamos ainda hoje.",
+        "cta": "Ver o estado do meu pagamento"
+      },
+      "class_access_ready": {
+        "subject": "Sua sala virtual de {course} já está pronta",
+        "p1": "Olá {name}: sua turma {classGroup} começa em {date}. Você já pode entrar com o e-mail que usou na matrícula.",
+        "p2": "Todas as aulas são ao vivo e em grupo, no horário da sua turma. Confira se o seu e-mail tem espaço disponível.",
+        "cta": "Entrar na sala virtual"
+      },
+      "enrollment_certificate_issued": {
+        "subject": "Sua constancia de matrícula está pronta",
+        "p1": "Olá {name}: emitimos sua constancia de matrícula de {course}. Ela vai anexada a este e-mail e também fica no seu portal.",
+        "p2": "O documento tem um código de verificação: qualquer pessoa pode conferir se é autêntico na nossa página.",
+        "cta": "Ver minha constancia"
+      },
+      "certificate_issued": {
+        "subject": "Seu certificado de {course} está pronto",
+        "p1": "Olá {name}: parabéns por concluir {course}. Seu certificado de conclusão já foi emitido e vai anexado a este e-mail.",
+        "p2": "Ele também fica guardado no seu portal, com o código de verificação.",
+        "cta": "Ver meu certificado"
+      }
+    },
+    "emails": {
+      "title": "E-mails",
+      "subtitle": "Os e-mails que a plataforma envia sozinha: quando saem, o que dizem e como chegaram.",
+      "locked_title": "Esta seção é da administração e da coordenação",
+      "locked_body": "Os e-mails automáticos decidem o que cada aluno recebe quando a matrícula avança. Seu cargo não os gerencia.",
+      "stat_sent": "Enviados",
+      "stat_sent_hint": "Últimos {days} dias",
+      "stat_delivered": "Entregues",
+      "stat_delivered_hint": "{rate} dos enviados",
+      "stat_bounced": "Devolvidos",
+      "stat_bounced_hint": "Endereços recusados pelo servidor",
+      "stat_paused": "Pausados",
+      "stat_paused_hint": "{count, plural, =0 {Todos os e-mails estão ativos} one {Um e-mail desligado: ninguém o recebe} other {# e-mails desligados: ninguém os recebe}}",
+      "search_label": "Buscar um e-mail",
+      "search_placeholder": "Buscar pelo nome do e-mail",
+      "filter_paused": "Somente pausados",
+      "col_flow": "E-mail",
+      "col_audience": "Destinatário",
+      "col_state": "Estado",
+      "col_sent": "Enviados",
+      "col_delivered": "Entregues",
+      "col_template": "Modelo",
+      "state_on": "Ativo",
+      "state_off": "Pausado",
+      "version": "Versão {version}",
+      "empty_title": "Nenhum e-mail corresponde",
+      "empty_body": "Tente outro texto ou tire o filtro de pausados.",
+      "open": "Ver o modelo",
+      "panel_close": "Fechar",
+      "preview_title": "Prévia",
+      "preview_note": "É o modelo versionado do repositório, com dados de exemplo. Cada pessoa o recebe no seu idioma.",
+      "preview_subject": "Assunto",
+      "metrics_title": "Últimos {days} dias",
+      "metric_sent": "Enviados",
+      "metric_delivered": "Entregues",
+      "metric_bounced": "Devolvidos",
+      "metric_failed": "Falharam",
+      "state_title": "Envio automático",
+      "state_label": "A plataforma envia este e-mail",
+      "state_hint_on": "Sai sozinho, assim que acontece o que o dispara.",
+      "state_hint_off": "Está pausado: ninguém o recebe, nem quem está esperando por ele.",
+      "toast_enabled": "E-mail ativado",
+      "toast_paused": "E-mail pausado",
+      "audit_notice": "Ativar ou pausar um e-mail fica na auditoria, com quem fez e quando.",
+      "no_send_notice": "Não existe botão de enviar por aluno: cada e-mail sai como consequência do que aconteceu no sistema, e reenviar é uma exceção auditada.",
+      "test_title": "Enviar um teste",
+      "test_hint": "Até {max} endereços, separados por vírgula. O assunto sai com o prefixo {prefix}.",
+      "test_prefix": "[PRUEBA]",
+      "test_label": "Endereços",
+      "test_placeholder": "nome@onlyonecoin.edu.pe",
+      "test_guard": "Fora de produção o provedor só aceita endereços da lista permitida.",
+      "test_send": "Enviar teste",
+      "test_error_empty": "Escreva pelo menos um endereço.",
+      "test_error_max": "São {max} endereços no máximo.",
+      "test_error_invalid": "Este endereço não parece um e-mail: {value}.",
+      "test_toast": "{count, plural, one {Teste enviado para um endereço} other {Teste enviado para # endereços}}"
     },
     "delivery_status": {
       "not_sent": "Não enviado",

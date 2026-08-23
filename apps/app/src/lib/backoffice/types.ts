@@ -227,9 +227,21 @@ export type StudentField =
   | 'city'
   | 'birth_date'
 
-/** Versioned e-mail templates (CLAUDE.md §5, outbox). */
+/**
+ * Versioned e-mail templates (CLAUDE.md §5, outbox). The union *is* the
+ * catalog: every transactional message the platform sends has an entry here,
+ * and the template it renders lives in the repository — never drawn only in the
+ * provider's panel, so what the e-mail screen previews is what ships.
+ */
 export type EmailTemplate =
+  | 'enrollment_submitted'
+  | 'payment_under_review'
+  | 'payment_approved'
+  | 'payment_rejected'
+  | 'credentials_issued'
   | 'guardian_consent_reminder'
+  | 'seat_reservation_expiring'
+  | 'class_access_ready'
   | 'enrollment_certificate_issued'
   | 'certificate_issued'
 
@@ -884,4 +896,74 @@ export interface NewEnrollmentInput {
   operationNumber: string
   /** Whether the staff member attached the receipt image while filling this in. */
   receiptAttached: boolean
+}
+
+/* -------------------------------------------------------------------------- */
+/* E-mail                                                                      */
+/* -------------------------------------------------------------------------- */
+
+/** Who the template is written to — it decides the tone and the address. */
+export type EmailAudience = 'student' | 'guardian'
+
+/**
+ * What the provider reported back over a rolling window. Delivery, bounce and
+ * failure only: opens would mean a tracking pixel on every message, and that is
+ * a consent question (Ley 29733), not a metric to add on the way past.
+ */
+export interface EmailFlowMetrics {
+  sent: number
+  delivered: number
+  /** Address rejected by the receiving server — it syncs back to the student. */
+  bounced: number
+  /** Never left the outbox: the provider errored and the retries ran out. */
+  failed: number
+}
+
+/**
+ * The values the preview renders with. Invented on purpose: the preview exists
+ * so somebody can check the wording, and rendering it over a real student would
+ * put their name and their course on a screen that has no reason to hold either
+ * (CLAUDE.md §8).
+ */
+export interface EmailSample {
+  studentName: string
+  guardianName: string
+  courseName: string
+  classGroupName: string
+  /** Integer cents, formatted at render time (CLAUDE.md §5). */
+  amountCents: number
+  /** ISO 8601 UTC, rendered in America/Lima. */
+  date: string
+}
+
+/**
+ * One automatic e-mail, as the catalog lists it. Nothing here is a send button:
+ * a transactional message is the consequence of something that happened in the
+ * domain — a payment approved, a document issued — and the outbox carries it
+ * (`docs/DOCUMENTOS-E-CERTIFICADOS.md` §4). The screen only says whether the
+ * platform is allowed to send it, and what it looks like when it does.
+ */
+export interface EmailFlow {
+  template: EmailTemplate
+  audience: EmailAudience
+  /** Whether the outbox may send it at all. Off means nobody receives it. */
+  enabled: boolean
+  /** Version of the template in the repository — bumped, never edited in place. */
+  version: number
+  /** When that version landed. */
+  updatedAt: string
+  /** Rolling window, `EmailMetrics.windowDays` long. */
+  metrics: EmailFlowMetrics
+  sample: EmailSample
+}
+
+/** The section header — the same window, summed over every flow. */
+export interface EmailMetrics {
+  windowDays: number
+  sent: number
+  delivered: number
+  bounced: number
+  failed: number
+  /** Flows currently switched off — nobody is receiving those. */
+  paused: number
 }
