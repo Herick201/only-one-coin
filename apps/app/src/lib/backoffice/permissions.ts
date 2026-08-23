@@ -140,3 +140,24 @@ export function canBrowseEnrollments(role: StaffRole): boolean {
 export function canCreateEnrollment(role: StaffRole): boolean {
   return role === 'admin' || role === 'coordinator'
 }
+
+/**
+ * Who opens the team directory — the panel's own accounts, their cargos and
+ * their second factor. Admin only, and for the reason the section exists at
+ * all: it is the surface where a cargo changes, and the anti-escalation rule
+ * gives that to `admin` alone (CLAUDE.md §8). Coordination runs the academic
+ * side and never promotes anybody, so it is not shown a roster whose only
+ * actions it may not take.
+ */
+export function canManageStaff(role: StaffRole): boolean {
+  return role === 'admin'
+}
+
+/**
+ * Cargos that must carry a second factor (CLAUDE.md §8). Not a preference: an
+ * account on one of these without MFA enrolled is a finding the directory has
+ * to show, because it is one password away from the whole panel.
+ */
+export function requiresMfa(role: StaffRole): boolean {
+  return role === 'admin' || role === 'treasury' || role === 'mass_approver'
+}

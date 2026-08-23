@@ -170,6 +170,7 @@ export default async function BackofficeHomePage({
       label: t('nav.staff'),
       body: t('modules.staff'),
       icon: UserCog,
+      ready: true,
     },
     {
       href: '/backoffice/settings',

@@ -90,7 +90,19 @@ Domínio e fila já existem, independentes dessa escolha:
   grade da semana com as turmas já atribuídas sobrepostas — e as turmas do
   docente. A ficha é onde se tira alguém do quadro e se devolve: a confirmação
   avisa quantas turmas em andamento ainda apontam para ele, e o contrato deixa
-  de ser vigiado enquanto estiver inativo). O papel `teacher` já entra numa
+  de ser vigiado enquanto estiver inativo) e equipe (`/backoffice/team`: as
+  contas que abrem o painel, em duas abas — **Com acesso** e **Sem acesso** —
+  com busca, filtro por cargo e filtro de segundo fator pendente; cada linha
+  mostra o cargo, se o MFA exigido pelo cargo já foi configurado e o último
+  ingresso, e a conta de docente aponta pra ficha do plantel. Abrir conta é só
+  nome, e-mail e cargo — sem senha na tela, credenciais por e-mail — e a conta
+  de docente é aberta sobre alguém que já está no plantel e ainda não tem
+  conta. Mudar cargo passa por um diálogo que pede a senha do próprio admin
+  (reautenticação fresca, `CLAUDE.md` §8) e escreve na bitácora de cargos que
+  fica abaixo da lista; o cargo `teacher` não entra nem sai por ali, porque
+  anda junto com a ficha do plantel. Tirar acesso não apaga ninguém — a conta
+  vai pra aba **Sem acesso** e volta de lá. A seção inteira é de `admin`; os
+  outros papéis veem a tela bloqueada). O papel `teacher` já entra numa
   **visão restrita**: menu reduzido,
   home própria (turmas, alunos, notas e certificados pendentes dele), só as
   próprias turmas na lista e na ficha da turma, e alunos/pagamentos bloqueados —
