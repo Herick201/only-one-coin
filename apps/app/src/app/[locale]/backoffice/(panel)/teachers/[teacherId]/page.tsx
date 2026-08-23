@@ -10,10 +10,7 @@ import {
   canManageTeachers,
   isRestrictedToOwnClassGroups,
 } from '@/lib/backoffice/permissions'
-import { countryName, flagEmoji } from '@/lib/geo'
-import { initials } from '@/lib/format'
-import { Card, MockNotice, StatusBadge } from '@/components/backoffice/ui'
-import { teacherTone } from '@/components/backoffice/status-tone'
+import { MockNotice } from '@/components/backoffice/ui'
 import { BoIcon } from '@/components/backoffice/icons'
 import { TeacherFile } from './teacher-file'
 
@@ -43,8 +40,6 @@ export default async function TeacherDetailPage({
   const teacher = getTeacher(teacherId)
   if (!teacher) notFound()
 
-  const fullName = `${teacher.firstName} ${teacher.lastName}`
-
   /* Clearing a teacher for a language means picking from the catalog — a new
      language is a course row, never a code branch (CLAUDE.md §1). */
   const catalogue = [
@@ -67,30 +62,8 @@ export default async function TeacherDetailPage({
         </Link>
       )}
 
-      <Card className="p-5">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-sky text-base font-semibold text-brand-blue-deep">
-              {initials(teacher.firstName, teacher.lastName)}
-            </span>
-            <div className="min-w-0">
-              <h1 className="truncate text-xl font-semibold tracking-tight text-ink">
-                {fullName}
-              </h1>
-              <p className="mt-0.5 truncate text-sm text-muted-foreground">
-                {`${flagEmoji(teacher.nationality)} ${countryName(teacher.nationality, locale)} · ${teacher.languages
-                  .map((language) => language.name)
-                  .join(' · ')}`}
-              </p>
-            </div>
-          </div>
-          <StatusBadge
-            tone={teacherTone[teacher.status]}
-            label={t(`teacher_status.${teacher.status}`)}
-          />
-        </div>
-      </Card>
-
+      {/* The identity header belongs to `TeacherFile`: the status is changed
+          from it, and it is the client half that owns that state. */}
       <MockNotice label={t('common.mock_notice')} />
 
       <TeacherFile

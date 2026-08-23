@@ -25,9 +25,11 @@ import type {
   StaffUser,
   StudentDetail,
   StudentRow,
+  TeacherContract,
   TeacherDetail,
   TeacherRow,
 } from './types'
+import { daysUntil } from './contract'
 
 /**
  * Mock backoffice dataset for the UI/UX phase. Every value is shaped like the
@@ -83,6 +85,7 @@ function enrollment(
     currency: 'PEN',
     paymentStatus: 'approved',
     paymentMethod: 'yape',
+    paymentMethodDetail: null,
     operationNumber: '00871245',
     paidAt: '2026-07-02T14:12:00Z',
     progressPct: 45,
@@ -630,6 +633,7 @@ function pendingStudent(receipt: PendingReceipt): StudentDetail {
         // is the extraction's problem, not the enrollment's (CLAUDE.md §5).
         amountCents: receipt.expectedAmountCents,
         paymentMethod: receipt.method,
+        paymentMethodDetail: null,
         operationNumber: receipt.operationNumber,
         createdAt: receipt.submittedAt,
         paidAt: null,
@@ -703,6 +707,7 @@ const students: StudentDetail[] = [
         planPriceId: 'pp_pt_i_v2',
         amountCents: 5990,
         paymentMethod: 'plin',
+        paymentMethodDetail: null,
         operationNumber: '55120398',
         createdAt: '2026-07-28T16:40:00Z',
         paidAt: '2026-07-28T16:31:00Z',
@@ -923,6 +928,7 @@ const students: StudentDetail[] = [
         planPriceId: 'pp_qu_i_v1',
         amountCents: 5490,
         paymentMethod: 'bcp',
+        paymentMethodDetail: null,
         operationNumber: '77120054',
         createdAt: '2026-07-19T11:05:00Z',
         paidAt: '2026-07-19T10:58:00Z',
@@ -1001,6 +1007,7 @@ const students: StudentDetail[] = [
         planPriceId: 'pp_it_i_v1',
         amountCents: 6490,
         paymentMethod: 'interbank',
+        paymentMethodDetail: null,
         operationNumber: '31882004',
         createdAt: '2025-09-14T17:45:00Z',
         paidAt: '2025-09-14T17:33:00Z',
@@ -1074,6 +1081,7 @@ const students: StudentDetail[] = [
         planPriceId: 'pp_fr_i_v2',
         amountCents: 6490,
         paymentMethod: 'yape',
+        paymentMethodDetail: null,
         operationNumber: null,
         createdAt: '2026-08-19T02:15:00Z',
         paidAt: null,
@@ -1201,6 +1209,7 @@ const students: StudentDetail[] = [
         planPriceId: 'pp_de_i_v1',
         amountCents: 6990,
         paymentMethod: 'plin',
+        paymentMethodDetail: null,
         operationNumber: '61220874',
         createdAt: '2026-07-30T20:50:00Z',
         paidAt: '2026-07-30T20:41:00Z',
@@ -1252,6 +1261,7 @@ const students: StudentDetail[] = [
         planPriceId: 'pp_pt_i_v2',
         amountCents: 5990,
         paymentMethod: 'yape',
+        paymentMethodDetail: null,
         operationNumber: '00611233',
         createdAt: '2026-04-02T11:00:00Z',
         paidAt: null,
@@ -2349,10 +2359,16 @@ function slots(
  * class group with a "docente ítalo-peruano" (`docs/REGRAS-NEGOCIO.md` §3), so
  * origin is catalogue data the ficha carries (`docs/REQUISITOS.md` RF03).
  */
-const teachers: (Omit<
+const teachers: Omit<
   TeacherDetail,
-  'activeClassGroups' | 'studentCount' | 'pendingGrades' | 'pendingCertificates' | 'classGroups'
->)[] = [
+  | 'activeClassGroups'
+  | 'studentCount'
+  | 'pendingGrades'
+  | 'pendingCertificates'
+  | 'classGroups'
+  /* Derived from `contract` against the request's clock, not seeded. */
+  | 'contractDaysLeft'
+>[] = [
   {
     id: 'tea_01',
     firstName: 'Carlos',
@@ -2362,6 +2378,19 @@ const teachers: (Omit<
     status: 'active',
     languages: [LANGUAGES.en],
     nationality: 'PE',
+    nationalIdType: 'DNI',
+    nationalId: '41028873',
+    country: 'PE',
+    region: 'Lima',
+    city: 'Lima',
+    addressLine: 'Av. Arequipa 2450, dpto. 502, Lince',
+    contract: {
+      fileName: 'contrato-carlos-meza-2026.pdf',
+      fileSizeBytes: 184320,
+      uploadedAt: '2026-01-08T14:20:00Z',
+      startsAt: '2026-01-05',
+      endsAt: '2026-12-31',
+    },
     joinedAt: '2023-03-06',
     availability: [
       ...slots(['mon', 'wed'], '17:00', '21:00'),
@@ -2377,6 +2406,19 @@ const teachers: (Omit<
     status: 'active',
     languages: [LANGUAGES.en],
     nationality: 'PE',
+    nationalIdType: 'DNI',
+    nationalId: '44190226',
+    country: 'PE',
+    region: 'Lima',
+    city: 'Lima',
+    addressLine: 'Jr. Manuel Segura 118, Lince',
+    contract: {
+      fileName: 'contrato-andrea-solis-2026.pdf',
+      fileSizeBytes: 176128,
+      uploadedAt: '2026-01-15T14:20:00Z',
+      startsAt: '2026-01-15',
+      endsAt: '2026-09-30',
+    },
     joinedAt: '2024-01-15',
     availability: [
       ...slots(['tue', 'thu'], '18:00', '22:00'),
@@ -2392,6 +2434,19 @@ const teachers: (Omit<
     status: 'active',
     languages: [LANGUAGES.it],
     nationality: 'IT',
+    nationalIdType: 'DNI',
+    nationalId: '09887321',
+    country: 'PE',
+    region: 'Cusco',
+    city: 'Cusco',
+    addressLine: 'Calle Saphi 470, Cusco',
+    contract: {
+      fileName: 'contrato-paola-benitez-2026.pdf',
+      fileSizeBytes: 192512,
+      uploadedAt: '2026-02-02T14:20:00Z',
+      startsAt: '2026-02-01',
+      endsAt: '2026-10-05',
+    },
     joinedAt: '2022-08-22',
     availability: [
       ...slots(['mon', 'wed'], '18:00', '22:00'),
@@ -2407,6 +2462,19 @@ const teachers: (Omit<
     status: 'active',
     languages: [LANGUAGES.fr],
     nationality: 'FR',
+    nationalIdType: 'CE',
+    nationalId: '001788452',
+    country: 'PE',
+    region: 'Lima',
+    city: 'Miraflores',
+    addressLine: 'Av. Larco 743, dpto. 1102, Miraflores',
+    contract: {
+      fileName: 'contrato-marion-lefevre-2026.pdf',
+      fileSizeBytes: 203776,
+      uploadedAt: '2026-03-11T14:20:00Z',
+      startsAt: '2026-03-10',
+      endsAt: '2027-03-09',
+    },
     joinedAt: '2024-06-03',
     availability: [
       ...slots(['tue', 'thu'], '18:00', '21:00'),
@@ -2422,6 +2490,13 @@ const teachers: (Omit<
     status: 'active',
     languages: [LANGUAGES.qu],
     nationality: 'PE',
+    nationalIdType: 'DNI',
+    nationalId: '47720184',
+    country: 'PE',
+    region: 'Cusco',
+    city: 'Cusco',
+    addressLine: 'Urb. Magisterio A-12, Cusco',
+    contract: null,
     joinedAt: '2023-09-11',
     availability: [
       ...slots(['tue'], '17:00', '20:00'),
@@ -2437,6 +2512,19 @@ const teachers: (Omit<
     status: 'active',
     languages: [LANGUAGES.de],
     nationality: 'DE',
+    nationalIdType: 'CE',
+    nationalId: '001902337',
+    country: 'PE',
+    region: 'Lima',
+    city: 'Lima',
+    addressLine: 'Calle Los Nogales 285, San Isidro',
+    contract: {
+      fileName: 'contrato-klaus-brenner-2026.pdf',
+      fileSizeBytes: 188416,
+      uploadedAt: '2025-09-01T14:20:00Z',
+      startsAt: '2025-09-01',
+      endsAt: '2026-08-31',
+    },
     joinedAt: '2025-02-17',
     availability: [...slots(['mon', 'wed'], '18:00', '22:00')],
   },
@@ -2449,6 +2537,19 @@ const teachers: (Omit<
     status: 'active',
     languages: [LANGUAGES.pt],
     nationality: 'BR',
+    nationalIdType: 'passport',
+    nationalId: 'FT902118',
+    country: 'BR',
+    region: null,
+    city: 'São Paulo',
+    addressLine: 'Rua Augusta 1508, ap. 84, São Paulo',
+    contract: {
+      fileName: 'contrato-bruno-antunes-2026.pdf',
+      fileSizeBytes: 180224,
+      uploadedAt: '2026-02-20T14:20:00Z',
+      startsAt: '2026-02-20',
+      endsAt: '2027-02-19',
+    },
     joinedAt: '2025-07-28',
     availability: [...slots(['sat'], '08:00', '13:00')],
   },
@@ -2463,6 +2564,19 @@ const teachers: (Omit<
     status: 'active',
     languages: [LANGUAGES.en, LANGUAGES.pt],
     nationality: 'PE',
+    nationalIdType: 'DNI',
+    nationalId: '43118902',
+    country: 'PE',
+    region: 'Arequipa',
+    city: 'Arequipa',
+    addressLine: 'Calle Jerusalén 402, Arequipa',
+    contract: {
+      fileName: 'contrato-ana-beltran-2026.pdf',
+      fileSizeBytes: 171008,
+      uploadedAt: '2025-08-18T14:20:00Z',
+      startsAt: '2025-08-18',
+      endsAt: '2026-08-17',
+    },
     joinedAt: '2022-04-04',
     availability: [
       ...slots(['mon', 'tue', 'wed', 'thu'], '15:00', '19:00'),
@@ -2478,6 +2592,19 @@ const teachers: (Omit<
     status: 'active',
     languages: [LANGUAGES.qu],
     nationality: 'PE',
+    nationalIdType: 'DNI',
+    nationalId: '48802173',
+    country: 'PE',
+    region: 'Puno',
+    city: 'Juliaca',
+    addressLine: 'Jr. Huancané 730, Juliaca',
+    contract: {
+      fileName: 'contrato-nilda-puma-2026.pdf',
+      fileSizeBytes: 166912,
+      uploadedAt: '2026-04-06T14:20:00Z',
+      startsAt: '2026-04-06',
+      endsAt: '2027-04-05',
+    },
     joinedAt: '2024-10-19',
     availability: [...slots(['fri'], '17:00', '21:00'), ...slots(['sun'], '09:00', '12:00')],
   },
@@ -2492,6 +2619,19 @@ const teachers: (Omit<
     status: 'inactive',
     languages: [LANGUAGES.it],
     nationality: 'IT',
+    nationalIdType: 'CE',
+    nationalId: '001655209',
+    country: 'PE',
+    region: 'Lima',
+    city: 'Lima',
+    addressLine: 'Av. Petit Thouars 1890, Lince',
+    contract: {
+      fileName: 'contrato-paolo-grimaldi-2026.pdf',
+      fileSizeBytes: 197632,
+      uploadedAt: '2026-01-22T14:20:00Z',
+      startsAt: '2026-01-20',
+      endsAt: '2026-11-30',
+    },
     joinedAt: '2021-05-10',
     availability: [],
   },
@@ -2504,6 +2644,19 @@ const teachers: (Omit<
     status: 'inactive',
     languages: [LANGUAGES.de],
     nationality: 'DE',
+    nationalIdType: 'passport',
+    nationalId: 'C4Z8801PP',
+    country: 'PE',
+    region: 'Lima',
+    city: 'Miraflores',
+    addressLine: 'Calle Berlín 690, dpto. 305, Miraflores',
+    contract: {
+      fileName: 'contrato-katrin-wolf-2026.pdf',
+      fileSizeBytes: 174080,
+      uploadedAt: '2026-05-04T14:20:00Z',
+      startsAt: '2026-05-04',
+      endsAt: '2027-05-03',
+    },
     joinedAt: '2021-11-02',
     availability: [],
   },
@@ -2516,6 +2669,19 @@ const teachers: (Omit<
     status: 'inactive',
     languages: [LANGUAGES.fr],
     nationality: 'FR',
+    nationalIdType: 'CE',
+    nationalId: '001744820',
+    country: 'PE',
+    region: 'Lima',
+    city: 'Lima',
+    addressLine: 'Av. Salaverry 3120, Magdalena',
+    contract: {
+      fileName: 'contrato-claire-dubois-2026.pdf',
+      fileSizeBytes: 169984,
+      uploadedAt: '2026-03-02T14:20:00Z',
+      startsAt: '2026-03-01',
+      endsAt: '2026-09-15',
+    },
     joinedAt: '2020-09-14',
     availability: [],
   },
@@ -2541,11 +2707,29 @@ function teacherLoad(teacherId: string) {
   }
 }
 
-export function listTeachers(): TeacherRow[] {
+/**
+ * Days left on the contract, against the request's clock. Handed down as a
+ * number so the component never computes a date: it would hydrate a different
+ * figure than the server rendered.
+ */
+function contractCountdown(
+  contract: TeacherContract | null,
+  now: Date,
+): { contractDaysLeft: number | null } {
+  return {
+    contractDaysLeft: contract ? daysUntil(contract.endsAt, now) : null,
+  }
+}
+
+export function listTeachers(now: Date = new Date()): TeacherRow[] {
   return teachers
     .map(({ availability, ...teacher }) => {
       void availability
-      return { ...teacher, ...teacherLoad(teacher.id) }
+      return {
+        ...teacher,
+        ...teacherLoad(teacher.id),
+        ...contractCountdown(teacher.contract, now),
+      }
     })
     .sort(
       (a, b) =>
@@ -2553,12 +2737,16 @@ export function listTeachers(): TeacherRow[] {
     )
 }
 
-export function getTeacher(id: string): TeacherDetail | undefined {
+export function getTeacher(
+  id: string,
+  now: Date = new Date(),
+): TeacherDetail | undefined {
   const teacher = teachers.find((item) => item.id === id)
   if (!teacher) return undefined
   return {
     ...teacher,
     ...teacherLoad(teacher.id),
+    ...contractCountdown(teacher.contract, now),
     /* Running first, then the finished ones that still owe a certificate:
        the file is opened either to allocate the next class group or to close
        the last one. */
@@ -2973,6 +3161,7 @@ export function listEnrollments(): EnrollmentRow[] {
         currency: item.currency,
         paymentStatus: item.paymentStatus,
         paymentMethod: item.paymentMethod,
+        paymentMethodDetail: item.paymentMethodDetail,
         operationNumber: item.operationNumber,
         createdAt: item.createdAt,
         paidAt: item.paidAt,
@@ -3021,6 +3210,9 @@ export function listSeatReservations(now: Date = new Date()): SeatReservation[] 
         classGroupId: row.classGroupId,
         paymentStatus: row.paymentStatus,
         flag: open?.flag ?? null,
+        // The queued receipt itself, so the row can open that one instead of
+        // handing the reader the whole queue back.
+        reviewId: open?.id ?? null,
         amountCents: row.amountCents,
         currency: row.currency,
         reservedAt: row.createdAt,

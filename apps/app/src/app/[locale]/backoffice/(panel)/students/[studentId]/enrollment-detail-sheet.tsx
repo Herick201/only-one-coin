@@ -2,7 +2,7 @@
 
 import { useLocale, useTranslations } from 'next-intl'
 import type { EnrollmentHistoryItem } from '@/lib/backoffice/types'
-import { paymentMethodLabel } from '@/lib/payment-method'
+import { formatPaymentMethod } from '@/lib/payment-method'
 import { formatDate, formatDateTime, formatMoney, type Locale } from '@/lib/format'
 import { Field, Meter, SectionTitle, StatusBadge } from '@/components/backoffice/ui'
 import {
@@ -110,7 +110,11 @@ export function EnrollmentDetailSheet({
                     />
                   </Field>
                   <Field label={t('student_file.field_payment_method')}>
-                    {paymentMethodLabel[enrollment.paymentMethod]}
+                    {formatPaymentMethod(
+                      enrollment.paymentMethod,
+                      enrollment.paymentMethodDetail,
+                      t('payment_method.other'),
+                    )}
                   </Field>
                   <Field label={t('student_file.field_operation')}>
                     {enrollment.operationNumber ? (

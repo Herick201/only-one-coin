@@ -52,13 +52,17 @@ export function StatusBadge({
   tone,
   label,
   dot = true,
+  title,
 }: {
   tone: Tone
   label: string
   dot?: boolean
+  /** Hover text for the rule behind the badge — never for the badge's meaning. */
+  title?: string
 }) {
   return (
     <span
+      title={title}
       className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${toneClasses[tone]}`}
     >
       {dot && <span className={`h-1.5 w-1.5 rounded-full ${dotClasses[tone]}`} />}
@@ -124,16 +128,28 @@ export function SectionTitle({
 export function Field({
   label,
   children,
+  wrap = false,
 }: {
   label: string
   children: ReactNode
+  /**
+   * Let the value run onto a second line. Off by default — a grid of fields
+   * keeps its rhythm only while every cell is one line tall — and on for the
+   * few values that are a sentence, like a street address, where a cut-off
+   * ending is worse than an uneven row.
+   */
+  wrap?: boolean
 }) {
   return (
     <div className="min-w-0">
       <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </dt>
-      <dd className="mt-0.5 truncate text-sm font-medium text-ink">{children}</dd>
+      <dd
+        className={`mt-0.5 text-sm font-medium text-ink ${wrap ? 'break-words' : 'truncate'}`}
+      >
+        {children}
+      </dd>
     </div>
   )
 }
@@ -236,6 +252,17 @@ export const thClass =
   'whitespace-nowrap border-b border-line px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground'
 export const tdClass = 'border-b border-line/70 px-4 py-3 align-middle text-ink'
 
+/**
+ * The action that ends a table row — "open this one". Blue at rest so it reads
+ * as the live thing on the line, amber the moment it is touched, because that
+ * is the colour the panel uses for something waiting on a human.
+ *
+ * Shared rather than copied: two lists that send the reader to the same review
+ * queue must not offer it as two different-looking controls.
+ */
+export const rowActionClass =
+  'inline-flex items-center gap-1 rounded-lg border border-line px-2.5 py-1.5 text-sm font-semibold text-brand-blue transition hover:border-brand-yellow hover:bg-cream hover:text-ink focus-visible:border-brand-yellow focus-visible:bg-cream focus-visible:text-ink active:border-brand-yellow active:bg-cream active:text-ink'
+
 /** Small progress meter used for seat pressure. */
 export function Meter({ value, max, tone }: { value: number; max: number; tone: Tone }) {
   const pct = max === 0 ? 0 : Math.min(100, Math.round((value / max) * 100))
@@ -316,5 +343,33 @@ export function MockNotice({ label }: { label: string }) {
       <BoIcon name="alert" size={14} className="mt-0.5 shrink-0" />
       {label}
     </p>
+  )
+}
+
+/**
+ * The mark that says a field has to be filled in. An asterisk carries no
+ * meaning on its own — a screen reader announces "star" — so the word rides
+ * along invisibly, translated like everything else (CLAUDE.md §4).
+ */
+export function RequiredMark({ label }: { label: string }) {
+  return (
+    <>
+      <span aria-hidden="true" className="ml-0.5 text-red-500">
+        *
+      </span>
+      <span className="sr-only">{` ${label}`}</span>
+    </>
+  )
+}
+
+/**
+ * Its counterpart, spelled out rather than marked: on a form where nearly
+ * everything is required, the exception is what needs saying.
+ */
+export function OptionalMark({ label }: { label: string }) {
+  return (
+    <span className="ml-1 font-normal normal-case text-muted-foreground">
+      {`(${label})`}
+    </span>
   )
 }

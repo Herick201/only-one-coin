@@ -22,13 +22,21 @@ import { ReviewQueueView } from './review-queue-view'
  * backend; the data and the role gate come from the server. Each row carries
  * its extraction, so opening one shows the image next to what the model read
  * without a second round trip.
+ *
+ * `?receipt=` names one of them. It is how the other screens hand a specific
+ * case over — a held seat, a payment line — instead of leaving the reader to
+ * find in the queue the row they were already looking at. An id that matches
+ * nothing just opens the queue: a stale link is not an error page.
  */
 export default async function PaymentsReviewPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>
+  searchParams: Promise<{ receipt?: string }>
 }) {
   const { locale } = await params
+  const { receipt } = await searchParams
   setRequestLocale(locale)
   const t = await getTranslations('bo')
 
@@ -79,6 +87,7 @@ export default async function PaymentsReviewPage({
         rows={listReviewQueue()}
         extractions={listReceiptExtractions()}
         canReview={canReviewPayments(staff.role)}
+        openReceiptId={receipt ?? null}
       />
     </div>
   )

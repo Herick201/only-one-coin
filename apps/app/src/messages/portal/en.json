@@ -75,7 +75,8 @@
       "legal_guardian": "Legal guardian"
     },
     "payment_method": {
-      "label": "Payment method"
+      "label": "Payment method",
+      "other": "Other method"
     },
     "weekday_short": {
       "0": "Sun",

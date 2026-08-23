@@ -7,10 +7,18 @@ import type {
   AvailabilitySlot,
   CourseLanguage,
   TeacherDetail,
+  TeacherStatus,
 } from '@/lib/backoffice/types'
 import { weekColumns, weeklyHours } from '@/lib/backoffice/availability'
 import { COUNTRIES, countryName, flagEmoji } from '@/lib/geo'
-import { formatDate, formatDateRange, type Locale } from '@/lib/format'
+import {
+  formatDate,
+  formatDateRange,
+  formatDateTime,
+  formatFileSize,
+  initials,
+  type Locale,
+} from '@/lib/format'
 import {
   Card,
   EmptyState,
@@ -23,7 +31,13 @@ import {
   thClass,
 } from '@/components/backoffice/ui'
 import { Toast } from '@/components/backoffice/controls'
-import { classGroupTone, seatPressureTone } from '@/components/backoffice/status-tone'
+import { ContractBadge } from '@/components/backoffice/contract-badge'
+import { PhoneField } from '@/components/backoffice/phone-field'
+import {
+  classGroupTone,
+  seatPressureTone,
+  teacherTone,
+} from '@/components/backoffice/status-tone'
 import { BoIcon } from '@/components/backoffice/icons'
 import { AvailabilityFields, slotsAreValid } from '../availability-fields'
 import { AutoGrid } from '@/components/layout/auto-grid'
@@ -62,6 +76,15 @@ export function TeacherFile({
   const [tab, setTab] = useState<Tab>('data')
   const [toast, setToast] = useState<string | null>(null)
 
+  /**
+   * On or off the roster. Out of it deletes nothing (`TeacherStatus`) — it is
+   * what coordination does when somebody stops teaching: a contract that
+   * lapsed, a term that ended. Local state only; the real write is a usecase in
+   * `apps/api` and lands in the append-only audit log (CLAUDE.md §8).
+   */
+  const [status, setStatus] = useState<TeacherStatus>(teacher.status)
+  const [confirmingExit, setConfirmingExit] = useState(false)
+
   const [editingData, setEditingData] = useState(false)
   const [email, setEmail] = useState(teacher.email)
   const [phone, setPhone] = useState(teacher.phone)
@@ -80,12 +103,10 @@ export function TeacherFile({
 
   /* Only class groups that are still running can conflict with a window — a
      finished one is history and would light up the grid forever. */
-  const columns = weekColumns(
-    availability,
-    teacher.classGroups.filter(
-      (group) => group.status === 'enrolling' || group.status === 'in_progress',
-    ),
+  const running = teacher.classGroups.filter(
+    (group) => group.status === 'enrolling' || group.status === 'in_progress',
   )
+  const columns = weekColumns(availability, running)
 
   const languages = catalogue.filter((language) => languageIds.includes(language.id))
 
@@ -108,6 +129,17 @@ export function TeacherFile({
     setToast(t('teacher_file.saved'))
   }
 
+  function leaveRoster() {
+    setStatus('inactive')
+    setConfirmingExit(false)
+    setToast(t('teacher_file.deactivated_toast'))
+  }
+
+  function rejoinRoster() {
+    setStatus('active')
+    setToast(t('teacher_file.activated_toast'))
+  }
+
   const editButton = (onClick: () => void) => (
     <button
       type="button"
@@ -121,6 +153,93 @@ export function TeacherFile({
 
   return (
     <div className="flex flex-col gap-5">
+      {/* The header lives here rather than on the page because the status is
+          changed from it, and two components owning one status disagree. */}
+      <Card className="p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-sky text-base font-semibold text-brand-blue-deep">
+              {initials(teacher.firstName, teacher.lastName)}
+            </span>
+            <div className="min-w-0">
+              <h1 className="truncate text-xl font-semibold tracking-tight text-ink">
+                {`${teacher.firstName} ${teacher.lastName}`}
+              </h1>
+              <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                {`${flagEmoji(nationality)} ${countryName(nationality, locale)} · ${languages
+                  .map((language) => language.name)
+                  .join(' · ')}`}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge
+              tone={teacherTone[status]}
+              label={t(`teacher_status.${status}`)}
+            />
+            {canEdit &&
+              !confirmingExit &&
+              (status === 'active' ? (
+                <button
+                  type="button"
+                  onClick={() => setConfirmingExit(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-sm font-semibold text-muted-foreground transition hover:border-red-300 hover:text-red-600"
+                >
+                  <BoIcon name="close" size={15} />
+                  {t('teacher_file.deactivate')}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={rejoinRoster}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-sm font-semibold text-brand-blue transition hover:border-brand-blue"
+                >
+                  <BoIcon name="check" size={15} />
+                  {t('teacher_file.activate')}
+                </button>
+              ))}
+          </div>
+        </div>
+
+        {/* Asked in place rather than in a modal: the consequence is about the
+            class groups on this very page, and it is worth reading, not
+            dismissing. */}
+        {confirmingExit && (
+          <div className="mt-4 rounded-lg border border-red-200 bg-red-50/60 p-3">
+            <p className="text-sm font-semibold text-ink">
+              {t('teacher_file.deactivate_title')}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t('teacher_file.deactivate_body')}
+            </p>
+            {running.length > 0 && (
+              <p className="mt-2 flex items-start gap-2 text-xs font-semibold text-red-700">
+                <BoIcon name="alert" size={14} className="mt-0.5 shrink-0" />
+                {t('teacher_file.deactivate_class_groups', { count: running.length })}
+              </p>
+            )}
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={leaveRoster}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+              >
+                <BoIcon name="check" size={16} />
+                {t('teacher_file.deactivate')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmingExit(false)}
+                className="rounded-lg border border-line bg-white px-3.5 py-2 text-sm font-semibold text-muted-foreground transition hover:text-ink"
+              >
+                {t('teacher_file.cancel')}
+              </button>
+            </div>
+          </div>
+        )}
+      </Card>
+
       <div className="flex gap-1 overflow-x-auto border-b border-line [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {TABS.map((value) => {
           const active = tab === value
@@ -168,12 +287,7 @@ export function TeacherFile({
                 </label>
                 <label className="flex flex-col gap-1">
                   <span className={labelClass}>{t('teachers.field_phone')}</span>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(event) => setPhone(event.target.value)}
-                    className={fieldClass}
-                  />
+                  <PhoneField value={phone} onChange={setPhone} />
                 </label>
                 <label className="flex flex-col gap-1">
                   <span className={labelClass}>{t('teachers.field_nationality')}</span>
@@ -242,10 +356,28 @@ export function TeacherFile({
             </div>
           ) : (
             <AutoGrid as="dl" min="17rem">
+              <Field label={t('teachers.field_id_number')}>
+                {t('students.document', {
+                  type: t(`national_id_type.${teacher.nationalIdType}`),
+                  number: teacher.nationalId,
+                })}
+              </Field>
               <Field label={t('teachers.field_email')}>{email}</Field>
               <Field label={t('teachers.field_phone')}>{phone}</Field>
               <Field label={t('teachers.field_nationality')}>
                 {`${flagEmoji(nationality)} ${countryName(nationality, locale)}`}
+              </Field>
+              {/* Where they live, which the contract is signed against — not
+                  the same question as the origin above it. */}
+              <Field label={t('teachers.field_address_line')} wrap>
+                {[
+                  teacher.addressLine,
+                  teacher.city,
+                  teacher.region,
+                  countryName(teacher.country, locale),
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
               </Field>
               <Field label={t('teachers.field_languages')}>
                 {languages.map((language) => language.name).join(' · ')}
@@ -261,6 +393,58 @@ export function TeacherFile({
               </Field>
             </AutoGrid>
           )}
+
+          {/* The contract, on the same tab as the person it binds. Its own
+              block rather than a field, because "no contract on file" has to
+              read as a finding and not as an empty cell. */}
+          <div className="mt-5 border-t border-line pt-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {t('teachers.section_contract')}
+              </p>
+              {/* Nothing to warn about off the roster: the countdown is there
+                  to stop somebody teaching on a lapsed contract, and nobody
+                  inactive is teaching. The document itself stays on file. */}
+              {status === 'active' ? (
+                <ContractBadge
+                  contract={teacher.contract}
+                  daysLeft={teacher.contractDaysLeft}
+                />
+              ) : (
+                <span className="text-xs text-muted-foreground">
+                  {t('teachers.contract_inactive')}
+                </span>
+              )}
+            </div>
+
+            {teacher.contract ? (
+              <div className="mt-3 flex flex-wrap items-center gap-3 rounded-lg border border-line bg-sky-soft px-3 py-2.5">
+                <BoIcon name="doc" size={16} className="shrink-0 text-brand-blue" />
+                <span className="flex min-w-0 flex-col">
+                  <span className="truncate text-sm font-semibold text-ink">
+                    {teacher.contract.fileName}
+                  </span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    {t('teachers.contract_file_meta', {
+                      date: formatDateTime(teacher.contract.uploadedAt, locale),
+                      size: formatFileSize(teacher.contract.fileSizeBytes, locale),
+                    })}
+                  </span>
+                </span>
+                <span className="ml-auto text-xs font-medium tabular-nums text-muted-foreground">
+                  {formatDateRange(
+                    teacher.contract.startsAt,
+                    teacher.contract.endsAt,
+                    locale,
+                  )}
+                </span>
+              </div>
+            ) : (
+              <p className="mt-3 text-xs text-muted-foreground">
+                {t('teachers.contract_none_body')}
+              </p>
+            )}
+          </div>
         </Card>
       )}
 

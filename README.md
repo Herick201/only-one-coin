@@ -60,13 +60,21 @@ Domínio e fila já existem, independentes dessa escolha:
   estado da matrícula, da vaga e do pagamento — com métricas do ciclo, busca,
   filtros por estado, vaga, idioma e ciclo, detalhe em modal e abertura manual de
   matrícula sobre aluno já cadastrado (vaga reservada, preço vigente somente
-  leitura, pagamento nunca aprovado dali); e
+  leitura, pagamento nunca aprovado dali, meio de pagamento com opção "outro"
+  que pede o texto que o nomeia); e
   `/backoffice/enrollments/reservations`, as vagas presas a um pagamento em
-  aberto, ordenadas pelo prazo em que o cron as devolve) e docentes
-  (`/backoffice/teachers`: plantel com busca, filtro por idioma, estado e "sem
-  turma", cadastro de docente, e ficha com dados, disponibilidade semanal — a
+  aberto, ordenadas pelo prazo em que o cron as devolve, com a linha abrindo
+  direto o comprovante que segura a vaga) e docentes
+  (`/backoffice/teachers`: plantel em duas abas — **Geral** (ativos) e
+  **Inativos** — com busca, filtro por idioma, "sem turma" e "contrato a
+  vencer", coluna de contrato com o alerta de vencimento; cadastro de docente —
+  identificação com documento, contato, endereço completo, docência e
+  contrato — e ficha com dados, contrato arquivado, disponibilidade semanal — a
   grade da semana com as turmas já atribuídas sobrepostas — e as turmas do
-  docente). O papel `teacher` já entra numa **visão restrita**: menu reduzido,
+  docente. A ficha é onde se tira alguém do quadro e se devolve: a confirmação
+  avisa quantas turmas em andamento ainda apontam para ele, e o contrato deixa
+  de ser vigiado enquanto estiver inativo). O papel `teacher` já entra numa
+  **visão restrita**: menu reduzido,
   home própria (turmas, alunos, notas e certificados pendentes dele), só as
   próprias turmas na lista e na ficha da turma, e alunos/pagamentos bloqueados —
   tudo escopado pelo `teacherId` da sessão, nunca por dado vindo do cliente. A

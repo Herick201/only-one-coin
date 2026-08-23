@@ -22,8 +22,19 @@ export type PaymentStatus =
   | 'approved'
   | 'rejected'
 
-/** Payment methods — lowercase, never translated (CLAUDE.md §4 glossary). */
-export type PaymentMethod = 'yape' | 'plin' | 'bcp' | 'interbank'
+/**
+ * The rails the institution is paid through — lowercase codes, never translated
+ * (CLAUDE.md §4 glossary).
+ */
+export type PaymentRail = 'yape' | 'plin' | 'bcp' | 'interbank'
+
+/**
+ * A rail, or anything else the money arrived by. `other` is not a fifth brand:
+ * it is the escape hatch for the deposit that came through a bank nobody
+ * listed, and it carries no label of its own — whoever records it writes what
+ * it was, and that text is the label (see `formatPaymentMethod`).
+ */
+export type PaymentMethod = PaymentRail | 'other'
 
 /** Seat lifecycle — CLAUDE.md §5: reserved → confirmed → released. */
 export type SeatStatus = 'reserved' | 'confirmed' | 'released'

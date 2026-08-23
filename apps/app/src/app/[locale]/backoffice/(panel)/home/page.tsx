@@ -130,6 +130,7 @@ export default async function BackofficeHomePage({
       label: t('nav.enrollments'),
       body: t('modules.enrollments'),
       icon: ClipboardList,
+      ready: true,
     },
     {
       href: '/backoffice/payments',
@@ -143,12 +144,14 @@ export default async function BackofficeHomePage({
       label: t('nav.courses'),
       body: t('modules.courses'),
       icon: BookOpen,
+      ready: true,
     },
     {
       href: '/backoffice/teachers',
       label: t('nav.teachers'),
       body: t('modules.teachers'),
       icon: GraduationCap,
+      ready: true,
     },
     {
       href: '/backoffice/emails',

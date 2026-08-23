@@ -15,6 +15,7 @@ import type {
   EnrollmentStatus,
   NationalIdType,
   PaymentMethod,
+  PaymentRail,
   PaymentStatus,
   SeatStatus,
 } from '@/lib/portal/types'
@@ -26,6 +27,7 @@ export type {
   EnrollmentStatus,
   NationalIdType,
   PaymentMethod,
+  PaymentRail,
   PaymentStatus,
   SeatStatus,
 }
@@ -115,6 +117,11 @@ export interface EnrollmentHistoryItem {
   currency: 'PEN'
   paymentStatus: PaymentStatus
   paymentMethod: PaymentMethod
+  /**
+   * Free text naming the method when it is `other` — what the operator wrote,
+   * and the only label that row has. Null on every rail.
+   */
+  paymentMethodDetail: string | null
   operationNumber: string | null
   /** When the payment was credited — null until it is approved. */
   paidAt: string | null
@@ -503,11 +510,37 @@ export interface AvailabilitySlot {
   endTime: string
 }
 
+/**
+ * The signed contract behind a teacher: a file and the window it covers. The
+ * file is what the Asociación can produce if anybody asks; the window is what
+ * the panel watches, because a teacher running a class group on an expired
+ * contract is the institution's problem, not the teacher's.
+ *
+ * Kept as a record of a document rather than as a document: the bytes live in
+ * the bucket behind a signed URL, exactly like a receipt (CLAUDE.md §8), and
+ * the row keeps only what a list has to be able to show.
+ */
+export interface TeacherContract {
+  /** What was filed, as the file was named. */
+  fileName: string
+  fileSizeBytes: number
+  uploadedAt: string
+  /** The window it covers — ISO date, rendered in America/Lima. */
+  startsAt: string
+  endsAt: string
+}
+
 /** One row of the teacher directory. */
 export interface TeacherRow {
   id: string
   firstName: string
   lastName: string
+  /**
+   * The document, same shape as a student's. A teacher signs a contract, and a
+   * contract is signed by somebody the institution can name on paper.
+   */
+  nationalIdType: NationalIdType
+  nationalId: string
   email: string
   phone: string
   status: TeacherStatus
@@ -525,6 +558,25 @@ export interface TeacherRow {
    * because it is personal data.
    */
   nationality: string
+  /**
+   * Where they live — not the same question as `nationality`, which is where
+   * they are from. The contract needs an address; the catalog needs an origin.
+   */
+  country: string
+  /** First-level division — `departamento` in Peru. Null outside it. */
+  region: string | null
+  city: string
+  /** Street line: what is missing from country/region/city to post a letter. */
+  addressLine: string
+  /** Null while nobody has filed one — which is itself worth flagging. */
+  contract: TeacherContract | null
+  /**
+   * Whole days to `contract.endsAt`, negative once the date has passed, null
+   * with no contract on file. Computed on the server clock and handed down like
+   * the reservation countdown: computing it inside the component would hydrate
+   * a different number than it rendered.
+   */
+  contractDaysLeft: number | null
   /** Class groups still enrolling or running. */
   activeClassGroups: number
   /** Seats taken across those class groups — the teaching load, in people. */
@@ -549,7 +601,19 @@ export interface TeacherDetail extends TeacherRow {
 /** What the creation form fills in. The rest is derived from the class groups. */
 export type NewTeacher = Pick<
   TeacherRow,
-  'firstName' | 'lastName' | 'email' | 'phone' | 'nationality' | 'languages'
+  | 'firstName'
+  | 'lastName'
+  | 'nationalIdType'
+  | 'nationalId'
+  | 'email'
+  | 'phone'
+  | 'nationality'
+  | 'country'
+  | 'region'
+  | 'city'
+  | 'addressLine'
+  | 'languages'
+  | 'contract'
 > & { availability: AvailabilitySlot[] }
 
 /* -------------------------------------------------------------------------- */
@@ -742,6 +806,11 @@ export interface EnrollmentRow {
   currency: 'PEN'
   paymentStatus: PaymentStatus
   paymentMethod: PaymentMethod
+  /**
+   * Free text naming the method when it is `other` — what the operator wrote,
+   * and the only label that row has. Null on every rail.
+   */
+  paymentMethodDetail: string | null
   operationNumber: string | null
   createdAt: string
   paidAt: string | null
@@ -781,6 +850,12 @@ export interface SeatReservation {
   paymentStatus: PaymentStatus
   /** Why the receipt is sitting with a human, when it is. */
   flag: ReviewFlag | null
+  /**
+   * The queued receipt holding this seat up, when there is one. It is what
+   * lets the row open that receipt instead of dropping the reader into the
+   * whole queue to find it again. Null while nobody has uploaded anything.
+   */
+  reviewId: string | null
   amountCents: number
   currency: 'PEN'
   reservedAt: string
@@ -804,6 +879,8 @@ export interface NewEnrollmentInput {
   studentId: string
   classGroupId: string
   method: PaymentMethod
+  /** Only when `method` is `other`: what the operator wrote it was. */
+  methodDetail: string | null
   operationNumber: string
   /** Whether the staff member attached the receipt image while filling this in. */
   receiptAttached: boolean

@@ -1,6 +1,9 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { getStaffSession, listStudents } from '@/lib/backoffice/mock-data'
-import { canBrowseStudents } from '@/lib/backoffice/permissions'
+import {
+  canBrowseStudents,
+  canCreateStudent,
+} from '@/lib/backoffice/permissions'
 import { EmptyState, MockNotice, PageHeader } from '@/components/backoffice/ui'
 import { StudentsTable } from './students-table'
 
@@ -39,7 +42,10 @@ export default async function StudentsPage({
     <div className="flex flex-col gap-5">
       <PageHeader title={t('students.title')} subtitle={t('students.subtitle')} />
       <MockNotice label={t('common.mock_notice')} />
-      <StudentsTable rows={listStudents()} />
+      <StudentsTable
+        rows={listStudents()}
+        canCreate={canCreateStudent(staff.role)}
+      />
     </div>
   )
 }

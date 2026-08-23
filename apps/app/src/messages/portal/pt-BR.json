@@ -75,7 +75,8 @@
       "legal_guardian": "Responsável legal"
     },
     "payment_method": {
-      "label": "Método de pagamento"
+      "label": "Método de pagamento",
+      "other": "Outro meio"
     },
     "weekday_short": {
       "0": "Dom",

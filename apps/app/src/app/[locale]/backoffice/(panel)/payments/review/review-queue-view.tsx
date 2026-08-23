@@ -17,6 +17,7 @@ import {
   TableShell,
   tdClass,
   thClass,
+  rowActionClass,
   Toolbar,
   toolbarSearchClass,
 } from '@/components/backoffice/ui'
@@ -61,11 +62,18 @@ export function ReviewQueueView({
   rows,
   extractions,
   canReview,
+  openReceiptId,
 }: {
   rows: ReviewQueueItem[]
   /** The extraction behind each queued receipt, keyed by the queue row. */
   extractions: Record<string, ReceiptExtraction>
   canReview: boolean
+  /**
+   * One receipt to open on arrival — another screen sent the reader straight
+   * to it. Honoured only if it is real and they may settle it: a link is a
+   * request, not a permission (CLAUDE.md §8).
+   */
+  openReceiptId?: string | null
 }) {
   const t = useTranslations('bo')
   const locale = useLocale() as Locale
@@ -73,7 +81,9 @@ export function ReviewQueueView({
   /** A settled receipt leaves the queue — that is the whole point of settling
    *  it. No server yet, so the removal lives here (see the mock notice). */
   const [queue, setQueue] = useState<ReviewQueueItem[]>(rows)
-  const [reviewing, setReviewing] = useState<string | null>(null)
+  const [reviewing, setReviewing] = useState<string | null>(() =>
+    canReview && openReceiptId && extractions[openReceiptId] ? openReceiptId : null,
+  )
   const [toast, setToast] = useState<string | null>(null)
 
   const [query, setQuery] = useState('')
@@ -318,7 +328,7 @@ export function ReviewQueueView({
                           <button
                             type="button"
                             onClick={() => setReviewing(row.id)}
-                            className="inline-flex items-center gap-1 rounded-lg border border-line px-2.5 py-1.5 text-sm font-semibold text-brand-blue transition hover:border-brand-yellow hover:bg-cream hover:text-ink"
+                            className={rowActionClass}
                           >
                             {t('receipt_review.open')}
                             <BoIcon name="chevron-right" size={14} />

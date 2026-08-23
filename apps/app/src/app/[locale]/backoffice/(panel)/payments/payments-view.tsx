@@ -10,7 +10,7 @@ import type {
   PaymentStatus,
 } from '@/lib/backoffice/types'
 import { formatDateTime, formatMoney, type Locale } from '@/lib/format'
-import { paymentMethodLabel } from '@/lib/payment-method'
+import { formatPaymentMethod } from '@/lib/payment-method'
 import {
   Card,
   EmptyState,
@@ -41,7 +41,14 @@ const STATUS_FILTERS: StatusFilter[] = [
   'rejected',
 ]
 
-const METHOD_FILTERS: MethodFilter[] = ['all', 'yape', 'plin', 'bcp', 'interbank']
+const METHOD_FILTERS: MethodFilter[] = [
+  'all',
+  'yape',
+  'plin',
+  'bcp',
+  'interbank',
+  'other',
+]
 
 const CONCEPT_FILTERS: ConceptFilter[] = ['all', 'course', 'document']
 
@@ -256,11 +263,12 @@ export function PaymentsView({
                   active={method === value}
                   onClick={() => reset(setMethod)(value)}
                   /* Rail names are proper nouns — never translated
-                     (CLAUDE.md §4 glossary). */
+                     (CLAUDE.md §4 glossary). Everything that came in by some
+                     other route is one chip, named in the reader's language. */
                   label={
                     value === 'all'
                       ? t('payments.filter_all')
-                      : paymentMethodLabel[value]
+                      : formatPaymentMethod(value, null, t('payment_method.other'))
                   }
                 />
               ))}
@@ -370,7 +378,11 @@ export function PaymentsView({
                       >
                         <span className="block font-semibold text-ink">
                           {row.method
-                            ? paymentMethodLabel[row.method]
+                            ? formatPaymentMethod(
+                                row.method,
+                                null,
+                                t('payment_method.other'),
+                              )
                             : t('payments.no_method')}
                         </span>
                       </td>
