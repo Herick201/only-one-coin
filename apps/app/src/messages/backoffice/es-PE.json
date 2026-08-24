@@ -588,22 +588,18 @@
       "guardian": "Apoderado"
     },
     "email_stage": {
-      "enrollment": {
-        "name": "La matrícula llega",
-        "detail": "Desde que el formulario se envía hasta que el comprobante entra en revisión."
-      },
-      "payment": {
-        "name": "El pago se resuelve",
-        "detail": "Lo que el alumno recibe mientras el comprobante se valida, y cuando se decide."
-      },
-      "access": {
-        "name": "El alumno entra",
-        "detail": "Las credenciales y el acceso al aula, antes de la primera clase."
-      },
-      "documents": {
-        "name": "Los documentos",
-        "detail": "La constancia que se solicita y el certificado del final."
-      }
+      "submitted": "Matrícula enviada",
+      "payment_pending": "Comprobante en validación",
+      "payment_settled": "Pago decidido",
+      "access": "Acceso liberado",
+      "documents": "Documentos del curso"
+    },
+    "email_condition": {
+      "guardian_consent_reminder": "si es menor de edad",
+      "payment_under_review": "si necesita revisión humana",
+      "seat_reservation_expiring": "si el pago no se cierra",
+      "payment_rejected": "si se rechaza",
+      "enrollment_certificate_issued": "si la solicita"
     },
     "email_preview": {
       "enrollment_submitted": {
@@ -726,12 +722,13 @@
       "tab_catalog": "Automáticos",
       "tab_journey": "Jornada",
       "new": "Nuevo envío",
-      "conditional": "Condicional",
-      "conditional_hint": "Solo sale si el caso toma ese camino.",
       "journey_title": "La jornada del alumno",
-      "journey_paused": "Pausado: en este punto nadie recibe nada.",
       "journey_empty": "Todavía no sale ningún correo en este punto.",
-      "journey_note": "El apoderado aparece solo cuando el alumno es menor de edad."
+      "help": "Cómo se lee",
+      "help_condition": "La etiqueta gris es la condición: ese correo solo sale si el caso toma ese camino.",
+      "help_guardian": "Apoderado: lo recibe él, no el alumno.",
+      "help_paused": "Pausado: ese correo está apagado y en ese punto nadie recibe nada.",
+      "help_open": "Cada recuadro abre el correo, con su plantilla."
     },
     "new_email": {
       "title": "Nuevo envío",

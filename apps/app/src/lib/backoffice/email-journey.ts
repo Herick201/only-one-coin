@@ -9,8 +9,9 @@ import type { EmailFlow, EmailStage } from './types'
  * stage it belongs to.
  */
 export const EMAIL_STAGES: EmailStage[] = [
-  'enrollment',
-  'payment',
+  'submitted',
+  'payment_pending',
+  'payment_settled',
   'access',
   'documents',
 ]

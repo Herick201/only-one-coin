@@ -588,22 +588,18 @@
       "guardian": "Apoderado"
     },
     "email_stage": {
-      "enrollment": {
-        "name": "A matrícula chega",
-        "detail": "Do envio do formulário até o comprovante entrar em revisão."
-      },
-      "payment": {
-        "name": "O pagamento se resolve",
-        "detail": "O que o aluno recebe enquanto o comprovante é validado, e quando se decide."
-      },
-      "access": {
-        "name": "O aluno entra",
-        "detail": "As credenciais e o acesso à sala, antes da primeira aula."
-      },
-      "documents": {
-        "name": "Os documentos",
-        "detail": "A constancia que se solicita e o certificado do fim."
-      }
+      "submitted": "Matrícula enviada",
+      "payment_pending": "Comprovante em validação",
+      "payment_settled": "Pagamento decidido",
+      "access": "Acesso liberado",
+      "documents": "Documentos do curso"
+    },
+    "email_condition": {
+      "guardian_consent_reminder": "se for menor de idade",
+      "payment_under_review": "se precisar de revisão humana",
+      "seat_reservation_expiring": "se o pagamento não fechar",
+      "payment_rejected": "se for rejeitado",
+      "enrollment_certificate_issued": "se ele solicitar"
     },
     "email_preview": {
       "enrollment_submitted": {
@@ -726,12 +722,13 @@
       "tab_catalog": "Automáticos",
       "tab_journey": "Jornada",
       "new": "Novo envio",
-      "conditional": "Condicional",
-      "conditional_hint": "Só sai se o caso tomar esse caminho.",
       "journey_title": "A jornada do aluno",
-      "journey_paused": "Pausado: neste ponto ninguém recebe nada.",
       "journey_empty": "Nenhum e-mail sai neste ponto ainda.",
-      "journey_note": "O apoderado aparece só quando o aluno é menor de idade."
+      "help": "Como se lê",
+      "help_condition": "A etiqueta cinza é a condição: esse e-mail só sai se o caso tomar aquele caminho.",
+      "help_guardian": "Apoderado: quem recebe é ele, não o aluno.",
+      "help_paused": "Pausado: esse e-mail está desligado e naquele ponto ninguém recebe nada.",
+      "help_open": "Cada quadro abre o e-mail, com o modelo dele."
     },
     "new_email": {
       "title": "Novo envio",

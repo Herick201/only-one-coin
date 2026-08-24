@@ -76,9 +76,11 @@ Domínio e fila já existem, independentes dessa escolha:
   de ser vigiado enquanto estiver inativo) e correio (`/backoffice/emails`, em
   três telas: **Automáticos**, o conjunto dos e-mails transacionais com
   destinatário, estado e enviados/entregues dos últimos 30 dias;
-  **Jornada** (`/backoffice/emails/journey`), os mesmos e-mails na ordem em que
-  o aluno os recebe — quatro etapas, marcando o que é ramo condicional e onde um
-  e-mail pausado deixa silêncio; e a página de cada e-mail
+  **Jornada** (`/backoffice/emails/journey`), o fluxo: a espinha são os eventos
+  do domínio (matrícula enviada, comprovante em validação, pagamento decidido,
+  acesso liberado, documentos) e os e-mails saem deles como ramos — tracejado e
+  com a condição escrita no conector quando o caso pode nunca tomar aquele
+  caminho, e cada quadro abre o e-mail; e a página de cada e-mail
   (`/backoffice/emails/[template]`), com a prévia renderizada do template
   versionado do repositório (dados de exemplo, nunca de aluno real), o
   liga/desliga do envio automático e a prova para até 5 endereços. **Novo envio**

@@ -588,22 +588,18 @@
       "guardian": "Guardian"
     },
     "email_stage": {
-      "enrollment": {
-        "name": "The enrollment arrives",
-        "detail": "From the form being submitted to the receipt entering review."
-      },
-      "payment": {
-        "name": "The payment is settled",
-        "detail": "What the student receives while the receipt is validated, and when it is decided."
-      },
-      "access": {
-        "name": "The student gets in",
-        "detail": "Credentials and classroom access, before the first class."
-      },
-      "documents": {
-        "name": "The documents",
-        "detail": "The certificate they request and the one that closes the course."
-      }
+      "submitted": "Enrollment submitted",
+      "payment_pending": "Receipt being validated",
+      "payment_settled": "Payment settled",
+      "access": "Access granted",
+      "documents": "Course documents"
+    },
+    "email_condition": {
+      "guardian_consent_reminder": "if the student is a minor",
+      "payment_under_review": "if it needs human review",
+      "seat_reservation_expiring": "if the payment does not settle",
+      "payment_rejected": "if it is rejected",
+      "enrollment_certificate_issued": "if they request it"
     },
     "email_preview": {
       "enrollment_submitted": {
@@ -726,12 +722,13 @@
       "tab_catalog": "Automatic",
       "tab_journey": "Journey",
       "new": "New send",
-      "conditional": "Conditional",
-      "conditional_hint": "Only goes out when the case takes that turn.",
       "journey_title": "The student’s journey",
-      "journey_paused": "Paused: at this point nobody receives anything.",
       "journey_empty": "No e-mail goes out at this point yet.",
-      "journey_note": "The guardian appears only when the student is a minor."
+      "help": "How to read it",
+      "help_condition": "The grey label is the condition: that e-mail only goes out when the case takes that turn.",
+      "help_guardian": "Guardian: they receive it, not the student.",
+      "help_paused": "Paused: that e-mail is switched off, and nobody receives anything at that point.",
+      "help_open": "Every box opens the e-mail, with its template."
     },
     "new_email": {
       "title": "New send",

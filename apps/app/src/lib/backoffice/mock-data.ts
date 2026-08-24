@@ -3279,7 +3279,7 @@ export function listEmailFlows(): EmailFlow[] {
     {
       template: 'enrollment_submitted',
       audience: 'student',
-      stage: 'enrollment',
+      stage: 'submitted',
       conditional: false,
       enabled: true,
       version: 4,
@@ -3290,7 +3290,7 @@ export function listEmailFlows(): EmailFlow[] {
     {
       template: 'guardian_consent_reminder',
       audience: 'guardian',
-      stage: 'enrollment',
+      stage: 'submitted',
       conditional: true,
       enabled: true,
       version: 2,
@@ -3301,7 +3301,7 @@ export function listEmailFlows(): EmailFlow[] {
     {
       template: 'payment_under_review',
       audience: 'student',
-      stage: 'payment',
+      stage: 'payment_pending',
       conditional: true,
       enabled: true,
       version: 2,
@@ -3312,7 +3312,7 @@ export function listEmailFlows(): EmailFlow[] {
     {
       template: 'seat_reservation_expiring',
       audience: 'student',
-      stage: 'payment',
+      stage: 'payment_pending',
       conditional: true,
       enabled: true,
       version: 1,
@@ -3323,7 +3323,7 @@ export function listEmailFlows(): EmailFlow[] {
     {
       template: 'payment_approved',
       audience: 'student',
-      stage: 'payment',
+      stage: 'payment_settled',
       conditional: false,
       enabled: true,
       version: 5,
@@ -3334,7 +3334,7 @@ export function listEmailFlows(): EmailFlow[] {
     {
       template: 'payment_rejected',
       audience: 'student',
-      stage: 'payment',
+      stage: 'payment_settled',
       conditional: true,
       enabled: true,
       version: 3,

@@ -903,11 +903,17 @@ export interface NewEnrollmentInput {
 /* -------------------------------------------------------------------------- */
 
 /**
- * The four moments of the student's path the automatic e-mails hang off. Not a
- * database column: it is the order somebody reads the journey in, and it lives
- * here so both screens agree on it.
+ * The domain events the automatic e-mails hang off — the spine of the flow.
+ * Not a database column: it is what *happens*, in order, and the e-mails are
+ * what leaves because of it. Written as events rather than as chapters, because
+ * a flow drawn over chapter titles is a list with a line down the side.
  */
-export type EmailStage = 'enrollment' | 'payment' | 'access' | 'documents'
+export type EmailStage =
+  | 'submitted'
+  | 'payment_pending'
+  | 'payment_settled'
+  | 'access'
+  | 'documents'
 
 /** Who the template is written to — it decides the tone and the address. */
 export type EmailAudience = 'student' | 'guardian'
@@ -956,7 +962,7 @@ export interface EmailSample {
 export interface EmailFlow {
   template: EmailTemplate
   audience: EmailAudience
-  /** Where in the student's path it fires — the journey groups on this. */
+  /** The event it leaves because of — the flow branches off this. */
   stage: EmailStage
   /**
    * Fires only when the case takes that turn: the receipt that needed a human,
