@@ -45,6 +45,9 @@ Venda por WhatsApp (humano, fora do sistema)
 - **Cadastro manual de aluno pelo backoffice** é o par do item acima: a matrícula manual só age sobre aluno já cadastrado, então o cadastro da pessoa é um fluxo próprio (`/backoffice/students`, `admin` e `coordinator`). O **apoderado é opcional** — e deixa de ser no instante em que a data de nascimento diz que o aluno é menor de idade, quando passa a ser obrigatório. O **consentimento (Ley 29733) nunca é digitado ali**: quem aceita é o apoderado, com a data, a versão e o IP dele; a ficha nasce com o consentimento pendente. O cadastro não matricula ninguém.
 - **Docente tem contrato com vigência, e o painel vigia o vencimento.** O contrato fica registrado como **arquivo** (nome + data de arquivamento, bytes no bucket como qualquer comprovante) mais o **período que cobre** (início e fim). O painel marca o contrato como *a vencer* a partir de **45 dias** do fim (`CONTRACT_ALERT_DAYS` — número provisório, a confirmar), *vencido* assim que a data passa, e *sem contrato* quando não há nenhum arquivado — esse último é um achado, não uma célula vazia. Arquivo, início e fim são as três coisas juntas ou nenhuma: meio contrato não se arquiva. **Gerar** o contrato a partir do modelo da Asociación é passo à parte, ainda não construído — hoje o painel só arquiva o que foi assinado.
 - **Docente sai do quadro, não some.** `inactive` é o que a coordenação marca quando alguém para de dar aula (contrato vencido, ciclo encerrado) — nunca apagar: quem assinou nota e deu turma continua apontado por elas. Sair do quadro **para a vigilância do contrato**: o alerta existe para impedir alguém de dar aula com contrato vencido, e quem está inativo não dá aula. O documento continua arquivado na ficha. O painel avisa quando ainda há turma em andamento apontando para o docente que está saindo — avisa, não bloqueia: quem larga no meio do ciclo é caso real, e travar deixaria a ficha presa.
+- **O e-mail do aluno tem que ser uma conta pessoal do Gmail.** Não é preferência: o formulário atual recusa em maiúsculas conta institucional e corporativa, porque o acesso à aula chega por Google Classroom. Endereço de colégio que morre em dezembro é aluno que perde o curso que pagou. Vale para o aluno; o e-mail do apoderado pode ser de qualquer provedor.
+- **O celular é pedido no formulário de matrícula.** A regra "nunca pedir número de telefone" (`docs/REGRAS-NEGOCIO.md` §5) governa a **conversa de venda no WhatsApp**, onde o número já é conhecido — não o formulário, que sempre teve coluna `CELULAR`.
+- **Data de início e horário são escolhas separadas.** O mesmo curso abre em várias datas — começar esta semana ou com a turma do fim do mês — e cada data tem seus três ou quatro horários. Quem abre turma é `admin`/`coordinator` pelo backoffice; o checkout público lê o que estiver aberto.
 - Comprovante: retido por **5 anos**. Só a **versão processada/reduzida** (pós downscale/grayscale da OCR, `CLAUDE.md` §5) é retida — não o upload original bruto.
 
 ---
@@ -213,7 +216,31 @@ RETURNING seats_taken;
 
 Zero linhas = cheia. Mais `CHECK (seats_taken <= capacity)` como rede.
 
-Estados de vaga: `reserved` (submit) → `confirmed` (pagamento aprovado) → `released` (rejeitado ou expirado). Cron libera reserva parada há mais de 5 dias.
+Estados de vaga: `reserved` → `confirmed` (pagamento aprovado) → `released` (rejeitado ou expirado).
+
+**Dois relógios, não um.** A vaga é presa antes do pagamento — quem paga já pagou com a vaga na mão — e isso cria duas janelas com prazos muito diferentes:
+
+| Relógio | De → até | Prazo | Quem devolve a vaga |
+| --- | --- | --- | --- |
+| **Hold de checkout** | vaga presa no checkout → comprovante enviado | **15 min** | o próprio checkout, ao expirar |
+| **Janela de revisão** | comprovante enviado → pagamento aprovado ou recusado | **5 dias** | cron de reserva parada |
+
+O hold curto existe porque o pagamento acontece **fora da plataforma** (Yape/transferência, `CLAUDE.md` §2 — não há pasarela): a pessoa sai da página, paga no app do banco e volta. Sem o hold, ela paga e descobre a turma cheia na volta — e não existe fluxo de devolução. Expirado o hold sem comprovante, a vaga volta pra turma e o checkout recomeça do passo da turma.
+
+Enviado o comprovante, a vaga **continua `reserved`** e passa a correr no relógio de 5 dias. Ela só vira `confirmed` quando o pagamento é aprovado (OCR ou revisão humana) — enviar comprovante não confirma matrícula, só garante que a vaga não cai pelo hold curto.
+
+Os dois prazos são **configuráveis no backoffice** (`/backoffice/settings`), nunca constante no código — mesma regra da tolerância de valor.
+
+### Origem da matrícula (atribuição de canal)
+
+Toda matrícula grava **de onde veio** — hoje `whatsapp` (link mandado pelo vendedor depois da venda fechada) ou `web` (a pessoa chegou sozinha pela landing). É campo do domínio, não analytics: fica na própria `enrollments`, não só no PostHog, porque a coordenação precisa responder "quantas matrículas o zap trouxe neste ciclo" dentro do backoffice, e porque analytics de borda se perde com bloqueador de anúncio.
+
+- Mora na **matrícula**, não no aluno. A mesma pessoa pode voltar por outro canal no ciclo seguinte; um campo no aluno perderia o histórico.
+- Capturado no **primeiro acesso** ao checkout e carregado até o submit — se a pessoa recarregar ou sair pra pagar, a origem não se perde.
+- Valor **nunca vem confiado do cliente** como texto livre: é união fechada, e qualquer coisa fora dela cai em `web`.
+- Os parâmetros de campanha (`utm_*`) andam junto, mas separados, para relatório — a origem é o dado de negócio, o `utm` é o detalhe da peça.
+
+O link do WhatsApp é URL comum com `?course=&group=&src=whatsapp` — **prefill e atribuição, não token**: sem segredo, sem autenticação e sem preço embutido (o valor vem sempre do `plan_price` vigente, lido no servidor). Isso é o que o mantém compatível com §2, "sem links de matrícula tokenizados".
 
 ### Notificações
 

@@ -8,6 +8,7 @@ backoffice administrativo e módulo de e-mail.
 
 - [`CLAUDE.md`](CLAUDE.md) — contexto permanente: stack fechada, convenções, regras proibidas.
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — estrutura do monorepo, modelo de autorização (Caminho A vs. B), RBAC, custo mensal estimado e o shell/layout responsivo de `apps/app`.
+- [`docs/MATRICULA-CHECKOUT.md`](docs/MATRICULA-CHECKOUT.md) — o funil público de matrícula: wizard de 4 passos com dois modos de entrada (landing e link do vendedor), os dois relógios da vaga e a atribuição de canal.
 - [`docs/DOCUMENTOS-E-CERTIFICADOS.md`](docs/DOCUMENTOS-E-CERTIFICADOS.md) — emissão de constancia e certificado, lote por turma, e-mail pela outbox.
 - [`docs/INFRAESTRUTURA.md`](docs/INFRAESTRUTURA.md) — base de conhecimento: levantamento de mercado (preços, specs, latência) que baseou as escolhas de hospedagem.
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — plano de desenvolvimento em sessões pequenas (1 sessão = 1 PR).
@@ -42,9 +43,24 @@ Domínio e fila já existem, independentes dessa escolha:
   JSON-LD de `EducationalOrganization`, `Course` e `FAQPage`. `/blog` e `/comunidad`
   seguem `noindex` enquanto forem placeholder.
 - `apps/app` — Next.js App Router: layout, roteamento, i18n trilíngue e as telas
-  em **mockup** (sem acesso a dados). Portal do aluno (`/portal`) e backoffice
-  (`/backoffice` para login; painel em `/backoffice/home`). No backoffice já
-  existem: alunos (`/backoffice/students`, com ficha, histórico e edição),
+  em **mockup** (sem acesso a dados). Portal do aluno (`/portal`), backoffice
+  (`/backoffice` para login; painel em `/backoffice/home`) e a **matrícula
+  pública** (`/enrollment`). O checkout público é o wizard de 4 passos —
+  curso + data de início + horário (escolhas separadas, porque o mesmo curso
+  abre em várias datas), dados do aluno nos campos que a Asociación já coleta
+  hoje (nome completo num campo só, documento, celular, nascimento e Gmail
+  obrigatório) mais o bloco do apoderado com consentimento quando menor,
+  pagamento com comprovante obrigatório, e revisão/envio — com **dois
+  modos de entrada** na mesma tela: aberto da landing começa no passo 1, e
+  aberto pelo link do vendedor (`?course=&group=&src=whatsapp`) chega com o
+  passo 1 respondido e cai no passo 2. A vaga é presa no checkout com relógio
+  curto (15 min, parâmetro do backoffice) e o rascunho sobrevive a recarregar a
+  página — sair pra pagar no app do banco não perde o preenchimento. A origem
+  do canal (`whatsapp`/`web`) é resolvida no servidor, na chegada, e carregada
+  até o envio. Desenho e regras em `docs/MATRICULA-CHECKOUT.md`. **Ainda não há
+  CTA na landing apontando pra ele** — falta a variável de ambiente com a URL
+  do app.
+  No backoffice já existem: alunos (`/backoffice/students`, com ficha, histórico e edição),
   turmas (`/backoffice/class-groups`, com lista paginada, ficha da turma,
   emissão de certificados em lote e procedimentos por matrícula — mover,
   congelar, retirar), cursos (`/backoffice/courses`, catálogo com opções por
@@ -77,7 +93,8 @@ Domínio e fila já existem, independentes dessa escolha:
   painel roda em cima: as regras acadêmicas e de trâmite (nota mínima, prazo do
   certificado, taxa da constancia, antecedência do aviso de contrato) e os
   parâmetros de validação do comprovante (tolerância de valor, confiança mínima
-  e validade da reserva) — estes últimos vieram de `/backoffice/payments/settings`,
+  e os dois relógios da vaga: os minutos de reserva durante o pagamento e os
+  dias de validade da reserva) — estes últimos vieram de `/backoffice/payments/settings`,
   que deixou de existir: um número com duas telas donas é um número que diverge.
   O papel `teacher` já entra numa
   **visão restrita**: menu reduzido,
@@ -86,8 +103,15 @@ Domínio e fila já existem, independentes dessa escolha:
   tudo escopado pelo `teacherId` da sessão, nunca por dado vindo do cliente. A
   sessão do mockup é fixa em `getStaffSession()`; trocar o papel ali é o que
   mostra essa visão, de propósito não há seletor de papel na tela (`CLAUDE.md`
-  §8). Toda escrita é estado local. Os demais módulos do painel aparecem
-  listados como "pronto/em breve".
+  §8). Cada pessoa do staff, em qualquer papel, gerencia a própria conta em
+  `/backoffice/account` (aberta pelo chip do usuário no rodapé do menu): senha
+  com as exigências listadas enquanto se digita, verificação em dois passos —
+  obrigatória e sem botão de desligar para `admin`, `treasury` e
+  `mass_approver` (`CLAUDE.md` §8), opcional para os demais —, códigos de
+  recuperação, sessões abertas com o encerramento por linha, e o idioma do
+  painel. Nome, e-mail de acesso e cargo ficam de fora de propósito: são
+  identidade, e o cargo só muda pelo usecase de promoção. Toda escrita é estado
+  local. Os demais módulos do painel aparecem listados como "pronto/em breve".
   UI em shadcn/ui sobre Tailwind v4; os tokens de marca vivem em `globals.css`
   (paleta da landing, tipografia Inter). A landing segue com Fredoka/Poppins —
   público diferente.

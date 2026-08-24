@@ -143,6 +143,7 @@ export function NewEnrollmentForm({
     const now = new Date().toISOString()
     onCreate({
       id: `enr_local_${student.id}_${group.id}`,
+      code: `OOC-${now.slice(0, 4)}-${student.nationalId.slice(-4)}`,
       studentId: student.id,
       studentName: `${student.firstName} ${student.lastName}`,
       courseName: group.courseName,

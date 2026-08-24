@@ -143,3 +143,14 @@ export function canCreateEnrollment(role: StaffRole): boolean {
 export function canConfigureSettings(role: StaffRole): boolean {
   return role === 'admin'
 }
+
+/**
+ * Whose second factor is not optional (CLAUDE.md §8). These three roles move
+ * money, approve in bulk or hand out roles, so the panel never offers them a
+ * switch to turn it off — the screen says the factor is part of the job. The
+ * enforcing check is the session policy in `apps/api`; this only decides
+ * whether a control is drawn.
+ */
+export function isMfaMandatory(role: StaffRole): boolean {
+  return role === 'admin' || role === 'treasury' || role === 'mass_approver'
+}

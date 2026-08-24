@@ -190,6 +190,32 @@ export function SettingsForm({ settings }: { settings: GeneralSettings }) {
             />
           </Row>
 
+          {/* The seat's other clock. It sits beside the reservation window
+              because the two are one rule read at two speeds: this is the
+              minutes somebody has to pay before the seat goes back, that is the
+              days the paid-but-unreviewed seat waits (CLAUDE.md §5). Split
+              across two screens is how they end up contradicting each other. */}
+          <Row
+            helpLabel={t('common.help')}
+            label={t('settings.checkout_hold_label')}
+            hint={t('settings.checkout_hold_hint')}
+            value={t('settings.checkout_hold_value', {
+              minutes: draft.receipts.checkoutHoldMinutes,
+            })}
+          >
+            <input
+              type="number"
+              min={5}
+              max={60}
+              aria-label={t('settings.checkout_hold_label')}
+              value={draft.receipts.checkoutHoldMinutes}
+              onChange={(event) =>
+                setReceipts('checkoutHoldMinutes', Number(event.target.value))
+              }
+              className={numberClass}
+            />
+          </Row>
+
           <Row
             helpLabel={t('common.help')}
             label={t('settings.reservation_label')}

@@ -1,4 +1,5 @@
-import { content, defaultLang, type Lang } from "./ui";
+import { content, courseSlugs, defaultLang, type CourseSlug, type Lang } from "./ui";
+import { legalContent } from "./legal";
 
 const PREFIXED: Lang[] = ["en", "pt"];
 
@@ -33,4 +34,44 @@ export function switchLangPath(url: URL, target: Lang): string {
     ? "/" + parts.slice(2).join("/")
     : url.pathname;
   return withLang(target, rest || "/");
+}
+
+/**
+ * Short title for the browser tab. The home page is the brand alone; every
+ * other page is the name it carries in the menu ("Nosotros", "Blog", the
+ * course name). The long, keyword-rich title stays on og:title and on the
+ * search snippet — it never had room in a tab anyway.
+ */
+export function tabTitle(url: URL, lang: Lang): string {
+  const t = content[lang];
+  const parts = url.pathname.split("/").filter(Boolean);
+  const path = (PREFIXED as string[]).includes(parts[0]) ? parts.slice(1) : parts;
+  const first = path[0] ?? "";
+  const second = path[1] ?? "";
+
+  switch (first) {
+    case "":
+      return t.meta.siteName;
+    case "about":
+      return t.nav.about;
+    case "courses":
+      return (courseSlugs as readonly string[]).includes(second)
+        ? t.courses.list[second as CourseSlug]
+        : t.nav.courses;
+    case "faq":
+      return t.nav.faq;
+    case "blog":
+      return t.nav.blog;
+    case "community":
+      return t.nav.community;
+    case "contact":
+      return t.nav.contact;
+    case "terms-and-conditions":
+      return legalContent[lang].terms.title;
+    case "privacy-policy":
+      return legalContent[lang].privacy.title;
+    // A page nobody mapped falls back to the brand rather than to an empty tab.
+    default:
+      return t.meta.siteName;
+  }
 }

@@ -91,7 +91,48 @@ Sem isso, tudo depois fica mais caro. Não pule nem comprima.
 | ☐ 29 | **OCR nível 2** | Escalada para modelo de outra família em baixa confiança, critério de concordância, alarme de volume | Divergência entre modelos vai para fila humana; escalada nunca encadeia |
 | ☐ 30 | **E-mails da matrícula** | Templates de matrícula recebida, pago aprovado/em revisão/rejeitado, credenciais — via outbox | Todos em `es-PE.json`, disparados pela fila, nenhum no caminho síncrono |
 
+#### Estado das Sessões 20–25 (atualizado em 21/08/2026)
+
+O **front inteiro** do checkout público existe e está navegável em
+`/enrollment` (`apps/app`), desenhado em `docs/MATRICULA-CHECKOUT.md`. Nenhuma
+sessão está fechada: o que falta em todas é a metade de servidor, que depende
+de peças da Fase 0 que ainda não existem (autorização deny-by-default da Sessão
+8, `apps/api` publicado da Sessão 13).
+
+| # | Já existe | Falta para fechar |
+| --- | --- | --- |
+| 20 | Wizard de 4 passos, validação com zod no cliente, estado preservado no `sessionStorage` (recarregar no meio não perde nada) | Validação no **servidor**, com o mesmo schema |
+| 21 | Campos reais da planilha do Forms (nome completo em um campo, documento, celular, nascimento, Gmail travado), idade mínima por curso como trava, bloco do apoderado com aceite de consentimento versionado | Gravar o consentimento com **timestamp e IP** — é registro do servidor |
+| 22 | Data de início e horário como escolhas separadas, só turma com vaga selecionável, turma cheia visível e desabilitada | **Lista de espera** quando a data inteira estiver cheia |
+| 23 | Upload com teto de tamanho, tipo aceito, prévia, comprovante **obrigatório** travando o passo | **Signed URL** direto ao Storage, magic bytes, normalização (downscale, cinza, strip EXIF, HEIC) |
+| 24 | Tela de revisão e envio, guarda de duplo clique | Transação curta, incremento atômico de vaga, idempotency key, enfileiramento, p95 < 300ms |
+| 25 | — | Turnstile, rate limit na borda, cache de idempotência |
+
+**Decisão nova desta sessão, que muda o desenho da Sessão 24:** a vaga passa a
+ter **dois relógios** (`CLAUDE.md` §5) — um *hold de checkout* de 15 minutos,
+que prende a vaga antes do pagamento, e a janela de revisão de 5 dias, que já
+existia. Os dois são parâmetros do backoffice, não constantes. Motivo: o
+pagamento acontece fora da plataforma, e sem o hold curto a pessoa paga e volta
+para uma turma cheia — sem fluxo de devolução no negócio.
+
+**Segunda decisão:** toda matrícula grava a **origem do canal**
+(`whatsapp`/`web`), resolvida no servidor na chegada. É o que permite responder
+dentro do backoffice quanto do ciclo veio do zap — e é o que tornou
+desnecessário manter dois formulários diferentes.
+
 > **Marco:** aprovação da Fase 2. Libera 30% do pagamento.
+
+### Sessões novas, abertas por esta sessão
+
+Trabalho que apareceu ao construir o checkout e que não cabia em nenhuma das
+sessões acima (regra 5: sessão que revela trabalho não previsto vira sessão
+nova, não incha a atual).
+
+| # | Sessão | Entregável | Pronto quando |
+| --- | --- | --- | --- |
+| ☐ 20a | **Porta de entrada na landing** | Variável de ambiente com a URL do app validada com zod, CTA "Matricúlate" na landing nos três idiomas, apontando pro checkout, e o link do vendedor documentado (`?course=&group=&src=whatsapp`) | Nenhuma URL literal no código; o CTA leva ao passo 1 e o link do vendedor cai no passo 2 |
+| ☐ 21a | **Nome do aluno no domínio** | Decidir e migrar: `students.full_name` numa coluna só (como o formulário coleta) e o `firstName`/`lastName` do backoffice vira derivado ou some | Backoffice, portal e checkout leem o mesmo campo; nenhuma tela remonta nome por concatenação |
+| ☐ 27a | **PayPal para aluno no exterior** | Confirmar com o cliente se o checkout público atende estrangeiro; se sim, estender `PaymentMethod` e a tabela de conversão como preço versionado, nunca câmbio ao vivo | Aluno no exterior conclui a matrícula sem passar pelo WhatsApp |
 
 ---
 
