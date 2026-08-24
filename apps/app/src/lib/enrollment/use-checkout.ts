@@ -92,7 +92,6 @@ export function useCheckout(
   const [hold, setHold] = useState<SeatHold | null>(null)
   const [now, setNow] = useState<number | null>(null)
   const [holdExpired, setHoldExpired] = useState(false)
-  const hydrated = useRef(false)
   const [restored, setRestored] = useState(false)
   const bootstrapped = useRef(false)
   /** The arrival as the server resolved it — frozen at first render. */
@@ -154,14 +153,26 @@ export function useCheckout(
       else clearStored(HOLD_KEY)
     }
 
-    hydrated.current = true
     setNow(Date.now())
     setRestored(true)
   }, [])
 
+  /**
+   * Persist — but never before the restore has actually landed in state.
+   *
+   * Gating this on a ref was a bug with teeth. Effects run in declaration
+   * order within one commit, so the restore effect flipped the ref and queued
+   * `setDraftState(stored)`, and then THIS effect ran in the same commit with
+   * `draft` still holding the empty initial value — writing the empty draft
+   * over the good one. A second remount before the corrective write (a locale
+   * switch does exactly that) then read the emptied draft back.
+   *
+   * `restored` is state, not a ref: the first render where it is true is the
+   * render where `draft` is already the restored one.
+   */
   useEffect(() => {
-    if (hydrated.current) writeStored(DRAFT_KEY, draft)
-  }, [draft])
+    if (restored) writeStored(DRAFT_KEY, draft)
+  }, [draft, restored])
 
   /** The countdown only runs while a seat is actually being held. */
   useEffect(() => {

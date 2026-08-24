@@ -9,9 +9,9 @@
  * copy — every label is resolved from the `enrollment` i18n namespace.
  */
 
-import type { NationalIdType, PaymentMethod } from '@/lib/portal/types'
+import type { NationalIdType, PaymentRail } from '@/lib/portal/types'
 
-export type { NationalIdType, PaymentMethod }
+export type { NationalIdType, PaymentRail }
 
 /**
  * Weekday code, resolved to a label by the locale. Declared here rather than
@@ -93,9 +93,14 @@ export interface CatalogClassGroup {
 /**
  * Where to send the money. There is no payment gateway in the platform
  * (`CLAUDE.md` §2) — the checkout shows the account and receives the proof.
+ *
+ * A **rail**, never a `PaymentMethod`: `other` is the backoffice's escape
+ * hatch for a deposit that arrived through a bank nobody listed, recorded
+ * after the fact. A public checkout cannot offer it — there would be no
+ * account to show and no number to copy — so the type says so.
  */
 export interface PaymentAccount {
-  method: PaymentMethod
+  method: PaymentRail
   /** Legal holder of the account, as it appears in the banking app. */
   holder: string
   /** The number the payer types or copies: phone for Yape, account for a bank. */
@@ -212,7 +217,8 @@ export interface ReceiptDraft {
 }
 
 export interface PaymentDraft {
-  method: PaymentMethod | null
+  /** Only a rail the Asociación publishes an account for — see `PaymentAccount`. */
+  method: PaymentRail | null
   operationNumber: string
   receipt: ReceiptDraft | null
 }

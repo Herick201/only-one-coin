@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { LanguageSwitcher } from '@/components/portal/language-switcher'
+import { LanguageSwitcher } from '@/components/enrollment/language-switcher'
 import { CheckoutIcon } from '@/components/enrollment/icons'
 
 /**
