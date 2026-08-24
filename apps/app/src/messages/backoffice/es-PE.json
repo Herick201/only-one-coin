@@ -793,13 +793,10 @@
     "new_email": {
       "title": "Nuevo envío",
       "back": "Volver a correos",
-      "step_of": "Paso {step} de {total}",
       "step_recipients": "Destinatarios",
       "step_content": "Contenido",
       "step_test": "Prueba",
       "step_review": "Revisión",
-      "next": "Siguiente",
-      "prev": "Atrás",
       "send": "Enviar",
       "segment_label": "¿A quién va?",
       "segment_all": "Toda la base",
@@ -816,12 +813,9 @@
       "body_label": "Mensaje",
       "body_placeholder": "Escribe el comunicado",
       "content_note": "Sale en el idioma en que lo escribas: un comunicado a mano no se traduce solo. Los automáticos sí llegan en el idioma de cada persona.",
-      "test_note": "Manda una prueba antes de aprobar. Si después cambias el asunto o el mensaje, la prueba deja de valer y hay que repetirla.",
+      "test_note": "Manda una prueba antes de aprobar. Si después cambias el asunto, el mensaje o el archivo, la prueba deja de valer y hay que repetirla.",
       "test_pending": "Todavía sin prueba",
-      "test_ok": "Prueba enviada, y el texto no cambió desde entonces.",
-      "review_recipients": "Destinatarios",
-      "review_subject": "Asunto",
-      "review_body": "Mensaje",
+      "test_ok": "Prueba enviada, y el contenido no cambió desde entonces.",
       "confirm_label": "Revisé el texto y confirmo que el grupo es el correcto.",
       "double_approval": "Un envío a toda la base necesita una segunda aprobación de administración. Esta pantalla todavía no la simula.",
       "cooldown_note": "El mismo grupo no recibe otro comunicado en los 7 días siguientes.",
@@ -849,8 +843,7 @@
       "html_note": "Sale tal cual: las imágenes tienen que ser enlaces absolutos, y ningún correo ejecuta scripts.",
       "html_preview": "Vista previa",
       "html_error_type": "Tiene que ser un archivo .html.",
-      "error_html": "Carga el archivo HTML.",
-      "review_html": "Archivo"
+      "error_html": "Carga el archivo HTML."
     },
     "delivery_status": {
       "not_sent": "Sin enviar",
