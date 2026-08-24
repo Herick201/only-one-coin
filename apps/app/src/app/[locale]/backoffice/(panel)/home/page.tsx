@@ -158,6 +158,7 @@ export default async function BackofficeHomePage({
       label: t('nav.email'),
       body: t('modules.email'),
       icon: Mail,
+      ready: true,
     },
     {
       href: '/backoffice/reports',

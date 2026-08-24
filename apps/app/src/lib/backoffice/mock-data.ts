@@ -11,6 +11,10 @@ import type {
   EnrollmentRow,
   DocumentDelivery,
   DocumentItem,
+  EmailDeliveryIssue,
+  EmailFlow,
+  EmailMetrics,
+  EmailSegment,
   EnrollmentHistoryItem,
   ExtractionField,
   PaymentMethod,
@@ -3318,4 +3322,351 @@ export function getEnrollmentMetrics(now: Date = new Date()): EnrollmentMetrics 
     ).length,
     released: rows.filter((row) => row.seatStatus === 'released').length,
   }
+}
+
+/* -------------------------------------------------------------------------- */
+/* E-mail                                                                      */
+/* -------------------------------------------------------------------------- */
+
+/** The window every figure on the e-mail screen is measured over. */
+const EMAIL_WINDOW_DAYS = 30
+
+/**
+ * One sample per audience, shared by every flow written to it. The preview is
+ * read by staff to check wording, so it renders over invented people — a real
+ * student's name has no business on that screen (CLAUDE.md §8).
+ */
+const studentSample = {
+  studentName: 'María Fernanda Quispe Rojas',
+  studentEmail: 'maria.quispe@gmail.com',
+  guardianName: 'Rosa Elena Rojas Sánchez',
+  guardianEmail: 'rosa.rojas@gmail.com',
+  teacherName: 'Elena Ríos Salazar',
+  teacherEmail: 'elena.rios@onlyonecoin.edu.pe',
+  staffName: 'Lucía Ramírez',
+  staffEmail: 'lucia.ramirez@onlyonecoin.edu.pe',
+  courseName: 'Inglés Básico A1',
+  classGroupName: 'A1 — Lun/Mié 18:00',
+  amountCents: 6990,
+  date: '2026-09-07T23:00:00Z',
+}
+
+/**
+ * The transactional catalog. Every entry is an e-mail that leaves on its own,
+ * as the consequence of something the domain did — there is no send button per
+ * message (`docs/DOCUMENTOS-E-CERTIFICADOS.md` §4).
+ *
+ * The counts are the last 30 days as the provider reported them back. They sit
+ * next to each other on purpose: a flow whose bounces climb is one whose
+ * addresses are wrong, and that only shows against its own volume.
+ */
+export function listEmailFlows(): EmailFlow[] {
+  return [
+    {
+      template: 'enrollment_submitted',
+      audience: 'student',
+      stage: 'submitted',
+      conditional: false,
+      enabled: true,
+      version: 4,
+      updatedAt: '2026-08-04T14:20:00Z',
+      metrics: { sent: 4128, delivered: 4061, bounced: 54, failed: 13 },
+      sample: studentSample,
+    },
+    {
+      template: 'guardian_consent_reminder',
+      audience: 'guardian',
+      stage: 'submitted',
+      conditional: true,
+      enabled: true,
+      version: 2,
+      updatedAt: '2026-07-18T13:00:00Z',
+      metrics: { sent: 486, delivered: 470, bounced: 14, failed: 2 },
+      sample: studentSample,
+    },
+    {
+      template: 'payment_under_review',
+      audience: 'student',
+      stage: 'payment_pending',
+      conditional: true,
+      enabled: true,
+      version: 2,
+      updatedAt: '2026-07-22T16:05:00Z',
+      metrics: { sent: 612, delivered: 604, bounced: 6, failed: 2 },
+      sample: studentSample,
+    },
+    {
+      template: 'seat_reservation_expiring',
+      audience: 'student',
+      stage: 'payment_pending',
+      conditional: true,
+      enabled: true,
+      version: 1,
+      updatedAt: '2026-08-16T10:05:00Z',
+      metrics: { sent: 173, delivered: 171, bounced: 2, failed: 0 },
+      sample: studentSample,
+    },
+    {
+      template: 'payment_approved',
+      audience: 'student',
+      stage: 'payment_settled',
+      conditional: false,
+      enabled: true,
+      version: 5,
+      updatedAt: '2026-08-11T11:40:00Z',
+      metrics: { sent: 3907, delivered: 3854, bounced: 41, failed: 12 },
+      sample: studentSample,
+    },
+    {
+      template: 'payment_rejected',
+      audience: 'student',
+      stage: 'payment_settled',
+      conditional: true,
+      enabled: true,
+      version: 3,
+      updatedAt: '2026-07-30T09:15:00Z',
+      metrics: { sent: 214, delivered: 209, bounced: 4, failed: 1 },
+      sample: studentSample,
+    },
+    {
+      template: 'credentials_issued',
+      audience: 'student',
+      stage: 'access',
+      conditional: false,
+      enabled: true,
+      version: 6,
+      updatedAt: '2026-08-14T18:30:00Z',
+      metrics: { sent: 3891, delivered: 3822, bounced: 57, failed: 12 },
+      sample: studentSample,
+    },
+    {
+      /* Off in the mock so the journey has to show what that costs: three days
+         before the class group starts, nobody gets the Classroom link
+         (`docs/REGRAS-NEGOCIO.md` §8). A paused flow is a silence, not a gap. */
+      template: 'class_access_ready',
+      audience: 'student',
+      stage: 'access',
+      conditional: false,
+      enabled: false,
+      version: 2,
+      updatedAt: '2026-08-02T15:45:00Z',
+      metrics: { sent: 0, delivered: 0, bounced: 0, failed: 0 },
+      sample: studentSample,
+    },
+    {
+      template: 'enrollment_certificate_issued',
+      audience: 'student',
+      stage: 'documents',
+      conditional: true,
+      enabled: true,
+      version: 3,
+      updatedAt: '2026-08-09T12:10:00Z',
+      metrics: { sent: 96, delivered: 95, bounced: 1, failed: 0 },
+      sample: studentSample,
+    },
+    {
+      template: 'certificate_issued',
+      audience: 'student',
+      stage: 'documents',
+      conditional: false,
+      enabled: true,
+      version: 4,
+      updatedAt: '2026-08-12T17:25:00Z',
+      metrics: { sent: 341, delivered: 336, bounced: 4, failed: 1 },
+      sample: studentSample,
+    },
+
+    /* Internal. Small volumes — there are two dozen teachers, not five
+       thousand students — and no stage: none of these is a step of the
+       student's journey. */
+    {
+      template: 'teacher_credentials_issued',
+      audience: 'teacher',
+      stage: null,
+      conditional: false,
+      enabled: true,
+      version: 2,
+      updatedAt: '2026-07-28T15:10:00Z',
+      metrics: { sent: 4, delivered: 4, bounced: 0, failed: 0 },
+      sample: studentSample,
+    },
+    {
+      template: 'teacher_class_group_assigned',
+      audience: 'teacher',
+      stage: null,
+      conditional: false,
+      enabled: true,
+      version: 3,
+      updatedAt: '2026-08-06T10:35:00Z',
+      metrics: { sent: 21, delivered: 21, bounced: 0, failed: 0 },
+      sample: studentSample,
+    },
+    {
+      /* 45 days out, the number the panel already watches
+         (`CONTRACT_ALERT_DAYS`, CLAUDE.md §1 — provisional). */
+      template: 'teacher_contract_expiring',
+      audience: 'teacher',
+      stage: null,
+      conditional: true,
+      enabled: true,
+      version: 1,
+      updatedAt: '2026-08-19T09:00:00Z',
+      metrics: { sent: 3, delivered: 3, bounced: 0, failed: 0 },
+      sample: studentSample,
+    },
+    {
+      template: 'teacher_grades_pending',
+      audience: 'teacher',
+      stage: null,
+      conditional: true,
+      enabled: true,
+      version: 2,
+      updatedAt: '2026-08-15T13:20:00Z',
+      metrics: { sent: 7, delivered: 7, bounced: 0, failed: 0 },
+      sample: studentSample,
+    },
+    {
+      /* The batch is never fired by a date — the list is prepared and
+         coordination confirms it (`docs/DOCUMENTOS-E-CERTIFICADOS.md`). This
+         e-mail is what tells them the list is ready. */
+      template: 'staff_certificates_ready',
+      audience: 'staff',
+      stage: null,
+      conditional: false,
+      enabled: true,
+      version: 1,
+      updatedAt: '2026-08-17T16:40:00Z',
+      metrics: { sent: 5, delivered: 5, bounced: 0, failed: 0 },
+      sample: studentSample,
+    },
+  ]
+}
+
+/** The header figures — the same window, summed over the catalog. */
+export function getEmailMetrics(): EmailMetrics {
+  const flows = listEmailFlows()
+  return {
+    windowDays: EMAIL_WINDOW_DAYS,
+    sent: flows.reduce((total, flow) => total + flow.metrics.sent, 0),
+    delivered: flows.reduce((total, flow) => total + flow.metrics.delivered, 0),
+    bounced: flows.reduce((total, flow) => total + flow.metrics.bounced, 0),
+    failed: flows.reduce((total, flow) => total + flow.metrics.failed, 0),
+    paused: flows.filter((flow) => !flow.enabled).length,
+  }
+}
+
+/** One flow, by the template it renders — the id the detail route carries. */
+export function getEmailFlow(template: string): EmailFlow | undefined {
+  return listEmailFlows().find((flow) => flow.template === template)
+}
+
+/**
+ * How many people a manual send would reach, resolved against the enrollment
+ * ledger the same way the real query will: the segment is a question answered
+ * at send time, never a list kept at the provider (`docs/ROADMAP.md` fase 5).
+ *
+ * Counted by student, not by enrollment — somebody enrolled in two courses is
+ * one person receiving one e-mail.
+ */
+export function countEmailRecipients(segment: EmailSegment): number {
+  const rows = listEnrollments().filter((row) => {
+    switch (segment.kind) {
+      case 'all':
+        return true
+      case 'course':
+        return row.courseName === segment.courseName
+      case 'class_group':
+        return row.classGroupId === segment.classGroupId
+      case 'enrollment_status':
+        return row.status === segment.status
+    }
+  })
+  return new Set(rows.map((row) => row.studentId)).size
+}
+
+/**
+ * The deliveries that did not land, newest first. Not a report: it is a list of
+ * people the institution failed to reach — the student whose credentials
+ * bounced cannot get into the portal, and nobody finds that out from a counter.
+ */
+export function listEmailDeliveryIssues(): EmailDeliveryIssue[] {
+  return [
+    {
+      id: 'del_01',
+      template: 'credentials_issued',
+      studentId: 'stu_0002',
+      studentName: 'Jhon Alexander Mamani Ccama',
+      address: 'jhon.mamani@outlook.com',
+      state: 'bounced',
+      reason: 'mailbox_full',
+      at: '2026-08-23T14:20:00Z',
+      attempts: 3,
+    },
+    {
+      id: 'del_02',
+      template: 'payment_approved',
+      studentId: 'stu_0006',
+      studentName: 'Diego Huamán Ccopa',
+      address: 'diego.huaman@gmial.com',
+      state: 'bounced',
+      reason: 'domain_invalid',
+      at: '2026-08-23T02:41:00Z',
+      attempts: 1,
+    },
+    {
+      id: 'del_03',
+      template: 'enrollment_submitted',
+      studentId: 'stu_0007',
+      studentName: 'Valentina Núñez Ibarra',
+      address: 'valentina.nunez@gmail.com',
+      state: 'failed',
+      reason: 'provider_error',
+      at: '2026-08-22T19:05:00Z',
+      attempts: 3,
+    },
+    {
+      id: 'del_04',
+      template: 'credentials_issued',
+      studentId: 'stu_0004',
+      studentName: 'Sebastián Ríos Paredes',
+      address: 'sebastian.ríos@gmail.com',
+      state: 'bounced',
+      reason: 'address_unknown',
+      at: '2026-08-22T16:30:00Z',
+      attempts: 2,
+    },
+    {
+      id: 'del_05',
+      template: 'certificate_issued',
+      studentId: 'stu_0003',
+      studentName: 'Camila Torres Vílchez',
+      address: 'camila.torres@gmail.com',
+      state: 'bounced',
+      reason: 'mailbox_full',
+      at: '2026-08-21T22:14:00Z',
+      attempts: 3,
+    },
+    {
+      id: 'del_06',
+      template: 'guardian_consent_reminder',
+      studentId: 'stu_0008',
+      studentName: 'Renzo Palacios Vega',
+      address: 'renzo.palacios@gmail.com',
+      state: 'bounced',
+      reason: 'blocked_by_server',
+      at: '2026-08-21T11:02:00Z',
+      attempts: 2,
+    },
+    {
+      id: 'del_07',
+      template: 'payment_approved',
+      studentId: 'stu_0005',
+      studentName: 'Ana Lucía Chávez Soto',
+      address: 'analucia.chavez@gmail.com',
+      state: 'failed',
+      reason: 'provider_error',
+      at: '2026-08-20T09:48:00Z',
+      attempts: 3,
+    },
+  ]
 }

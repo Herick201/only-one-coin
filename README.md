@@ -88,7 +88,33 @@ Domínio e fila já existem, independentes dessa escolha:
   grade da semana com as turmas já atribuídas sobrepostas — e as turmas do
   docente. A ficha é onde se tira alguém do quadro e se devolve: a confirmação
   avisa quantas turmas em andamento ainda apontam para ele, e o contrato deixa
-  de ser vigiado enquanto estiver inativo) e relatórios
+  de ser vigiado enquanto estiver inativo) e correio (`/backoffice/emails`, em
+  cinco telas: **Automáticos**, o conjunto dos e-mails transacionais com
+  destinatário, estado e enviados/entregues dos últimos 30 dias, cortado entre
+  os que saem para o aluno/apoderado e os **internos** (docente e coordenação:
+  acesso ao painel, turma atribuída, contrato a vencer, notas pendentes, turma
+  pronta para certificados);
+  **Jornada** (`/backoffice/emails/journey`), o fluxo do aluno (os internos ficam
+  fora dele de propósito): a espinha são os eventos do domínio (matrícula enviada, comprovante em validação, pagamento decidido,
+  acesso liberado, documentos) e os e-mails saem deles como ramos — tracejado e
+  com a condição escrita no conector quando o caso pode nunca tomar aquele
+  caminho, e cada quadro abre o e-mail; e a página de cada e-mail
+  (`/backoffice/emails/[template]`), com a prévia renderizada do template
+  versionado do repositório (dados de exemplo, nunca de aluno real), o
+  liga/desliga do envio automático e a prova para até 5 endereços. **Não entregues**
+  (`/backoffice/emails/deliveries`) é a única tela da seção sobre pessoas: quem
+  não recebeu, por quê (caixa cheia, domínio errado, erro do provedor), com a
+  linha abrindo a ficha do aluno — e a ação decidida pelo motivo, porque
+  endereço escrito errado não se resolve reenviando. **Novo envio**
+  (`/backoffice/emails/new`) é o comunicado escrito à mão, numa trilha de
+  passos guiados, um por vez — segmento, qual (só quando o segmento pede um
+  valor), conteúdo, teste e revisão: o segmento é escolhido
+  entre o que existe e calculado no envio (nunca guardado no provedor), o
+  conteúdo é texto escrito ali ou um HTML carregado (pré-visualizado em iframe
+  sandboxed), o teste perde a validade assim que o conteúdo muda, e o envio para
+  toda a base fica parado à espera da segunda aprovação. Não existe
+  botão de enviar por aluno: e-mail transacional é consequência do que aconteceu
+  no domínio). Também entram relatórios
   (`/backoffice/reports`: matrículas, receita e ocupação do ciclo, cortadas por
   curso, idioma ou docente, com filtro de período, série de matrículas por mês e
   exportação em CSV, em duas guias sobre o mesmo filtro de período e corte.

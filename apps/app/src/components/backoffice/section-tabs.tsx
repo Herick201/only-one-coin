@@ -44,7 +44,7 @@ export function SectionTabs({
   const actionActive = action !== undefined && pathname === action.href
 
   return (
-    <nav className="-mt-2 flex items-center gap-1 border-b border-line">
+    <nav className="-mt-2 flex items-end gap-1 border-b border-line">
       {tabs.map((tab) => {
         /* The detail page of a class group belongs to the class group tab —
            matching the prefix keeps the tab lit while you are inside it. */
@@ -56,10 +56,14 @@ export function SectionTabs({
             key={tab.href}
             href={tab.href}
             aria-current={active ? 'page' : undefined}
-            className={`-mb-px border-b-2 px-3 py-2 text-sm font-semibold transition ${
+            /* Tabs the way a browser draws them: the open one is a surface
+               that sits on the line and covers it, the others are labels
+               waiting behind it. The underline version read as a filter row —
+               these are places you are *in*, and one of them is always open. */
+            className={`-mb-px rounded-t-lg border px-4 py-2 text-sm transition ${
               active
-                ? 'border-brand-blue text-brand-blue'
-                : 'border-transparent text-muted-foreground hover:border-line hover:text-ink'
+                ? 'border-line border-b-white bg-white font-semibold text-ink shadow-[0_-2px_6px_-4px_rgba(15,23,42,0.25)]'
+                : 'border-transparent font-medium text-muted-foreground hover:bg-cream hover:text-ink'
             }`}
           >
             {tab.label}
@@ -73,10 +77,10 @@ export function SectionTabs({
           aria-current={actionActive ? 'page' : undefined}
           aria-label={action.label}
           title={action.label}
-          className={`-mb-px ml-auto border-b-2 px-2.5 py-2 transition ${
+          className={`-mb-px ml-auto rounded-t-lg border px-3 py-2 transition ${
             actionActive
-              ? 'border-brand-blue text-brand-blue'
-              : 'border-transparent text-muted-foreground hover:border-line hover:text-ink'
+              ? 'border-line border-b-white bg-white text-ink shadow-[0_-2px_6px_-4px_rgba(15,23,42,0.25)]'
+              : 'border-transparent text-muted-foreground hover:bg-cream hover:text-ink'
           }`}
         >
           <BoIcon name={action.icon} size={18} />

@@ -9,6 +9,7 @@ import { Link } from '@/i18n/navigation'
 import {
   canBrowseReports,
   canConfigureSettings,
+  canManageEmail,
   isRestrictedToOwnClassGroups,
 } from '@/lib/backoffice/permissions'
 import {
@@ -160,7 +161,21 @@ export default async function BackofficePanelLayout({
       key: 'admin',
       label: t('nav.group_admin'),
       items: [
-        { key: 'email', href: '/backoffice/emails', label: t('nav.email'), soon: true },
+        /* Same rule the whole group follows: an entry that only ever opens
+           on a locked state is a door that never opens. The catalog of what
+           every student receives belongs to the two roles that answer for the
+           funnel; tesorería settles money and a teacher runs a class group.
+           Whoever arrives by URL still meets the locked screen, and the role
+           on the route in `apps/api` is what enforces it (CLAUDE.md §8). */
+        ...(canManageEmail(staff.role)
+          ? [
+              {
+                key: 'email' as const,
+                href: '/backoffice/emails',
+                label: t('nav.email'),
+              },
+            ]
+          : []),
         /* Same rule as settings below: an entry that only ever opens on a
            locked state is a door that never opens. Tesorería reads its figure
            of the ciclo in Pagos, beside the receipts it settles; the teacher's

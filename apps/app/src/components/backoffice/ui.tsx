@@ -261,7 +261,7 @@ export const tdClass = 'border-b border-line/70 px-4 py-3 align-middle text-ink'
  * queue must not offer it as two different-looking controls.
  */
 export const rowActionClass =
-  'inline-flex items-center gap-1 rounded-lg border border-line px-2.5 py-1.5 text-sm font-semibold text-brand-blue transition hover:border-brand-yellow hover:bg-cream hover:text-ink focus-visible:border-brand-yellow focus-visible:bg-cream focus-visible:text-ink active:border-brand-yellow active:bg-cream active:text-ink'
+  'inline-flex items-center gap-1 whitespace-nowrap rounded-lg border border-line px-2.5 py-1.5 text-sm font-semibold text-brand-blue transition hover:border-brand-yellow hover:bg-cream hover:text-ink focus-visible:border-brand-yellow focus-visible:bg-cream focus-visible:text-ink active:border-brand-yellow active:bg-cream active:text-ink'
 
 /** Small progress meter used for seat pressure. */
 export function Meter({ value, max, tone }: { value: number; max: number; tone: Tone }) {

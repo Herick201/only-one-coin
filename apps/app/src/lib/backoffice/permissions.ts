@@ -145,6 +145,19 @@ export function canCreateEnrollment(role: StaffRole): boolean {
 }
 
 /**
+ * Who opens the e-mail module. Administration and coordination: the catalog
+ * decides what every student receives at the moment their enrollment moves, so
+ * it belongs to the two roles that answer for the funnel. Tesorería settles
+ * money — the payment e-mails are a consequence of that, not a lever it pulls —
+ * and a teacher runs a class group. As everywhere else, this only decides
+ * whether the screen is drawn; the enforcing check is the role declared on the
+ * route in `apps/api` (CLAUDE.md §8).
+ */
+export function canManageEmail(role: StaffRole): boolean {
+  return role === 'admin' || role === 'coordinator'
+}
+
+/**
  * Who opens the platform settings. Admin only: that screen holds the grade that
  * decides who is certified and the tolerance the platform approves a receipt
  * with when nobody is looking. Coordination works inside those numbers and does

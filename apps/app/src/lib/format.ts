@@ -197,3 +197,22 @@ export function formatDateRange(
   const sameYear = startIso.slice(0, 4) === endIso.slice(0, 4)
   return `${compactDate(startIso, locale, !sameYear)} → ${compactDate(endIso, locale, true)}`
 }
+
+/**
+ * A plain count, grouped for the locale. Four-digit volumes read as `4128`
+ * without it, which is a number nobody scans in a column.
+ */
+export function formatNumber(value: number, locale: Locale): string {
+  return new Intl.NumberFormat(intlLocale[locale]).format(value)
+}
+
+/**
+ * A rate, from the fraction itself — never from a number already multiplied by
+ * a hundred. The locale decides the symbol and its spacing.
+ */
+export function formatPercent(fraction: number, locale: Locale): string {
+  return new Intl.NumberFormat(intlLocale[locale], {
+    style: 'percent',
+    maximumFractionDigits: 1,
+  }).format(fraction)
+}
