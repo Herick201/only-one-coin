@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useRef, useState, type ChangeEvent } from 'react'
+import { useMemo, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import type { EnrollmentStatus } from '@/lib/backoffice/types'
@@ -33,6 +33,42 @@ const primaryButtonClass =
 
 const ghostButtonClass =
   'inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3.5 py-2 text-sm font-semibold text-muted-foreground transition hover:text-ink'
+
+/**
+ * One numbered step of the form. The rail is the same one the journey uses:
+ * a marker per step and a line between them, so a form that lives on one page
+ * still reads as an order to follow rather than as a wall of fields.
+ */
+function Step({
+  n,
+  label,
+  last = false,
+  children,
+}: {
+  n: number
+  label: string
+  last?: boolean
+  children: ReactNode
+}) {
+  return (
+    <li className={`relative pl-12 ${last ? '' : 'pb-7'}`}>
+      {!last && (
+        <span
+          aria-hidden="true"
+          className="absolute bottom-0 left-4 top-9 w-px -translate-x-1/2 bg-line"
+        />
+      )}
+      <span
+        aria-hidden="true"
+        className="absolute left-4 top-0 grid size-8 -translate-x-1/2 place-items-center rounded-full border border-line bg-white text-sm font-semibold text-brand-blue"
+      >
+        {n}
+      </span>
+      <p className={`${stepLabelClass} pt-1.5`}>{label}</p>
+      {children}
+    </li>
+  )
+}
 
 /** One choice in a guided list — a row, with the state on the left. */
 function Choice({
@@ -250,15 +286,26 @@ export function NewEmailForm({
   }
 
   const needsValue = kind !== 'all'
+
+  /* The order on screen. "Qual" is only a step when the segment asks for a
+     value, and everything after it moves up a number when it does not. */
+  const stepKeys = [
+    'segment',
+    ...(needsValue ? ['value'] : []),
+    'content',
+    'test',
+    'review',
+  ]
+  const num = (key: string) => stepKeys.indexOf(key) + 1
+
   const chosen =
     kind === 'course' ? course : kind === 'class_group' ? classGroup : statusRow
 
   return (
     <div className="flex flex-col gap-4">
       <Card className="p-5">
-        {/* Who it reaches */}
-        <section>
-          <p className={stepLabelClass}>{t('new_email.segment_step')}</p>
+        <ol className="flex flex-col">
+        <Step n={num('segment')} label={t('new_email.segment_step')}>
               <div role="radiogroup" className="flex flex-col gap-2 sm:max-w-md">
                 {KINDS.map((value) => (
                   <Choice
@@ -274,11 +321,15 @@ export function NewEmailForm({
                   />
                 ))}
               </div>
-            </section>
+
+          <p className="mt-4 flex items-start gap-2 rounded-lg border border-dashed border-line bg-sky-soft px-3 py-2 text-xs text-muted-foreground">
+            <BoIcon name="shield" size={14} className="mt-0.5 shrink-0" />
+            {t('new_email.recipients_note')}
+          </p>
+        </Step>
 
             {needsValue && (
-              <section className="mt-5 border-t border-line pt-4">
-                <p className={stepLabelClass}>{t('new_email.value_step')}</p>
+              <Step n={num('value')} label={t('new_email.value_step')}>
 
                 {kind === 'enrollment_status' ? (
                   <div role="radiogroup" className="flex flex-col gap-2 sm:max-w-md">
@@ -408,17 +459,11 @@ export function NewEmailForm({
                       ))}
                   </div>
                 )}
-              </section>
+              </Step>
             )}
 
-        <p className="mt-5 flex items-start gap-2 rounded-lg border border-dashed border-line bg-sky-soft px-3 py-2 text-xs text-muted-foreground">
-          <BoIcon name="shield" size={14} className="mt-0.5 shrink-0" />
-          {t('new_email.recipients_note')}
-        </p>
-
         {/* What it says */}
-        <section className="mt-5 border-t border-line pt-4">
-          <p className={stepLabelClass}>{t('new_email.content_step')}</p>
+        <Step n={num('content')} label={t('new_email.content_step')}>
               <div role="radiogroup" className="flex flex-col gap-2 sm:max-w-md">
                 <Choice
                   checked={mode === 'write'}
@@ -431,9 +476,8 @@ export function NewEmailForm({
                   onSelect={() => editContent(() => setMode('html'))}
                 />
               </div>
-            </section>
 
-            <section className="mt-5 flex flex-col gap-4 border-t border-line pt-4">
+            <div className="mt-4 flex flex-col gap-4">
               <label className="flex flex-col gap-1.5">
                 <span className={labelClass}>
                   {t('new_email.subject_label')}
@@ -523,11 +567,12 @@ export function NewEmailForm({
                   </p>
                 </>
               )}
-        </section>
+            </div>
+        </Step>
 
         {/* A test to a real inbox, before anybody approves anything */}
-        <section className="mt-5 flex flex-col gap-4 border-t border-line pt-4">
-          <p className={stepLabelClass}>{t('new_email.step_test')}</p>
+        <Step n={num('test')} label={t('new_email.step_test')}>
+          <div className="flex flex-col gap-4">
             <ProofSend
               onSent={(count) => {
                 setError(null)
@@ -551,13 +596,13 @@ export function NewEmailForm({
             <BoIcon name="alert" size={14} className="mt-0.5 shrink-0" />
             {t('new_email.test_note')}
           </p>
-        </section>
+          </div>
+        </Step>
 
         {/* The approval. No summary above it: everything it would repeat is
             still on this page, a screen up. */}
-        <section className="mt-5 flex flex-col gap-3 border-t border-line pt-4">
-          <p className={stepLabelClass}>{t('new_email.step_review')}</p>
-
+        <Step n={num('review')} label={t('new_email.step_review')} last>
+          <div className="flex flex-col gap-3">
           <label className="flex items-start gap-2 text-sm text-ink">
             <input
               type="checkbox"
@@ -582,7 +627,9 @@ export function NewEmailForm({
             <BoIcon name="clock" size={14} className="mt-0.5 shrink-0" />
             {t('new_email.cooldown_note')}
           </p>
-        </section>
+          </div>
+        </Step>
+        </ol>
 
         {error && <p className="mt-4 text-xs font-medium text-red-600">{error}</p>}
 
