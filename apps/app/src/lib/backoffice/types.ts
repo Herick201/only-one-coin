@@ -772,6 +772,13 @@ export interface PaymentSettings {
   escalationConfidence: number
   /** Days a reserved seat survives without an approved payment. */
   reservationDays: number
+  /**
+   * Minutes the public checkout holds a seat while the person goes off to pay
+   * (`CLAUDE.md` §5, "Dois relógios"). The short clock of the pair: it runs
+   * from the class group being chosen to the receipt arriving, and `reservationDays`
+   * takes over from there.
+   */
+  checkoutHoldMinutes: number
 }
 
 /* -------------------------------------------------------------------------- */
@@ -786,6 +793,13 @@ export interface PaymentSettings {
  */
 export interface EnrollmentRow {
   id: string
+  /**
+   * The tracking code printed on the checkout's confirmation screen — what the
+   * student quotes on the phone. Not `id`: an internal row id is not something
+   * anybody should be reading out loud, and a code that only exists on the
+   * student's side is a code nobody here can look up (`CLAUDE.md` §4).
+   */
+  code: string
   studentId: string
   studentName: string
   courseName: string
@@ -884,4 +898,86 @@ export interface NewEnrollmentInput {
   operationNumber: string
   /** Whether the staff member attached the receipt image while filling this in. */
   receiptAttached: boolean
+}
+
+/* -------------------------------------------------------------------------- */
+/* Settings — the numbers and names the platform runs on                       */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The academic thresholds the rules fix and the screens already read. They are
+ * settings rather than constants for the same reason the payment tolerance is:
+ * the Asociación changing what "approved" means must not need a deploy
+ * (CLAUDE.md §5).
+ */
+export interface AcademicSettings {
+  /** Minimum final grade on the 0–20 scale (`docs/REGRAS-NEGOCIO.md` §3). */
+  passingGrade: number
+  /** Business days to issue the free certificate after a class group ends (§6). */
+  certificateDeadlineBusinessDays: number
+  /** Fee for the constancia de matrícula, in cents — a paid procedure (§5). */
+  constanciaFeeCents: number
+  /** How early a teacher's contract starts showing as expiring (CLAUDE.md §1). */
+  contractAlertDays: number
+}
+
+/**
+ * Everything the settings screen owns. Two groups because they answer for two
+ * different things — what the academic rules count as, and what the receipt
+ * pipeline approves on without a human — and one screen, because a number with
+ * two homes is a number that drifts.
+ */
+export interface GeneralSettings {
+  academic: AcademicSettings
+  receipts: PaymentSettings
+}
+
+/**
+ * The account a staff member manages for themselves — access, not identity.
+ * Name, login e-mail and role are not here as editable values on purpose: the
+ * role is written only by the dedicated promotion usecase (CLAUDE.md §8), and
+ * the rest is administration's to change.
+ */
+
+/** The only second factor the panel offers — an authenticator app. */
+export type MfaMethod = 'totp'
+
+export interface AccountMfa {
+  enabled: boolean
+  method: MfaMethod
+  /** When the current device was enrolled. Null while the factor is off. */
+  enrolledAt: string | null
+  /** Unused recovery codes left — what is between a lost phone and a lockout. */
+  recoveryCodesLeft: number
+}
+
+export interface AccountSecurity {
+  /** Null when the password is still the one the account was created with. */
+  passwordUpdatedAt: string | null
+  mfa: AccountMfa
+  lastSignInAt: string
+}
+
+/**
+ * One open session. Browser and system are proper names, so they stay as they
+ * are (CLAUDE.md §4 exception for brand names); the country is a code and gets
+ * resolved to a name on screen.
+ */
+export interface AccountSession {
+  id: string
+  browser: string
+  os: string
+  ip: string
+  city: string
+  /** ISO 3166-1 alpha-2. */
+  country: string
+  lastActiveAt: string
+  /** The session reading this screen — the one that cannot close itself. */
+  current: boolean
+}
+
+export interface AccountOverview {
+  user: StaffUser
+  security: AccountSecurity
+  sessions: AccountSession[]
 }

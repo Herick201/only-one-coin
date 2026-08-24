@@ -132,6 +132,7 @@ export function EnrollmentsView({
       if (period !== 'all' && row.academicPeriodName !== period) return false
       if (!needle) return true
       return [
+        row.code,
         row.studentName,
         row.courseName,
         row.classGroupName,
@@ -403,6 +404,13 @@ export function EnrollmentsView({
                       >
                         {row.studentName}
                       </Link>
+                      {/* The code the student was given at checkout. Under the
+                          name because that is the pair support works with: a
+                          person calls, reads the code, and this is where the
+                          two are matched. */}
+                      <span className="mt-0.5 block font-mono text-[11px] text-muted-foreground">
+                        {row.code}
+                      </span>
                     </td>
 
                     {/* Course over class group, in that order: the course is

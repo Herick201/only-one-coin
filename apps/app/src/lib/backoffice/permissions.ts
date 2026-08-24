@@ -56,16 +56,6 @@ export function canReviewPayments(role: StaffRole): boolean {
 }
 
 /**
- * Who may change the validation parameters. Admin only: the tolerance and the
- * minimum confidence decide what the platform approves with nobody looking, so
- * moving them is worth more than any single approval — including tesorería's,
- * which settles receipts one by one under exactly these numbers.
- */
-export function canConfigurePayments(role: StaffRole): boolean {
-  return role === 'admin'
-}
-
-/**
  * Who opens the teacher roster. A teacher is on it, they do not run it: hiring,
  * allocation and availability are coordination's, and treasury has no business
  * in the academic side at all.
@@ -152,4 +142,28 @@ export function canBrowseReports(role: StaffRole): boolean {
  */
 export function canCreateEnrollment(role: StaffRole): boolean {
   return role === 'admin' || role === 'coordinator'
+}
+
+/**
+ * Who opens the platform settings. Admin only: that screen holds the grade that
+ * decides who is certified and the tolerance the platform approves a receipt
+ * with when nobody is looking. Coordination works inside those numbers and does
+ * not set them, and tesorería settles receipts one by one under exactly them —
+ * so neither moves them. As everywhere else, this only decides whether the
+ * screen draws the form; the enforcing check is the role on the route in
+ * `apps/api` (CLAUDE.md §8).
+ */
+export function canConfigureSettings(role: StaffRole): boolean {
+  return role === 'admin'
+}
+
+/**
+ * Whose second factor is not optional (CLAUDE.md §8). These three roles move
+ * money, approve in bulk or hand out roles, so the panel never offers them a
+ * switch to turn it off — the screen says the factor is part of the job. The
+ * enforcing check is the session policy in `apps/api`; this only decides
+ * whether a control is drawn.
+ */
+export function isMfaMandatory(role: StaffRole): boolean {
+  return role === 'admin' || role === 'treasury' || role === 'mass_approver'
 }

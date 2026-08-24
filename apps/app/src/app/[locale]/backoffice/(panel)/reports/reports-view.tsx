@@ -171,7 +171,6 @@ export function ReportsView({
   const { totals } = report
   const totalOccupancy = occupancyPct(totals.seatsTaken, totals.capacity)
   const periodLabel = period === ALL_PERIODS ? t('reports.period_all') : period
-  const busiestMonth = Math.max(1, ...report.months.map((month) => month.enrollments))
 
   const money = (cents: number) => formatMoney(cents, totals.currency, locale)
 

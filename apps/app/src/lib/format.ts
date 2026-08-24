@@ -122,6 +122,24 @@ export function formatWeekdayTime(
   }
 }
 
+/**
+ * Month names in the reader's language, for a date built from three selects.
+ *
+ * Derived from the locale rather than typed into a locale file: these are the
+ * same names `formatDate` already prints, and keeping them in one place is what
+ * stops "set." and "Setembro" from disagreeing. Nothing here is a hardcoded
+ * string, so the no-UI-copy-in-.ts rule (CLAUDE.md §4) is not in play.
+ */
+export function monthNames(locale: Locale): string[] {
+  const fmt = new Intl.DateTimeFormat(intlLocale[locale], {
+    month: 'long',
+    timeZone: 'UTC',
+  })
+  return Array.from({ length: 12 }, (_, i) =>
+    fmt.format(new Date(Date.UTC(2020, i, 1))),
+  )
+}
+
 /** Initials for an avatar chip. */
 export function initials(firstName: string, lastName: string): string {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
