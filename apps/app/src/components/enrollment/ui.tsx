@@ -265,7 +265,11 @@ export function GhostButton({
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-transparent px-6 py-3.5 text-[15px] font-bold text-muted-foreground transition hover:border-brand-blue hover:text-brand-blue-deep"
+      /* Yellow on hover, like the primary — the pair reads as one family. It
+         stays outlined rather than filling, so "back" never competes with
+         "continue" for the eye. `-deep` for the text because the flat yellow
+         is too light to read on white. */
+      className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-transparent px-6 py-3.5 text-[15px] font-bold text-muted-foreground transition hover:border-brand-yellow hover:bg-brand-yellow/10 hover:text-brand-yellow-deep"
     >
       {children}
     </button>
