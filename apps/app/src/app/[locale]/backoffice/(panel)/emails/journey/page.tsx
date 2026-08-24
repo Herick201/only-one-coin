@@ -45,7 +45,10 @@ export default async function EmailJourneyPage({
     return (
       <Link
         key={flow.template}
-        href={`/backoffice/emails/${flow.template}`}
+        /* Says where the reader came from, so the e-mail's page can send
+           them back to the flow instead of dropping them in the list. A query
+           param rather than history: it survives a refresh and a shared link. */
+        href={`/backoffice/emails/${flow.template}?from=journey`}
         className="group flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-line bg-white px-4 py-3 shadow-card transition hover:border-brand-blue hover:bg-sky-soft"
       >
         <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink transition group-hover:text-brand-blue">

@@ -690,6 +690,7 @@
       "empty_body": "Prueba con otro texto o quita el filtro de pausados.",
       "open": "Ver la plantilla",
       "back": "Volver a correos",
+      "back_journey": "Volver a la jornada",
       "preview_title": "Vista previa",
       "preview_note": "Es la plantilla versionada del repositorio, con datos de ejemplo. Cada persona la recibe en su idioma.",
       "preview_subject": "Asunto",

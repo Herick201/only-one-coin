@@ -690,6 +690,7 @@
       "empty_body": "Try other words, or drop the paused filter.",
       "open": "See the template",
       "back": "Back to e-mails",
+      "back_journey": "Back to the journey",
       "preview_title": "Preview",
       "preview_note": "This is the versioned template from the repository, rendered with sample data. Each person receives it in their own language.",
       "preview_subject": "Subject",

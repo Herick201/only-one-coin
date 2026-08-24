@@ -23,10 +23,14 @@ import { EmailFlowDetail } from './email-flow-detail'
  */
 export default async function EmailFlowPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; template: string }>
+  /** `from=journey` when the reader arrived from the flow — see below. */
+  searchParams: Promise<{ from?: string }>
 }) {
   const { locale, template } = await params
+  const { from } = await searchParams
   setRequestLocale(locale)
   const t = await getTranslations('bo')
 
@@ -36,14 +40,19 @@ export default async function EmailFlowPage({
   const flow = getEmailFlow(template)
   if (!flow) notFound()
 
+  /* Back goes where the reader actually was. Anything other than the flow —
+     including a link somebody pasted — lands on the list, which is the
+     section's front door. */
+  const fromJourney = from === 'journey'
+
   return (
     <div className="flex flex-col gap-5">
       <Link
-        href="/backoffice/emails"
+        href={fromJourney ? '/backoffice/emails/journey' : '/backoffice/emails'}
         className="inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-muted-foreground transition hover:text-ink"
       >
         <BoIcon name="arrow-left" size={16} />
-        {t('emails.back')}
+        {t(fromJourney ? 'emails.back_journey' : 'emails.back')}
       </Link>
 
       <MockNotice label={t('common.mock_notice')} />

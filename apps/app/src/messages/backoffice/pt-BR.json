@@ -690,6 +690,7 @@
       "empty_body": "Tente outro texto ou tire o filtro de pausados.",
       "open": "Ver o modelo",
       "back": "Voltar aos e-mails",
+      "back_journey": "Voltar à jornada",
       "preview_title": "Prévia",
       "preview_note": "É o modelo versionado do repositório, com dados de exemplo. Cada pessoa o recebe no seu idioma.",
       "preview_subject": "Assunto",
