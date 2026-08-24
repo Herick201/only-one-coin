@@ -38,6 +38,7 @@ export type BoIconName =
   | 'plus'
   | 'sort'
   | 'chevron-down'
+  | 'help'
   | 'eye'
   | 'eye-off'
   | 'device'
@@ -98,6 +99,9 @@ const paths: Record<BoIconName, ReactElement> = {
   plus: <path d="M12 5v14M5 12h14" />,
   sort: <path d="M7 4v16m0 0-3-3m3 3 3-3M17 20V4m0 0-3 3m3-3 3 3" />,
   'chevron-down': <path d="m6 9 6 6 6-6" />,
+  help: (
+    <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM9.6 9.5a2.5 2.5 0 1 1 3.3 2.4c-.6.2-.9.7-.9 1.3v.6M12 17h.01" />
+  ),
   eye: (
     <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6ZM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
   ),

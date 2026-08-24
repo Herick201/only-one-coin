@@ -40,7 +40,8 @@
       "actions": "Ações",
       "mock_notice": "Tela de demonstração: os dados são de exemplo e as alterações ainda não são salvas.",
       "required": "obrigatório",
-      "optional": "opcional"
+      "optional": "opcional",
+      "help": "Ajuda"
     },
     "account": {
       "title": "Minha conta",
@@ -358,7 +359,6 @@
       "subtitle": "Tudo que entrou por matrícula e por trâmite, com o estado de cada comprovante.",
       "tab_ledger": "Pagamentos",
       "tab_review": "Fila de revisão",
-      "settings_action": "Parâmetros de validação",
       "metric_in_review": "Em revisão",
       "metric_in_review_hint": "O mais antigo espera {hours} h",
       "metric_approved": "Aprovados",
@@ -450,27 +450,6 @@
       "duplicate": "O comprovante já foi usado",
       "not_a_receipt": "A imagem não é um comprovante",
       "other": "Outro motivo"
-    },
-    "payment_settings": {
-      "title": "Validação de comprovantes",
-      "subtitle": "Os parâmetros com que a plataforma aprova sozinha antes de chamar um humano.",
-      "tolerance_label": "Tolerância de valor",
-      "tolerance_hint": "O quanto o comprovante pode se afastar do preço do plano e ainda ser aprovado sozinho.",
-      "confidence_label": "Confiança mínima",
-      "confidence_hint": "Abaixo desse valor num campo crítico, o comprovante sobe de nível em vez de ser aprovado.",
-      "confidence_value": "{value}%",
-      "reservation_label": "Validade da reserva",
-      "reservation_hint": "Dias que a vaga fica reservada sem pagamento aprovado. Depois ela é liberada sozinha.",
-      "reservation_value": "{days} dias",
-      "checkout_hold_label": "Reserva durante o pagamento",
-      "checkout_hold_hint": "Minutos que a matrícula pública segura a vaga enquanto o aluno sai para pagar. Vencido o prazo, a vaga volta para a turma e o aluno escolhe horário de novo.",
-      "checkout_hold_value": "{minutes} min",
-      "save": "Salvar parâmetros",
-      "cancel": "Descartar",
-      "saved_toast": "Parâmetros aplicados só na tela. Ainda não há servidor conectado.",
-      "audit_notice": "Mudar um parâmetro vale para os comprovantes que chegarem depois: nunca revalida um pagamento já resolvido.",
-      "locked_title": "Só administração",
-      "locked_body": "Estes parâmetros decidem o que é aprovado sem ninguém olhar. Só quem administra a plataforma os muda."
     },
     "enrollments": {
       "title": "Matrículas",
@@ -1023,6 +1002,40 @@
       "class_groups_subtitle": "Tudo o que você dá, em andamento e fechado.",
       "no_class_groups_title": "Sem turmas",
       "no_class_groups_body": "Você ainda não tem turmas atribuídas neste período."
+    },
+    "settings": {
+      "title": "Configuração",
+      "locked_title": "Só administração",
+      "locked_body": "Aqui se define a nota que decide quem é certificado e a tolerância com que a plataforma aprova um comprovante sem ninguém olhar. Só quem administra a plataforma muda isso.",
+      "academic_title": "Regras acadêmicas e procedimentos",
+      "passing_grade_label": "Nota mínima de aprovação",
+      "passing_grade_hint": "Escala 0–20. Abaixo disso não sai certificado.",
+      "passing_grade_value": "{grade} / 20",
+      "certificate_deadline_label": "Prazo do certificado",
+      "certificate_deadline_hint": "Dias úteis a partir do fim da turma para emitir o certificado gratuito.",
+      "business_days_value": "{days} dias úteis",
+      "constancia_fee_label": "Taxa da constancia de matrícula",
+      "constancia_fee_hint": "A constancia é um procedimento pago: o aluno paga, sobe o comprovante e só então ela é emitida.",
+      "contract_alert_label": "Aviso de vencimento de contrato",
+      "contract_alert_hint": "Quantos dias antes do fim o painel marca o contrato de um docente como a vencer.",
+      "days_value": "{days} dias",
+      "academic_notice": "Mudar um número vale daqui para a frente: não revisa o que já foi emitido nem revalida uma nota fechada.",
+      "receipts_title": "Validação de comprovantes",
+      "tolerance_label": "Tolerância de valor",
+      "tolerance_hint": "O quanto o comprovante pode se afastar do preço do plano e ainda ser aprovado sozinho.",
+      "confidence_label": "Confiança mínima",
+      "confidence_hint": "Abaixo desse valor num campo crítico, o comprovante sobe de nível em vez de ser aprovado.",
+      "confidence_value": "{value}%",
+      "reservation_label": "Validade da reserva",
+      "reservation_hint": "Dias que a vaga fica reservada sem pagamento aprovado. Depois ela é liberada sozinha.",
+      "reservation_value": "{days} dias",
+      "checkout_hold_label": "Reserva durante o pagamento",
+      "checkout_hold_hint": "Minutos que a matrícula pública segura a vaga enquanto o aluno sai para pagar. Vencido o prazo, a vaga volta para a turma e o aluno escolhe horário de novo.",
+      "checkout_hold_value": "{minutes} min",
+      "receipts_notice": "Mudar um parâmetro vale para os comprovantes que chegarem depois: nunca revalida um pagamento já resolvido.",
+      "save": "Salvar alterações",
+      "cancel": "Descartar",
+      "saved_toast": "Alterações aplicadas só na tela. Ainda não há servidor conectado."
     }
   }
 }
