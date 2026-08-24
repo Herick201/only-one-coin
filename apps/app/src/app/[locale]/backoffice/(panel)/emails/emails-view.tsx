@@ -4,7 +4,7 @@ import { useMemo, useState, type MouseEvent } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { Link, useRouter } from '@/i18n/navigation'
 import type { EmailFlow, EmailMetrics } from '@/lib/backoffice/types'
-import { formatDate, formatNumber, formatPercent, type Locale } from '@/lib/format'
+import { formatNumber, formatPercent, type Locale } from '@/lib/format'
 import { AutoGrid } from '@/components/layout/auto-grid'
 import {
   Card,
@@ -56,9 +56,10 @@ export function EmailsView({
     return flows.filter((flow) => {
       if (pausedOnly && flow.enabled) return false
       if (!needle) return true
+      /* Search what is on screen: the trigger sentence moved to the journey,
+         so matching on it would find rows the reader cannot see the reason for. */
       return [
         t(`email_template.${flow.template}`),
-        t(`email_trigger.${flow.template}`),
         t(`email_audience.${flow.audience}`),
       ]
         .join(' ')
@@ -177,7 +178,6 @@ export function EmailsView({
                 <th className={thClass}>{t('emails.col_state')}</th>
                 <th className={`${thClass} text-right`}>{t('emails.col_sent')}</th>
                 <th className={`${thClass} text-right`}>{t('emails.col_delivered')}</th>
-                <th className={thClass}>{t('emails.col_template')}</th>
                 <th className={thClass}>
                   <span className="sr-only">{t('common.actions')}</span>
                 </th>
@@ -188,21 +188,16 @@ export function EmailsView({
                 const rate = deliveryRate(flow)
                 return (
                   <tr key={flow.template} {...rowProps(flow.template)}>
+                    {/* The name and nothing under it. What each e-mail is
+                        for, and where it fires, is the journey's job — here
+                        the reader is scanning the whole set at once. */}
                     <td className={tdClass}>
-                      <span className="flex min-w-0 flex-col">
-                        <Link
-                          href={`/backoffice/emails/${flow.template}`}
-                          className="font-semibold text-ink transition hover:text-brand-blue"
-                        >
-                          {t(`email_template.${flow.template}`)}
-                        </Link>
-                        {/* What fires it, on the row: a catalog of names alone
-                            does not say which of two similar e-mails is the
-                            one going out at the wrong moment. */}
-                        <span className="text-xs text-muted-foreground">
-                          {t(`email_trigger.${flow.template}`)}
-                        </span>
-                      </span>
+                      <Link
+                        href={`/backoffice/emails/${flow.template}`}
+                        className="font-semibold text-ink transition hover:text-brand-blue"
+                      >
+                        {t(`email_template.${flow.template}`)}
+                      </Link>
                     </td>
                     <td className={`${tdClass} whitespace-nowrap text-sm text-muted-foreground`}>
                       {t(`email_audience.${flow.audience}`)}
@@ -229,17 +224,6 @@ export function EmailsView({
                           </span>
                         )}
                       </span>
-                    </td>
-                    {/* Version and date on one line: two stacked lines here
-                        made every row two lines tall for a fact nobody reads
-                        twice a month. */}
-                    <td
-                      className={`${tdClass} whitespace-nowrap text-xs text-muted-foreground`}
-                    >
-                      <span className="text-ink">
-                        {t('emails.version', { version: flow.version })}
-                      </span>
-                      {` · ${formatDate(flow.updatedAt, locale)}`}
                     </td>
                     <td className={`${tdClass} text-right`}>
                       <Link

@@ -12,6 +12,7 @@ import type {
   DocumentItem,
   EmailFlow,
   EmailMetrics,
+  EmailSegment,
   EnrollmentHistoryItem,
   ExtractionField,
   PaymentMethod,
@@ -3278,6 +3279,8 @@ export function listEmailFlows(): EmailFlow[] {
     {
       template: 'enrollment_submitted',
       audience: 'student',
+      stage: 'enrollment',
+      conditional: false,
       enabled: true,
       version: 4,
       updatedAt: '2026-08-04T14:20:00Z',
@@ -3285,8 +3288,21 @@ export function listEmailFlows(): EmailFlow[] {
       sample: studentSample,
     },
     {
+      template: 'guardian_consent_reminder',
+      audience: 'guardian',
+      stage: 'enrollment',
+      conditional: true,
+      enabled: true,
+      version: 2,
+      updatedAt: '2026-07-18T13:00:00Z',
+      metrics: { sent: 486, delivered: 470, bounced: 14, failed: 2 },
+      sample: studentSample,
+    },
+    {
       template: 'payment_under_review',
       audience: 'student',
+      stage: 'payment',
+      conditional: true,
       enabled: true,
       version: 2,
       updatedAt: '2026-07-22T16:05:00Z',
@@ -3294,8 +3310,21 @@ export function listEmailFlows(): EmailFlow[] {
       sample: studentSample,
     },
     {
+      template: 'seat_reservation_expiring',
+      audience: 'student',
+      stage: 'payment',
+      conditional: true,
+      enabled: true,
+      version: 1,
+      updatedAt: '2026-08-16T10:05:00Z',
+      metrics: { sent: 173, delivered: 171, bounced: 2, failed: 0 },
+      sample: studentSample,
+    },
+    {
       template: 'payment_approved',
       audience: 'student',
+      stage: 'payment',
+      conditional: false,
       enabled: true,
       version: 5,
       updatedAt: '2026-08-11T11:40:00Z',
@@ -3305,6 +3334,8 @@ export function listEmailFlows(): EmailFlow[] {
     {
       template: 'payment_rejected',
       audience: 'student',
+      stage: 'payment',
+      conditional: true,
       enabled: true,
       version: 3,
       updatedAt: '2026-07-30T09:15:00Z',
@@ -3314,6 +3345,8 @@ export function listEmailFlows(): EmailFlow[] {
     {
       template: 'credentials_issued',
       audience: 'student',
+      stage: 'access',
+      conditional: false,
       enabled: true,
       version: 6,
       updatedAt: '2026-08-14T18:30:00Z',
@@ -3321,29 +3354,13 @@ export function listEmailFlows(): EmailFlow[] {
       sample: studentSample,
     },
     {
-      template: 'guardian_consent_reminder',
-      audience: 'guardian',
-      enabled: true,
-      version: 2,
-      updatedAt: '2026-07-18T13:00:00Z',
-      metrics: { sent: 486, delivered: 470, bounced: 14, failed: 2 },
-      sample: studentSample,
-    },
-    {
-      template: 'seat_reservation_expiring',
-      audience: 'student',
-      enabled: true,
-      version: 1,
-      updatedAt: '2026-08-16T10:05:00Z',
-      metrics: { sent: 173, delivered: 171, bounced: 2, failed: 0 },
-      sample: studentSample,
-    },
-    {
-      /* Off in the mock so the screen has to say what that costs: three days
+      /* Off in the mock so the journey has to show what that costs: three days
          before the class group starts, nobody gets the Classroom link
-         (`docs/REGRAS-NEGOCIO.md` §8). A paused flow is not a quiet flow. */
+         (`docs/REGRAS-NEGOCIO.md` §8). A paused flow is a silence, not a gap. */
       template: 'class_access_ready',
       audience: 'student',
+      stage: 'access',
+      conditional: false,
       enabled: false,
       version: 2,
       updatedAt: '2026-08-02T15:45:00Z',
@@ -3353,6 +3370,8 @@ export function listEmailFlows(): EmailFlow[] {
     {
       template: 'enrollment_certificate_issued',
       audience: 'student',
+      stage: 'documents',
+      conditional: true,
       enabled: true,
       version: 3,
       updatedAt: '2026-08-09T12:10:00Z',
@@ -3362,6 +3381,8 @@ export function listEmailFlows(): EmailFlow[] {
     {
       template: 'certificate_issued',
       audience: 'student',
+      stage: 'documents',
+      conditional: false,
       enabled: true,
       version: 4,
       updatedAt: '2026-08-12T17:25:00Z',
@@ -3387,4 +3408,28 @@ export function getEmailMetrics(): EmailMetrics {
 /** One flow, by the template it renders — the id the detail route carries. */
 export function getEmailFlow(template: string): EmailFlow | undefined {
   return listEmailFlows().find((flow) => flow.template === template)
+}
+
+/**
+ * How many people a manual send would reach, resolved against the enrollment
+ * ledger the same way the real query will: the segment is a question answered
+ * at send time, never a list kept at the provider (`docs/ROADMAP.md` fase 5).
+ *
+ * Counted by student, not by enrollment — somebody enrolled in two courses is
+ * one person receiving one e-mail.
+ */
+export function countEmailRecipients(segment: EmailSegment): number {
+  const rows = listEnrollments().filter((row) => {
+    switch (segment.kind) {
+      case 'all':
+        return true
+      case 'course':
+        return row.courseName === segment.courseName
+      case 'class_group':
+        return row.classGroupId === segment.classGroupId
+      case 'enrollment_status':
+        return row.status === segment.status
+    }
+  })
+  return new Set(rows.map((row) => row.studentId)).size
 }

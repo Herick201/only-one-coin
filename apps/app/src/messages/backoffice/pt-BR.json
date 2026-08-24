@@ -587,6 +587,24 @@
       "student": "Aluno",
       "guardian": "Apoderado"
     },
+    "email_stage": {
+      "enrollment": {
+        "name": "A matrícula chega",
+        "detail": "Do envio do formulário até o comprovante entrar em revisão."
+      },
+      "payment": {
+        "name": "O pagamento se resolve",
+        "detail": "O que o aluno recebe enquanto o comprovante é validado, e quando se decide."
+      },
+      "access": {
+        "name": "O aluno entra",
+        "detail": "As credenciais e o acesso à sala, antes da primeira aula."
+      },
+      "documents": {
+        "name": "Os documentos",
+        "detail": "A constancia que se solicita e o certificado do fim."
+      }
+    },
     "email_preview": {
       "enrollment_submitted": {
         "subject": "Recebemos sua matrícula em {course}",
@@ -651,7 +669,6 @@
     },
     "emails": {
       "title": "E-mails",
-      "subtitle": "Os e-mails que a plataforma envia sozinha: quando saem, o que dizem e como chegaram.",
       "locked_title": "Esta seção é da administração e da coordenação",
       "locked_body": "Os e-mails automáticos decidem o que cada aluno recebe quando a matrícula avança. Seu cargo não os gerencia.",
       "stat_sent": "Enviados",
@@ -670,7 +687,6 @@
       "col_state": "Estado",
       "col_sent": "Enviados",
       "col_delivered": "Entregues",
-      "col_template": "Modelo",
       "state_on": "Ativo",
       "state_off": "Pausado",
       "version": "Versão {version}",
@@ -706,7 +722,61 @@
       "test_error_invalid": "Este endereço não parece um e-mail: {value}.",
       "test_toast": "{count, plural, one {Teste enviado para um endereço} other {Teste enviado para # endereços}}",
       "preview_to": "Para",
-      "updated": "Atualizado em {date}"
+      "updated": "Atualizado em {date}",
+      "tab_catalog": "Automáticos",
+      "tab_journey": "Jornada",
+      "new": "Novo envio",
+      "conditional": "Condicional",
+      "conditional_hint": "Só sai se o caso tomar esse caminho.",
+      "journey_title": "A jornada do aluno",
+      "journey_paused": "Pausado: neste ponto ninguém recebe nada.",
+      "journey_empty": "Nenhum e-mail sai neste ponto ainda.",
+      "journey_note": "O apoderado aparece só quando o aluno é menor de idade."
+    },
+    "new_email": {
+      "title": "Novo envio",
+      "back": "Voltar aos e-mails",
+      "step_of": "Passo {step} de {total}",
+      "step_recipients": "Destinatários",
+      "step_content": "Conteúdo",
+      "step_test": "Prova",
+      "step_review": "Revisão",
+      "next": "Seguinte",
+      "prev": "Voltar",
+      "send": "Enviar",
+      "segment_label": "Para quem vai?",
+      "segment_all": "Toda a base",
+      "segment_course": "Por curso",
+      "segment_class_group": "Por turma",
+      "segment_enrollment_status": "Por estado da matrícula",
+      "pick_course": "Escolha o curso",
+      "pick_class_group": "Escolha a turma",
+      "pick_status": "Escolha o estado",
+      "recipients_count": "{count, plural, =0 {Ninguém corresponde a este grupo} one {Uma pessoa} other {# pessoas}}",
+      "recipients_note": "O grupo é calculado no envio, contra o cadastro: nunca fica guardado no provedor. Quem pediu para não receber avisos fica de fora (Ley 29733).",
+      "subject_label": "Assunto",
+      "subject_placeholder": "O que se lê na caixa de entrada",
+      "body_label": "Mensagem",
+      "body_placeholder": "Escreva o comunicado",
+      "content_note": "Sai no idioma em que você escrever: um comunicado à mão não se traduz sozinho. Os automáticos, sim, chegam no idioma de cada pessoa.",
+      "test_note": "Mande uma prova antes de aprovar. Se depois mudar o assunto ou a mensagem, a prova deixa de valer e precisa ser repetida.",
+      "test_pending": "Ainda sem prova",
+      "test_ok": "Prova enviada, e o texto não mudou desde então.",
+      "review_recipients": "Destinatários",
+      "review_subject": "Assunto",
+      "review_body": "Mensagem",
+      "confirm_label": "Revisei o texto e confirmo que o grupo está certo.",
+      "double_approval": "Um envio para toda a base precisa de uma segunda aprovação da administração. Esta tela ainda não simula isso.",
+      "cooldown_note": "O mesmo grupo não recebe outro comunicado nos 7 dias seguintes.",
+      "audit_note": "O envio fica na auditoria: quem aprovou, para qual grupo e com qual texto.",
+      "error_recipients": "Este grupo não alcança ninguém.",
+      "error_subject": "Falta o assunto.",
+      "error_body": "Falta a mensagem.",
+      "error_test": "Mande uma prova antes de enviar.",
+      "error_confirm": "Marque a confirmação.",
+      "sent_title": "Envio na fila",
+      "sent_body": "{count, plural, one {Sai para uma pessoa.} other {Sai para # pessoas.}} A fila entrega; nada sai desta tela.",
+      "sent_again": "Escrever outro"
     },
     "delivery_status": {
       "not_sent": "Não enviado",

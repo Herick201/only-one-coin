@@ -587,6 +587,24 @@
       "student": "Student",
       "guardian": "Guardian"
     },
+    "email_stage": {
+      "enrollment": {
+        "name": "The enrollment arrives",
+        "detail": "From the form being submitted to the receipt entering review."
+      },
+      "payment": {
+        "name": "The payment is settled",
+        "detail": "What the student receives while the receipt is validated, and when it is decided."
+      },
+      "access": {
+        "name": "The student gets in",
+        "detail": "Credentials and classroom access, before the first class."
+      },
+      "documents": {
+        "name": "The documents",
+        "detail": "The certificate they request and the one that closes the course."
+      }
+    },
     "email_preview": {
       "enrollment_submitted": {
         "subject": "We received your enrollment in {course}",
@@ -651,7 +669,6 @@
     },
     "emails": {
       "title": "Emails",
-      "subtitle": "The e-mails the platform sends on its own: when they go out, what they say and how they landed.",
       "locked_title": "This section belongs to administration and coordination",
       "locked_body": "The automatic e-mails decide what every student receives as their enrollment moves. Your role does not manage them.",
       "stat_sent": "Sent",
@@ -670,7 +687,6 @@
       "col_state": "State",
       "col_sent": "Sent",
       "col_delivered": "Delivered",
-      "col_template": "Template",
       "state_on": "On",
       "state_off": "Paused",
       "version": "Version {version}",
@@ -706,7 +722,61 @@
       "test_error_invalid": "This one does not look like an address: {value}.",
       "test_toast": "{count, plural, one {Test sent to one address} other {Test sent to # addresses}}",
       "preview_to": "To",
-      "updated": "Updated on {date}"
+      "updated": "Updated on {date}",
+      "tab_catalog": "Automatic",
+      "tab_journey": "Journey",
+      "new": "New send",
+      "conditional": "Conditional",
+      "conditional_hint": "Only goes out when the case takes that turn.",
+      "journey_title": "The student’s journey",
+      "journey_paused": "Paused: at this point nobody receives anything.",
+      "journey_empty": "No e-mail goes out at this point yet.",
+      "journey_note": "The guardian appears only when the student is a minor."
+    },
+    "new_email": {
+      "title": "New send",
+      "back": "Back to e-mails",
+      "step_of": "Step {step} of {total}",
+      "step_recipients": "Recipients",
+      "step_content": "Content",
+      "step_test": "Proof",
+      "step_review": "Review",
+      "next": "Next",
+      "prev": "Back",
+      "send": "Send",
+      "segment_label": "Who is it going to?",
+      "segment_all": "Everyone",
+      "segment_course": "By course",
+      "segment_class_group": "By class group",
+      "segment_enrollment_status": "By enrollment state",
+      "pick_course": "Pick the course",
+      "pick_class_group": "Pick the class group",
+      "pick_status": "Pick the state",
+      "recipients_count": "{count, plural, =0 {Nobody matches this group} one {One person} other {# people}}",
+      "recipients_note": "The group is resolved at send time, against the register: it is never stored at the provider. Anyone who asked not to receive notices is left out (Ley 29733).",
+      "subject_label": "Subject",
+      "subject_placeholder": "What is read in the inbox",
+      "body_label": "Message",
+      "body_placeholder": "Write the notice",
+      "content_note": "It goes out in the language you write it in: a hand-written notice does not translate itself. The automatic ones do reach each person in their own.",
+      "test_note": "Send a proof before approving. If you change the subject or the message afterwards, the proof stops counting and has to be repeated.",
+      "test_pending": "No proof yet",
+      "test_ok": "Proof sent, and the text has not changed since.",
+      "review_recipients": "Recipients",
+      "review_subject": "Subject",
+      "review_body": "Message",
+      "confirm_label": "I read the text and confirm the group is the right one.",
+      "double_approval": "A send to everyone needs a second approval from administration. This screen does not simulate it yet.",
+      "cooldown_note": "The same group receives no other notice for the next 7 days.",
+      "audit_note": "The send goes to the audit log: who approved it, to which group, and with what text.",
+      "error_recipients": "This group reaches nobody.",
+      "error_subject": "The subject is missing.",
+      "error_body": "The message is missing.",
+      "error_test": "Send a proof before sending.",
+      "error_confirm": "Tick the confirmation.",
+      "sent_title": "Send queued",
+      "sent_body": "{count, plural, one {It goes to one person.} other {It goes to # people.}} The queue delivers it; nothing leaves from this screen.",
+      "sent_again": "Write another"
     },
     "delivery_status": {
       "not_sent": "Not sent",

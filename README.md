@@ -73,14 +73,21 @@ Domínio e fila já existem, independentes dessa escolha:
   grade da semana com as turmas já atribuídas sobrepostas — e as turmas do
   docente. A ficha é onde se tira alguém do quadro e se devolve: a confirmação
   avisa quantas turmas em andamento ainda apontam para ele, e o contrato deixa
-  de ser vigiado enquanto estiver inativo) e correio (`/backoffice/emails`: o
-  catálogo dos e-mails transacionais — o que dispara cada um, destinatário,
-  estado, enviados/entregues dos últimos 30 dias e versão do template —, com um
-  painel por e-mail que mostra a prévia renderizada do template versionado do
-  repositório (dados de exemplo, nunca de aluno real), liga/desliga o envio
-  automático e manda uma prova para até 5 endereços. Não existe botão de enviar
-  por aluno: e-mail transacional é consequência do que aconteceu no domínio.
-  Campanhas ainda não existem). O papel `teacher` já entra numa
+  de ser vigiado enquanto estiver inativo) e correio (`/backoffice/emails`, em
+  três telas: **Automáticos**, o conjunto dos e-mails transacionais com
+  destinatário, estado e enviados/entregues dos últimos 30 dias;
+  **Jornada** (`/backoffice/emails/journey`), os mesmos e-mails na ordem em que
+  o aluno os recebe — quatro etapas, marcando o que é ramo condicional e onde um
+  e-mail pausado deixa silêncio; e a página de cada e-mail
+  (`/backoffice/emails/[template]`), com a prévia renderizada do template
+  versionado do repositório (dados de exemplo, nunca de aluno real), o
+  liga/desliga do envio automático e a prova para até 5 endereços. **Novo envio**
+  (`/backoffice/emails/new`) é o comunicado escrito à mão, em quatro passos —
+  destinatários, conteúdo, prova e revisão: o segmento é calculado no envio e
+  nunca guardado no provedor, a prova perde a validade assim que o texto muda, e
+  o envio para toda a base fica parado à espera da segunda aprovação. Não existe
+  botão de enviar por aluno: e-mail transacional é consequência do que aconteceu
+  no domínio). O papel `teacher` já entra numa
   **visão restrita**: menu reduzido,
   home própria (turmas, alunos, notas e certificados pendentes dele), só as
   próprias turmas na lista e na ficha da turma, e alunos/pagamentos bloqueados —

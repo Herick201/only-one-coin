@@ -10,6 +10,10 @@ import {
   formatPercent,
   type Locale,
 } from '@/lib/format'
+import {
+  MAX_TEST_RECIPIENTS,
+  parseTestRecipients,
+} from '@/lib/backoffice/email-proof'
 import { AutoGrid } from '@/components/layout/auto-grid'
 import {
   Card,
@@ -19,12 +23,6 @@ import {
 } from '@/components/backoffice/ui'
 import { Toast, Toggle } from '@/components/backoffice/controls'
 import { BoIcon } from '@/components/backoffice/icons'
-
-/** How many addresses one proof may go to (`docs/ROADMAP.md` fase 5). */
-const MAX_TEST_RECIPIENTS = 5
-
-/** Enough to catch a typo before it becomes a bounce; the provider is the judge. */
-const ADDRESS = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 /**
  * The e-mail itself. Two columns where the column is wide enough for them: the
@@ -61,28 +59,20 @@ export function EmailFlowDetail({
   }
 
   function sendTest() {
-    const list = recipients
-      .split(',')
-      .map((value) => value.trim())
-      .filter((value) => value.length > 0)
-
-    if (list.length === 0) {
-      setError(t('emails.test_error_empty'))
-      return
-    }
-    if (list.length > MAX_TEST_RECIPIENTS) {
-      setError(t('emails.test_error_max', { max: MAX_TEST_RECIPIENTS }))
-      return
-    }
-    const bad = list.find((value) => !ADDRESS.test(value))
-    if (bad) {
-      setError(t('emails.test_error_invalid', { value: bad }))
+    const parsed = parseTestRecipients(recipients)
+    if (!parsed.ok) {
+      /* Written out rather than nested: the invalid case is the only one
+         carrying the address that failed, and a ternary chain hides that. */
+      if (parsed.reason === 'empty') setError(t('emails.test_error_empty'))
+      else if (parsed.reason === 'max')
+        setError(t('emails.test_error_max', { max: MAX_TEST_RECIPIENTS }))
+      else setError(t('emails.test_error_invalid', { value: parsed.value }))
       return
     }
 
     setError(null)
     setRecipients('')
-    setToast(t('emails.test_toast', { count: list.length }))
+    setToast(t('emails.test_toast', { count: parsed.list.length }))
   }
 
   /**

@@ -235,12 +235,12 @@ export type StudentField =
  */
 export type EmailTemplate =
   | 'enrollment_submitted'
+  | 'guardian_consent_reminder'
   | 'payment_under_review'
+  | 'seat_reservation_expiring'
   | 'payment_approved'
   | 'payment_rejected'
   | 'credentials_issued'
-  | 'guardian_consent_reminder'
-  | 'seat_reservation_expiring'
   | 'class_access_ready'
   | 'enrollment_certificate_issued'
   | 'certificate_issued'
@@ -902,6 +902,13 @@ export interface NewEnrollmentInput {
 /* E-mail                                                                      */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * The four moments of the student's path the automatic e-mails hang off. Not a
+ * database column: it is the order somebody reads the journey in, and it lives
+ * here so both screens agree on it.
+ */
+export type EmailStage = 'enrollment' | 'payment' | 'access' | 'documents'
+
 /** Who the template is written to — it decides the tone and the address. */
 export type EmailAudience = 'student' | 'guardian'
 
@@ -949,6 +956,14 @@ export interface EmailSample {
 export interface EmailFlow {
   template: EmailTemplate
   audience: EmailAudience
+  /** Where in the student's path it fires — the journey groups on this. */
+  stage: EmailStage
+  /**
+   * Fires only when the case takes that turn: the receipt that needed a human,
+   * the seat nobody paid for, the student who is a minor. The journey has to
+   * say so, or a branch reads like a step everybody goes through.
+   */
+  conditional: boolean
   /** Whether the outbox may send it at all. Off means nobody receives it. */
   enabled: boolean
   /** Version of the template in the repository — bumped, never edited in place. */
@@ -969,4 +984,23 @@ export interface EmailMetrics {
   failed: number
   /** Flows currently switched off — nobody is receiving those. */
   paused: number
+}
+
+/**
+ * Who a manual send goes to. A segment is *computed* — the platform asks the
+ * database who matches, at the moment of sending, and never keeps a list at the
+ * provider (`docs/ROADMAP.md` fase 5). So this is the question, not the answer:
+ * the recipients are whatever it resolves to when somebody presses send.
+ */
+export type EmailSegment =
+  | { kind: 'all' }
+  | { kind: 'course'; courseName: string }
+  | { kind: 'class_group'; classGroupId: string; classGroupName: string }
+  | { kind: 'enrollment_status'; status: EnrollmentStatus }
+
+/** What a manual send is, while it is still being written. */
+export interface EmailDraft {
+  segment: EmailSegment
+  subject: string
+  body: string
 }
