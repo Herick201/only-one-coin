@@ -39,6 +39,11 @@ export type BoIconName =
   | 'sort'
   | 'chevron-down'
   | 'help'
+  | 'eye'
+  | 'eye-off'
+  | 'device'
+  | 'key'
+  | 'globe'
 
 const paths: Record<BoIconName, ReactElement> = {
   dashboard: <path d="M4 4h7v7H4zM13 4h7v4h-7zM13 10h7v10h-7zM4 13h7v7H4z" />,
@@ -95,7 +100,22 @@ const paths: Record<BoIconName, ReactElement> = {
   sort: <path d="M7 4v16m0 0-3-3m3 3 3-3M17 20V4m0 0-3 3m3-3 3 3" />,
   'chevron-down': <path d="m6 9 6 6 6-6" />,
   help: (
-    <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.8.4-1 .9-1 1.7M12 17h.01" />
+    <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM9.6 9.5a2.5 2.5 0 1 1 3.3 2.4c-.6.2-.9.7-.9 1.3v.6M12 17h.01" />
+  ),
+  eye: (
+    <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6ZM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+  ),
+  'eye-off': (
+    <path d="M4 4l16 16M9.9 5.2A9.8 9.8 0 0 1 12 5c6.4 0 10 6 10 6a17 17 0 0 1-3.5 4M6.3 7.8C3.7 9.4 2 12 2 12s3.6 6 10 6a10 10 0 0 0 3.4-.6M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+  ),
+  device: (
+    <path d="M3 5a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3M3 5v9a1 1 0 0 0 1 1h6M8 19h4M10 15v4M15 11h5a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1ZM17 17.5h1" />
+  ),
+  key: (
+    <path d="M14.5 4a5.5 5.5 0 1 1-4.1 9.2L4 19.6V21h3v-2h2v-2h2l1.4-1.4A5.5 5.5 0 0 1 14.5 4ZM16 8.5h.01" />
+  ),
+  globe: (
+    <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM3 12h18M12 3a14 14 0 0 1 3.5 9A14 14 0 0 1 12 21a14 14 0 0 1-3.5-9A14 14 0 0 1 12 3Z" />
   ),
 }
 

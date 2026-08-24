@@ -165,6 +165,7 @@ export default async function BackofficeHomePage({
       label: t('nav.reports'),
       body: t('modules.reports'),
       icon: BarChart3,
+      ready: true,
     },
     {
       href: '/backoffice/team',

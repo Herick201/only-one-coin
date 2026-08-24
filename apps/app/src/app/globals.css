@@ -29,6 +29,13 @@
 
   --shadow-card: 0 6px 18px -10px rgba(19, 34, 75, 0.28);
   --shadow-float: 0 20px 45px -22px rgba(19, 34, 75, 0.35);
+  /* The landing's two coloured lifts (`--shadow-blue` / `--shadow-yellow` in
+     apps/landing). Used by the public checkout, which is the one surface of
+     this app a visitor reaches straight from the marketing site — the primary
+     button there goes blue → yellow on hover, and it has to carry the same
+     glow it did one page earlier. */
+  --shadow-blue: 0 22px 45px -18px rgba(47, 107, 255, 0.5);
+  --shadow-yellow: 0 18px 38px -16px rgba(245, 166, 35, 0.55);
 
   /* Uma família só no app (portal + backoffice): Inter. A variável
      --font-inter é injetada por next/font no <html> ([locale]/layout.tsx),

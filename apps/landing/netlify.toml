@@ -18,6 +18,56 @@
 [context.branch-deploy.environment]
   # variáveis de staging
 
+# A matrícula e o portal moram em `apps/app`, num domínio próprio — mas os
+# links da landing são relativos (`/enrollment`, `/pt/enrollment`), porque para
+# quem lê é tudo o mesmo site. Estes redirects são a costura entre os dois.
+#
+# 302 e não proxy (200): um proxy manteria o domínio da landing na barra, ao
+# custo de cookies de sessão e CSP atravessando origens — frágil demais para a
+# tela onde alguém digita documento e sobe comprovante. A query string é
+# preservada pelo Netlify por padrão, o que importa: `?course=&group=&src=`
+# carrega o pré-preenchimento do vendedor e a atribuição de canal
+# (`docs/MATRICULA-CHECKOUT.md` §4).
+#
+# O domínio vive aqui, em config por contexto, e não no código (`CLAUDE.md` §6).
+[[redirects]]
+  from = "/enrollment*"
+  to = "https://aula.onlyonecoin.edu.pe/enrollment:splat"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/pt/enrollment*"
+  to = "https://aula.onlyonecoin.edu.pe/pt/enrollment:splat"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/en/enrollment*"
+  to = "https://aula.onlyonecoin.edu.pe/en/enrollment:splat"
+  status = 302
+  force = true
+
+# Staging aponta para o app de staging (`CLAUDE.md` §7). Sem isto, um deploy de
+# branch mandaria quem testa direto para produção.
+[[context.branch-deploy.redirects]]
+  from = "/enrollment*"
+  to = "https://staging.aula.onlyonecoin.edu.pe/enrollment:splat"
+  status = 302
+  force = true
+
+[[context.branch-deploy.redirects]]
+  from = "/pt/enrollment*"
+  to = "https://staging.aula.onlyonecoin.edu.pe/pt/enrollment:splat"
+  status = 302
+  force = true
+
+[[context.branch-deploy.redirects]]
+  from = "/en/enrollment*"
+  to = "https://staging.aula.onlyonecoin.edu.pe/en/enrollment:splat"
+  status = 302
+  force = true
+
 # Segurança — aplicada na borda do Netlify (§8 do CLAUDE.md).
 [[headers]]
   for = "/*"

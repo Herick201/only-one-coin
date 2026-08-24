@@ -4,26 +4,52 @@
     {
       "name": "landing",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@ooc/landing", "dev"],
+      "runtimeArgs": [
+        "--filter",
+        "@ooc/landing",
+        "dev"
+      ],
       "port": 4321
     },
     {
       "name": "landing-wt",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@ooc/landing", "dev", "--port", "4322"],
+      "runtimeArgs": [
+        "--filter",
+        "@ooc/landing",
+        "dev",
+        "--port",
+        "4322"
+      ],
       "port": 4322
     },
     {
       "name": "app",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@ooc/app", "exec", "next", "dev", "--port", "3007"],
+      "runtimeArgs": [
+        "--filter",
+        "@ooc/app",
+        "exec",
+        "next",
+        "dev",
+        "--port",
+        "3007"
+      ],
       "port": 3007
     },
     {
       "name": "app-wt",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@ooc/app", "exec", "next", "dev", "--port", "3009"],
-      "port": 3009
+      "runtimeArgs": [
+        "--filter",
+        "@ooc/app",
+        "exec",
+        "next",
+        "dev",
+        "--port",
+        "3008"
+      ],
+      "port": 3008
     }
   ]
 }
