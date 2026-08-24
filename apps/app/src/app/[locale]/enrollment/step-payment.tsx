@@ -192,13 +192,13 @@ export function StepPayment({
               method: paymentMethodLabel[account.method],
             })}
           </p>
-          <div className="flex flex-col gap-3 @md/checkout:flex-row @md/checkout:items-start">
-            {/* Scanning is the fast path on a phone; the number below it is
-                the fallback for somebody typing on a laptop. */}
-            {account.hasQr && (
-              <QrPlaceholder label={t('step.payment.qr_example')} />
-            )}
-            <div className="flex min-w-0 flex-1 flex-col gap-2">
+          {/* Account details first, code under them.
+              Side by side, the square pulled the eye before the reader knew
+              whose account they were about to send money to — and the holder's
+              name is the thing worth checking before scanning anything. Read,
+              then scan. */}
+          <div className="flex flex-col gap-4">
+            <div className="flex min-w-0 flex-col gap-2">
             <CopyRow
               label={t('step.payment.holder')}
               value={account.holder}
@@ -227,6 +227,14 @@ export function StepPayment({
               />
             )}
             </div>
+
+            {/* Centred, because it is a target: a code hugging one edge of a
+                wide card is a code somebody holds their phone crooked at. */}
+            {account.hasQr && (
+              <div className="flex justify-center">
+                <QrPlaceholder label={t('step.payment.qr_example')} />
+              </div>
+            )}
           </div>
           <Note tone="warning">{t('step.payment.exact_amount_warning')}</Note>
         </Card>
@@ -292,11 +300,14 @@ export function StepPayment({
                     {formatFileSize(draft.payment.receipt.sizeBytes, locale)}
                   </span>
                 </span>
+                {/* Red, though it sits in the green "attached" panel: the
+                    colour here describes the action, not the surround, and
+                    this one throws away the file the whole step depends on. */}
                 <button
                   type="button"
                   onClick={dropReceipt}
                   aria-label={t('action.remove_receipt')}
-                  className="ml-auto shrink-0 rounded-lg p-1.5 text-emerald-800 transition hover:bg-emerald-100"
+                  className="ml-auto shrink-0 rounded-lg p-1.5 text-red-600 transition hover:bg-red-100 hover:text-red-700"
                 >
                   <CheckoutIcon name="trash" size={16} />
                 </button>
