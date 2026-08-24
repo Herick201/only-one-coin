@@ -426,7 +426,7 @@
       "metric_released": "Seats released",
       "metric_released_hint": "Handed back to the class group",
       "search_label": "Search enrollments",
-      "search_placeholder": "Student, course, class group or operation number",
+      "search_placeholder": "Code, student, course, class group or operation number",
       "filters": "Filters",
       "filter_all": "All",
       "filter_status": "Status",

@@ -73,17 +73,32 @@ export interface CatalogPlan {
   currency: 'PEN'
 }
 
+/**
+ * One weekly session. A class group is a list of these rather than a set of
+ * weekdays sharing one time, because they do not: a group can meet Tuesday
+ * 09:00–13:00 and Thursday 06:30–08:30. Same shape the portal already uses
+ * (`lib/portal/types.ts`, `WeeklySlot`).
+ */
+export interface WeeklySlot {
+  weekday: Weekday
+  /** "HH:mm" in America/Lima. */
+  startTime: string
+  endTime: string
+}
+
 /** A turma. Never `class` — reserved word (`CLAUDE.md` §4 glossary). */
 export interface CatalogClassGroup {
   id: string
   courseId: string
-  /** The code the institution prints on paperwork — catalog data, not an id. */
+  /**
+   * The code the institution prints on paperwork. Carried, but never shown in
+   * the checkout: it means nothing to somebody enrolling for the first time,
+   * and it was crowding the one thing the card exists to say — when the class
+   * meets.
+   */
   code: string
   teacherName: string
-  weekdays: Weekday[]
-  /** "HH:mm" in America/Lima. */
-  startTime: string
-  endTime: string
+  slots: WeeklySlot[]
   startDate: string
   endDate: string
   capacity: number
@@ -107,6 +122,12 @@ export interface PaymentAccount {
   number: string
   /** Interbank transfer code, when the rail has one. */
   interbankCode: string | null
+  /**
+   * Whether this rail is paid by scanning. Yape is; a bank transfer is not,
+   * and showing a code beside an account number invites somebody to try to
+   * scan the wrong thing.
+   */
+  hasQr: boolean
 }
 
 /**

@@ -26,6 +26,8 @@ import {
   TextInput,
 } from '@/components/enrollment/ui'
 import { CheckoutIcon } from '@/components/enrollment/icons'
+import { PhoneField } from '@/components/enrollment/phone-field'
+import { BirthDateField } from '@/components/enrollment/birth-date-field'
 import { AutoGrid, fullRowClass } from '@/components/layout/auto-grid'
 
 const ID_TYPES: NationalIdType[] = ['DNI', 'CE', 'passport']
@@ -108,7 +110,6 @@ export function StepStudent({
   return (
     <div className="flex flex-col gap-5">
       <StepHeading
-        eyebrow={t('step.student.eyebrow')}
         title={t('step.student.title')}
         subtitle={t('step.student.subtitle')}
       />
@@ -171,14 +172,11 @@ export function StepStudent({
             error={err(studentErrors.phone)}
             hint={t('step.student.phone_hint')}
           >
-            <TextInput
+            <PhoneField
               id="phone"
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
               value={draft.student.phone}
               invalid={Boolean(err(studentErrors.phone))}
-              onChange={(e) => patchStudent({ phone: e.target.value })}
+              onChange={(phone) => patchStudent({ phone })}
             />
           </FieldGroup>
 
@@ -190,14 +188,13 @@ export function StepStudent({
               course ? t('step.student.min_age_hint', { age: course.minAge }) : undefined
             }
           >
-            <TextInput
+            <BirthDateField
               id="birth-date"
-              type="date"
               value={draft.student.birthDate}
               invalid={Boolean(
                 err(studentErrors.birthDate) ?? err(studentErrors.minAge),
               )}
-              onChange={(e) => patchStudent({ birthDate: e.target.value })}
+              onChange={(birthDate) => patchStudent({ birthDate })}
             />
           </FieldGroup>
 
@@ -298,13 +295,11 @@ export function StepStudent({
               htmlFor="guardian-phone"
               error={err(guardianErrors.phone)}
             >
-              <TextInput
+              <PhoneField
                 id="guardian-phone"
-                type="tel"
-                inputMode="tel"
                 value={draft.guardian.phone}
                 invalid={Boolean(err(guardianErrors.phone))}
-                onChange={(e) => patchGuardian({ phone: e.target.value })}
+                onChange={(phone) => patchGuardian({ phone })}
               />
             </FieldGroup>
 

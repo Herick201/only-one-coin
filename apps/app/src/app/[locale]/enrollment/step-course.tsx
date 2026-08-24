@@ -12,7 +12,7 @@ import {
   seatsLeft,
   startDatesOfCourse,
 } from '@/lib/enrollment/checkout'
-import { scheduleLine } from '@/lib/enrollment/schedule'
+import { scheduleLines } from '@/lib/enrollment/schedule'
 import { formatDate, formatMoney, type Locale } from '@/lib/format'
 import {
   Card,
@@ -125,21 +125,31 @@ export function StepCourse({
     setDraft((prev) => ({ ...prev, course: { ...prev.course, classGroupId: id } }))
   }
 
-  const schedule = (group: {
-    weekdays: readonly string[]
-    startTime: string
-    endTime: string
-  }) =>
-    scheduleLine(
-      group as Parameters<typeof scheduleLine>[0],
+  const schedule = (group: Parameters<typeof scheduleLines>[0]) =>
+    scheduleLines(
+      group,
       (day) => t(`weekday.${day}`),
-      (vars) => t('schedule_line', vars),
+      (vars) => t('time_range', vars),
     )
+
+  /** The week as a small stack — day on the left, hours on the right. */
+  const scheduleBlock = (group: Parameters<typeof scheduleLines>[0]) => (
+    <span className="flex flex-col gap-0.5">
+      {schedule(group).map((line) => (
+        <span key={line.key} className="flex items-baseline gap-2">
+          <span className="text-sm font-semibold text-ink">{line.day}</span>
+          <span aria-hidden="true" className="text-muted-foreground">
+            —
+          </span>
+          <span className="text-sm font-semibold text-ink">{line.time}</span>
+        </span>
+      ))}
+    </span>
+  )
 
   return (
     <div className="flex flex-col gap-5">
       <StepHeading
-        eyebrow={t('step.course.eyebrow')}
         title={t('step.course.title')}
         subtitle={t('step.course.subtitle')}
       />
@@ -262,7 +272,7 @@ export function StepCourse({
                     selected={classGroupId === group.id}
                     disabled={!open}
                     onSelect={() => pickGroup(group.id)}
-                    title={schedule(group)}
+                    title={scheduleBlock(group)}
                     aside={
                       open ? (
                         left <= SCARCE_SEATS ? (
@@ -277,11 +287,8 @@ export function StepCourse({
                       )
                     }
                   >
-                    <span className="mt-1 flex flex-col gap-0.5 text-xs text-muted-foreground">
-                      <span>
-                        {t('step.course.teacher', { name: group.teacherName })}
-                      </span>
-                      <span className="font-mono text-[11px]">{group.code}</span>
+                    <span className="mt-1.5 text-xs text-muted-foreground">
+                      {t('step.course.teacher', { name: group.teacherName })}
                     </span>
                   </ChoiceCard>
                 )
@@ -304,7 +311,11 @@ export function StepCourse({
               {formatDate(selectedGroup.startDate, locale)}
             </SummaryRow>
             <SummaryRow label={t('summary.schedule')}>
-              {schedule(selectedGroup)}
+              <span className="flex flex-col items-end gap-0.5">
+                {schedule(selectedGroup).map((line) => (
+                  <span key={line.key}>{`${line.day} — ${line.time}`}</span>
+                ))}
+              </span>
             </SummaryRow>
             <SummaryRow label={t('summary.total')} strong>
               {formatMoney(plan.amountCents, plan.currency, locale)}

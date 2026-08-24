@@ -17,6 +17,7 @@ import {
   TextInput,
 } from '@/components/enrollment/ui'
 import { CheckoutIcon } from '@/components/enrollment/icons'
+import { QrPlaceholder } from '@/components/enrollment/qr-placeholder'
 import { AutoGrid } from '@/components/layout/auto-grid'
 
 /**
@@ -132,7 +133,6 @@ export function StepPayment({
   return (
     <div className="flex flex-col gap-5">
       <StepHeading
-        eyebrow={t('step.payment.eyebrow')}
         title={t('step.payment.title')}
         subtitle={t('step.payment.subtitle')}
       />
@@ -192,7 +192,13 @@ export function StepPayment({
               method: paymentMethodLabel[account.method],
             })}
           </p>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-3 @md/checkout:flex-row @md/checkout:items-start">
+            {/* Scanning is the fast path on a phone; the number below it is
+                the fallback for somebody typing on a laptop. */}
+            {account.hasQr && (
+              <QrPlaceholder label={t('step.payment.qr_example')} />
+            )}
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
             <CopyRow
               label={t('step.payment.holder')}
               value={account.holder}
@@ -220,6 +226,7 @@ export function StepPayment({
                 onCopy={() => void copy(account.interbankCode ?? '', 'cci')}
               />
             )}
+            </div>
           </div>
           <Note tone="warning">{t('step.payment.exact_amount_warning')}</Note>
         </Card>

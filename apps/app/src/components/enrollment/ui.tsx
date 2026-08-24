@@ -1,9 +1,15 @@
 import type { InputHTMLAttributes, ReactNode } from 'react'
 import { CheckoutIcon, type CheckoutIconName } from './icons'
+import { display } from '@/lib/enrollment/fonts'
 
 /**
  * Presentational primitives for the public checkout. Like the portal's, they
  * never hold copy — every label arrives already translated (`CLAUDE.md` §4).
+ *
+ * Shapes follow the landing: 20px card radius, pill buttons, and the primary
+ * action going blue → yellow on hover with the same coloured lift. A visitor
+ * gets here one click from that site, and controls that change shape between
+ * the two read as two different products.
  *
  * Sizing follows the column, not the window (`CLAUDE.md` §5, "Layout das
  * telas"). The checkout has no sidebar, but it is capped at a reading width and
@@ -21,27 +27,30 @@ export function Card({
   as?: 'div' | 'section' | 'li' | 'form'
 }) {
   return (
-    <Tag className={`rounded-2xl border border-line bg-white shadow-card ${className}`}>
+    <Tag className={`rounded-[20px] border border-line bg-white shadow-card ${className}`}>
       {children}
     </Tag>
   )
 }
 
+/**
+ * No step number above the title: the rail right above it already says which
+ * step this is, in a way that also shows what is behind and ahead. Printing
+ * "PASO 2" a second time is the same fact twice, and it pushed the question
+ * the reader actually has to answer further down the screen.
+ */
 export function StepHeading({
-  eyebrow,
   title,
   subtitle,
 }: {
-  eyebrow: string
   title: string
   subtitle?: string
 }) {
   return (
     <header className="mb-5">
-      <p className="text-xs font-semibold uppercase tracking-wide text-brand-blue">
-        {eyebrow}
-      </p>
-      <h1 className="mt-1 text-xl font-semibold tracking-tight text-ink sm:text-2xl">
+      <h1
+        className={`${display.className} text-2xl font-semibold leading-tight tracking-[-0.01em] text-ink sm:text-3xl`}
+      >
         {title}
       </h1>
       {subtitle && (
@@ -51,6 +60,16 @@ export function StepHeading({
   )
 }
 
+/**
+ * Every field on this form is required, and the asterisk says so on each one
+ * rather than once in a line of small print above them. A reader who scrolls
+ * back to a half-filled form should not have to remember which of the two
+ * conventions this page used.
+ *
+ * The marker is `aria-hidden` and the requirement is carried to assistive tech
+ * by `required` on the control itself — a screen reader announcing "asterisk"
+ * after every label is noise, not information.
+ */
 export function FieldGroup({
   label,
   error,
@@ -71,6 +90,9 @@ export function FieldGroup({
         className="text-xs font-medium uppercase tracking-wide text-muted-foreground"
       >
         {label}
+        <span aria-hidden="true" className="ml-1 text-brand-blue">
+          *
+        </span>
       </label>
       {children}
       {error ? (
@@ -146,7 +168,8 @@ export function ChoiceCard({
   selected: boolean
   disabled?: boolean
   onSelect: () => void
-  title: string
+  /** A node, not a string: a class group's week is one line per session. */
+  title: ReactNode
   meta?: string
   aside?: ReactNode
   children?: ReactNode
@@ -157,12 +180,12 @@ export function ChoiceCard({
       disabled={disabled}
       onClick={onSelect}
       aria-pressed={selected}
-      className={`flex w-full min-w-0 flex-col gap-1 rounded-xl border p-4 text-left transition ${
+      className={`flex w-full min-w-0 flex-col gap-1 rounded-2xl border p-4 text-left transition ${
         disabled
           ? 'cursor-not-allowed border-line bg-sky-soft opacity-60'
           : selected
             ? 'border-brand-blue bg-sky ring-2 ring-brand-blue/20'
-            : 'border-line bg-white hover:border-brand-blue/50 hover:bg-sky-soft'
+            : 'border-line bg-white hover:-translate-y-0.5 hover:border-brand-blue/50 hover:bg-sky-soft hover:shadow-card'
       }`}
     >
       <span className="flex w-full items-start justify-between gap-3">
@@ -200,7 +223,7 @@ export function Note({
 }) {
   return (
     <p
-      className={`flex items-start gap-2 rounded-xl border px-3.5 py-3 text-sm ${noteStyles[tone]}`}
+      className={`flex items-start gap-2 rounded-2xl border px-4 py-3.5 text-sm ${noteStyles[tone]}`}
     >
       <CheckoutIcon name={noteIcons[tone]} size={16} className="mt-0.5 shrink-0" />
       <span className="min-w-0">{children}</span>
@@ -224,7 +247,7 @@ export function PrimaryButton({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-blue px-5 py-2.5 text-sm font-semibold text-white shadow-card transition hover:bg-brand-blue-deep disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none"
+      className="inline-flex items-center justify-center gap-2 rounded-full bg-brand-blue px-7 py-3.5 text-[15px] font-bold text-white shadow-blue transition hover:-translate-y-0.5 hover:bg-brand-yellow hover:text-ink hover:shadow-yellow disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none"
     >
       {children}
     </button>
@@ -242,7 +265,7 @@ export function GhostButton({
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-muted-foreground transition hover:bg-sky hover:text-ink"
+      className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-transparent px-6 py-3.5 text-[15px] font-bold text-muted-foreground transition hover:border-brand-blue hover:text-brand-blue-deep"
     >
       {children}
     </button>

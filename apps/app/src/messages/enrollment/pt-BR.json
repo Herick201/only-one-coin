@@ -1,7 +1,7 @@
 {
   "enrollment": {
     "meta": {
-      "title": "Matrícula online — Only One Coin",
+      "title": "Matrícula online",
       "description": "Escolha seu curso, reserve sua vaga e envie o comprovante de pagamento em quatro passos."
     },
     "brand": {
@@ -9,13 +9,12 @@
     },
     "footer": {
       "secure": "Conexão segura. Seus dados são usados apenas para a sua matrícula.",
-      "support": "Precisa de ajuda? Fale com a gente pelo WhatsApp."
+      "support": "Ajuda pelo WhatsApp"
     },
     "step": {
       "position": "Passo {current} de {total}",
       "course": {
         "short": "Curso",
-        "eyebrow": "Passo 1",
         "title": "O que você quer estudar?",
         "subtitle": "Escolha o idioma, o curso, a data de início e o horário. O preço aparece quando você escolhe o horário.",
         "language_label": "Idioma",
@@ -37,7 +36,6 @@
       },
       "student": {
         "short": "Dados",
-        "eyebrow": "Passo 2",
         "title": "Quem vai estudar?",
         "subtitle": "Estes dados aparecem no seu certificado, então escreva exatamente como está no documento.",
         "full_name_hint": "Exatamente como está no seu documento. É assim que vai sair no seu certificado.",
@@ -52,7 +50,6 @@
       },
       "payment": {
         "short": "Pagamento",
-        "eyebrow": "Passo 3",
         "title": "Pague e envie seu comprovante",
         "subtitle": "O pagamento é feito no app do seu banco ou do Yape. Aqui a gente só recebe a comprovação.",
         "amount_label": "Valor a pagar",
@@ -78,11 +75,11 @@
         "proof_hint": "Envie o print ou o comprovante do pagamento. Sem comprovante não conseguimos registrar sua matrícula.",
         "operation_hint": "Aparece no seu comprovante como número da operação.",
         "receipt_hint": "Imagem ou PDF, até {size}.",
-        "receipt_preview_alt": "Prévia do comprovante que você enviou"
+        "receipt_preview_alt": "Prévia do comprovante que você enviou",
+        "qr_example": "Exemplo — QR de teste"
       },
       "review": {
         "short": "Confirmação",
-        "eyebrow": "Passo 4",
         "title": "Confira antes de enviar",
         "subtitle": "Se algo estiver errado, dá para corrigir por aqui.",
         "course_section": "Curso e horário",
@@ -93,7 +90,7 @@
         "what_happens": "Ao enviar, sua vaga fica reservada e o comprovante entra em revisão. Você tem até {days} dias para o pagamento ser aprovado; avisamos por e-mail assim que estiver pronto."
       }
     },
-    "schedule_line": "{days} — {start} às {end}",
+    "time_range": "{start} às {end}",
     "hold": {
       "will_start": "Ao continuar, reservamos sua vaga por {minutes} minutos para você pagar com calma.",
       "active": "Sua vaga está reservada enquanto você paga",
@@ -106,7 +103,6 @@
       "schedule": "Horário",
       "total": "Total",
       "starts_on": "Início das aulas",
-      "class_group": "Código da turma",
       "full_name": "Nome completo",
       "document": "Documento",
       "phone": "Celular",
@@ -122,7 +118,11 @@
       "national_id_type": "Tipo de documento",
       "national_id": "Número do documento",
       "phone": "Celular",
+      "dial_code": "Código do país",
       "birth_date": "Data de nascimento",
+      "day": "Dia",
+      "month": "Mês",
+      "year": "Ano",
       "email": "E-mail",
       "relationship": "Parentesco",
       "operation_number": "Número da operação",
@@ -139,13 +139,13 @@
       "legal_guardian": "Responsável legal"
     },
     "weekday": {
-      "mon": "Seg",
-      "tue": "Ter",
-      "wed": "Qua",
-      "thu": "Qui",
-      "fri": "Sex",
-      "sat": "Sáb",
-      "sun": "Dom"
+      "mon": "Segunda-feira",
+      "tue": "Terça-feira",
+      "wed": "Quarta-feira",
+      "thu": "Quinta-feira",
+      "fri": "Sexta-feira",
+      "sat": "Sábado",
+      "sun": "Domingo"
     },
     "action": {
       "continue": "Continuar",
@@ -175,7 +175,7 @@
     },
     "submitted": {
       "title": "Recebemos sua matrícula",
-      "subtitle": "Vamos escrever para {email} com o resultado da revisão do seu pagamento.",
+      "subtitle": "Enviaremos um e-mail para {email} com o resultado da revisão do seu pagamento.",
       "reference_label": "Código de acompanhamento",
       "what_now": "E agora?",
       "timeline": {

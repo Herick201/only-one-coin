@@ -155,39 +155,39 @@ const plans: CatalogPlan[] = [
  */
 const classGroups: CatalogClassGroup[] = [
   // Inglés Kids — starts 05 Sep and 03 Oct
-  { id: 'cg_en_kids_a', courseId: 'crs_en_kids', code: 'ENK-2601-A', teacherName: 'Rosa Quispe', weekdays: ['sat'], startTime: '09:00', endTime: '12:00', startDate: '2026-09-05', endDate: '2027-01-30', capacity: 45, seatsTaken: 31 },
-  { id: 'cg_en_kids_b', courseId: 'crs_en_kids', code: 'ENK-2601-B', teacherName: 'Diego Salas', weekdays: ['tue', 'thu'], startTime: '17:00', endTime: '18:30', startDate: '2026-09-05', endDate: '2027-01-28', capacity: 45, seatsTaken: 12 },
-  { id: 'cg_en_kids_c', courseId: 'crs_en_kids', code: 'ENK-2602-A', teacherName: 'Rosa Quispe', weekdays: ['sat'], startTime: '15:00', endTime: '18:00', startDate: '2026-10-03', endDate: '2027-02-27', capacity: 45, seatsTaken: 4 },
-  { id: 'cg_en_kids_d', courseId: 'crs_en_kids', code: 'ENK-2602-B', teacherName: 'Diego Salas', weekdays: ['mon', 'wed'], startTime: '17:00', endTime: '18:30', startDate: '2026-10-03', endDate: '2027-02-24', capacity: 45, seatsTaken: 9 },
+  { id: 'cg_en_kids_a', courseId: 'crs_en_kids', code: 'ENK-2601-A', teacherName: 'Rosa Quispe', slots: [{ weekday: 'sat', startTime: '09:00', endTime: '12:00' }], startDate: '2026-09-05', endDate: '2027-01-30', capacity: 45, seatsTaken: 31 },
+  { id: 'cg_en_kids_b', courseId: 'crs_en_kids', code: 'ENK-2601-B', teacherName: 'Diego Salas', slots: [{ weekday: 'tue', startTime: '17:00', endTime: '18:30' }, { weekday: 'thu', startTime: '17:00', endTime: '18:30' }], startDate: '2026-09-05', endDate: '2027-01-28', capacity: 45, seatsTaken: 12 },
+  { id: 'cg_en_kids_c', courseId: 'crs_en_kids', code: 'ENK-2602-A', teacherName: 'Rosa Quispe', slots: [{ weekday: 'sat', startTime: '15:00', endTime: '18:00' }], startDate: '2026-10-03', endDate: '2027-02-27', capacity: 45, seatsTaken: 4 },
+  { id: 'cg_en_kids_d', courseId: 'crs_en_kids', code: 'ENK-2602-B', teacherName: 'Diego Salas', slots: [{ weekday: 'mon', startTime: '17:00', endTime: '18:30' }, { weekday: 'wed', startTime: '17:00', endTime: '18:30' }], startDate: '2026-10-03', endDate: '2027-02-24', capacity: 45, seatsTaken: 9 },
 
   // Inglés Básico — starts 07 Sep (four schedules, one already full) and 28 Sep
-  { id: 'cg_en_basic_a', courseId: 'crs_en_basic', code: 'ENB-2601-A', teacherName: 'Milagros Fernández', weekdays: ['mon', 'wed'], startTime: '19:00', endTime: '20:30', startDate: '2026-09-07', endDate: '2027-02-19', capacity: 50, seatsTaken: 38 },
-  { id: 'cg_en_basic_b', courseId: 'crs_en_basic', code: 'ENB-2601-B', teacherName: 'Carlos Ramírez', weekdays: ['sat'], startTime: '15:00', endTime: '18:00', startDate: '2026-09-07', endDate: '2027-02-20', capacity: 50, seatsTaken: 47 },
-  { id: 'cg_en_basic_c', courseId: 'crs_en_basic', code: 'ENB-2601-C', teacherName: 'Milagros Fernández', weekdays: ['tue', 'thu'], startTime: '07:00', endTime: '08:30', startDate: '2026-09-07', endDate: '2027-02-18', capacity: 50, seatsTaken: 50 },
-  { id: 'cg_en_basic_d', courseId: 'crs_en_basic', code: 'ENB-2601-D', teacherName: 'Carlos Ramírez', weekdays: ['mon', 'wed', 'fri'], startTime: '20:30', endTime: '21:30', startDate: '2026-09-07', endDate: '2027-02-19', capacity: 50, seatsTaken: 21 },
-  { id: 'cg_en_basic_e', courseId: 'crs_en_basic', code: 'ENB-2602-A', teacherName: 'Lucero Ávalos', weekdays: ['tue', 'thu'], startTime: '19:00', endTime: '20:30', startDate: '2026-09-28', endDate: '2027-03-11', capacity: 50, seatsTaken: 6 },
-  { id: 'cg_en_basic_f', courseId: 'crs_en_basic', code: 'ENB-2602-B', teacherName: 'Lucero Ávalos', weekdays: ['sat'], startTime: '09:00', endTime: '12:00', startDate: '2026-09-28', endDate: '2027-03-13', capacity: 50, seatsTaken: 14 },
+  { id: 'cg_en_basic_a', courseId: 'crs_en_basic', code: 'ENB-2601-A', teacherName: 'Milagros Fernández', slots: [{ weekday: 'mon', startTime: '19:00', endTime: '20:30' }, { weekday: 'wed', startTime: '19:00', endTime: '20:30' }], startDate: '2026-09-07', endDate: '2027-02-19', capacity: 50, seatsTaken: 38 },
+  { id: 'cg_en_basic_b', courseId: 'crs_en_basic', code: 'ENB-2601-B', teacherName: 'Carlos Ramírez', slots: [{ weekday: 'sat', startTime: '15:00', endTime: '18:00' }], startDate: '2026-09-07', endDate: '2027-02-20', capacity: 50, seatsTaken: 47 },
+  { id: 'cg_en_basic_c', courseId: 'crs_en_basic', code: 'ENB-2601-C', teacherName: 'Milagros Fernández', slots: [{ weekday: 'tue', startTime: '07:00', endTime: '08:30' }, { weekday: 'thu', startTime: '07:00', endTime: '08:30' }], startDate: '2026-09-07', endDate: '2027-02-18', capacity: 50, seatsTaken: 50 },
+  { id: 'cg_en_basic_d', courseId: 'crs_en_basic', code: 'ENB-2601-D', teacherName: 'Carlos Ramírez', slots: [{ weekday: 'mon', startTime: '20:30', endTime: '21:30' }, { weekday: 'wed', startTime: '20:30', endTime: '21:30' }, { weekday: 'fri', startTime: '19:00', endTime: '21:00' }], startDate: '2026-09-07', endDate: '2027-02-19', capacity: 50, seatsTaken: 21 },
+  { id: 'cg_en_basic_e', courseId: 'crs_en_basic', code: 'ENB-2602-A', teacherName: 'Lucero Ávalos', slots: [{ weekday: 'tue', startTime: '19:00', endTime: '20:30' }, { weekday: 'thu', startTime: '19:00', endTime: '20:30' }], startDate: '2026-09-28', endDate: '2027-03-11', capacity: 50, seatsTaken: 6 },
+  { id: 'cg_en_basic_f', courseId: 'crs_en_basic', code: 'ENB-2602-B', teacherName: 'Lucero Ávalos', slots: [{ weekday: 'sat', startTime: '09:00', endTime: '12:00' }], startDate: '2026-09-28', endDate: '2027-03-13', capacity: 50, seatsTaken: 14 },
 
   // Inglés Intermedio y Avanzado — intensive, starts 07 Sep and 05 Oct
-  { id: 'cg_en_upper_a', courseId: 'crs_en_upper', code: 'ENA-2601-A', teacherName: 'Andrea Villanueva', weekdays: ['mon', 'wed', 'fri'], startTime: '20:00', endTime: '21:30', startDate: '2026-09-07', endDate: '2026-11-13', capacity: 45, seatsTaken: 19 },
-  { id: 'cg_en_upper_b', courseId: 'crs_en_upper', code: 'ENA-2601-B', teacherName: 'Andrea Villanueva', weekdays: ['tue', 'thu'], startTime: '06:30', endTime: '08:30', startDate: '2026-09-07', endDate: '2026-11-12', capacity: 45, seatsTaken: 33 },
-  { id: 'cg_en_upper_c', courseId: 'crs_en_upper', code: 'ENA-2602-A', teacherName: 'Andrea Villanueva', weekdays: ['sat'], startTime: '08:00', endTime: '12:00', startDate: '2026-10-05', endDate: '2026-12-12', capacity: 45, seatsTaken: 7 },
+  { id: 'cg_en_upper_a', courseId: 'crs_en_upper', code: 'ENA-2601-A', teacherName: 'Andrea Villanueva', slots: [{ weekday: 'mon', startTime: '20:00', endTime: '21:30' }, { weekday: 'wed', startTime: '20:00', endTime: '21:30' }, { weekday: 'fri', startTime: '20:00', endTime: '21:30' }], startDate: '2026-09-07', endDate: '2026-11-13', capacity: 45, seatsTaken: 19 },
+  { id: 'cg_en_upper_b', courseId: 'crs_en_upper', code: 'ENA-2601-B', teacherName: 'Andrea Villanueva', slots: [{ weekday: 'tue', startTime: '09:00', endTime: '13:00' }, { weekday: 'thu', startTime: '06:30', endTime: '08:30' }], startDate: '2026-09-07', endDate: '2026-11-12', capacity: 45, seatsTaken: 33 },
+  { id: 'cg_en_upper_c', courseId: 'crs_en_upper', code: 'ENA-2602-A', teacherName: 'Andrea Villanueva', slots: [{ weekday: 'sat', startTime: '08:00', endTime: '12:00' }], startDate: '2026-10-05', endDate: '2026-12-12', capacity: 45, seatsTaken: 7 },
 
   // Other languages — two dates each, fewer schedules
-  { id: 'cg_fr_full_a', courseId: 'crs_fr_full', code: 'FRC-2601-A', teacherName: 'Pierre Delacroix', weekdays: ['tue', 'thu'], startTime: '19:00', endTime: '21:00', startDate: '2026-09-08', endDate: '2027-02-04', capacity: 40, seatsTaken: 22 },
-  { id: 'cg_fr_full_b', courseId: 'crs_fr_full', code: 'FRC-2601-B', teacherName: 'Pierre Delacroix', weekdays: ['sat'], startTime: '14:00', endTime: '18:00', startDate: '2026-09-08', endDate: '2027-02-06', capacity: 40, seatsTaken: 37 },
-  { id: 'cg_fr_full_c', courseId: 'crs_fr_full', code: 'FRC-2602-A', teacherName: 'Camille Roux', weekdays: ['mon', 'wed'], startTime: '18:30', endTime: '20:30', startDate: '2026-10-05', endDate: '2027-03-03', capacity: 40, seatsTaken: 5 },
-  { id: 'cg_pt_full_a', courseId: 'crs_pt_full', code: 'PTC-2601-A', teacherName: 'Beatriz Nunes', weekdays: ['mon', 'wed'], startTime: '18:00', endTime: '19:30', startDate: '2026-09-07', endDate: '2027-01-27', capacity: 40, seatsTaken: 8 },
-  { id: 'cg_pt_full_b', courseId: 'crs_pt_full', code: 'PTC-2602-A', teacherName: 'Beatriz Nunes', weekdays: ['sat'], startTime: '10:00', endTime: '13:00', startDate: '2026-10-03', endDate: '2027-02-27', capacity: 40, seatsTaken: 3 },
-  { id: 'cg_it_basic_a', courseId: 'crs_it_basic', code: 'ITB-2601-A', teacherName: 'Marco Bianchi', weekdays: ['sat'], startTime: '10:00', endTime: '13:00', startDate: '2026-09-05', endDate: '2026-12-05', capacity: 35, seatsTaken: 27 },
-  { id: 'cg_it_basic_b', courseId: 'crs_it_basic', code: 'ITB-2602-A', teacherName: 'Marco Bianchi', weekdays: ['tue', 'thu'], startTime: '19:30', endTime: '21:00', startDate: '2026-10-06', endDate: '2027-01-07', capacity: 35, seatsTaken: 2 },
-  { id: 'cg_de_basic_a', courseId: 'crs_de_basic', code: 'DEB-2601-A', teacherName: 'Katrin Hoffmann', weekdays: ['tue', 'thu'], startTime: '20:00', endTime: '21:30', startDate: '2026-09-08', endDate: '2026-12-10', capacity: 35, seatsTaken: 15 },
-  { id: 'cg_de_basic_b', courseId: 'crs_de_basic', code: 'DEB-2602-A', teacherName: 'Katrin Hoffmann', weekdays: ['sat'], startTime: '09:00', endTime: '12:00', startDate: '2026-10-10', endDate: '2027-01-16', capacity: 35, seatsTaken: 1 },
-  { id: 'cg_zh_basic_a', courseId: 'crs_zh_basic', code: 'ZHB-2601-A', teacherName: 'Li Wei', weekdays: ['mon', 'wed', 'fri'], startTime: '19:30', endTime: '21:00', startDate: '2026-09-07', endDate: '2026-11-06', capacity: 30, seatsTaken: 11 },
-  { id: 'cg_zh_basic_b', courseId: 'crs_zh_basic', code: 'ZHB-2602-A', teacherName: 'Li Wei', weekdays: ['sat'], startTime: '15:00', endTime: '18:00', startDate: '2026-10-03', endDate: '2026-12-12', capacity: 30, seatsTaken: 6 },
-  { id: 'cg_ko_full_a', courseId: 'crs_ko_full', code: 'KOC-2601-A', teacherName: 'Ji-woo Park', weekdays: ['sat'], startTime: '09:00', endTime: '12:00', startDate: '2026-09-05', endDate: '2027-01-30', capacity: 35, seatsTaken: 20 },
-  { id: 'cg_ko_full_b', courseId: 'crs_ko_full', code: 'KOC-2601-B', teacherName: 'Ji-woo Park', weekdays: ['mon', 'wed'], startTime: '20:00', endTime: '21:30', startDate: '2026-09-05', endDate: '2027-01-27', capacity: 35, seatsTaken: 29 },
-  { id: 'cg_ko_full_c', courseId: 'crs_ko_full', code: 'KOC-2602-A', teacherName: 'Ji-woo Park', weekdays: ['tue', 'thu'], startTime: '18:00', endTime: '19:30', startDate: '2026-10-06', endDate: '2027-03-04', capacity: 35, seatsTaken: 2 },
+  { id: 'cg_fr_full_a', courseId: 'crs_fr_full', code: 'FRC-2601-A', teacherName: 'Pierre Delacroix', slots: [{ weekday: 'tue', startTime: '19:00', endTime: '21:00' }, { weekday: 'thu', startTime: '19:00', endTime: '21:00' }], startDate: '2026-09-08', endDate: '2027-02-04', capacity: 40, seatsTaken: 22 },
+  { id: 'cg_fr_full_b', courseId: 'crs_fr_full', code: 'FRC-2601-B', teacherName: 'Pierre Delacroix', slots: [{ weekday: 'sat', startTime: '14:00', endTime: '18:00' }], startDate: '2026-09-08', endDate: '2027-02-06', capacity: 40, seatsTaken: 37 },
+  { id: 'cg_fr_full_c', courseId: 'crs_fr_full', code: 'FRC-2602-A', teacherName: 'Camille Roux', slots: [{ weekday: 'mon', startTime: '18:30', endTime: '20:30' }, { weekday: 'wed', startTime: '18:30', endTime: '20:30' }], startDate: '2026-10-05', endDate: '2027-03-03', capacity: 40, seatsTaken: 5 },
+  { id: 'cg_pt_full_a', courseId: 'crs_pt_full', code: 'PTC-2601-A', teacherName: 'Beatriz Nunes', slots: [{ weekday: 'mon', startTime: '18:00', endTime: '19:30' }, { weekday: 'wed', startTime: '18:00', endTime: '19:30' }], startDate: '2026-09-07', endDate: '2027-01-27', capacity: 40, seatsTaken: 8 },
+  { id: 'cg_pt_full_b', courseId: 'crs_pt_full', code: 'PTC-2602-A', teacherName: 'Beatriz Nunes', slots: [{ weekday: 'sat', startTime: '10:00', endTime: '13:00' }], startDate: '2026-10-03', endDate: '2027-02-27', capacity: 40, seatsTaken: 3 },
+  { id: 'cg_it_basic_a', courseId: 'crs_it_basic', code: 'ITB-2601-A', teacherName: 'Marco Bianchi', slots: [{ weekday: 'sat', startTime: '10:00', endTime: '13:00' }], startDate: '2026-09-05', endDate: '2026-12-05', capacity: 35, seatsTaken: 27 },
+  { id: 'cg_it_basic_b', courseId: 'crs_it_basic', code: 'ITB-2602-A', teacherName: 'Marco Bianchi', slots: [{ weekday: 'tue', startTime: '19:30', endTime: '21:00' }, { weekday: 'thu', startTime: '19:30', endTime: '21:00' }], startDate: '2026-10-06', endDate: '2027-01-07', capacity: 35, seatsTaken: 2 },
+  { id: 'cg_de_basic_a', courseId: 'crs_de_basic', code: 'DEB-2601-A', teacherName: 'Katrin Hoffmann', slots: [{ weekday: 'tue', startTime: '20:00', endTime: '21:30' }, { weekday: 'thu', startTime: '20:00', endTime: '21:30' }], startDate: '2026-09-08', endDate: '2026-12-10', capacity: 35, seatsTaken: 15 },
+  { id: 'cg_de_basic_b', courseId: 'crs_de_basic', code: 'DEB-2602-A', teacherName: 'Katrin Hoffmann', slots: [{ weekday: 'sat', startTime: '09:00', endTime: '12:00' }], startDate: '2026-10-10', endDate: '2027-01-16', capacity: 35, seatsTaken: 1 },
+  { id: 'cg_zh_basic_a', courseId: 'crs_zh_basic', code: 'ZHB-2601-A', teacherName: 'Li Wei', slots: [{ weekday: 'mon', startTime: '19:30', endTime: '21:00' }, { weekday: 'wed', startTime: '19:30', endTime: '21:00' }, { weekday: 'fri', startTime: '19:30', endTime: '21:00' }], startDate: '2026-09-07', endDate: '2026-11-06', capacity: 30, seatsTaken: 11 },
+  { id: 'cg_zh_basic_b', courseId: 'crs_zh_basic', code: 'ZHB-2602-A', teacherName: 'Li Wei', slots: [{ weekday: 'sat', startTime: '15:00', endTime: '18:00' }], startDate: '2026-10-03', endDate: '2026-12-12', capacity: 30, seatsTaken: 6 },
+  { id: 'cg_ko_full_a', courseId: 'crs_ko_full', code: 'KOC-2601-A', teacherName: 'Ji-woo Park', slots: [{ weekday: 'sat', startTime: '09:00', endTime: '12:00' }], startDate: '2026-09-05', endDate: '2027-01-30', capacity: 35, seatsTaken: 20 },
+  { id: 'cg_ko_full_b', courseId: 'crs_ko_full', code: 'KOC-2601-B', teacherName: 'Ji-woo Park', slots: [{ weekday: 'mon', startTime: '20:00', endTime: '21:30' }, { weekday: 'wed', startTime: '20:00', endTime: '21:30' }], startDate: '2026-09-05', endDate: '2027-01-27', capacity: 35, seatsTaken: 29 },
+  { id: 'cg_ko_full_c', courseId: 'crs_ko_full', code: 'KOC-2602-A', teacherName: 'Ji-woo Park', slots: [{ weekday: 'tue', startTime: '18:00', endTime: '19:30' }, { weekday: 'thu', startTime: '18:00', endTime: '19:30' }], startDate: '2026-10-06', endDate: '2027-03-04', capacity: 35, seatsTaken: 2 },
 ]
 
 /**
@@ -206,12 +206,14 @@ const accounts: PaymentAccount[] = [
     holder: 'INGLÉS POR UN SOL SAC',
     number: '951 153 323',
     interbankCode: null,
+    hasQr: true,
   },
   {
     method: 'bcp',
     holder: 'INGLÉS POR UN SOL SAC',
     number: '1947124724007',
     interbankCode: '00219400712472400791',
+    hasQr: false,
   },
 ]
 

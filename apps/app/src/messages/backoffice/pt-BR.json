@@ -426,7 +426,7 @@
       "metric_released": "Vagas liberadas",
       "metric_released_hint": "Devolvidas à turma",
       "search_label": "Buscar matrícula",
-      "search_placeholder": "Aluno, curso, turma ou número de operação",
+      "search_placeholder": "Código, aluno, curso, turma ou número de operação",
       "filters": "Filtros",
       "filter_all": "Todas",
       "filter_status": "Estado",

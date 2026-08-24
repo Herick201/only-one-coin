@@ -426,7 +426,7 @@
       "metric_released": "Asientos liberados",
       "metric_released_hint": "Devueltos al aula",
       "search_label": "Buscar matrícula",
-      "search_placeholder": "Alumno, curso, aula o número de operación",
+      "search_placeholder": "Código, alumno, curso, aula o número de operación",
       "filters": "Filtros",
       "filter_all": "Todas",
       "filter_status": "Estado",

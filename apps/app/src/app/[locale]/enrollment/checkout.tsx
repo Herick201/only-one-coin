@@ -165,8 +165,13 @@ function Shell({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * Placeholder handle for the mockup. The real one is issued by `apps/api` at
- * submit and is a readable reference, not a row id (`CLAUDE.md` §4).
+ * The tracking code the reader is told to quote. Same shape the backoffice
+ * enrollment ledger shows and searches on (`listEnrollments`) — a code the
+ * student can read out that nobody here can look up is worse than no code.
+ *
+ * Built in the browser only for the mockup: the real one is issued by
+ * `apps/api` at submit and stored on the row. It is a readable reference, never
+ * a row id (`CLAUDE.md` §4).
  */
 function referenceFrom(draft: CheckoutDraft): string {
   const digits = draft.student.nationalId.replace(/\D/g, '').slice(-4).padStart(4, '0')

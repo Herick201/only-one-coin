@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import type { CheckoutDraft, PublicCatalog, StepId } from '@/lib/enrollment/types'
 import { courseById, groupById, planOfCourse } from '@/lib/enrollment/checkout'
-import { scheduleLine } from '@/lib/enrollment/schedule'
+import { scheduleLines } from '@/lib/enrollment/schedule'
 import { formatDate, formatMoney, type Locale } from '@/lib/format'
 import { paymentMethodLabel } from '@/lib/payment-method'
 import {
@@ -63,7 +63,6 @@ export function StepReview({
   return (
     <div className="flex flex-col gap-5">
       <StepHeading
-        eyebrow={t('step.review.eyebrow')}
         title={t('step.review.title')}
         subtitle={t('step.review.subtitle')}
       />
@@ -80,17 +79,16 @@ export function StepReview({
           {group && (
             <>
               <SummaryRow label={t('summary.schedule')}>
-                {scheduleLine(
+                {scheduleLines(
                   group,
                   (day) => t(`weekday.${day}`),
-                  (vars) => t('schedule_line', vars),
-                )}
+                  (vars) => t('time_range', vars),
+                ).map((line) => (
+                  <span key={line.key} className="block">{`${line.day} — ${line.time}`}</span>
+                ))}
               </SummaryRow>
               <SummaryRow label={t('summary.starts_on')}>
                 {formatDate(group.startDate, locale)}
-              </SummaryRow>
-              <SummaryRow label={t('summary.class_group')}>
-                <span className="font-mono text-xs">{group.code}</span>
               </SummaryRow>
             </>
           )}

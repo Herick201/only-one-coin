@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { ageFrom } from '@/lib/format'
+import { splitPhone } from '@/lib/geo'
 import type {
   CatalogClassGroup,
   CatalogCourse,
@@ -226,15 +227,18 @@ export function isGmail(email: string): boolean {
 }
 
 /**
- * Mobile number — the sheet's CELULAR column. Deliberately loose: Peruvian
- * mobiles are nine digits, but the Asociación does enroll students abroad, and
- * a regex that only knows Lima turns a paying student away at the last step.
- * Separators and a country code are allowed and normalised on the server.
+ * Mobile number — the sheet's CELULAR column, stored as one string with the
+ * dial code (`joinPhone`), the same as the backoffice.
+ *
+ * Emptiness is `splitPhone`, never `phone === ''`: the field starts life
+ * holding `"+51"`, which is a dial code and not a phone. The digit floor is
+ * deliberately low — the Asociación does enroll students abroad, and a rule
+ * that only knows Lima turns a paying student away at the last step.
  */
-const PHONE = /^\+?[\d\s-]{9,18}$/
+const MIN_DIGITS = 6
 
-export function digitsOf(phone: string): string {
-  return phone.replace(/\D/g, '')
+export function phoneNumberOf(phone: string): string {
+  return splitPhone(phone).number.trim()
 }
 
 /** A full name is at least two words: one word is half a name on a certificate. */
@@ -257,9 +261,9 @@ export function validateStudent(
   else if (!NATIONAL_ID_RULES[draft.nationalIdType].test(id))
     errors.nationalId = 'national_id_format'
 
-  if (draft.phone.trim() === '') errors.phone = 'required'
-  else if (!PHONE.test(draft.phone.trim()) || digitsOf(draft.phone).length < 9)
-    errors.phone = 'phone_format'
+  const phone = phoneNumberOf(draft.phone)
+  if (phone === '') errors.phone = 'required'
+  else if (phone.replace(/\D/g, '').length < MIN_DIGITS) errors.phone = 'phone_format'
 
   if (draft.email.trim() === '') errors.email = 'required'
   else if (!emailSchema.safeParse(draft.email).success) errors.email = 'email_format'
@@ -302,9 +306,9 @@ export function validateGuardian(draft: GuardianDraft): FieldErrors<GuardianFiel
   else if (!NATIONAL_ID_RULES[draft.nationalIdType].test(id))
     errors.nationalId = 'national_id_format'
 
-  if (draft.phone.trim() === '') errors.phone = 'required'
-  else if (!PHONE.test(draft.phone.trim()) || digitsOf(draft.phone).length < 9)
-    errors.phone = 'phone_format'
+  const phone = phoneNumberOf(draft.phone)
+  if (phone === '') errors.phone = 'required'
+  else if (phone.replace(/\D/g, '').length < MIN_DIGITS) errors.phone = 'phone_format'
 
   if (draft.email.trim() === '') errors.email = 'required'
   else if (!emailSchema.safeParse(draft.email).success) errors.email = 'email_format'

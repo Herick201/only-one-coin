@@ -1,9 +1,18 @@
+import { Fragment } from 'react'
 import type { StepId } from '@/lib/enrollment/types'
 import { STEP_ORDER } from '@/lib/enrollment/types'
 import { CheckoutIcon } from './icons'
 
 /**
  * The four steps, and where the reader is in them.
+ *
+ * The label sits **under** its circle rather than beside it: with four steps
+ * side by side, a label to the right of each dot pushes the whole rail wide and
+ * the connectors end up as slivers. Stacked, the rail reads as four stations on
+ * one line, and the label has room to be large enough to actually read.
+ *
+ * Three states, and the colour carries the meaning on its own:
+ * **blue** is where you are, **yellow** is behind you, grey is ahead.
  *
  * It is deliberately not clickable forward. Jumping to "payment" before a class
  * group is chosen produces a screen asking for money against nothing — the
@@ -31,7 +40,7 @@ export function Stepper({
   return (
     <nav aria-label={positionLabel} className="mb-6">
       {/* Compact: the only thing that fits next to a thumb. */}
-      <div className="@2xl/checkout:hidden">
+      <div className="@lg/checkout:hidden">
         <div className="mb-2 flex items-baseline justify-between gap-3">
           <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {positionLabel}
@@ -47,37 +56,49 @@ export function Stepper({
       </div>
 
       {/* Full rail. */}
-      <ol className="hidden items-center gap-2 @2xl/checkout:flex">
+      <ol className="hidden items-start @lg/checkout:flex">
         {STEP_ORDER.map((step, i) => {
           const done = i < index
           const active = i === index
           return (
-            <li key={step} className="flex min-w-0 flex-1 items-center gap-2">
-              <span
-                aria-current={active ? 'step' : undefined}
-                className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-bold transition ${
-                  done
-                    ? 'bg-brand-blue text-white'
-                    : active
-                      ? 'bg-brand-blue text-white ring-4 ring-brand-blue/15'
-                      : 'bg-sky text-muted-foreground'
-                }`}
-              >
-                {done ? <CheckoutIcon name="check" size={14} /> : i + 1}
-              </span>
-              <span
-                className={`truncate text-xs font-semibold ${
-                  active ? 'text-ink' : 'text-muted-foreground'
-                }`}
-              >
-                {labels[step]}
-              </span>
-              {i < STEP_ORDER.length - 1 && (
-                <span
-                  className={`h-px min-w-3 flex-1 ${done ? 'bg-brand-blue' : 'bg-line'}`}
+            <Fragment key={step}>
+              {i > 0 && (
+                /* `mt-4` puts the line on the circle's centre line — half of
+                   the 2rem circle — so it stays aligned while the labels grow
+                   downward. */
+                <li
+                  aria-hidden="true"
+                  className={`mt-4 h-0.5 flex-1 rounded-full ${
+                    done || active ? 'bg-brand-yellow' : 'bg-line'
+                  }`}
                 />
               )}
-            </li>
+              <li className="flex flex-col items-center gap-2 px-2">
+                <span
+                  aria-current={active ? 'step' : undefined}
+                  className={`grid size-8 shrink-0 place-items-center rounded-full text-sm font-bold transition ${
+                    done
+                      ? 'bg-brand-yellow text-ink'
+                      : active
+                        ? 'bg-brand-blue text-white ring-4 ring-brand-blue/15'
+                        : 'bg-sky text-muted-foreground'
+                  }`}
+                >
+                  {done ? <CheckoutIcon name="check" size={16} /> : i + 1}
+                </span>
+                <span
+                  className={`whitespace-nowrap text-sm ${
+                    active
+                      ? 'font-semibold text-ink'
+                      : done
+                        ? 'font-medium text-ink'
+                        : 'font-medium text-muted-foreground'
+                  }`}
+                >
+                  {labels[step]}
+                </span>
+              </li>
+            </Fragment>
           )
         })}
       </ol>

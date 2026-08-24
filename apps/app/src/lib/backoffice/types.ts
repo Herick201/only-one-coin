@@ -793,6 +793,13 @@ export interface PaymentSettings {
  */
 export interface EnrollmentRow {
   id: string
+  /**
+   * The tracking code printed on the checkout's confirmation screen — what the
+   * student quotes on the phone. Not `id`: an internal row id is not something
+   * anybody should be reading out loud, and a code that only exists on the
+   * student's side is a code nobody here can look up (`CLAUDE.md` §4).
+   */
+  code: string
   studentId: string
   studentName: string
   courseName: string

@@ -3,7 +3,7 @@
 import { useLocale, useTranslations } from 'next-intl'
 import type { CheckoutDraft, PublicCatalog } from '@/lib/enrollment/types'
 import { courseById, groupById } from '@/lib/enrollment/checkout'
-import { scheduleLine } from '@/lib/enrollment/schedule'
+import { scheduleLines } from '@/lib/enrollment/schedule'
 import { formatDate, type Locale } from '@/lib/format'
 import { Card, Note, SummaryRow } from '@/components/enrollment/ui'
 import { CheckoutIcon } from '@/components/enrollment/icons'
@@ -99,11 +99,13 @@ export function Submitted({
           <dl className="divide-y divide-line">
             <SummaryRow label={t('summary.course')}>{course.name}</SummaryRow>
             <SummaryRow label={t('summary.schedule')}>
-              {scheduleLine(
-                group,
-                (day) => t(`weekday.${day}`),
-                (vars) => t('schedule_line', vars),
-              )}
+                {scheduleLines(
+                  group,
+                  (day) => t(`weekday.${day}`),
+                  (vars) => t('time_range', vars),
+                ).map((line) => (
+                  <span key={line.key} className="block">{`${line.day} — ${line.time}`}</span>
+                ))}
             </SummaryRow>
             <SummaryRow label={t('summary.starts_on')}>
               {formatDate(group.startDate, locale)}

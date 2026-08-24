@@ -18,6 +18,8 @@ export type CheckoutIconName =
   | 'lock'
   | 'seat'
   | 'calendar'
+  | 'globe'
+  | 'chevron-down'
   | 'user'
   | 'trash'
 
@@ -36,6 +38,10 @@ const paths: Record<CheckoutIconName, ReactElement> = {
   seat: (
     <path d="M6 10V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v4M5 10h14v6H5zM7 16v3M17 16v3" />
   ),
+  globe: (
+    <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+  ),
+  'chevron-down': <path d="m6 9 6 6 6-6" />,
   calendar: <path d="M4 6.5A1.5 1.5 0 0 1 5.5 5h13A1.5 1.5 0 0 1 20 6.5v12A1.5 1.5 0 0 1 18.5 20h-13A1.5 1.5 0 0 1 4 18.5zM4 9.5h16M8.5 3v3M15.5 3v3" />,
   user: <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM5 20a7 7 0 0 1 14 0" />,
   trash: <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-8 0 1 12a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1l1-12" />,

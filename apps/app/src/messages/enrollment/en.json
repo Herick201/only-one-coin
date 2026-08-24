@@ -1,7 +1,7 @@
 {
   "enrollment": {
     "meta": {
-      "title": "Online enrolment — Only One Coin",
+      "title": "Online enrolment",
       "description": "Choose your course, hold your seat and send your payment receipt in four steps."
     },
     "brand": {
@@ -9,13 +9,12 @@
     },
     "footer": {
       "secure": "Secure connection. Your data is used only for your enrolment.",
-      "support": "Need help? Message us on WhatsApp."
+      "support": "Help on WhatsApp"
     },
     "step": {
       "position": "Step {current} of {total}",
       "course": {
         "short": "Course",
-        "eyebrow": "Step 1",
         "title": "What would you like to study?",
         "subtitle": "Pick the language, the course, the start date and the schedule. The price appears once you choose a schedule.",
         "language_label": "Language",
@@ -37,7 +36,6 @@
       },
       "student": {
         "short": "Details",
-        "eyebrow": "Step 2",
         "title": "Who is going to study?",
         "subtitle": "These details go on your certificate, so write them exactly as they appear on your ID.",
         "full_name_hint": "Exactly as it appears on your ID. This is how it will read on your certificate.",
@@ -52,7 +50,6 @@
       },
       "payment": {
         "short": "Payment",
-        "eyebrow": "Step 3",
         "title": "Pay and upload your receipt",
         "subtitle": "You pay from your bank or Yape app. Here we only receive the proof.",
         "amount_label": "Amount to pay",
@@ -78,11 +75,11 @@
         "proof_hint": "Upload the screenshot or voucher of the payment. Without a receipt we cannot register your enrolment.",
         "operation_hint": "It appears on your payment record as the operation number.",
         "receipt_hint": "Image or PDF, up to {size}.",
-        "receipt_preview_alt": "Preview of the receipt you uploaded"
+        "receipt_preview_alt": "Preview of the receipt you uploaded",
+        "qr_example": "Example — test QR"
       },
       "review": {
         "short": "Confirmation",
-        "eyebrow": "Step 4",
         "title": "Check before sending",
         "subtitle": "If anything is wrong, you can fix it from here.",
         "course_section": "Course and schedule",
@@ -93,7 +90,7 @@
         "what_happens": "When you send, your seat is held and your receipt goes to review. You have up to {days} days for the payment to be approved; we will email you as soon as it is."
       }
     },
-    "schedule_line": "{days} — {start} to {end}",
+    "time_range": "{start} to {end}",
     "hold": {
       "will_start": "When you continue we hold your seat for {minutes} minutes so you can pay without rushing.",
       "active": "Your seat is held while you pay",
@@ -106,7 +103,6 @@
       "schedule": "Schedule",
       "total": "Total",
       "starts_on": "Classes start",
-      "class_group": "Class group code",
       "full_name": "Full name",
       "document": "ID document",
       "phone": "Mobile",
@@ -122,7 +118,11 @@
       "national_id_type": "Document type",
       "national_id": "Document number",
       "phone": "Mobile",
+      "dial_code": "Country code",
       "birth_date": "Date of birth",
+      "day": "Day",
+      "month": "Month",
+      "year": "Year",
       "email": "Email address",
       "relationship": "Relationship",
       "operation_number": "Operation number",
@@ -139,13 +139,13 @@
       "legal_guardian": "Legal guardian"
     },
     "weekday": {
-      "mon": "Mon",
-      "tue": "Tue",
-      "wed": "Wed",
-      "thu": "Thu",
-      "fri": "Fri",
-      "sat": "Sat",
-      "sun": "Sun"
+      "mon": "Monday",
+      "tue": "Tuesday",
+      "wed": "Wednesday",
+      "thu": "Thursday",
+      "fri": "Friday",
+      "sat": "Saturday",
+      "sun": "Sunday"
     },
     "action": {
       "continue": "Continue",
@@ -175,7 +175,7 @@
     },
     "submitted": {
       "title": "We have your enrolment",
-      "subtitle": "We will write to {email} with the result of your payment review.",
+      "subtitle": "We will send an email to {email} with the result of your payment review.",
       "reference_label": "Tracking code",
       "what_now": "What happens next",
       "timeline": {
