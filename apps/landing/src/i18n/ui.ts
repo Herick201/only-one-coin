@@ -182,7 +182,6 @@ export const content = {
       },
     },
     nav: {
-      home: "Inicio",
       about: "Nosotros",
       courses: "Cursos",
       coursesAll: "Ver todos los cursos",
@@ -534,7 +533,6 @@ export const content = {
       },
     },
     nav: {
-      home: "Home",
       about: "About",
       courses: "Courses",
       coursesAll: "See all courses",
@@ -885,7 +883,6 @@ export const content = {
       },
     },
     nav: {
-      home: "Início",
       about: "Sobre",
       courses: "Cursos",
       coursesAll: "Ver todos os cursos",
