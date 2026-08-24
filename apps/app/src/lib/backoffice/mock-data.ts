@@ -3255,7 +3255,9 @@ const EMAIL_WINDOW_DAYS = 30
  */
 const studentSample = {
   studentName: 'María Fernanda Quispe Rojas',
+  studentEmail: 'maria.quispe@gmail.com',
   guardianName: 'Rosa Elena Rojas Sánchez',
+  guardianEmail: 'rosa.rojas@gmail.com',
   courseName: 'Inglés Básico A1',
   classGroupName: 'A1 — Lun/Mié 18:00',
   amountCents: 6990,
@@ -3380,4 +3382,9 @@ export function getEmailMetrics(): EmailMetrics {
     failed: flows.reduce((total, flow) => total + flow.metrics.failed, 0),
     paused: flows.filter((flow) => !flow.enabled).length,
   }
+}
+
+/** One flow, by the template it renders — the id the detail route carries. */
+export function getEmailFlow(template: string): EmailFlow | undefined {
+  return listEmailFlows().find((flow) => flow.template === template)
 }

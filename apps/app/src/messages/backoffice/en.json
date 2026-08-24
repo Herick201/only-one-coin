@@ -677,7 +677,7 @@
       "empty_title": "No e-mail matches",
       "empty_body": "Try other words, or drop the paused filter.",
       "open": "See the template",
-      "panel_close": "Close",
+      "back": "Back to e-mails",
       "preview_title": "Preview",
       "preview_note": "This is the versioned template from the repository, rendered with sample data. Each person receives it in their own language.",
       "preview_subject": "Subject",
@@ -704,7 +704,9 @@
       "test_error_empty": "Write at least one address.",
       "test_error_max": "That is {max} addresses at most.",
       "test_error_invalid": "This one does not look like an address: {value}.",
-      "test_toast": "{count, plural, one {Test sent to one address} other {Test sent to # addresses}}"
+      "test_toast": "{count, plural, one {Test sent to one address} other {Test sent to # addresses}}",
+      "preview_to": "To",
+      "updated": "Updated on {date}"
     },
     "delivery_status": {
       "not_sent": "Not sent",

@@ -927,7 +927,10 @@ export interface EmailFlowMetrics {
  */
 export interface EmailSample {
   studentName: string
+  /** Where the preview says it is going — invented, like the name above it. */
+  studentEmail: string
   guardianName: string
+  guardianEmail: string
   courseName: string
   classGroupName: string
   /** Integer cents, formatted at render time (CLAUDE.md §5). */

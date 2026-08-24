@@ -677,7 +677,7 @@
       "empty_title": "Ningún correo coincide",
       "empty_body": "Prueba con otro texto o quita el filtro de pausados.",
       "open": "Ver la plantilla",
-      "panel_close": "Cerrar",
+      "back": "Volver a correos",
       "preview_title": "Vista previa",
       "preview_note": "Es la plantilla versionada del repositorio, con datos de ejemplo. Cada persona la recibe en su idioma.",
       "preview_subject": "Asunto",
@@ -704,7 +704,9 @@
       "test_error_empty": "Escribe al menos una dirección.",
       "test_error_max": "Son {max} direcciones como máximo.",
       "test_error_invalid": "Esta dirección no parece un correo: {value}.",
-      "test_toast": "{count, plural, one {Prueba enviada a una dirección} other {Prueba enviada a # direcciones}}"
+      "test_toast": "{count, plural, one {Prueba enviada a una dirección} other {Prueba enviada a # direcciones}}",
+      "preview_to": "Para",
+      "updated": "Actualizada el {date}"
     },
     "delivery_status": {
       "not_sent": "Sin enviar",

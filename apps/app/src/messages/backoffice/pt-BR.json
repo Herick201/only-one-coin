@@ -677,7 +677,7 @@
       "empty_title": "Nenhum e-mail corresponde",
       "empty_body": "Tente outro texto ou tire o filtro de pausados.",
       "open": "Ver o modelo",
-      "panel_close": "Fechar",
+      "back": "Voltar aos e-mails",
       "preview_title": "Prévia",
       "preview_note": "É o modelo versionado do repositório, com dados de exemplo. Cada pessoa o recebe no seu idioma.",
       "preview_subject": "Assunto",
@@ -704,7 +704,9 @@
       "test_error_empty": "Escreva pelo menos um endereço.",
       "test_error_max": "São {max} endereços no máximo.",
       "test_error_invalid": "Este endereço não parece um e-mail: {value}.",
-      "test_toast": "{count, plural, one {Teste enviado para um endereço} other {Teste enviado para # endereços}}"
+      "test_toast": "{count, plural, one {Teste enviado para um endereço} other {Teste enviado para # endereços}}",
+      "preview_to": "Para",
+      "updated": "Atualizado em {date}"
     },
     "delivery_status": {
       "not_sent": "Não enviado",

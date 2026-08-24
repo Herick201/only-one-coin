@@ -1,0 +1,56 @@
+import { notFound } from 'next/navigation'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { Link } from '@/i18n/navigation'
+import { getEmailFlow, getEmailMetrics, getStaffSession } from '@/lib/backoffice/mock-data'
+import { canManageEmail } from '@/lib/backoffice/permissions'
+import { MockNotice } from '@/components/backoffice/ui'
+import { BoIcon } from '@/components/backoffice/icons'
+import { EmailFlowDetail } from './email-flow-detail'
+
+/**
+ * One automatic e-mail, on a page of its own: what it says, whether it goes
+ * out, and how the window went.
+ *
+ * A page rather than a panel over the list, because this is where the template
+ * is *read* — the whole message, at the width of a message — and because the
+ * URL is worth having: somebody checking wording with a colleague sends this
+ * link, not "open the e-mail screen and click the fourth row".
+ *
+ * The catalog is a closed union, so an id that names nothing answers
+ * `notFound`. The role gate does the same rather than drawing an empty page:
+ * the enforcing check is the role declared on the route in `apps/api`
+ * (CLAUDE.md §8).
+ */
+export default async function EmailFlowPage({
+  params,
+}: {
+  params: Promise<{ locale: string; template: string }>
+}) {
+  const { locale, template } = await params
+  setRequestLocale(locale)
+  const t = await getTranslations('bo')
+
+  const staff = getStaffSession()
+  if (!canManageEmail(staff.role)) notFound()
+
+  const flow = getEmailFlow(template)
+  if (!flow) notFound()
+
+  return (
+    <div className="flex flex-col gap-5">
+      <Link
+        href="/backoffice/emails"
+        className="inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-muted-foreground transition hover:text-ink"
+      >
+        <BoIcon name="arrow-left" size={16} />
+        {t('emails.back')}
+      </Link>
+
+      <MockNotice label={t('common.mock_notice')} />
+
+      {/* The header lives in the client half: the switch is up there with the
+          state it changes, and that state is what the header reads. */}
+      <EmailFlowDetail flow={flow} windowDays={getEmailMetrics().windowDays} />
+    </div>
+  )
+}

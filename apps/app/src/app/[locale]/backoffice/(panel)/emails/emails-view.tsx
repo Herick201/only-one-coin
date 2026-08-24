@@ -2,7 +2,8 @@
 
 import { useMemo, useState, type MouseEvent } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
-import type { EmailFlow, EmailMetrics, EmailTemplate } from '@/lib/backoffice/types'
+import { Link, useRouter } from '@/i18n/navigation'
+import type { EmailFlow, EmailMetrics } from '@/lib/backoffice/types'
 import { formatDate, formatNumber, formatPercent, type Locale } from '@/lib/format'
 import { AutoGrid } from '@/components/layout/auto-grid'
 import {
@@ -17,9 +18,7 @@ import {
   toolbarSearchClass,
   rowActionClass,
 } from '@/components/backoffice/ui'
-import { Toast } from '@/components/backoffice/controls'
 import { BoIcon } from '@/components/backoffice/icons'
-import { EmailFlowSheet } from './email-flow-sheet'
 
 /** Share of what left that the receiving server accepted. */
 function deliveryRate(flow: EmailFlow): number | null {
@@ -28,12 +27,13 @@ function deliveryRate(flow: EmailFlow): number | null {
 
 /**
  * The catalog of automatic e-mails. Search and the paused filter run in the
- * browser because the list is mocked and short — this is ten rows that grow to
- * maybe twenty, not a ledger, so it is never paged.
+ * browser because the list is mocked and short — ten rows that grow to maybe
+ * twenty, not a ledger, so it is never paged.
  *
- * Switching a flow lives in the panel, not on the row: turning off the one that
- * carries the portal credentials means nobody gets in, and that is not a
- * decision to hand to a stray click in a list.
+ * The list only ever reads. Switching a flow, and reading the template it
+ * renders, happen on the e-mail's own page: turning off the one that carries
+ * the portal credentials means nobody gets in, and that is not a decision to
+ * hand to a stray click in a list.
  */
 export function EmailsView({
   flows,
@@ -44,18 +44,16 @@ export function EmailsView({
 }) {
   const t = useTranslations('bo')
   const locale = useLocale() as Locale
+  const router = useRouter()
 
-  const [rows, setRows] = useState(flows)
   const [query, setQuery] = useState('')
   const [pausedOnly, setPausedOnly] = useState(false)
-  const [openTemplate, setOpenTemplate] = useState<EmailTemplate | null>(null)
-  const [toast, setToast] = useState<string | null>(null)
 
   /* Names and triggers are translated, so the search runs over what the reader
      actually sees — searching the template codes would find nothing they typed. */
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase()
-    return rows.filter((flow) => {
+    return flows.filter((flow) => {
       if (pausedOnly && flow.enabled) return false
       if (!needle) return true
       return [
@@ -67,25 +65,21 @@ export function EmailsView({
         .toLowerCase()
         .includes(needle)
     })
-  }, [rows, query, pausedOnly, t])
+  }, [flows, query, pausedOnly, t])
 
-  const pausedCount = rows.filter((flow) => !flow.enabled).length
-  const open = rows.find((flow) => flow.template === openTemplate) ?? null
+  const pausedCount = flows.filter((flow) => !flow.enabled).length
 
-  function toggle(template: EmailTemplate, enabled: boolean) {
-    setRows((current) =>
-      current.map((flow) => (flow.template === template ? { ...flow, enabled } : flow)),
-    )
-    setToast(t(enabled ? 'emails.toast_enabled' : 'emails.toast_paused'))
-  }
-
-  /** The row opens the panel; the button inside it stays a real button. */
-  function rowProps(template: EmailTemplate) {
+  /**
+   * The whole row opens the e-mail, and the button inside it stays a real
+   * link — so keyboard, screen reader and ctrl+click keep working.
+   */
+  function rowProps(template: string) {
+    const href = `/backoffice/emails/${template}`
     return {
       className: 'cursor-pointer transition hover:bg-sky-soft',
       onClick: (event: MouseEvent<HTMLTableRowElement>) => {
-        if ((event.target as HTMLElement).closest('button')) return
-        setOpenTemplate(template)
+        if ((event.target as HTMLElement).closest('a')) return
+        router.push(href)
       },
     }
   }
@@ -196,9 +190,12 @@ export function EmailsView({
                   <tr key={flow.template} {...rowProps(flow.template)}>
                     <td className={tdClass}>
                       <span className="flex min-w-0 flex-col">
-                        <span className="font-semibold text-ink">
+                        <Link
+                          href={`/backoffice/emails/${flow.template}`}
+                          className="font-semibold text-ink transition hover:text-brand-blue"
+                        >
                           {t(`email_template.${flow.template}`)}
-                        </span>
+                        </Link>
                         {/* What fires it, on the row: a catalog of names alone
                             does not say which of two similar e-mails is the
                             one going out at the wrong moment. */}
@@ -244,13 +241,12 @@ export function EmailsView({
                       </span>
                     </td>
                     <td className={`${tdClass} text-right`}>
-                      <button
-                        type="button"
-                        onClick={() => setOpenTemplate(flow.template)}
+                      <Link
+                        href={`/backoffice/emails/${flow.template}`}
                         className={rowActionClass}
                       >
                         {t('emails.open')}
-                      </button>
+                      </Link>
                     </td>
                   </tr>
                 )
@@ -259,16 +255,6 @@ export function EmailsView({
           </TableShell>
         )}
       </Card>
-
-      <EmailFlowSheet
-        flow={open}
-        windowDays={metrics.windowDays}
-        onClose={() => setOpenTemplate(null)}
-        onToggle={toggle}
-        onTestSent={(count) => setToast(t('emails.test_toast', { count }))}
-      />
-
-      <Toast message={toast} onDismiss={() => setToast(null)} />
     </div>
   )
 }
