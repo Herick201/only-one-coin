@@ -99,18 +99,12 @@ export default async function EmailDeliveriesPage({
           still point straight at the slice it names — and a native disclosure,
           so the menu costs no client component. */}
       <details className="relative w-fit">
-        <summary
-          className={`inline-flex cursor-pointer list-none items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold transition [&::-webkit-details-marker]:hidden ${
-            stateFilter === null
-              ? 'border-line bg-white text-muted-foreground hover:border-brand-yellow hover:bg-cream hover:text-ink'
-              : 'border-brand-yellow bg-cream text-ink'
-          }`}
-        >
+        {/* The button names the slice you are in and nothing else: the count
+            is on every row of the menu, and repeating it here made the control
+            read as a number to act on rather than as a filter. */}
+        <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-2 text-sm font-semibold text-muted-foreground transition hover:border-brand-yellow hover:bg-cream hover:text-ink [&::-webkit-details-marker]:hidden">
           <BoIcon name="filter" size={16} />
           {active.label}
-          <span className="text-slate-400">
-            {active.count}
-          </span>
           <BoIcon name="chevron-down" size={14} />
         </summary>
         <div className="absolute left-0 top-12 z-20 flex w-60 flex-col gap-0.5 rounded-xl border border-line bg-white p-1.5 shadow-float">
