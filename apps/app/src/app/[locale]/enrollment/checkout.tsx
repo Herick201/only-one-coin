@@ -15,6 +15,7 @@ import { StepStudent } from './step-student'
 import { StepPayment } from './step-payment'
 import { StepReview } from './step-review'
 import { Submitted } from './submitted'
+import { Expired } from './expired'
 
 /**
  * The public checkout — one wizard, two ways in.
@@ -48,6 +49,7 @@ export function Checkout({
     holdExpired,
     startHold,
     settleHold,
+    restart,
   } = useCheckout(catalog, initialDraft)
 
   const stepLabels: Record<StepId, string> = {
@@ -79,7 +81,25 @@ export function Checkout({
   if (reference) {
     return (
       <Shell>
-        <Submitted catalog={catalog} draft={draft} reference={reference} />
+        <Submitted
+          catalog={catalog}
+          draft={draft}
+          reference={reference}
+          onRestart={() => {
+            setReference(null)
+            restart()
+          }}
+        />
+      </Shell>
+    )
+  }
+
+  // Terminal, and checked before the stepper: a rail showing "step 2 of 4" over
+  // a checkout that no longer holds a seat is the screen lying about itself.
+  if (holdExpired) {
+    return (
+      <Shell>
+        <Expired onRestart={restart} />
       </Shell>
     )
   }
@@ -114,7 +134,6 @@ export function Checkout({
           draft={draft}
           setDraft={setDraft}
           onContinue={leaveCourseStep}
-          holdExpired={holdExpired}
         />
       )}
 

@@ -57,13 +57,11 @@ export function StepCourse({
   draft,
   setDraft,
   onContinue,
-  holdExpired,
 }: {
   catalog: PublicCatalog
   draft: CheckoutDraft
   setDraft: (next: (prev: CheckoutDraft) => CheckoutDraft) => void
   onContinue: () => void
-  holdExpired: boolean
 }) {
   const t = useTranslations('enrollment')
   const locale = useLocale() as Locale
@@ -153,11 +151,6 @@ export function StepCourse({
         title={t('step.course.title')}
         subtitle={t('step.course.subtitle')}
       />
-
-      {/* The seat went back while they were away. Not a failure screen: the
-          rest of the draft is intact, only the class group has to be picked
-          again (`docs/MATRICULA-CHECKOUT.md` §3). */}
-      {holdExpired && <Note tone="danger">{t('hold.expired')}</Note>}
 
       {/* Language */}
       <Card className="p-5">

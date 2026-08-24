@@ -198,6 +198,28 @@ export function ChoiceCard({
   )
 }
 
+/**
+ * The landing's dot grid, at its exact spacing. Decoration only, so it is
+ * `aria-hidden` and never carries meaning.
+ *
+ * Used on the screens that are a moment rather than a task — the confirmation
+ * and the expiry — and deliberately not on the form: a field that a reader is
+ * squinting at does not need a texture behind it.
+ */
+export function DotGrid({ className = '' }: { className?: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`pointer-events-none absolute size-28 opacity-30 ${className}`}
+      style={{
+        backgroundImage:
+          'radial-gradient(var(--color-brand-blue) 2.4px, transparent 2.4px)',
+        backgroundSize: '16px 16px',
+      }}
+    />
+  )
+}
+
 export type NoteTone = 'info' | 'warning' | 'danger' | 'success'
 
 const noteStyles: Record<NoteTone, string> = {
@@ -231,23 +253,42 @@ export function Note({
   )
 }
 
+/**
+ * The primary action. Renders an `<a>` when it is given an `href` and a
+ * `<button>` otherwise — a control that navigates has to be a link, or it is
+ * invisible to a middle click, a long press and a screen reader listing the
+ * page's destinations.
+ */
 export function PrimaryButton({
   children,
   onClick,
+  href,
   disabled = false,
   type = 'button',
 }: {
   children: ReactNode
   onClick?: () => void
+  href?: string
   disabled?: boolean
   type?: 'button' | 'submit'
 }) {
+  const className =
+    'inline-flex items-center justify-center gap-2 rounded-full bg-brand-blue px-7 py-3.5 text-[15px] font-bold text-white shadow-blue transition hover:-translate-y-0.5 hover:bg-brand-yellow hover:text-ink hover:shadow-yellow disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none'
+
+  if (href) {
+    return (
+      <a href={href} className={className}>
+        {children}
+      </a>
+    )
+  }
+
   return (
     <button
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className="inline-flex items-center justify-center gap-2 rounded-full bg-brand-blue px-7 py-3.5 text-[15px] font-bold text-white shadow-blue transition hover:-translate-y-0.5 hover:bg-brand-yellow hover:text-ink hover:shadow-yellow disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none"
+      className={className}
     >
       {children}
     </button>

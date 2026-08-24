@@ -141,8 +141,10 @@ export function StepPayment({
           is read-only: there are no discounts, ever (`CLAUDE.md` §1), so a
           field somebody can type into is a field somebody can undercharge
           from. */}
+      {/* The yellow rule down the left edge is the landing's way of marking the
+          line that matters in a block. Here that line is the amount. */}
       {plan && (
-        <Card className="border-brand-blue/25 bg-sky p-5">
+        <Card className="border-l-4 border-brand-blue/25 border-l-brand-yellow bg-sky p-5">
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-blue-deep">
             {t('step.payment.amount_label')}
           </p>

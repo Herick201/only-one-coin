@@ -34,7 +34,18 @@ export default async function EnrollmentLayout({
   const t = await getTranslations('enrollment')
 
   return (
-    <div className={`${body.className} flex min-h-dvh flex-col bg-sky-soft text-ink`}>
+    <div
+      className={`${body.className} flex min-h-dvh flex-col bg-sky-soft text-ink`}
+      /* The landing's two washes — yellow high on the right, blue low on the
+         left — at the same stops it uses. A form needs calm, so they stay this
+         faint: enough that the page is not a white sheet, never enough to
+         compete with a field. */
+      style={{
+        backgroundImage:
+          'radial-gradient(50% 45% at 92% 2%, rgba(255, 201, 60, 0.16), transparent 60%), radial-gradient(45% 40% at 4% 98%, rgba(47, 107, 255, 0.12), transparent 60%)',
+        backgroundAttachment: 'fixed',
+      }}
+    >
       <header className="sticky top-0 z-20 border-b border-line bg-white/90 backdrop-blur">
         <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           {/* The real mark, not a stand-in. This is the first screen somebody

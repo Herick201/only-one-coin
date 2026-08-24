@@ -94,8 +94,13 @@
     "hold": {
       "will_start": "Al continuar reservamos tu vacante por {minutes} minutos para que puedas pagar con tranquilidad.",
       "active": "Tu vacante está reservada mientras pagas",
-      "remaining": "Quedan {minutes} minutos y {seconds} segundos de reserva",
-      "expired": "Se acabó el tiempo y tu vacante volvió al grupo. Tus datos siguen guardados: elige un horario de nuevo para continuar."
+      "remaining": "Quedan {minutes} minutos y {seconds} segundos de reserva"
+    },
+    "expired": {
+      "title": "Se acabó el tiempo",
+      "body": "Tu vacante volvió al grupo y esta matrícula se canceló. Puedes empezar de nuevo y elegir tu horario otra vez.",
+      "action": "Nueva matrícula",
+      "already_paid": "¿Ya pagaste? No vuelvas a pagar. Escríbenos por WhatsApp con tu comprobante y el número de operación y lo registramos nosotros."
     },
     "summary": {
       "course": "Curso",
@@ -193,7 +198,9 @@
         }
       },
       "summary_label": "Lo que registramos",
-      "online_note": "Todas nuestras clases son 100% en línea, por Google Meet y Google Classroom. No necesitas ir a ninguna sede."
+      "online_note": "Todas nuestras clases son 100% en línea, por Google Meet y Google Classroom. No necesitas ir a ninguna sede.",
+      "back_to_site": "Volver al sitio",
+      "new_enrollment": "Matricular a otra persona"
     }
   }
 }

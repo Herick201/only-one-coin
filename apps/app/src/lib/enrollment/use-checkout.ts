@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { CheckoutDraft, PublicCatalog, SeatHold, StepId } from './types'
 import { STEP_ORDER } from './types'
-import { groupById, hasSeat } from './checkout'
+import { emptyDraft, groupById, hasSeat } from './checkout'
 
 /**
  * Where a half-filled checkout survives a reload. `sessionStorage`, not
@@ -57,8 +57,13 @@ export interface CheckoutController {
   goTo: (step: StepId) => void
   /** Seconds left on the checkout hold, or null when no seat is held. */
   holdSecondsLeft: number | null
-  /** True from the moment a hold ran out until the reader picks again. */
+  /**
+   * The hold ran out. A terminal state, not a step: the checkout is over and
+   * the only way on is to start again.
+   */
   holdExpired: boolean
+  /** Throws the expired attempt away and opens an empty checkout. */
+  restart: () => void
   startHold: (classGroupId: string) => void
   releaseHold: () => void
   /** Freezes the hold once the receipt is in — the 5-day clock takes over. */
@@ -191,16 +196,20 @@ export function useCheckout(
     clearStored(HOLD_KEY)
   }, [])
 
-  /** Ran out: the seat went back, and the reader has to choose again. */
+  /**
+   * Ran out. The seat went back to the class group, and the attempt ends here.
+   *
+   * Everything typed is discarded rather than kept warm for a retry. That is a
+   * deliberate trade: a half-filled form sitting in a shared browser is a
+   * document number and a birth date left on a machine in a cabina, and the
+   * checkout has no session to tie it to anybody. Starting over costs a couple
+   * of minutes; the other way costs somebody else's data.
+   */
   useEffect(() => {
     if (holdSecondsLeft === 0) {
       setHoldExpired(true)
-      setDraftState((prev) => ({
-        ...prev,
-        course: { ...prev.course, classGroupId: null },
-      }))
       releaseHold()
-      setStep('course')
+      clearStored(DRAFT_KEY)
     }
   }, [holdSecondsLeft, releaseHold])
 
@@ -248,6 +257,16 @@ export function useCheckout(
     }
   }, [restored, hold, draft.course.classGroupId, step, startHold])
 
+  const restart = useCallback(() => {
+    clearCheckoutStorage()
+    bootstrapped.current = true
+    setDraftState(emptyDraft(arrival.current.source))
+    setHold(null)
+    setHoldExpired(false)
+    setStep('course')
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0 })
+  }, [])
+
   const setDraft = useCallback(
     (next: CheckoutDraft | ((prev: CheckoutDraft) => CheckoutDraft)) => {
       setDraftState((prev) => (typeof next === 'function' ? next(prev) : next))
@@ -271,6 +290,7 @@ export function useCheckout(
     startHold,
     releaseHold,
     settleHold,
+    restart,
   }
 }
 

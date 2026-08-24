@@ -94,8 +94,13 @@
     "hold": {
       "will_start": "When you continue we hold your seat for {minutes} minutes so you can pay without rushing.",
       "active": "Your seat is held while you pay",
-      "remaining": "{minutes} minutes and {seconds} seconds left on your hold",
-      "expired": "Time ran out and your seat went back to the class. Your details are still saved: pick a schedule again to carry on."
+      "remaining": "{minutes} minutes and {seconds} seconds left on your hold"
+    },
+    "expired": {
+      "title": "Time ran out",
+      "body": "Your seat went back to the class group and this enrolment was cancelled. You can start again and pick your schedule.",
+      "action": "New enrolment",
+      "already_paid": "Already paid? Do not pay again. Message us on WhatsApp with your receipt and operation number and we will register it for you."
     },
     "summary": {
       "course": "Course",
@@ -193,7 +198,9 @@
         }
       },
       "summary_label": "What we recorded",
-      "online_note": "All our classes are 100% online, on Google Meet and Google Classroom. You never need to travel to a campus."
+      "online_note": "All our classes are 100% online, on Google Meet and Google Classroom. You never need to travel to a campus.",
+      "back_to_site": "Back to the site",
+      "new_enrollment": "Enrol somebody else"
     }
   }
 }
