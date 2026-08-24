@@ -24,6 +24,8 @@ import {
 } from '@/components/backoffice/ui'
 import { Toast } from '@/components/backoffice/controls'
 import { BoIcon } from '@/components/backoffice/icons'
+import { tabClass, tabStripClass } from '@/components/backoffice/tab-strip'
+import { FiltersDropdown } from '@/components/backoffice/filters-dropdown'
 import {
   Dialog,
   DialogContent,
@@ -97,7 +99,6 @@ export function TeamView({
   const [query, setQuery] = useState('')
   const [role, setRole] = useState(ALL)
   const [mfaOnly, setMfaOnly] = useState(false)
-  const [filtersOpen, setFiltersOpen] = useState(false)
   const [page, setPage] = useState(0)
   const [creating, setCreating] = useState(false)
   const [changing, setChanging] = useState<StaffMemberRow | null>(null)
@@ -203,7 +204,7 @@ export function TeamView({
     <div className="flex flex-col gap-4">
       {/* Not `SectionTabs`: those are real routes, and these two are one list
           cut two ways — the same page, the same filters, no URL to bookmark. */}
-      <nav className="-mt-2 flex items-center gap-1 border-b border-line">
+      <nav className={tabStripClass}>
         {(['active', 'inactive'] as Tab[]).map((value) => {
           const active = tab === value
           return (
@@ -212,11 +213,7 @@ export function TeamView({
               type="button"
               onClick={() => openTab(value)}
               aria-current={active ? 'page' : undefined}
-              className={`-mb-px flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-semibold transition ${
-                active
-                  ? 'border-brand-blue text-brand-blue'
-                  : 'border-transparent text-muted-foreground hover:border-line hover:text-ink'
-              }`}
+              className={tabClass(active)}
             >
               {t(value === 'active' ? 'team.tab_active' : 'team.tab_inactive')}
               <span className={active ? 'text-brand-blue/60' : 'text-slate-400'}>
@@ -249,39 +246,11 @@ export function TeamView({
             />
           </label>
 
-          <button
-            type="button"
-            onClick={() => setFiltersOpen(!filtersOpen)}
-            aria-expanded={filtersOpen}
-            className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold transition ${
-              activeFilters > 0 || filtersOpen
-                ? 'border-brand-blue bg-sky text-brand-blue'
-                : 'border-line bg-white text-muted-foreground hover:text-ink'
-            }`}
+          <FiltersDropdown
+            label={t('team.filters')}
+            count={activeFilters}
+            panelClassName="flex-wrap items-center gap-1.5"
           >
-            <BoIcon name="filter" size={16} />
-            {t('team.filters')}
-            {activeFilters > 0 && (
-              <span className="rounded-full bg-brand-blue px-1.5 text-xs text-white">
-                {activeFilters}
-              </span>
-            )}
-          </button>
-
-          {!creating && (
-            <button
-              type="button"
-              onClick={() => setCreating(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-deep lg:ml-auto"
-            >
-              <BoIcon name="plus" size={16} />
-              {t('team.new')}
-            </button>
-          )}
-        </Toolbar>
-
-        {filtersOpen && (
-          <Card className="flex flex-wrap items-center gap-1.5 p-3">
             {onActive && (
               <button
                 type="button"
@@ -323,8 +292,20 @@ export function TeamView({
                 ))}
               </select>
             </label>
-          </Card>
-        )}
+          </FiltersDropdown>
+
+          {!creating && (
+            <button
+              type="button"
+              onClick={() => setCreating(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-deep lg:ml-auto"
+            >
+              <BoIcon name="plus" size={16} />
+              {t('team.new')}
+            </button>
+          )}
+        </Toolbar>
+
       </div>
 
       {creating && (

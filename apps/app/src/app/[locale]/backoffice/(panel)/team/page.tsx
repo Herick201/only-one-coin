@@ -35,7 +35,7 @@ export default async function TeamPage({
   if (!canManageStaff(staff.role)) {
     return (
       <div className="flex flex-col gap-5">
-        <PageHeader title={t('team.title')} subtitle={t('team.subtitle')} />
+        <PageHeader title={t('team.title')} />
         <EmptyState
           icon="shield"
           title={t('team.locked_title')}
@@ -59,7 +59,7 @@ export default async function TeamPage({
 
   return (
     <div className="flex flex-col gap-5">
-      <PageHeader title={t('team.title')} subtitle={t('team.subtitle')} />
+      <PageHeader title={t('team.title')} />
       <MockNotice label={t('common.mock_notice')} />
       <TeamView
         rows={listStaff()}

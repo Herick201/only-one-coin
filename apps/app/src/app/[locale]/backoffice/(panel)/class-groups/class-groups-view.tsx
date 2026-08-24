@@ -19,6 +19,7 @@ import {
 } from '@/components/backoffice/ui'
 import { classGroupTone, seatPressureTone } from '@/components/backoffice/status-tone'
 import { BoIcon } from '@/components/backoffice/icons'
+import { FiltersDropdown } from '@/components/backoffice/filters-dropdown'
 import { AutoGrid } from '@/components/layout/auto-grid'
 
 type Sort = 'newest' | 'oldest'
@@ -89,7 +90,6 @@ export function ClassGroupsView({
   const [teacher, setTeacher] = useState(ALL)
   const [period, setPeriod] = useState(ALL)
   const [sort, setSort] = useState<Sort>('newest')
-  const [filtersOpen, setFiltersOpen] = useState(false)
   /**
    * Language groups the user opened. Everything starts closed: with ~10
    * languages the open list is longer than a screen, and the first thing you
@@ -248,48 +248,11 @@ export function ClassGroupsView({
             />
           </label>
 
-          <button
-            type="button"
-            onClick={() => setFiltersOpen((open) => !open)}
-            aria-expanded={filtersOpen}
-            className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold transition ${
-              activeFilters > 0 || filtersOpen
-                ? 'border-brand-blue bg-sky text-brand-blue'
-                : 'border-line bg-white text-muted-foreground hover:text-ink'
-            }`}
+          <FiltersDropdown
+            label={t('class_groups.filters')}
+            count={activeFilters}
+            panelClassName="flex-wrap items-end gap-3"
           >
-            <BoIcon name="filter" size={16} />
-            {t('class_groups.filters')}
-            {activeFilters > 0 && (
-              <span className="rounded-full bg-brand-blue px-1.5 text-xs text-white">
-                {activeFilters}
-              </span>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setSort(sort === 'newest' ? 'oldest' : 'newest')}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-2 text-sm font-semibold text-muted-foreground transition hover:text-ink"
-          >
-            <BoIcon name="sort" size={16} />
-            {t(sort === 'newest' ? 'class_groups.sort_newest' : 'class_groups.sort_oldest')}
-          </button>
-
-          {canCreate && (
-            <button
-              type="button"
-              onClick={() => setCreating(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-deep lg:ml-auto"
-            >
-              <BoIcon name="plus" size={16} />
-              {t('class_groups.new_class_group')}
-            </button>
-          )}
-        </Toolbar>
-
-        {filtersOpen && (
-          <Card className="flex flex-wrap items-end gap-3 p-4">
             <label className="flex min-w-40 flex-1 flex-col gap-1">
               <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 {t('class_groups.filter_language')}
@@ -353,8 +316,29 @@ export function ClassGroupsView({
                 {t('class_groups.clear_filters')}
               </button>
             )}
-          </Card>
-        )}
+          </FiltersDropdown>
+
+          <button
+            type="button"
+            onClick={() => setSort(sort === 'newest' ? 'oldest' : 'newest')}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-2 text-sm font-semibold text-muted-foreground transition hover:text-ink"
+          >
+            <BoIcon name="sort" size={16} />
+            {t(sort === 'newest' ? 'class_groups.sort_newest' : 'class_groups.sort_oldest')}
+          </button>
+
+          {canCreate && (
+            <button
+              type="button"
+              onClick={() => setCreating(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-deep lg:ml-auto"
+            >
+              <BoIcon name="plus" size={16} />
+              {t('class_groups.new_class_group')}
+            </button>
+          )}
+        </Toolbar>
+
       </div>
 
       {creating && (

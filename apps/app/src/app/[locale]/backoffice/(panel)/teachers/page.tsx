@@ -45,7 +45,7 @@ export default async function TeachersPage({
   if (!canManageTeachers(staff.role)) {
     return (
       <div className="flex flex-col gap-5">
-        <PageHeader title={t('teachers.title')} subtitle={t('teachers.subtitle')} />
+        <PageHeader title={t('teachers.title')} />
         <EmptyState
           icon="shield"
           title={t('teachers.locked_title')}
@@ -66,7 +66,7 @@ export default async function TeachersPage({
 
   return (
     <div className="flex flex-col gap-5">
-      <PageHeader title={t('teachers.title')} subtitle={t('teachers.subtitle')} />
+      <PageHeader title={t('teachers.title')} />
       <MockNotice label={t('common.mock_notice')} />
       <TeachersView
         rows={listTeachers()}

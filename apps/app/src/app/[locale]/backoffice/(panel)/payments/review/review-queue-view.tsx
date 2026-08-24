@@ -24,6 +24,7 @@ import {
 import { Toast } from '@/components/backoffice/controls'
 import { reviewFlagTone } from '@/components/backoffice/status-tone'
 import { BoIcon } from '@/components/backoffice/icons'
+import { FiltersDropdown } from '@/components/backoffice/filters-dropdown'
 import { ReceiptReviewDialog } from './receipt-review-dialog'
 
 type FlagFilter = ReviewFlag | 'all'
@@ -88,7 +89,6 @@ export function ReviewQueueView({
 
   const [query, setQuery] = useState('')
   const [flag, setFlag] = useState<FlagFilter>('all')
-  const [filtersOpen, setFiltersOpen] = useState(false)
   const [sort, setSort] = useState<'oldest' | 'newest'>('oldest')
   const [page, setPage] = useState(0)
 
@@ -186,40 +186,11 @@ export function ReviewQueueView({
           {/* Six reasons is a row of chips wide enough to shove the table
               down the page — they live behind the button, like the alumnos
               list does. */}
-          <button
-            type="button"
-            onClick={() => setFiltersOpen(!filtersOpen)}
-            aria-expanded={filtersOpen}
-            className={`inline-flex items-center gap-1.5 self-start rounded-lg border px-3 py-2 text-sm font-semibold transition ${
-              flag !== 'all' || filtersOpen
-                ? 'border-brand-blue bg-sky text-brand-blue'
-                : 'border-line bg-white text-muted-foreground hover:text-ink'
-            }`}
+          <FiltersDropdown
+            label={t('review_queue.filters')}
+            count={flag !== 'all' ? 1 : 0}
+            panelClassName="flex-wrap items-center gap-1.5"
           >
-            <BoIcon name="filter" size={16} />
-            {t('review_queue.filters')}
-            {flag !== 'all' && (
-              <span className="rounded-full bg-brand-blue px-1.5 text-xs text-white">
-                1
-              </span>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setSort(sort === 'oldest' ? 'newest' : 'oldest')}
-            className="inline-flex items-center gap-1.5 self-start rounded-lg border border-line bg-white px-3 py-2 text-sm font-semibold text-muted-foreground transition hover:text-ink"
-          >
-            <BoIcon name="sort" size={16} />
-            {t(
-              sort === 'oldest' ? 'review_queue.sort_oldest' : 'review_queue.sort_newest',
-            )}
-          </button>
-        </Toolbar>
-
-        {/* One axis only: the flag is what tells one case from another here. */}
-        {filtersOpen && (
-          <Card className="flex flex-wrap items-center gap-1.5 p-3">
             {FLAG_FILTERS.map((value) => {
               const active = flag === value
               return (
@@ -243,8 +214,21 @@ export function ReviewQueueView({
                 </button>
               )
             })}
-          </Card>
-        )}
+          </FiltersDropdown>
+
+          <button
+            type="button"
+            onClick={() => setSort(sort === 'oldest' ? 'newest' : 'oldest')}
+            className="inline-flex items-center gap-1.5 self-start rounded-lg border border-line bg-white px-3 py-2 text-sm font-semibold text-muted-foreground transition hover:text-ink"
+          >
+            <BoIcon name="sort" size={16} />
+            {t(
+              sort === 'oldest' ? 'review_queue.sort_oldest' : 'review_queue.sort_newest',
+            )}
+          </button>
+        </Toolbar>
+
+        {/* One axis only: the flag is what tells one case from another here. */}
       </div>
 
       {/* min-w-0: the row is wide enough to push a flex child past the page,

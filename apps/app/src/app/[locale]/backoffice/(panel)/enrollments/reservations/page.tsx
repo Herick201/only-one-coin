@@ -44,7 +44,6 @@ export default async function ReservationsPage({
       <div className="flex flex-col gap-5">
         <PageHeader
           title={t('enrollments.title')}
-          subtitle={t('enrollments.subtitle')}
         />
         <EmptyState
           icon="shield"
@@ -59,7 +58,6 @@ export default async function ReservationsPage({
     <div className="flex flex-col gap-5">
       <PageHeader
         title={t('reservations.title')}
-        subtitle={t('reservations.subtitle')}
       />
       <SectionTabs
         tabs={[

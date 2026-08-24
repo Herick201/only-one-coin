@@ -43,7 +43,6 @@
     },
     "dashboard": {
       "greeting": "Hola, {name}",
-      "subtitle": "Resumen del día y todo lo que necesita revisión humana.",
       "metric_enrollments_today": "Matrículas de hoy",
       "metric_delta": "{value}% frente a ayer",
       "metric_pending_review": "En revisión humana",
@@ -115,7 +114,6 @@
     },
     "students": {
       "title": "Alumnos",
-      "subtitle": "Busca por nombre, documento, correo o teléfono.",
       "search_label": "Buscar alumno",
       "search_placeholder": "Nombre, documento, correo o teléfono",
       "filter_all": "Todos",
@@ -295,7 +293,6 @@
     },
     "payments": {
       "title": "Pagos",
-      "subtitle": "Todo lo que entró por matrícula y por trámite, con el estado de cada comprobante.",
       "tab_ledger": "Pagos",
       "tab_review": "Cola de revisión",
       "settings_action": "Parámetros de validación",
@@ -393,7 +390,6 @@
     },
     "payment_settings": {
       "title": "Validación de comprobantes",
-      "subtitle": "Los parámetros con los que la plataforma aprueba sola antes de pedir un humano.",
       "tolerance_label": "Tolerancia de monto",
       "tolerance_hint": "Cuánto puede alejarse el comprobante del precio del plan y aun así aprobarse solo.",
       "confidence_label": "Confianza mínima",
@@ -414,7 +410,6 @@
     },
     "enrollments": {
       "title": "Matrículas",
-      "subtitle": "Cada asiento de la institución: quién se matriculó, en qué aula y si el pago ya está resuelto.",
       "tab_ledger": "Listado",
       "tab_reservations": "Reservas",
       "metric_total": "Matrículas",
@@ -480,7 +475,6 @@
     },
     "reservations": {
       "title": "Asientos reservados",
-      "subtitle": "Asientos ocupados por un pago que nadie resolvió todavía. Los más próximos a vencer, primero.",
       "rule": "Un asiento reservado vuelve a la bolsa a los {days} días si el pago no se aprueba.",
       "col_student": "Alumno",
       "col_course": "Curso / aula",
@@ -585,7 +579,6 @@
     },
     "class_groups": {
       "title": "Aulas",
-      "subtitle": "Aulas por período, con lo que falta emitir en cada una.",
       "col_class_group": "Aula",
       "col_teacher": "Docente",
       "col_period": "Período",
@@ -641,8 +634,7 @@
       "page_status": "{from}–{to} de {total}",
       "code_generated": "Generado automáticamente.",
       "field_time_hour": "Hora",
-      "field_time_minute": "Minutos",
-      "own_subtitle": "Las aulas que dictas en este período."
+      "field_time_minute": "Minutos"
     },
     "class_group": {
       "back_to_list": "Volver a las aulas",
@@ -768,7 +760,6 @@
     },
     "courses": {
       "title": "Cursos",
-      "subtitle": "El catálogo del que nacen las aulas.",
       "search_label": "Buscar cursos",
       "search_placeholder": "Curso, idioma o nivel",
       "new_course": "Nuevo curso",
@@ -828,7 +819,6 @@
     },
     "teachers": {
       "title": "Docentes",
-      "subtitle": "Quién dicta qué, quién está libre y qué queda pendiente.",
       "locked_title": "Sin acceso al plantel docente",
       "locked_body": "El plantel lo administran administración y coordinación.",
       "search_label": "Buscar docentes",
@@ -859,7 +849,6 @@
       "col_teacher": "Docente",
       "col_languages": "Idiomas",
       "col_class_groups": "Aulas",
-      "col_students": "Alumnos",
       "col_pending": "Pendiente",
       "col_status": "Estado",
       "free": "Libre",
@@ -949,7 +938,6 @@
       "legend_outside": "Aula fuera de la franja"
     },
     "teacher_home": {
-      "subtitle": "Tus aulas y lo que todavía te falta cerrar.",
       "metric_class_groups": "Aulas activas",
       "metric_class_groups_hint": "{total} en total",
       "metric_students": "Alumnos",
@@ -966,7 +954,6 @@
     },
     "team": {
       "title": "Equipo",
-      "subtitle": "Quién entra al panel, con qué cargo y con qué segundo factor.",
       "locked_title": "Sin acceso al equipo",
       "locked_body": "Las cuentas del panel y los cargos los administra administración.",
       "tab_active": "Con acceso",

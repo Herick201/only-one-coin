@@ -32,6 +32,7 @@ import {
   seatTone,
 } from '@/components/backoffice/status-tone'
 import { BoIcon } from '@/components/backoffice/icons'
+import { FiltersDropdown } from '@/components/backoffice/filters-dropdown'
 import { EnrollmentDetailDialog } from './enrollment-detail-dialog'
 import { NewEnrollmentForm } from './new-enrollment-form'
 import { AutoGrid } from '@/components/layout/auto-grid'
@@ -99,7 +100,6 @@ export function EnrollmentsView({
   const [seat, setSeat] = useState<SeatFilter>('all')
   const [languageId, setLanguageId] = useState<string>('all')
   const [period, setPeriod] = useState<string>('all')
-  const [filtersOpen, setFiltersOpen] = useState(false)
   const [sort, setSort] = useState<'newest' | 'oldest'>('newest')
   const [page, setPage] = useState(0)
 
@@ -236,52 +236,11 @@ export function EnrollmentsView({
 
           {/* Four axes of chips would be taller than the table itself, so they
               live behind the button — same as the payments ledger. */}
-          <button
-            type="button"
-            onClick={() => setFiltersOpen(!filtersOpen)}
-            aria-expanded={filtersOpen}
-            className={`inline-flex items-center gap-1.5 self-start rounded-lg border px-3 py-2 text-sm font-semibold transition ${
-              activeFilters > 0 || filtersOpen
-                ? 'border-brand-blue bg-sky text-brand-blue'
-                : 'border-line bg-white text-muted-foreground hover:text-ink'
-            }`}
+          <FiltersDropdown
+            label={t('enrollments.filters')}
+            count={activeFilters}
+            panelClassName="flex-col gap-3"
           >
-            <BoIcon name="filter" size={16} />
-            {t('enrollments.filters')}
-            {activeFilters > 0 && (
-              <span className="rounded-full bg-brand-blue px-1.5 text-xs text-white">
-                {activeFilters}
-              </span>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setSort(sort === 'newest' ? 'oldest' : 'newest')}
-            className="inline-flex items-center gap-1.5 self-start rounded-lg border border-line bg-white px-3 py-2 text-sm font-semibold text-muted-foreground transition hover:text-ink"
-          >
-            <BoIcon name="sort" size={16} />
-            {t(
-              sort === 'newest'
-                ? 'enrollments.sort_newest'
-                : 'enrollments.sort_oldest',
-            )}
-          </button>
-
-          {canCreate && !creating && (
-            <button
-              type="button"
-              onClick={() => setCreating(true)}
-              className="inline-flex items-center gap-1.5 self-start rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-deep lg:ml-auto"
-            >
-              <BoIcon name="plus" size={16} />
-              {t('enrollments.new_enrollment')}
-            </button>
-          )}
-        </Toolbar>
-
-        {filtersOpen && (
-          <Card className="flex flex-col gap-3 p-3">
             <FilterRow label={t('enrollments.filter_status')}>
               {STATUS_FILTERS.map((value) => (
                 <Chip
@@ -343,8 +302,33 @@ export function EnrollmentsView({
                 />
               ))}
             </FilterRow>
-          </Card>
-        )}
+          </FiltersDropdown>
+
+          <button
+            type="button"
+            onClick={() => setSort(sort === 'newest' ? 'oldest' : 'newest')}
+            className="inline-flex items-center gap-1.5 self-start rounded-lg border border-line bg-white px-3 py-2 text-sm font-semibold text-muted-foreground transition hover:text-ink"
+          >
+            <BoIcon name="sort" size={16} />
+            {t(
+              sort === 'newest'
+                ? 'enrollments.sort_newest'
+                : 'enrollments.sort_oldest',
+            )}
+          </button>
+
+          {canCreate && !creating && (
+            <button
+              type="button"
+              onClick={() => setCreating(true)}
+              className="inline-flex items-center gap-1.5 self-start rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-deep lg:ml-auto"
+            >
+              <BoIcon name="plus" size={16} />
+              {t('enrollments.new_enrollment')}
+            </button>
+          )}
+        </Toolbar>
+
       </div>
 
       {creating && (

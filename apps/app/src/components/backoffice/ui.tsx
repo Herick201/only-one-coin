@@ -87,13 +87,17 @@ export function Card({
   )
 }
 
+/**
+ * The title of a screen, on its own. There used to be a line of support copy
+ * under it on every page; it said what the section was to somebody who already
+ * knew — the sidebar entry that got them here said the same thing — and it
+ * pushed the work down the page on all of them.
+ */
 export function PageHeader({
   title,
-  subtitle,
   actions,
 }: {
   title: string
-  subtitle?: string
   actions?: ReactNode
 }) {
   return (
@@ -102,7 +106,6 @@ export function PageHeader({
         <h1 className="text-xl font-semibold tracking-tight text-ink sm:text-2xl">
           {title}
         </h1>
-        {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
       </div>
       {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
     </header>

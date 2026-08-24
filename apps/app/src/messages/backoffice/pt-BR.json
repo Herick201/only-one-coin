@@ -43,7 +43,6 @@
     },
     "dashboard": {
       "greeting": "Olá, {name}",
-      "subtitle": "Resumo do dia e tudo o que precisa de revisão humana.",
       "metric_enrollments_today": "Matrículas de hoje",
       "metric_delta": "{value}% em relação a ontem",
       "metric_pending_review": "Em revisão humana",
@@ -115,7 +114,6 @@
     },
     "students": {
       "title": "Alunos",
-      "subtitle": "Busque por nome, documento, e-mail ou telefone.",
       "search_label": "Buscar aluno",
       "search_placeholder": "Nome, documento, e-mail ou telefone",
       "filter_all": "Todos",
@@ -295,7 +293,6 @@
     },
     "payments": {
       "title": "Pagamentos",
-      "subtitle": "Tudo que entrou por matrícula e por trâmite, com o estado de cada comprovante.",
       "tab_ledger": "Pagamentos",
       "tab_review": "Fila de revisão",
       "settings_action": "Parâmetros de validação",
@@ -393,7 +390,6 @@
     },
     "payment_settings": {
       "title": "Validação de comprovantes",
-      "subtitle": "Os parâmetros com que a plataforma aprova sozinha antes de chamar um humano.",
       "tolerance_label": "Tolerância de valor",
       "tolerance_hint": "O quanto o comprovante pode se afastar do preço do plano e ainda ser aprovado sozinho.",
       "confidence_label": "Confiança mínima",
@@ -414,7 +410,6 @@
     },
     "enrollments": {
       "title": "Matrículas",
-      "subtitle": "Cada vaga da instituição: quem se matriculou, em qual turma e se o pagamento já está resolvido.",
       "tab_ledger": "Listagem",
       "tab_reservations": "Reservas",
       "metric_total": "Matrículas",
@@ -480,7 +475,6 @@
     },
     "reservations": {
       "title": "Vagas reservadas",
-      "subtitle": "Vagas ocupadas por um pagamento que ninguém resolveu ainda. As mais próximas de vencer, primeiro.",
       "rule": "Uma vaga reservada volta para o lote em {days} dias se o pagamento não for aprovado.",
       "col_student": "Aluno",
       "col_course": "Curso / turma",
@@ -585,7 +579,6 @@
     },
     "class_groups": {
       "title": "Turmas",
-      "subtitle": "Turmas por período, com o que falta emitir em cada uma.",
       "col_class_group": "Turma",
       "col_teacher": "Docente",
       "col_period": "Período",
@@ -641,8 +634,7 @@
       "page_status": "{from}–{to} de {total}",
       "code_generated": "Gerado automaticamente.",
       "field_time_hour": "Hora",
-      "field_time_minute": "Minutos",
-      "own_subtitle": "As turmas que você dá neste período."
+      "field_time_minute": "Minutos"
     },
     "class_group": {
       "back_to_list": "Voltar às turmas",
@@ -768,7 +760,6 @@
     },
     "courses": {
       "title": "Cursos",
-      "subtitle": "O catálogo de onde nascem as turmas.",
       "search_label": "Buscar cursos",
       "search_placeholder": "Curso, idioma ou nível",
       "new_course": "Novo curso",
@@ -828,7 +819,6 @@
     },
     "teachers": {
       "title": "Docentes",
-      "subtitle": "Quem dá o quê, quem está livre e o que falta fechar.",
       "locked_title": "Sem acesso ao quadro de docentes",
       "locked_body": "O quadro é administrado pela administração e pela coordenação.",
       "search_label": "Buscar docentes",
@@ -859,7 +849,6 @@
       "col_teacher": "Docente",
       "col_languages": "Idiomas",
       "col_class_groups": "Turmas",
-      "col_students": "Alunos",
       "col_pending": "Pendente",
       "col_status": "Estado",
       "free": "Livre",
@@ -949,7 +938,6 @@
       "legend_outside": "Turma fora da faixa"
     },
     "teacher_home": {
-      "subtitle": "Suas turmas e o que ainda falta fechar.",
       "metric_class_groups": "Turmas ativas",
       "metric_class_groups_hint": "{total} no total",
       "metric_students": "Alunos",
@@ -966,7 +954,6 @@
     },
     "team": {
       "title": "Equipe",
-      "subtitle": "Quem entra no painel, com qual cargo e com qual segundo fator.",
       "locked_title": "Sem acesso à equipe",
       "locked_body": "As contas do painel e os cargos são administrados pela administração.",
       "tab_active": "Com acesso",

@@ -2,6 +2,7 @@
 
 import { Link, usePathname } from '@/i18n/navigation'
 import { BoIcon, type BoIconName } from './icons'
+import { tabClass, tabStripClass } from './tab-strip'
 
 export interface SectionTab {
   href: string
@@ -44,7 +45,7 @@ export function SectionTabs({
   const actionActive = action !== undefined && pathname === action.href
 
   return (
-    <nav className="-mt-2 flex items-center gap-1 border-b border-line">
+    <nav className={tabStripClass}>
       {tabs.map((tab) => {
         /* The detail page of a class group belongs to the class group tab —
            matching the prefix keeps the tab lit while you are inside it. */
@@ -56,11 +57,7 @@ export function SectionTabs({
             key={tab.href}
             href={tab.href}
             aria-current={active ? 'page' : undefined}
-            className={`-mb-px border-b-2 px-3 py-2 text-sm font-semibold transition ${
-              active
-                ? 'border-brand-blue text-brand-blue'
-                : 'border-transparent text-muted-foreground hover:border-line hover:text-ink'
-            }`}
+            className={tabClass(active)}
           >
             {tab.label}
           </Link>
@@ -73,11 +70,7 @@ export function SectionTabs({
           aria-current={actionActive ? 'page' : undefined}
           aria-label={action.label}
           title={action.label}
-          className={`-mb-px ml-auto border-b-2 px-2.5 py-2 transition ${
-            actionActive
-              ? 'border-brand-blue text-brand-blue'
-              : 'border-transparent text-muted-foreground hover:border-line hover:text-ink'
-          }`}
+          className={`${tabClass(actionActive)} ml-auto px-2.5`}
         >
           <BoIcon name={action.icon} size={18} />
         </Link>

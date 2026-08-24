@@ -43,7 +43,6 @@
     },
     "dashboard": {
       "greeting": "Hi, {name}",
-      "subtitle": "Today at a glance, plus everything waiting on a human.",
       "metric_enrollments_today": "Enrollments today",
       "metric_delta": "{value}% vs. yesterday",
       "metric_pending_review": "In human review",
@@ -115,7 +114,6 @@
     },
     "students": {
       "title": "Students",
-      "subtitle": "Search by name, ID, email or phone.",
       "search_label": "Search student",
       "search_placeholder": "Name, ID, email or phone",
       "filter_all": "All",
@@ -295,7 +293,6 @@
     },
     "payments": {
       "title": "Payments",
-      "subtitle": "Everything paid for an enrollment or a procedure, with the state of each receipt.",
       "tab_ledger": "Payments",
       "tab_review": "Review queue",
       "settings_action": "Validation parameters",
@@ -393,7 +390,6 @@
     },
     "payment_settings": {
       "title": "Receipt validation",
-      "subtitle": "The parameters the platform approves on before it asks for a human.",
       "tolerance_label": "Amount tolerance",
       "tolerance_hint": "How far a receipt may fall from the plan price and still pass on its own.",
       "confidence_label": "Minimum confidence",
@@ -414,7 +410,6 @@
     },
     "enrollments": {
       "title": "Enrollments",
-      "subtitle": "Every seat in the institution: who enrolled, in which class group, and whether the payment is settled.",
       "tab_ledger": "Ledger",
       "tab_reservations": "Reservations",
       "metric_total": "Enrollments",
@@ -480,7 +475,6 @@
     },
     "reservations": {
       "title": "Reserved seats",
-      "subtitle": "Seats held by a payment nobody has settled yet. Closest to expiry first.",
       "rule": "A reserved seat goes back to the pool after {days} days if the payment is not approved.",
       "col_student": "Student",
       "col_course": "Course / class group",
@@ -585,7 +579,6 @@
     },
     "class_groups": {
       "title": "Class groups",
-      "subtitle": "Class groups by period, with what each one still has to issue.",
       "col_class_group": "Class group",
       "col_teacher": "Teacher",
       "col_period": "Period",
@@ -641,8 +634,7 @@
       "page_status": "{from}–{to} of {total}",
       "code_generated": "Generated automatically.",
       "field_time_hour": "Hour",
-      "field_time_minute": "Minutes",
-      "own_subtitle": "The class groups you teach this period."
+      "field_time_minute": "Minutes"
     },
     "class_group": {
       "back_to_list": "Back to class groups",
@@ -768,7 +760,6 @@
     },
     "courses": {
       "title": "Courses",
-      "subtitle": "The catalog class groups are opened from.",
       "search_label": "Search courses",
       "search_placeholder": "Course, language or level",
       "new_course": "New course",
@@ -828,7 +819,6 @@
     },
     "teachers": {
       "title": "Teachers",
-      "subtitle": "Who teaches what, who is free, and what is still owed.",
       "locked_title": "No access to the teaching staff",
       "locked_body": "The roster is run by administration and coordination.",
       "search_label": "Search teachers",
@@ -859,7 +849,6 @@
       "col_teacher": "Teacher",
       "col_languages": "Languages",
       "col_class_groups": "Class groups",
-      "col_students": "Students",
       "col_pending": "Pending",
       "col_status": "Status",
       "free": "Free",
@@ -949,7 +938,6 @@
       "legend_outside": "Class group outside the window"
     },
     "teacher_home": {
-      "subtitle": "Your class groups and what you still have to close.",
       "metric_class_groups": "Active class groups",
       "metric_class_groups_hint": "{total} in total",
       "metric_students": "Students",
@@ -966,7 +954,6 @@
     },
     "team": {
       "title": "Team",
-      "subtitle": "Who opens the panel, with which role, and with which second factor.",
       "locked_title": "No access to the team",
       "locked_body": "Panel accounts and roles are run by administration.",
       "tab_active": "Has access",

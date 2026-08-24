@@ -186,7 +186,6 @@ export default async function BackofficeHomePage({
         <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
           {t('dashboard.greeting', { name: staff.firstName })}
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t('dashboard.subtitle')}</p>
       </header>
 
       <p className="flex items-start gap-2 rounded-lg border border-dashed border-border bg-secondary/60 px-3 py-2 text-xs text-muted-foreground">
