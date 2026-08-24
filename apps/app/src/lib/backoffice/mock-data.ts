@@ -1,4 +1,5 @@
 import type {
+  AccountOverview,
   AuditEntry,
   AvailabilitySlot,
   ClassGroupDetail,
@@ -62,6 +63,64 @@ export function getStaffSession(): StaffUser {
     email: 'lucia.ramirez@onlyonecoin.edu.pe',
     role: 'admin',
     teacherId: null,
+  }
+}
+
+/**
+ * The signed-in staff member's own account — access, never identity. Shaped
+ * like the rows behind it: the protected `user` row (CLAUDE.md §8), the
+ * password/second-factor state beside it, and the open sessions the auth
+ * library keeps. Swapping this for real queries should not touch a component.
+ *
+ * The sessions are deliberately more than one, and one of them is a phone in a
+ * different city: the screen only earns its place if there is something to
+ * recognise — or not recognise — on it.
+ */
+export function getAccountOverview(): AccountOverview {
+  return {
+    user: getStaffSession(),
+    security: {
+      passwordUpdatedAt: '2026-05-14T13:40:00Z',
+      mfa: {
+        enabled: true,
+        method: 'totp',
+        enrolledAt: '2026-02-03T15:12:00Z',
+        recoveryCodesLeft: 8,
+      },
+      lastSignInAt: '2026-08-21T13:02:00Z',
+    },
+    sessions: [
+      {
+        id: 'sess_01',
+        browser: 'Chrome 141',
+        os: 'Windows 11',
+        ip: '190.235.14.72',
+        city: 'Lima',
+        country: 'PE',
+        lastActiveAt: '2026-08-21T13:02:00Z',
+        current: true,
+      },
+      {
+        id: 'sess_02',
+        browser: 'Safari 18',
+        os: 'iOS 19',
+        ip: '181.65.202.9',
+        city: 'Arequipa',
+        country: 'PE',
+        lastActiveAt: '2026-08-19T22:41:00Z',
+        current: false,
+      },
+      {
+        id: 'sess_03',
+        browser: 'Firefox 132',
+        os: 'Ubuntu 24.04',
+        ip: '200.48.90.116',
+        city: 'Lima',
+        country: 'PE',
+        lastActiveAt: '2026-08-12T09:18:00Z',
+        current: false,
+      },
+    ],
   }
 }
 

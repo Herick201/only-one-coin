@@ -899,3 +899,53 @@ export interface NewEnrollmentInput {
   /** Whether the staff member attached the receipt image while filling this in. */
   receiptAttached: boolean
 }
+
+/**
+ * The account a staff member manages for themselves — access, not identity.
+ * Name, login e-mail and role are not here as editable values on purpose: the
+ * role is written only by the dedicated promotion usecase (CLAUDE.md §8), and
+ * the rest is administration's to change.
+ */
+
+/** The only second factor the panel offers — an authenticator app. */
+export type MfaMethod = 'totp'
+
+export interface AccountMfa {
+  enabled: boolean
+  method: MfaMethod
+  /** When the current device was enrolled. Null while the factor is off. */
+  enrolledAt: string | null
+  /** Unused recovery codes left — what is between a lost phone and a lockout. */
+  recoveryCodesLeft: number
+}
+
+export interface AccountSecurity {
+  /** Null when the password is still the one the account was created with. */
+  passwordUpdatedAt: string | null
+  mfa: AccountMfa
+  lastSignInAt: string
+}
+
+/**
+ * One open session. Browser and system are proper names, so they stay as they
+ * are (CLAUDE.md §4 exception for brand names); the country is a code and gets
+ * resolved to a name on screen.
+ */
+export interface AccountSession {
+  id: string
+  browser: string
+  os: string
+  ip: string
+  city: string
+  /** ISO 3166-1 alpha-2. */
+  country: string
+  lastActiveAt: string
+  /** The session reading this screen — the one that cannot close itself. */
+  current: boolean
+}
+
+export interface AccountOverview {
+  user: StaffUser
+  security: AccountSecurity
+  sessions: AccountSession[]
+}
