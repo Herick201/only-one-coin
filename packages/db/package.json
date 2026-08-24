@@ -3,6 +3,9 @@
   "version": "0.0.1",
   "type": "module",
   "private": true,
+  "exports": {
+    ".": "./src/schema.ts"
+  },
   "scripts": {
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",

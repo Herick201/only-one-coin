@@ -1,1 +1,448 @@
-export {};
+import { sql } from "drizzle-orm";
+import {
+  check,
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
+
+// Postgres 18 (see compose.yml) generates uuidv7() natively — no extension
+// needed, and it matches the uuid v7 format packages/domain already uses
+// (packages/domain/src/example/Example.ts) for when this bounded context
+// gets a domain layer.
+const uuidPk = () =>
+  uuid("id")
+    .primaryKey()
+    .default(sql`uuidv7()`);
+
+// Catalog is stable across sales periods — only class_groups (the class:
+// schedule, seats, start date) gets recreated per academic_period
+// (docs/ROADMAP.md Sessão 35, "duplicar período anterior... cria ~40
+// turmas").
+export const academicPeriods = pgTable("academic_periods", {
+  id: uuidPk(),
+  name: text("name").notNull(),
+  startsOn: timestamp("starts_on", { withTimezone: true }).notNull(),
+  endsOn: timestamp("ends_on", { withTimezone: true }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// Each language track (Kids, Básico, Intermediário/Avançado...) is its own
+// course, not a variant of plan within a single "Inglês" course — min_age
+// is validated per course (docs/ROADMAP.md Sessão 21) and tracks have
+// different minimum ages (docs/REGRAS-NEGOCIO.md §2).
+export const courses = pgTable(
+  "courses",
+  {
+    id: uuidPk(),
+    name: text("name").notNull(),
+    language: text("language").notNull(),
+    minAge: integer("min_age").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [check("courses_min_age_check", sql`${table.minAge} > 0`)],
+);
+
+// A plan varies package/pricing shape within the same course (e.g. "Plano
+// Básico" per module vs. "Plano Completo" of the same Inglês Básico).
+export const plans = pgTable(
+  "plans",
+  {
+    id: uuidPk(),
+    courseId: uuid("course_id")
+      .notNull()
+      .references(() => courses.id, { onDelete: "restrict" }),
+    name: text("name").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index("plans_course_id_idx").on(table.courseId)],
+);
+
+// Append-only: price is versioned, never edited (CLAUDE.md §5) — correcting
+// a price is always a new row, never an UPDATE. The current price for a
+// plan is the row with the greatest valid_from <= now(); "price in effect
+// on date X" is the same query with X instead of now().
+export const planPrices = pgTable(
+  "plan_prices",
+  {
+    id: uuidPk(),
+    planId: uuid("plan_id")
+      .notNull()
+      .references(() => plans.id, { onDelete: "restrict" }),
+    amountCents: integer("amount_cents").notNull(),
+    validFrom: timestamp("valid_from", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    check("plan_prices_amount_cents_check", sql`${table.amountCents} > 0`),
+    index("plan_prices_plan_id_valid_from_idx").on(
+      table.planId,
+      table.validFrom,
+    ),
+  ],
+);
+
+// The live instance of a course for one academic_period: schedule, seats,
+// start date. Which plan/price a student bought is an attribute of the
+// enrollment (Sessão 6), not of the class_group — students on different
+// plans of the same course attend the same class_group.
+//
+// status enum matches ClassGroupStatus in the backoffice mock
+// (apps/app/src/lib/backoffice/types.ts) — enrolling → in_progress →
+// finished | closed.
+export const classGroups = pgTable(
+  "class_groups",
+  {
+    id: uuidPk(),
+    courseId: uuid("course_id")
+      .notNull()
+      .references(() => courses.id, { onDelete: "restrict" }),
+    academicPeriodId: uuid("academic_period_id")
+      .notNull()
+      .references(() => academicPeriods.id, { onDelete: "restrict" }),
+    schedule: text("schedule").notNull(),
+    startsOn: timestamp("starts_on", { withTimezone: true }).notNull(),
+    capacity: integer("capacity").notNull(),
+    seatsTaken: integer("seats_taken").notNull().default(0),
+    status: text("status").notNull().default("enrolling"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    check("class_groups_capacity_check", sql`${table.capacity} > 0`),
+    check(
+      "class_groups_seats_taken_check",
+      sql`${table.seatsTaken} >= 0 and ${table.seatsTaken} <= ${table.capacity}`,
+    ),
+    // Matches apps/app/src/lib/backoffice/types.ts ClassGroupStatus exactly
+    // — that vocabulary already exists and is exercised by the backoffice
+    // mock; no reason to invent a different one and translate at the API
+    // boundary (CLAUDE.md §1, class_groups.status was flagged provisional
+    // in the original migration, resolved here before anything shipped).
+    check(
+      "class_groups_status_check",
+      sql`${table.status} in ('enrolling', 'in_progress', 'finished', 'closed')`,
+    ),
+    index("class_groups_course_id_idx").on(table.courseId),
+    index("class_groups_academic_period_id_idx").on(table.academicPeriodId),
+  ],
+);
+
+// national_id_type is shared by students, guardians and (later) teachers —
+// same union everywhere a Peruvian identity document is recorded.
+const nationalIdTypeCheck = (columnName: string) =>
+  sql.raw(`${columnName} in ('DNI', 'CE', 'passport')`);
+
+// Status (active/under_review/inactive) is derived from enrollments, not a
+// stored column — enrollments don't exist yet (Sessão 6), and there is
+// nothing to derive from until they do (apps/app/src/lib/backoffice/types.ts,
+// StudentStatus: "Derived, not a stored column").
+//
+// No user_id here: portal credentials are issued only after an enrollment is
+// approved (CLAUDE.md §1, "aprovado: recebe credenciais") — out of scope for
+// a manual backoffice registration, which never approves anything by itself.
+export const students = pgTable(
+  "students",
+  {
+    id: uuidPk(),
+    firstName: text("first_name").notNull(),
+    lastName: text("last_name").notNull(),
+    nationalIdType: text("national_id_type").notNull(),
+    nationalId: text("national_id").notNull(),
+    email: text("email").notNull(),
+    phone: text("phone").notNull(),
+    birthDate: timestamp("birth_date", { withTimezone: true }).notNull(),
+    // ISO 3166-1 alpha-2.
+    country: text("country").notNull(),
+    // First-level division ("departamento" in Peru). Null outside it.
+    region: text("region"),
+    city: text("city").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    // Soft delete only — no DELETE grant on students (CLAUDE.md §6).
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  },
+  (table) => [
+    check("students_national_id_type_check", nationalIdTypeCheck('"national_id_type"')),
+    index("students_national_id_type_national_id_idx").on(
+      table.nationalIdType,
+      table.nationalId,
+    ),
+    // Trigram GIN indexes back "busca por nome/DNI/telefone" (docs/ROADMAP.md
+    // Sessão 5) — pg_trgm enabled in migrations/0003_enable_pg_trgm.sql,
+    // which must apply before this migration.
+    index("students_full_name_trgm_idx").using(
+      "gin",
+      sql`(${table.firstName} || ' ' || ${table.lastName}) gin_trgm_ops`,
+    ),
+    index("students_national_id_trgm_idx").using(
+      "gin",
+      sql`${table.nationalId} gin_trgm_ops`,
+    ),
+    index("students_phone_trgm_idx").using(
+      "gin",
+      sql`${table.phone} gin_trgm_ops`,
+    ),
+  ],
+);
+
+// One guardian per student, optional unless the student is a minor
+// (CLAUDE.md §1) — enforced in the application layer (birth_date isn't known
+// to be "under 18" at the database level), not here. 1:1 via a unique FK,
+// matching apps/app/src/lib/backoffice/types.ts StudentDetail.guardian being
+// a single nullable object, never a list.
+export const guardians = pgTable(
+  "guardians",
+  {
+    id: uuidPk(),
+    studentId: uuid("student_id")
+      .notNull()
+      .unique()
+      .references(() => students.id, { onDelete: "restrict" }),
+    firstName: text("first_name").notNull(),
+    lastName: text("last_name").notNull(),
+    relationship: text("relationship").notNull(),
+    nationalIdType: text("national_id_type").notNull(),
+    nationalId: text("national_id").notNull(),
+    email: text("email").notNull(),
+    phone: text("phone").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    check(
+      "guardians_relationship_check",
+      sql`"relationship" in ('mother', 'father', 'legal_guardian')`,
+    ),
+    check("guardians_national_id_type_check", nationalIdTypeCheck('"national_id_type"')),
+  ],
+);
+
+// Ley 29733 consent — append-only, never edited (same pattern as
+// plan_prices): the guardian is the one who accepts, with a timestamp, the
+// text version and their IP (CLAUDE.md §1, §8). A guardian row is created
+// with consent pending — zero rows here means pending; the current consent
+// is the most recent row. Kept out of `guardians` itself because "quem
+// aceita é o apoderado" is a fact about an event, not an editable field.
+export const consents = pgTable(
+  "consents",
+  {
+    id: uuidPk(),
+    guardianId: uuid("guardian_id")
+      .notNull()
+      .references(() => guardians.id, { onDelete: "restrict" }),
+    version: text("version").notNull(),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }).notNull(),
+    ip: text("ip").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("consents_guardian_id_accepted_at_idx").on(
+      table.guardianId,
+      table.acceptedAt,
+    ),
+  ],
+);
+
+// Seat lifecycle (CLAUDE.md §5: reserved → confirmed → released) lives here,
+// not on class_groups — the incremented/decremented seats_taken counter is
+// what class_groups tracks. `status` shown to the student (under_review /
+// active / completed / rejected, apps/app/src/lib/portal/types.ts
+// EnrollmentStatus) is derived from seat_status + payment.status + grading —
+// not stored, same treatment as students.status (StudentStatus).
+//
+// plan_price_id freezes the price in force at enrollment time (CLAUDE.md §5,
+// "preço é versionado, nunca editado") — never re-resolved from the current
+// plan_prices row afterwards.
+export const enrollments = pgTable(
+  "enrollments",
+  {
+    id: uuidPk(),
+    studentId: uuid("student_id")
+      .notNull()
+      .references(() => students.id, { onDelete: "restrict" }),
+    classGroupId: uuid("class_group_id")
+      .notNull()
+      .references(() => classGroups.id, { onDelete: "restrict" }),
+    planPriceId: uuid("plan_price_id")
+      .notNull()
+      .references(() => planPrices.id, { onDelete: "restrict" }),
+    seatStatus: text("seat_status").notNull().default("reserved"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    check(
+      "enrollments_seat_status_check",
+      sql`"seat_status" in ('reserved', 'confirmed', 'released')`,
+    ),
+    index("enrollments_student_id_idx").on(table.studentId),
+    index("enrollments_class_group_id_idx").on(table.classGroupId),
+  ],
+);
+
+// payments is agnostic of origin (CLAUDE.md §5) — scoped to enrollments only
+// for now, since that is what both target forms (new-student-form.tsx,
+// new-enrollment-form.tsx) need. Paid procedures (constancia and the rest of
+// docs/REGRAS-NEGOCIO.md §5) share the same ladder per CLAUDE.md §1 but
+// aren't in docs/ROADMAP.md Sessão 6's bullet list — deferred, not modeled
+// here, rather than guessing their shape.
+//
+// idempotency_key is unique and required on every row (CLAUDE.md §5, "duplo
+// POST de celular ruim é certeza") — this is the Sessão 6 "pronto quando"
+// check: a duplicate payment insert must fail in the database, not just in
+// application code.
+export const payments = pgTable(
+  "payments",
+  {
+    id: uuidPk(),
+    enrollmentId: uuid("enrollment_id")
+      .notNull()
+      .references(() => enrollments.id, { onDelete: "restrict" }),
+    idempotencyKey: text("idempotency_key").notNull(),
+    status: text("status").notNull().default("pending"),
+    method: text("method").notNull(),
+    // Required only when method is 'other' — the free text IS the label
+    // (CLAUDE.md §4 glossary).
+    methodDetail: text("method_detail"),
+    amountCents: integer("amount_cents").notNull(),
+    // Nullable: the public flow (Sessão 20+) only learns this once OCR reads
+    // the receipt; the manual backoffice flow (NewEnrollmentInput) always
+    // provides it upfront. Uniqueness against fraud lives on
+    // payment_receipts, not here (see below).
+    operationNumber: text("operation_number"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("payments_idempotency_key_uidx").on(table.idempotencyKey),
+    check(
+      "payments_status_check",
+      sql`"status" in ('pending', 'under_review', 'approved', 'rejected')`,
+    ),
+    check(
+      "payments_method_check",
+      sql`"method" in ('yape', 'plin', 'bcp', 'interbank', 'other')`,
+    ),
+    check("payments_amount_cents_check", sql`${table.amountCents} > 0`),
+    check(
+      "payments_method_detail_required_check",
+      sql`"method" <> 'other' or "method_detail" is not null`,
+    ),
+    index("payments_enrollment_id_idx").on(table.enrollmentId),
+  ],
+);
+
+// Extraction data lives here, never on payments (CLAUDE.md §5). One row per
+// uploaded receipt image — a payment can carry more than one over time (a
+// rejected receipt gets replaced), so this is 1:N off payments, not 1:1.
+//
+// image_phash and operation_number each get a partial unique index (null
+// allowed, but no two non-null values may repeat) — the antifraude defense
+// against the same receipt cropped and resent (CLAUDE.md §5). tier /
+// model_name / model_version / extracted_fields mirror the columns CLAUDE.md
+// §5 requires ("gravar tier, model_name, model_version e confiança por campo
+// em toda extração") even though no worker fills them yet — packages/ocr and
+// the worker are Sessão 26+, out of scope here. extracted_fields is the
+// per-field {field, value, confidence} array as JSON rather than a side
+// table, since it is written once by the worker and never queried by field.
+export const paymentReceipts = pgTable(
+  "payment_receipts",
+  {
+    id: uuidPk(),
+    paymentId: uuid("payment_id")
+      .notNull()
+      .references(() => payments.id, { onDelete: "restrict" }),
+    imagePhash: text("image_phash"),
+    operationNumber: text("operation_number"),
+    amountCents: integer("amount_cents"),
+    tier: integer("tier"),
+    modelName: text("model_name"),
+    modelVersion: text("model_version"),
+    extractedFields: jsonb("extracted_fields"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("payment_receipts_image_phash_uidx")
+      .on(table.imagePhash)
+      .where(sql`${table.imagePhash} is not null`),
+    uniqueIndex("payment_receipts_operation_number_uidx")
+      .on(table.operationNumber)
+      .where(sql`${table.operationNumber} is not null`),
+    index("payment_receipts_payment_id_idx").on(table.paymentId),
+  ],
+);
+
+// One row per student waiting on a full class_group (Sessão 22, not built
+// yet — this is just the queue table the roadmap bundles into Sessão 6).
+// FIFO by created_at; the unique pair stops the same student from queuing
+// twice for the same class group.
+export const waitlistEntries = pgTable(
+  "waitlist_entries",
+  {
+    id: uuidPk(),
+    classGroupId: uuid("class_group_id")
+      .notNull()
+      .references(() => classGroups.id, { onDelete: "restrict" }),
+    studentId: uuid("student_id")
+      .notNull()
+      .references(() => students.id, { onDelete: "restrict" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("waitlist_entries_class_group_id_student_id_uidx").on(
+      table.classGroupId,
+      table.studentId,
+    ),
+  ],
+);
