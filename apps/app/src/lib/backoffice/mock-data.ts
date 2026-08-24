@@ -1739,7 +1739,7 @@ const classGroups: ClassGroupDetail[] = [
         certificationExam: null,
         certificateIssuedAt: null,
         delivery: null,
-        procedure: null,
+        procedure: 'frozen',
       },
       {
         studentId: 'stu_0005',
@@ -1788,7 +1788,7 @@ const classGroups: ClassGroupDetail[] = [
         certificationExam: null,
         certificateIssuedAt: null,
         delivery: null,
-        procedure: null,
+        procedure: 'frozen',
       },
       {
         studentId: 'stu_0002',
@@ -1814,7 +1814,7 @@ const classGroups: ClassGroupDetail[] = [
         certificationExam: null,
         certificateIssuedAt: null,
         delivery: null,
-        procedure: null,
+        procedure: 'withdrawn',
       },
       {
         studentId: 'stu_0006',
@@ -2334,6 +2334,16 @@ export function listClassGroups(): ClassGroupRow[] {
 
 export function getClassGroup(id: string): ClassGroupDetail | undefined {
   return classGroups.find((group) => group.id === id)
+}
+
+/**
+ * The class groups with their rosters attached — what `listClassGroups()`
+ * deliberately strips. Read by anything that has to count across every roster
+ * at once (grades, administrative procedures), never by a list screen: a
+ * directory has no business carrying every student of every class group.
+ */
+export function listClassGroupRosters(): ClassGroupDetail[] {
+  return classGroups
 }
 
 /* -------------------------------------------------------------------------- */

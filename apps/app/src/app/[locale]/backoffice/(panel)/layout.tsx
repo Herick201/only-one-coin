@@ -157,7 +157,7 @@ export default async function BackofficePanelLayout({
       label: t('nav.group_admin'),
       items: [
         { key: 'email', href: '/backoffice/emails', label: t('nav.email'), soon: true },
-        { key: 'reports', href: '/backoffice/reports', label: t('nav.reports'), soon: true },
+        { key: 'reports', href: '/backoffice/reports', label: t('nav.reports') },
         { key: 'staff', href: '/backoffice/team', label: t('nav.staff'), soon: true },
         {
           key: 'settings',
