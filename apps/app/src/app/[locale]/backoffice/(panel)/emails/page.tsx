@@ -53,7 +53,7 @@ export default async function EmailsPage({
         actions={
           <Link
             href="/backoffice/emails/new"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-deep"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-yellow hover:text-ink active:bg-brand-yellow-deep"
           >
             <BoIcon name="plus" size={16} />
             {t('emails.new')}

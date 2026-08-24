@@ -49,9 +49,9 @@ export default async function EmailJourneyPage({
            them back to the flow instead of dropping them in the list. A query
            param rather than history: it survives a refresh and a shared link. */
         href={`/backoffice/emails/${flow.template}?from=journey`}
-        className="group flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-line bg-white px-4 py-3 shadow-card transition hover:border-brand-blue hover:bg-sky-soft"
+        className="group flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-line bg-white px-4 py-3 shadow-card transition hover:border-brand-yellow hover:bg-cream"
       >
-        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink transition group-hover:text-brand-blue">
+        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">
           {t(`email_template.${flow.template}`)}
         </span>
         {flow.audience === 'guardian' && (
@@ -63,7 +63,7 @@ export default async function EmailJourneyPage({
         <BoIcon
           name="chevron-right"
           size={16}
-          className="shrink-0 text-muted-foreground transition group-hover:text-brand-blue"
+          className="shrink-0 text-muted-foreground transition group-hover:text-ink"
         />
       </Link>
     )
@@ -83,7 +83,7 @@ export default async function EmailJourneyPage({
               <summary
                 aria-label={t('emails.help')}
                 title={t('emails.help')}
-                className="grid size-9 cursor-pointer list-none place-items-center rounded-lg border border-line bg-white text-muted-foreground transition hover:text-ink [&::-webkit-details-marker]:hidden"
+                className="grid size-9 cursor-pointer list-none place-items-center rounded-lg border border-line bg-white text-muted-foreground transition hover:border-brand-yellow hover:bg-cream hover:text-ink [&::-webkit-details-marker]:hidden"
               >
                 <BoIcon name="help" size={18} />
               </summary>
@@ -98,7 +98,7 @@ export default async function EmailJourneyPage({
 
             <Link
               href="/backoffice/emails/new"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-deep"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-yellow hover:text-ink active:bg-brand-yellow-deep"
             >
               <BoIcon name="plus" size={16} />
               {t('emails.new')}

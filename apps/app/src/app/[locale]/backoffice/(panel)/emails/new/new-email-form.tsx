@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import type { EnrollmentStatus } from '@/lib/backoffice/types'
-import { Card, EmptyState, SectionTitle } from '@/components/backoffice/ui'
+import { Card, EmptyState, RequiredMark } from '@/components/backoffice/ui'
 import { Toast } from '@/components/backoffice/controls'
 import { BoIcon } from '@/components/backoffice/icons'
 import { ProofSend } from '../proof-send'
@@ -14,11 +14,22 @@ type SegmentKind = 'all' | 'course' | 'class_group' | 'enrollment_status'
 
 const KINDS: SegmentKind[] = ['all', 'course', 'class_group', 'enrollment_status']
 
+/** Written by hand, or an HTML somebody designed elsewhere and brings in. */
+type ContentMode = 'write' | 'html'
+
 const STEPS = ['recipients', 'content', 'test', 'review'] as const
 type Step = (typeof STEPS)[number]
 
+/** Enough matches to recognise the right one, few enough to read at a glance. */
+const MAX_MATCHES = 6
+
 const fieldClass =
   'w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink outline-none transition placeholder:text-muted-foreground focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15'
+
+const labelClass = 'text-xs font-medium uppercase tracking-wide text-muted-foreground'
+
+const stepLabelClass =
+  'mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground'
 
 const primaryButtonClass =
   'inline-flex items-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-yellow hover:text-ink active:bg-brand-yellow-deep disabled:cursor-not-allowed disabled:opacity-40'
@@ -26,22 +37,67 @@ const primaryButtonClass =
 const ghostButtonClass =
   'inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3.5 py-2 text-sm font-semibold text-muted-foreground transition hover:text-ink'
 
+/** One choice in a guided list — a row, with the state on the left. */
+function Choice({
+  checked,
+  label,
+  hint,
+  onSelect,
+}: {
+  checked: boolean
+  label: string
+  hint?: string
+  onSelect: () => void
+}) {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={checked}
+      onClick={onSelect}
+      className={`flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition ${
+        checked
+          ? 'border-brand-blue bg-sky-soft'
+          : 'border-line bg-white hover:border-brand-blue/40 hover:bg-cream'
+      }`}
+    >
+      <span
+        aria-hidden="true"
+        className={`grid size-4 shrink-0 place-items-center rounded-full border-2 ${
+          checked ? 'border-brand-blue' : 'border-slate-300'
+        }`}
+      >
+        {checked && <span className="size-2 rounded-full bg-brand-blue" />}
+      </span>
+      <span className="flex min-w-0 flex-col">
+        <span className="truncate text-sm font-medium text-ink">{label}</span>
+        {hint && <span className="truncate text-xs text-muted-foreground">{hint}</span>}
+      </span>
+    </button>
+  )
+}
+
 /**
  * The composer for a send written by hand. Four steps, in the order the
- * mistakes happen: who it reaches, what it says, a proof to a real inbox, and
+ * mistakes happen: who it reaches, what it says, a test to a real inbox, and
  * only then the approval.
+ *
+ * Guided the way the enrollment form is guided: one question per section, the
+ * answer picked from what exists rather than typed, and the chosen one shown
+ * back as a card you can swap. A segment typed by hand is a segment that
+ * matches nobody.
  *
  * Two rules are wired rather than written on a sign:
  *
- * - **The proof stops counting the moment the text changes.** Editing the
- *   subject or the message clears it, so nobody ever approves a message that
- *   was edited after being checked (`docs/ROADMAP.md` fase 5).
+ * - **The test stops counting the moment the content changes.** Editing the
+ *   subject, the message or the file clears it, so nobody ever approves a
+ *   message that was edited after being checked (`docs/ROADMAP.md` fase 5).
  * - **Everyone is not a segment somebody reaches alone.** A send to the whole
  *   register needs a second approval, and the button stays shut until that
  *   exists — an empty confirmation would be worse than no confirmation.
  *
- * Nothing is saved: this is the mockup, and the send ends in a queued state
- * because the outbox is what delivers, never this screen (CLAUDE.md §5).
+ * Nothing is saved: this is the mockup, and the send ends queued because the
+ * outbox is what delivers, never this screen (CLAUDE.md §5).
  */
 export function NewEmailForm({
   allCount,
@@ -57,47 +113,90 @@ export function NewEmailForm({
   const t = useTranslations('bo')
 
   const [step, setStep] = useState<Step>('recipients')
+
   const [kind, setKind] = useState<SegmentKind>('course')
-  const [courseName, setCourseName] = useState(courses[0]?.name ?? '')
-  const [classGroupId, setClassGroupId] = useState(classGroups[0]?.id ?? '')
-  const [status, setStatus] = useState<EnrollmentStatus>(
-    statuses[0]?.status ?? 'active',
-  )
+  const [courseName, setCourseName] = useState<string | null>(null)
+  const [classGroupId, setClassGroupId] = useState<string | null>(null)
+  const [status, setStatus] = useState<EnrollmentStatus | null>(null)
+  const [query, setQuery] = useState('')
+
+  const [mode, setMode] = useState<ContentMode>('write')
   const [subject, setSubject] = useState('')
   const [body, setBody] = useState('')
-  /** Cleared by any edit to the text — that is the whole point of it. */
-  const [proofSent, setProofSent] = useState(false)
+  const [html, setHtml] = useState<{ name: string; source: string } | null>(null)
+  const fileInput = useRef<HTMLInputElement>(null)
+
+  /** Cleared by any edit to the content — that is the whole point of it. */
+  const [testSent, setTestSent] = useState(false)
   const [confirmed, setConfirmed] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [sent, setSent] = useState<number | null>(null)
 
+  const course = courses.find((item) => item.name === courseName) ?? null
+  const classGroup = classGroups.find((item) => item.id === classGroupId) ?? null
+  const statusRow = statuses.find((item) => item.status === status) ?? null
+
+  const matches = useMemo(() => {
+    const needle = query.trim().toLowerCase()
+    if (!needle) return { courses: [], classGroups: [] }
+    return {
+      courses: courses
+        .filter((item) => item.name.toLowerCase().includes(needle))
+        .slice(0, MAX_MATCHES),
+      classGroups: classGroups
+        .filter((item) => item.label.toLowerCase().includes(needle))
+        .slice(0, MAX_MATCHES),
+    }
+  }, [courses, classGroups, query])
+
   const recipients =
     kind === 'all'
       ? allCount
       : kind === 'course'
-        ? (courses.find((item) => item.name === courseName)?.count ?? 0)
+        ? (course?.count ?? null)
         : kind === 'class_group'
-          ? (classGroups.find((item) => item.id === classGroupId)?.count ?? 0)
-          : (statuses.find((item) => item.status === status)?.count ?? 0)
+          ? (classGroup?.count ?? null)
+          : (statusRow?.count ?? null)
 
   const segmentLabel =
     kind === 'all'
       ? t('new_email.segment_all')
       : kind === 'course'
-        ? courseName
+        ? (course?.name ?? '')
         : kind === 'class_group'
-          ? (classGroups.find((item) => item.id === classGroupId)?.label ?? '')
-          : t(`enrollment_status.${status}`)
+          ? (classGroup?.label ?? '')
+          : statusRow
+            ? t(`enrollment_status.${statusRow.status}`)
+            : ''
 
   /* A send to the whole register is the one nobody signs off alone. */
   const needsSecondApproval = kind === 'all'
 
-  function editText(next: () => void) {
+  function editContent(next: () => void) {
     next()
-    setProofSent(false)
+    setTestSent(false)
     setConfirmed(false)
     setError(null)
+  }
+
+  function pickKind(next: SegmentKind) {
+    setKind(next)
+    setQuery('')
+    setError(null)
+  }
+
+  function readFile(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    if (!file) return
+    if (!/\.html?$/i.test(file.name)) {
+      setError(t('new_email.html_error_type'))
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () =>
+      editContent(() => setHtml({ name: file.name, source: String(reader.result) }))
+    reader.readAsText(file)
   }
 
   function go(next: Step) {
@@ -107,7 +206,7 @@ export function NewEmailForm({
 
   function advance() {
     if (step === 'recipients') {
-      if (recipients === 0) {
+      if (recipients === null || recipients === 0) {
         setError(t('new_email.error_recipients'))
         return
       }
@@ -119,8 +218,12 @@ export function NewEmailForm({
         setError(t('new_email.error_subject'))
         return
       }
-      if (body.trim().length === 0) {
+      if (mode === 'write' && body.trim().length === 0) {
         setError(t('new_email.error_body'))
+        return
+      }
+      if (mode === 'html' && html === null) {
+        setError(t('new_email.error_html'))
         return
       }
       go('test')
@@ -129,14 +232,8 @@ export function NewEmailForm({
     if (step === 'test') go('review')
   }
 
-  function proofSentTo(count: number) {
-    setError(null)
-    setProofSent(true)
-    setToast(t('emails.test_toast', { count }))
-  }
-
   function send() {
-    if (!proofSent) {
+    if (!testSent) {
       setError(t('new_email.error_test'))
       return
     }
@@ -145,7 +242,7 @@ export function NewEmailForm({
       return
     }
     setError(null)
-    setSent(recipients)
+    setSent(recipients ?? 0)
   }
 
   function reset() {
@@ -153,7 +250,8 @@ export function NewEmailForm({
     setStep('recipients')
     setSubject('')
     setBody('')
-    setProofSent(false)
+    setHtml(null)
+    setTestSent(false)
     setConfirmed(false)
   }
 
@@ -179,6 +277,9 @@ export function NewEmailForm({
   }
 
   const index = STEPS.indexOf(step)
+  const needsValue = kind !== 'all'
+  const chosen =
+    kind === 'course' ? course : kind === 'class_group' ? classGroup : statusRow
 
   return (
     <div className="flex flex-col gap-4">
@@ -216,94 +317,164 @@ export function NewEmailForm({
         })}
       </ol>
 
-      <Card className="flex flex-col gap-4 p-5">
+      <Card className="p-5">
         {step === 'recipients' && (
           <>
-            <SectionTitle icon="students">{t('new_email.segment_label')}</SectionTitle>
-            <div className="flex flex-wrap gap-1.5">
-              {KINDS.map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => {
-                    setKind(value)
-                    setError(null)
-                  }}
-                  aria-pressed={kind === value}
-                  className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                    kind === value
-                      ? 'bg-brand-blue text-white'
-                      : 'border border-line bg-white text-muted-foreground hover:bg-cream hover:text-ink'
-                  }`}
-                >
-                  {t(`new_email.segment_${value === 'all' ? 'all' : value}`)}
-                </button>
-              ))}
-            </div>
+            <section>
+              <p className={stepLabelClass}>{t('new_email.segment_step')}</p>
+              <div role="radiogroup" className="flex flex-col gap-2 sm:max-w-md">
+                {KINDS.map((value) => (
+                  <Choice
+                    key={value}
+                    checked={kind === value}
+                    label={t(`new_email.segment_${value}`)}
+                    hint={
+                      value === 'all'
+                        ? t('new_email.recipients_count', { count: allCount })
+                        : undefined
+                    }
+                    onSelect={() => pickKind(value)}
+                  />
+                ))}
+              </div>
+            </section>
 
-            {kind === 'course' && (
-              <label className="flex flex-col gap-1.5">
-                <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  {t('new_email.pick_course')}
-                </span>
-                <select
-                  value={courseName}
-                  onChange={(event) => setCourseName(event.target.value)}
-                  className={fieldClass}
-                >
-                  {courses.map((item) => (
-                    <option key={item.name} value={item.name}>
-                      {item.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
+            {needsValue && (
+              <section className="mt-5 border-t border-line pt-4">
+                <p className={stepLabelClass}>{t('new_email.value_step')}</p>
+
+                {kind === 'enrollment_status' ? (
+                  <div role="radiogroup" className="flex flex-col gap-2 sm:max-w-md">
+                    {statuses.map((item) => (
+                      <Choice
+                        key={item.status}
+                        checked={status === item.status}
+                        label={t(`enrollment_status.${item.status}`)}
+                        hint={t('new_email.recipients_count', { count: item.count })}
+                        onSelect={() => {
+                          setStatus(item.status)
+                          setError(null)
+                        }}
+                      />
+                    ))}
+                  </div>
+                ) : chosen ? (
+                  /* The choice, shown back as what it is — with the way out of
+                     it right next to it, like the student on the enrollment
+                     form. */
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-sky-soft px-3 py-2.5 sm:max-w-md">
+                    <span className="flex min-w-0 flex-col">
+                      <span className="truncate text-sm font-semibold text-ink">
+                        {kind === 'course' ? course?.name : classGroup?.label}
+                      </span>
+                      <span className="truncate text-xs text-muted-foreground">
+                        {t('new_email.recipients_count', {
+                          count: kind === 'course' ? course!.count : classGroup!.count,
+                        })}
+                      </span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCourseName(null)
+                        setClassGroupId(null)
+                        setQuery('')
+                      }}
+                      className="text-xs font-semibold text-brand-blue transition hover:text-brand-blue-deep"
+                    >
+                      {t('new_email.change')}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    <label className="flex flex-col gap-1 sm:max-w-md">
+                      <span className={labelClass}>
+                        {t(
+                          kind === 'course'
+                            ? 'new_email.pick_course'
+                            : 'new_email.pick_class_group',
+                        )}
+                        <RequiredMark label={t('common.required')} />
+                      </span>
+                      <span className="relative">
+                        <BoIcon
+                          name="search"
+                          size={16}
+                          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                        />
+                        <input
+                          type="search"
+                          value={query}
+                          onChange={(event) => setQuery(event.target.value)}
+                          placeholder={t(
+                            kind === 'course'
+                              ? 'new_email.search_course'
+                              : 'new_email.search_class_group',
+                          )}
+                          className={`${fieldClass} pl-9`}
+                        />
+                      </span>
+                    </label>
+
+                    {query.trim() !== '' &&
+                      ((kind === 'course' ? matches.courses : matches.classGroups)
+                        .length === 0 ? (
+                        <p className="text-xs text-muted-foreground">
+                          {t('new_email.no_matches')}
+                        </p>
+                      ) : (
+                        <ul className="flex flex-col overflow-hidden rounded-lg border border-line sm:max-w-md">
+                          {kind === 'course'
+                            ? matches.courses.map((item) => (
+                                <li key={item.name}>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setCourseName(item.name)
+                                      setError(null)
+                                    }}
+                                    className="flex w-full items-center justify-between gap-3 border-b border-line/70 px-3 py-2 text-left transition last:border-b-0 hover:bg-sky-soft"
+                                  >
+                                    <span className="truncate text-sm font-medium text-ink">
+                                      {item.name}
+                                    </span>
+                                    <span className="shrink-0 text-xs text-muted-foreground">
+                                      {t('new_email.recipients_count', {
+                                        count: item.count,
+                                      })}
+                                    </span>
+                                  </button>
+                                </li>
+                              ))
+                            : matches.classGroups.map((item) => (
+                                <li key={item.id}>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setClassGroupId(item.id)
+                                      setError(null)
+                                    }}
+                                    className="flex w-full items-center justify-between gap-3 border-b border-line/70 px-3 py-2 text-left transition last:border-b-0 hover:bg-sky-soft"
+                                  >
+                                    <span className="truncate text-sm font-medium text-ink">
+                                      {item.label}
+                                    </span>
+                                    <span className="shrink-0 text-xs text-muted-foreground">
+                                      {t('new_email.recipients_count', {
+                                        count: item.count,
+                                      })}
+                                    </span>
+                                  </button>
+                                </li>
+                              ))}
+                        </ul>
+                      ))}
+                  </div>
+                )}
+              </section>
             )}
 
-            {kind === 'class_group' && (
-              <label className="flex flex-col gap-1.5">
-                <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  {t('new_email.pick_class_group')}
-                </span>
-                <select
-                  value={classGroupId}
-                  onChange={(event) => setClassGroupId(event.target.value)}
-                  className={fieldClass}
-                >
-                  {classGroups.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-
-            {kind === 'enrollment_status' && (
-              <label className="flex flex-col gap-1.5">
-                <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  {t('new_email.pick_status')}
-                </span>
-                <select
-                  value={status}
-                  onChange={(event) =>
-                    setStatus(event.target.value as EnrollmentStatus)
-                  }
-                  className={fieldClass}
-                >
-                  {statuses.map((item) => (
-                    <option key={item.status} value={item.status}>
-                      {t(`enrollment_status.${item.status}`)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-
-            <p className="text-sm font-semibold text-ink">
-              {t('new_email.recipients_count', { count: recipients })}
-            </p>
-            <p className="flex items-start gap-2 rounded-lg border border-dashed border-line bg-sky-soft px-3 py-2 text-xs text-muted-foreground">
+            <p className="mt-5 flex items-start gap-2 rounded-lg border border-dashed border-line bg-sky-soft px-3 py-2 text-xs text-muted-foreground">
               <BoIcon name="shield" size={14} className="mt-0.5 shrink-0" />
               {t('new_email.recipients_note')}
             </p>
@@ -312,84 +483,177 @@ export function NewEmailForm({
 
         {step === 'content' && (
           <>
-            <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                {t('new_email.subject_label')}
-              </span>
-              <input
-                type="text"
-                value={subject}
-                onChange={(event) => editText(() => setSubject(event.target.value))}
-                placeholder={t('new_email.subject_placeholder')}
-                className={fieldClass}
-              />
-            </label>
-            <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                {t('new_email.body_label')}
-              </span>
-              <textarea
-                rows={9}
-                value={body}
-                onChange={(event) => editText(() => setBody(event.target.value))}
-                placeholder={t('new_email.body_placeholder')}
-                className={`${fieldClass} resize-y leading-relaxed`}
-              />
-            </label>
-            <p className="flex items-start gap-2 text-xs text-muted-foreground">
-              <BoIcon name="alert" size={14} className="mt-0.5 shrink-0" />
-              {t('new_email.content_note')}
-            </p>
+            <section>
+              <p className={stepLabelClass}>{t('new_email.content_step')}</p>
+              <div role="radiogroup" className="flex flex-col gap-2 sm:max-w-md">
+                <Choice
+                  checked={mode === 'write'}
+                  label={t('new_email.content_mode_write')}
+                  onSelect={() => editContent(() => setMode('write'))}
+                />
+                <Choice
+                  checked={mode === 'html'}
+                  label={t('new_email.content_mode_html')}
+                  onSelect={() => editContent(() => setMode('html'))}
+                />
+              </div>
+            </section>
+
+            <section className="mt-5 flex flex-col gap-4 border-t border-line pt-4">
+              <label className="flex flex-col gap-1.5">
+                <span className={labelClass}>
+                  {t('new_email.subject_label')}
+                  <RequiredMark label={t('common.required')} />
+                </span>
+                <input
+                  type="text"
+                  value={subject}
+                  onChange={(event) =>
+                    editContent(() => setSubject(event.target.value))
+                  }
+                  placeholder={t('new_email.subject_placeholder')}
+                  className={fieldClass}
+                />
+              </label>
+
+              {mode === 'write' ? (
+                <>
+                  <label className="flex flex-col gap-1.5">
+                    <span className={labelClass}>
+                      {t('new_email.body_label')}
+                      <RequiredMark label={t('common.required')} />
+                    </span>
+                    <textarea
+                      rows={9}
+                      value={body}
+                      onChange={(event) =>
+                        editContent(() => setBody(event.target.value))
+                      }
+                      placeholder={t('new_email.body_placeholder')}
+                      className={`${fieldClass} resize-y leading-relaxed`}
+                    />
+                  </label>
+                  <p className="flex items-start gap-2 text-xs text-muted-foreground">
+                    <BoIcon name="alert" size={14} className="mt-0.5 shrink-0" />
+                    {t('new_email.content_note')}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="flex flex-col gap-1.5">
+                    <span className={labelClass}>
+                      {t('new_email.html_label')}
+                      <RequiredMark label={t('common.required')} />
+                    </span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => fileInput.current?.click()}
+                        className={ghostButtonClass}
+                      >
+                        <BoIcon name="download" size={16} className="rotate-180" />
+                        {t('new_email.html_choose')}
+                      </button>
+                      <span className="text-xs text-muted-foreground">
+                        {html?.name ?? t('new_email.html_none')}
+                      </span>
+                    </div>
+                    <input
+                      ref={fileInput}
+                      type="file"
+                      accept=".html,.htm,text/html"
+                      onChange={readFile}
+                      className="hidden"
+                    />
+                  </div>
+
+                  {html && (
+                    <div className="flex flex-col gap-1.5">
+                      <span className={labelClass}>{t('new_email.html_preview')}</span>
+                      {/* Sandboxed with nothing allowed back in: the file comes
+                          from outside, and a preview that runs its scripts would
+                          be running them inside the panel, with the reader's
+                          session (CLAUDE.md §8). */}
+                      <iframe
+                        title={t('new_email.html_preview')}
+                        sandbox=""
+                        srcDoc={html.source}
+                        className="h-80 w-full rounded-lg border border-line bg-white"
+                      />
+                    </div>
+                  )}
+
+                  <p className="flex items-start gap-2 text-xs text-muted-foreground">
+                    <BoIcon name="alert" size={14} className="mt-0.5 shrink-0" />
+                    {t('new_email.html_note')}
+                  </p>
+                </>
+              )}
+            </section>
           </>
         )}
 
         {step === 'test' && (
-          <>
-            <SectionTitle icon="email">{t('emails.test_title')}</SectionTitle>
-            <ProofSend onSent={proofSentTo} />
+          <div className="flex flex-col gap-4">
+            <p className={stepLabelClass}>{t('emails.test_title')}</p>
+            <ProofSend
+              onSent={(count) => {
+                setError(null)
+                setTestSent(true)
+                setToast(t('emails.test_toast', { count }))
+              }}
+            />
             <p
               className={`flex items-start gap-2 text-xs font-medium ${
-                proofSent ? 'text-emerald-700' : 'text-amber-700'
+                testSent ? 'text-emerald-700' : 'text-amber-700'
               }`}
             >
               <BoIcon
-                name={proofSent ? 'check' : 'clock'}
+                name={testSent ? 'check' : 'clock'}
                 size={14}
                 className="mt-0.5 shrink-0"
               />
-              {t(proofSent ? 'new_email.test_ok' : 'new_email.test_pending')}
+              {t(testSent ? 'new_email.test_ok' : 'new_email.test_pending')}
             </p>
             <p className="flex items-start gap-2 text-xs text-muted-foreground">
               <BoIcon name="alert" size={14} className="mt-0.5 shrink-0" />
               {t('new_email.test_note')}
             </p>
-          </>
+          </div>
         )}
 
         {step === 'review' && (
-          <>
+          <div className="flex flex-col gap-4">
             <dl className="flex flex-col gap-3">
               <div>
-                <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  {t('new_email.review_recipients')}
-                </dt>
+                <dt className={labelClass}>{t('new_email.review_recipients')}</dt>
                 <dd className="mt-0.5 text-sm font-semibold text-ink">
-                  {`${segmentLabel} · ${t('new_email.recipients_count', { count: recipients })}`}
+                  {`${segmentLabel} · ${t('new_email.recipients_count', { count: recipients ?? 0 })}`}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  {t('new_email.review_subject')}
-                </dt>
+                <dt className={labelClass}>{t('new_email.review_subject')}</dt>
                 <dd className="mt-0.5 text-sm font-semibold text-ink">{subject}</dd>
               </div>
               <div>
-                <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  {t('new_email.review_body')}
+                <dt className={labelClass}>
+                  {t(mode === 'html' ? 'new_email.review_html' : 'new_email.review_body')}
                 </dt>
-                <dd className="mt-1 whitespace-pre-wrap rounded-lg border border-line bg-sky-soft px-3 py-2 text-sm leading-relaxed text-ink">
-                  {body}
-                </dd>
+                {mode === 'html' && html ? (
+                  <dd className="mt-1 flex flex-col gap-2">
+                    <span className="text-sm font-semibold text-ink">{html.name}</span>
+                    <iframe
+                      title={t('new_email.html_preview')}
+                      sandbox=""
+                      srcDoc={html.source}
+                      className="h-64 w-full rounded-lg border border-line bg-white"
+                    />
+                  </dd>
+                ) : (
+                  <dd className="mt-1 whitespace-pre-wrap rounded-lg border border-line bg-sky-soft px-3 py-2 text-sm leading-relaxed text-ink">
+                    {body}
+                  </dd>
+                )}
               </div>
             </dl>
 
@@ -417,16 +681,12 @@ export function NewEmailForm({
               <BoIcon name="clock" size={14} className="mt-0.5 shrink-0" />
               {t('new_email.cooldown_note')}
             </p>
-            <p className="flex items-start gap-2 text-xs text-muted-foreground">
-              <BoIcon name="shield" size={14} className="mt-0.5 shrink-0" />
-              {t('new_email.audit_note')}
-            </p>
-          </>
+          </div>
         )}
 
-        {error && <p className="text-xs font-medium text-red-600">{error}</p>}
+        {error && <p className="mt-4 text-xs font-medium text-red-600">{error}</p>}
 
-        <div className="flex flex-wrap items-center gap-2 border-t border-line pt-4">
+        <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-line pt-4">
           {index > 0 && (
             <button
               type="button"
