@@ -843,7 +843,14 @@
       "html_note": "Sale tal cual: las imágenes tienen que ser enlaces absolutos, y ningún correo ejecuta scripts.",
       "html_preview": "Vista previa",
       "html_error_type": "Tiene que ser un archivo .html.",
-      "error_html": "Carga el archivo HTML."
+      "error_html": "Carga el archivo HTML.",
+      "next": "Siguiente",
+      "prev": "Atrás",
+      "step_of": "Paso {step} de {total}",
+      "review_recipients": "Destinatarios",
+      "review_subject": "Asunto",
+      "review_body": "Mensaje",
+      "review_html": "Archivo"
     },
     "delivery_status": {
       "not_sent": "Sin enviar",

@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
+import { useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import type { EnrollmentStatus } from '@/lib/backoffice/types'
@@ -25,9 +25,6 @@ const fieldClass =
 
 const labelClass = 'text-xs font-medium uppercase tracking-wide text-muted-foreground'
 
-const stepLabelClass =
-  'mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground'
-
 const primaryButtonClass =
   'inline-flex items-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-yellow hover:text-ink active:bg-brand-yellow-deep disabled:cursor-not-allowed disabled:opacity-40'
 
@@ -35,38 +32,70 @@ const ghostButtonClass =
   'inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3.5 py-2 text-sm font-semibold text-muted-foreground transition hover:text-ink'
 
 /**
- * One numbered step of the form. The rail is the same one the journey uses:
- * a marker per step and a line between them, so a form that lives on one page
- * still reads as an order to follow rather than as a wall of fields.
+ * The stepper: where you are, what is behind you, and what is left. Horizontal
+ * because the steps are a path across the top of the work, not a list beside
+ * it — and because with one step on screen at a time, this strip is the only
+ * thing telling somebody how much of the send they have already decided.
+ *
+ * Steps behind are links: going back to re-read what you wrote must never cost
+ * the draft. Steps ahead are not — they are gated by what is missing here.
  */
-function Step({
-  n,
-  label,
-  last = false,
-  children,
+function Stepper({
+  steps,
+  current,
+  labelOf,
+  onPick,
 }: {
-  n: number
-  label: string
-  last?: boolean
-  children: ReactNode
+  steps: string[]
+  current: number
+  labelOf: (key: string) => string
+  onPick: (key: string) => void
 }) {
   return (
-    <li className={`relative pl-12 ${last ? '' : 'pb-7'}`}>
-      {!last && (
-        <span
-          aria-hidden="true"
-          className="absolute bottom-0 left-4 top-9 w-px -translate-x-1/2 bg-line"
-        />
-      )}
-      <span
-        aria-hidden="true"
-        className="absolute left-4 top-0 grid size-8 -translate-x-1/2 place-items-center rounded-full border border-line bg-white text-sm font-semibold text-brand-blue"
-      >
-        {n}
-      </span>
-      <p className={`${stepLabelClass} pt-1.5`}>{label}</p>
-      {children}
-    </li>
+    <ol className="flex items-start gap-1 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {steps.map((key, position) => {
+        const active = position === current
+        const done = position < current
+        return (
+          <li key={key} className="flex min-w-0 flex-1 items-start gap-1">
+            <button
+              type="button"
+              disabled={!done && !active}
+              onClick={() => onPick(key)}
+              aria-current={active ? 'step' : undefined}
+              className="flex min-w-16 flex-1 flex-col items-center gap-1.5 px-0.5 text-center disabled:cursor-default"
+            >
+              <span
+                className={`grid size-8 shrink-0 place-items-center rounded-full border text-sm font-semibold transition ${
+                  active
+                    ? 'border-brand-blue bg-brand-blue text-white'
+                    : done
+                      ? 'border-brand-blue bg-white text-brand-blue'
+                      : 'border-line bg-white text-muted-foreground'
+                }`}
+              >
+                {done ? <BoIcon name="check" size={16} /> : position + 1}
+              </span>
+              <span
+                /* Wraps rather than truncates: a step called "COMO SE ESC…"
+                   is one nobody can tell apart from the next. */
+                className={`text-[11px] font-semibold uppercase leading-tight tracking-wide ${
+                  active ? 'text-ink' : 'text-muted-foreground'
+                }`}
+              >
+                {labelOf(key)}
+              </span>
+            </button>
+            {position < steps.length - 1 && (
+              <span
+                aria-hidden="true"
+                className={`mt-4 h-px flex-1 ${done ? 'bg-brand-blue/40' : 'bg-line'}`}
+              />
+            )}
+          </li>
+        )
+      })}
+    </ol>
   )
 }
 
@@ -147,6 +176,7 @@ export function NewEmailForm({
 }) {
   const t = useTranslations('bo')
 
+  const [openStep, setOpenStep] = useState('segment')
   const [kind, setKind] = useState<SegmentKind>('course')
   const [courseName, setCourseName] = useState<string | null>(null)
   const [classGroupId, setClassGroupId] = useState<string | null>(null)
@@ -192,6 +222,17 @@ export function NewEmailForm({
           ? (classGroup?.count ?? null)
           : (statusRow?.count ?? null)
 
+  const segmentLabel =
+    kind === 'all'
+      ? t('new_email.segment_all')
+      : kind === 'course'
+        ? (course?.name ?? '')
+        : kind === 'class_group'
+          ? (classGroup?.label ?? '')
+          : statusRow
+            ? t(`enrollment_status.${statusRow.status}`)
+            : ''
+
   /* A send to the whole register is the one nobody signs off alone. */
   const needsSecondApproval = kind === 'all'
 
@@ -221,42 +262,57 @@ export function NewEmailForm({
     reader.readAsText(file)
   }
 
-  /**
-   * Everything is on screen, so everything is checked at once — in the order
-   * the sections are read, so the message points at the first thing missing
-   * rather than at the last.
-   */
+  /** What the step being left has to have, before it may be left. */
+  function missingHere(): string | null {
+    /* On the first step the group is only half chosen — which one it is comes
+       next. Only "toda a base" can be judged here, because it answers both. */
+    if (step === 'segment') {
+      return needsValue || (recipients ?? 0) > 0
+        ? null
+        : t('new_email.error_recipients')
+    }
+    if (step === 'value') {
+      return (recipients ?? 0) > 0 ? null : t('new_email.error_recipients')
+    }
+    if (step === 'content') {
+      if (subject.trim().length === 0) return t('new_email.error_subject')
+      if (mode === 'write' && body.trim().length === 0) {
+        return t('new_email.error_body')
+      }
+      if (mode === 'html' && html === null) return t('new_email.error_html')
+      return null
+    }
+    if (step === 'test') return testSent ? null : t('new_email.error_test')
+    return confirmed ? null : t('new_email.error_confirm')
+  }
+
+  function go(key: string) {
+    setError(null)
+    setOpenStep(key)
+  }
+
+  function advance() {
+    const missing = missingHere()
+    if (missing) {
+      setError(missing)
+      return
+    }
+    go(stepKeys[current + 1])
+  }
+
   function send() {
-    if (recipients === null || recipients === 0) {
-      setError(t('new_email.error_recipients'))
-      return
-    }
-    if (subject.trim().length === 0) {
-      setError(t('new_email.error_subject'))
-      return
-    }
-    if (mode === 'write' && body.trim().length === 0) {
-      setError(t('new_email.error_body'))
-      return
-    }
-    if (mode === 'html' && html === null) {
-      setError(t('new_email.error_html'))
-      return
-    }
-    if (!testSent) {
-      setError(t('new_email.error_test'))
-      return
-    }
-    if (!confirmed) {
-      setError(t('new_email.error_confirm'))
+    const missing = missingHere()
+    if (missing) {
+      setError(missing)
       return
     }
     setError(null)
-    setSent(recipients)
+    setSent(recipients ?? 0)
   }
 
   function reset() {
     setSent(null)
+    setOpenStep('segment')
     setSubject('')
     setBody('')
     setHtml(null)
@@ -296,7 +352,20 @@ export function NewEmailForm({
     'test',
     'review',
   ]
-  const num = (key: string) => stepKeys.indexOf(key) + 1
+  /* Picking "toda a base" removes the step somebody may be standing on — the
+     form falls back to the one before it rather than going blank. */
+  const current = Math.max(0, stepKeys.indexOf(openStep))
+  const step = stepKeys[current]
+  const stepLabel = (key: string) =>
+    key === 'segment'
+      ? t('new_email.segment_step')
+      : key === 'value'
+        ? t('new_email.value_step')
+        : key === 'content'
+          ? t('new_email.content_step')
+          : key === 'test'
+            ? t('new_email.step_test')
+            : t('new_email.step_review')
 
   const chosen =
     kind === 'course' ? course : kind === 'class_group' ? classGroup : statusRow
@@ -304,8 +373,16 @@ export function NewEmailForm({
   return (
     <div className="flex flex-col gap-4">
       <Card className="p-5">
-        <ol className="flex flex-col">
-        <Step n={num('segment')} label={t('new_email.segment_step')}>
+        <Stepper
+          steps={stepKeys}
+          current={current}
+          labelOf={stepLabel}
+          onPick={go}
+        />
+
+        <div className="mt-5 border-t border-line pt-5">
+        {step === 'segment' && (
+          <>
               <div role="radiogroup" className="flex flex-col gap-2 sm:max-w-md">
                 {KINDS.map((value) => (
                   <Choice
@@ -326,10 +403,11 @@ export function NewEmailForm({
             <BoIcon name="shield" size={14} className="mt-0.5 shrink-0" />
             {t('new_email.recipients_note')}
           </p>
-        </Step>
+          </>
+        )}
 
-            {needsValue && (
-              <Step n={num('value')} label={t('new_email.value_step')}>
+            {step === 'value' && (
+              <>
 
                 {kind === 'enrollment_status' ? (
                   <div role="radiogroup" className="flex flex-col gap-2 sm:max-w-md">
@@ -459,11 +537,12 @@ export function NewEmailForm({
                       ))}
                   </div>
                 )}
-              </Step>
+              </>
             )}
 
         {/* What it says */}
-        <Step n={num('content')} label={t('new_email.content_step')}>
+        {step === 'content' && (
+          <>
               <div role="radiogroup" className="flex flex-col gap-2 sm:max-w-md">
                 <Choice
                   checked={mode === 'write'}
@@ -568,10 +647,11 @@ export function NewEmailForm({
                 </>
               )}
             </div>
-        </Step>
+          </>
+        )}
 
         {/* A test to a real inbox, before anybody approves anything */}
-        <Step n={num('test')} label={t('new_email.step_test')}>
+        {step === 'test' && (
           <div className="flex flex-col gap-4">
             <ProofSend
               onSent={(count) => {
@@ -597,52 +677,107 @@ export function NewEmailForm({
             {t('new_email.test_note')}
           </p>
           </div>
-        </Step>
+        )}
 
         {/* The approval. No summary above it: everything it would repeat is
             still on this page, a screen up. */}
-        <Step n={num('review')} label={t('new_email.step_review')} last>
-          <div className="flex flex-col gap-3">
-          <label className="flex items-start gap-2 text-sm text-ink">
-            <input
-              type="checkbox"
-              checked={confirmed}
-              onChange={(event) => {
-                setConfirmed(event.target.checked)
-                setError(null)
-              }}
-              className="mt-0.5 size-4 accent-brand-blue"
-            />
-            {t('new_email.confirm_label')}
-          </label>
+        {step === 'review' && (
+          <div className="flex flex-col gap-4">
+            {/* The summary is here because the steps behind it are off screen:
+                nobody approves a mass send from memory. */}
+            <dl className="flex flex-col gap-3">
+              <div>
+                <dt className={labelClass}>{t('new_email.review_recipients')}</dt>
+                <dd className="mt-0.5 text-sm font-semibold text-ink">
+                  {`${segmentLabel} · ${t('new_email.recipients_count', { count: recipients ?? 0 })}`}
+                </dd>
+              </div>
+              <div>
+                <dt className={labelClass}>{t('new_email.review_subject')}</dt>
+                <dd className="mt-0.5 text-sm font-semibold text-ink">{subject}</dd>
+              </div>
+              <div>
+                <dt className={labelClass}>
+                  {t(mode === 'html' ? 'new_email.review_html' : 'new_email.review_body')}
+                </dt>
+                {mode === 'html' && html ? (
+                  <dd className="mt-1 flex flex-col gap-2">
+                    <span className="text-sm font-semibold text-ink">{html.name}</span>
+                    <iframe
+                      title={t('new_email.html_preview')}
+                      sandbox=""
+                      srcDoc={html.source}
+                      className="h-64 w-full rounded-lg border border-line bg-white"
+                    />
+                  </dd>
+                ) : (
+                  <dd className="mt-1 whitespace-pre-wrap rounded-lg border border-line bg-sky-soft px-3 py-2 text-sm leading-relaxed text-ink">
+                    {body}
+                  </dd>
+                )}
+              </div>
+            </dl>
 
-          {needsSecondApproval && (
-            <p className="flex items-start gap-2 rounded-lg border border-dashed border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-              <BoIcon name="alert" size={14} className="mt-0.5 shrink-0" />
-              {t('new_email.double_approval')}
+            <label className="flex items-start gap-2 text-sm text-ink">
+              <input
+                type="checkbox"
+                checked={confirmed}
+                onChange={(event) => {
+                  setConfirmed(event.target.checked)
+                  setError(null)
+                }}
+                className="mt-0.5 size-4 accent-brand-blue"
+              />
+              {t('new_email.confirm_label')}
+            </label>
+
+            {needsSecondApproval && (
+              <p className="flex items-start gap-2 rounded-lg border border-dashed border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                <BoIcon name="alert" size={14} className="mt-0.5 shrink-0" />
+                {t('new_email.double_approval')}
+              </p>
+            )}
+
+            <p className="flex items-start gap-2 text-xs text-muted-foreground">
+              <BoIcon name="clock" size={14} className="mt-0.5 shrink-0" />
+              {t('new_email.cooldown_note')}
             </p>
-          )}
-
-          <p className="flex items-start gap-2 text-xs text-muted-foreground">
-            <BoIcon name="clock" size={14} className="mt-0.5 shrink-0" />
-            {t('new_email.cooldown_note')}
-          </p>
           </div>
-        </Step>
-        </ol>
+        )}
+        </div>
 
         {error && <p className="mt-4 text-xs font-medium text-red-600">{error}</p>}
 
         <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-line pt-4">
-          <button
-            type="button"
-            onClick={send}
-            disabled={needsSecondApproval}
-            className={primaryButtonClass}
-          >
-            <BoIcon name="email" size={16} />
-            {t('new_email.send')}
-          </button>
+          {current > 0 && (
+            <button
+              type="button"
+              onClick={() => go(stepKeys[current - 1])}
+              className={ghostButtonClass}
+            >
+              <BoIcon name="arrow-left" size={16} />
+              {t('new_email.prev')}
+            </button>
+          )}
+          {step === 'review' ? (
+            <button
+              type="button"
+              onClick={send}
+              disabled={needsSecondApproval}
+              className={primaryButtonClass}
+            >
+              <BoIcon name="email" size={16} />
+              {t('new_email.send')}
+            </button>
+          ) : (
+            <button type="button" onClick={advance} className={primaryButtonClass}>
+              {t('new_email.next')}
+              <BoIcon name="chevron-right" size={16} />
+            </button>
+          )}
+          <span className="ml-auto text-xs text-muted-foreground">
+            {t('new_email.step_of', { step: current + 1, total: stepKeys.length })}
+          </span>
         </div>
       </Card>
 

@@ -843,7 +843,14 @@
       "html_note": "It goes out as it is: images have to be absolute links, and no e-mail runs scripts.",
       "html_preview": "Preview",
       "html_error_type": "It has to be an .html file.",
-      "error_html": "Upload the HTML file."
+      "error_html": "Upload the HTML file.",
+      "next": "Next",
+      "prev": "Back",
+      "step_of": "Step {step} of {total}",
+      "review_recipients": "Recipients",
+      "review_subject": "Subject",
+      "review_body": "Message",
+      "review_html": "File"
     },
     "delivery_status": {
       "not_sent": "Not sent",

@@ -843,7 +843,14 @@
       "html_note": "Sai como está: as imagens precisam ser links absolutos, e nenhum e-mail executa scripts.",
       "html_preview": "Prévia",
       "html_error_type": "Precisa ser um arquivo .html.",
-      "error_html": "Carregue o arquivo HTML."
+      "error_html": "Carregue o arquivo HTML.",
+      "next": "Seguinte",
+      "prev": "Voltar",
+      "step_of": "Passo {step} de {total}",
+      "review_recipients": "Destinatários",
+      "review_subject": "Assunto",
+      "review_body": "Mensagem",
+      "review_html": "Arquivo"
     },
     "delivery_status": {
       "not_sent": "Não enviado",
