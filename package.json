@@ -24,6 +24,7 @@
     "typecheck:queue": "pnpm --filter @ooc/queue typecheck",
     "typecheck:api": "pnpm --filter @ooc/api typecheck",
     "typecheck:db": "pnpm --filter @ooc/db typecheck",
+    "test:api": "pnpm --filter @ooc/api test",
     "db:up": "docker compose up -d --wait",
     "db:down": "docker compose down",
     "db:generate": "pnpm --filter @ooc/db db:generate",

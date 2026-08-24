@@ -1,5 +1,7 @@
+import type { Role } from "@ooc/domain";
 import type { FastifyReply, FastifyRequest, RouteOptions } from "fastify";
 import type { z, ZodType } from "zod";
+import type { RouteAuth } from "@/infra/plugins/authorization.js";
 
 interface RouteSchema {
   tags?: string[];
@@ -19,6 +21,11 @@ export class RouteBuilder<
   private readonly method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
   private readonly url: string;
   private schema: RouteSchema = {};
+  // No default — deny-by-default (CLAUDE.md §6) is enforced by requiring
+  // every route to call .roles(...) or .public() explicitly. A route built
+  // without either fails at registration time (authorization plugin's
+  // onRoute hook), not silently open.
+  private auth?: RouteAuth;
 
   private constructor(method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH", url: string) {
     this.method = method;
@@ -70,6 +77,20 @@ export class RouteBuilder<
     return this;
   }
 
+  /** Restricts the route to the given roles — checked against the caller's
+   * `user.role` on every request (CLAUDE.md §8). */
+  roles(...roles: [Role, ...Role[]]) {
+    this.auth = { public: false, roles };
+    return this;
+  }
+
+  /** Explicitly marks the route as open to unauthenticated callers — the
+   * only other way to satisfy the deny-by-default requirement. */
+  public() {
+    this.auth = { public: true };
+    return this;
+  }
+
   handler(
     fn: (
       request: FastifyRequest<{
@@ -84,6 +105,7 @@ export class RouteBuilder<
       method: this.method,
       url: this.url,
       schema: this.schema,
+      config: { auth: this.auth },
       handler: fn as RouteOptions["handler"],
     };
   }

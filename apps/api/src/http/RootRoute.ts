@@ -8,6 +8,7 @@ export const rootRoute = RouteBuilder.get("/")
     description: "Root endpoint for the application",
   })
   .response(200, z.object({ message: z.string() }))
+  .public()
   .handler(async (_request, reply) => {
     reply.send({ message: "Only One Coin API" });
   });
