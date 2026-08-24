@@ -7,8 +7,11 @@
  * (#25D366) on every surface and must not turn white, blue or ink because a
  * parent said so — hence fixed `fill` values and no `currentColor` anywhere.
  *
- * The green sits on a white disc rather than straight on the button, so it
- * survives the primary button's blue → yellow hover without losing contrast.
+ * The app-icon form: WhatsApp green disc, white glyph. That is the lockup
+ * people recognise at this size, and it carries its own background, so it holds
+ * up on the primary button through the blue → yellow hover without ever needing
+ * to be recoloured.
+ *
  * The glyph is the published 24×24 path, inset into the disc rather than
  * redrawn: an approximation of a logo everyone recognises reads as wrong even
  * when nobody can say why.
@@ -26,10 +29,10 @@ export function WhatsAppMark({ size = 22 }: { size?: number }) {
       aria-hidden="true"
       className="shrink-0"
     >
-      <circle cx="12" cy="12" r="12" fill="#FFFFFF" />
+      <circle cx="12" cy="12" r="12" fill="#25D366" />
       {/* 24 × 0.58 ≈ 14, offset by 5 on both axes to sit centred in the disc. */}
       <g transform="translate(5 5) scale(0.583)">
-        <path fill="#25D366" d={GLYPH} />
+        <path fill="#FFFFFF" d={GLYPH} />
       </g>
     </svg>
   )
