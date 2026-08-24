@@ -885,3 +885,35 @@ export interface NewEnrollmentInput {
   /** Whether the staff member attached the receipt image while filling this in. */
   receiptAttached: boolean
 }
+
+/* -------------------------------------------------------------------------- */
+/* Settings — the numbers and names the platform runs on                       */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The academic thresholds the rules fix and the screens already read. They are
+ * settings rather than constants for the same reason the payment tolerance is:
+ * the Asociación changing what "approved" means must not need a deploy
+ * (CLAUDE.md §5).
+ */
+export interface AcademicSettings {
+  /** Minimum final grade on the 0–20 scale (`docs/REGRAS-NEGOCIO.md` §3). */
+  passingGrade: number
+  /** Business days to issue the free certificate after a class group ends (§6). */
+  certificateDeadlineBusinessDays: number
+  /** Fee for the constancia de matrícula, in cents — a paid procedure (§5). */
+  constanciaFeeCents: number
+  /** How early a teacher's contract starts showing as expiring (CLAUDE.md §1). */
+  contractAlertDays: number
+}
+
+/**
+ * Everything the settings screen owns. Two groups because they answer for two
+ * different things — what the academic rules count as, and what the receipt
+ * pipeline approves on without a human — and one screen, because a number with
+ * two homes is a number that drifts.
+ */
+export interface GeneralSettings {
+  academic: AcademicSettings
+  receipts: PaymentSettings
+}

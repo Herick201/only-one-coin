@@ -18,6 +18,12 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "@ooc/app", "exec", "next", "dev", "--port", "3007"],
       "port": 3007
+    },
+    {
+      "name": "app-wt",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@ooc/app", "exec", "next", "dev", "--port", "3009"],
+      "port": 3009
     }
   ]
 }

@@ -39,7 +39,8 @@
       "actions": "Actions",
       "mock_notice": "Demo screen: the data is sample data and changes are not saved yet.",
       "required": "required",
-      "optional": "optional"
+      "optional": "optional",
+      "help": "Help"
     },
     "dashboard": {
       "greeting": "Hi, {name}",
@@ -298,7 +299,6 @@
       "subtitle": "Everything paid for an enrollment or a procedure, with the state of each receipt.",
       "tab_ledger": "Payments",
       "tab_review": "Review queue",
-      "settings_action": "Validation parameters",
       "metric_in_review": "In review",
       "metric_in_review_hint": "Oldest waiting {hours} h",
       "metric_approved": "Approved",
@@ -390,24 +390,6 @@
       "duplicate": "The receipt was already used",
       "not_a_receipt": "The image is not a receipt",
       "other": "Another reason"
-    },
-    "payment_settings": {
-      "title": "Receipt validation",
-      "subtitle": "The parameters the platform approves on before it asks for a human.",
-      "tolerance_label": "Amount tolerance",
-      "tolerance_hint": "How far a receipt may fall from the plan price and still pass on its own.",
-      "confidence_label": "Minimum confidence",
-      "confidence_hint": "Below this value on a critical field the receipt is escalated instead of approved.",
-      "confidence_value": "{value}%",
-      "reservation_label": "Reservation lifetime",
-      "reservation_hint": "Days a seat stays reserved with no approved payment. After that it is released.",
-      "reservation_value": "{days} days",
-      "save": "Save parameters",
-      "cancel": "Discard",
-      "saved_toast": "Parameters applied on screen only. No server is connected yet.",
-      "audit_notice": "Changing a parameter applies to receipts arriving afterwards: it never revalidates a payment already settled.",
-      "locked_title": "Administration only",
-      "locked_body": "These parameters decide what gets approved unseen. Only whoever administers the platform changes them."
     },
     "enrollments": {
       "title": "Enrollments",
@@ -960,6 +942,37 @@
       "class_groups_subtitle": "Everything you run, current and closed.",
       "no_class_groups_title": "No class groups",
       "no_class_groups_body": "You have no class groups allocated this period."
+    },
+    "settings": {
+      "title": "Settings",
+      "locked_title": "Administration only",
+      "locked_body": "This is where the grade that decides who is certified and the tolerance the platform approves a receipt with, unseen, are set. Only whoever administers the platform changes them.",
+      "academic_title": "Academic rules and procedures",
+      "passing_grade_label": "Minimum passing grade",
+      "passing_grade_hint": "0–20 scale. Below this no certificate is issued.",
+      "passing_grade_value": "{grade} / 20",
+      "certificate_deadline_label": "Certificate deadline",
+      "certificate_deadline_hint": "Business days from the end of the class group to issue the free certificate.",
+      "business_days_value": "{days} business days",
+      "constancia_fee_label": "Constancia de matrícula fee",
+      "constancia_fee_hint": "The constancia is a paid procedure: the student pays, uploads the receipt, and only then is it issued.",
+      "contract_alert_label": "Contract expiry warning",
+      "contract_alert_hint": "How many days before the end the panel marks a teacher's contract as expiring.",
+      "days_value": "{days} days",
+      "academic_notice": "Changing a number applies from here on: it never revisits what was already issued or revalidates a closed grade.",
+      "receipts_title": "Receipt validation",
+      "tolerance_label": "Amount tolerance",
+      "tolerance_hint": "How far a receipt may fall from the plan price and still pass on its own.",
+      "confidence_label": "Minimum confidence",
+      "confidence_hint": "Below this value on a critical field the receipt is escalated instead of approved.",
+      "confidence_value": "{value}%",
+      "reservation_label": "Reservation lifetime",
+      "reservation_hint": "Days a seat stays reserved with no approved payment. After that it is released.",
+      "reservation_value": "{days} days",
+      "receipts_notice": "Changing a parameter applies to receipts arriving afterwards: it never revalidates a payment already settled.",
+      "save": "Save changes",
+      "cancel": "Discard",
+      "saved_toast": "Changes applied on screen only. No server is connected yet."
     }
   }
 }

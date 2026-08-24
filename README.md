@@ -53,9 +53,8 @@ Domínio e fila já existem, independentes dessa escolha:
   e conceito, e cada linha abrindo o comprovante e os dados do pagamento num
   modal; `/backoffice/payments/review`, a fila de revisão humana com a
   ficha de decisão do comprovante — extração campo a campo com confiança,
-  segunda leitura quando os modelos divergem, aprovar/recusar com motivo; e
-  `/backoffice/payments/settings`, os parâmetros de validação — tolerância de
-  valor, confiança mínima e validade da reserva), matrículas
+  segunda leitura quando os modelos divergem, aprovar/recusar com motivo),
+  matrículas
   (`/backoffice/enrollments`: livro de todas as matrículas — aluno, curso/turma,
   estado da matrícula, da vaga e do pagamento — com métricas do ciclo, busca,
   filtros por estado, vaga, idioma e ciclo, detalhe em modal e abertura manual de
@@ -73,7 +72,14 @@ Domínio e fila já existem, independentes dessa escolha:
   grade da semana com as turmas já atribuídas sobrepostas — e as turmas do
   docente. A ficha é onde se tira alguém do quadro e se devolve: a confirmação
   avisa quantas turmas em andamento ainda apontam para ele, e o contrato deixa
-  de ser vigiado enquanto estiver inativo). O papel `teacher` já entra numa
+  de ser vigiado enquanto estiver inativo). Fecha a lista a configuração
+  (`/backoffice/settings`, só `admin`), a tela única dos números que o resto do
+  painel roda em cima: as regras acadêmicas e de trâmite (nota mínima, prazo do
+  certificado, taxa da constancia, antecedência do aviso de contrato) e os
+  parâmetros de validação do comprovante (tolerância de valor, confiança mínima
+  e validade da reserva) — estes últimos vieram de `/backoffice/payments/settings`,
+  que deixou de existir: um número com duas telas donas é um número que diverge.
+  O papel `teacher` já entra numa
   **visão restrita**: menu reduzido,
   home própria (turmas, alunos, notas e certificados pendentes dele), só as
   próprias turmas na lista e na ficha da turma, e alunos/pagamentos bloqueados —

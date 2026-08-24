@@ -5,7 +5,10 @@ import { cookies } from 'next/headers'
 import { LogOut } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { logoutStaff } from '../actions'
-import { isRestrictedToOwnClassGroups } from '@/lib/backoffice/permissions'
+import {
+  canConfigureSettings,
+  isRestrictedToOwnClassGroups,
+} from '@/lib/backoffice/permissions'
 import {
   getDashboardMetrics,
   getEnrollmentMetrics,
@@ -159,12 +162,22 @@ export default async function BackofficePanelLayout({
         { key: 'email', href: '/backoffice/emails', label: t('nav.email'), soon: true },
         { key: 'reports', href: '/backoffice/reports', label: t('nav.reports'), soon: true },
         { key: 'staff', href: '/backoffice/team', label: t('nav.staff'), soon: true },
-        {
-          key: 'settings',
-          href: '/backoffice/settings',
-          label: t('nav.settings'),
-          soon: true,
-        },
+        /* Settings is admin's alone — it holds the grade that decides who is
+           certified and the tolerance the platform approves a receipt with when
+           nobody is looking. Left out of the rail rather than shown greyed:
+           "pronto" promises a door that will open one day, and this one never
+           opens for coordination or tesorería. The locked state on the page
+           stays for whoever arrives by URL, and the role on the route in
+           `apps/api` is what actually enforces it (CLAUDE.md §8). */
+        ...(canConfigureSettings(staff.role)
+          ? [
+              {
+                key: 'settings' as const,
+                href: '/backoffice/settings',
+                label: t('nav.settings'),
+              },
+            ]
+          : []),
       ],
     },
   ]

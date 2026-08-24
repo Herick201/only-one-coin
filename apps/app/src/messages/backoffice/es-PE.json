@@ -39,7 +39,8 @@
       "actions": "Acciones",
       "mock_notice": "Vista de demostración: los datos son de ejemplo y los cambios no se guardan todavía.",
       "required": "obligatorio",
-      "optional": "opcional"
+      "optional": "opcional",
+      "help": "Ayuda"
     },
     "dashboard": {
       "greeting": "Hola, {name}",
@@ -298,7 +299,6 @@
       "subtitle": "Todo lo que entró por matrícula y por trámite, con el estado de cada comprobante.",
       "tab_ledger": "Pagos",
       "tab_review": "Cola de revisión",
-      "settings_action": "Parámetros de validación",
       "metric_in_review": "En revisión",
       "metric_in_review_hint": "El más antiguo espera {hours} h",
       "metric_approved": "Aprobados",
@@ -390,24 +390,6 @@
       "duplicate": "El comprobante ya se usó",
       "not_a_receipt": "La imagen no es un comprobante",
       "other": "Otro motivo"
-    },
-    "payment_settings": {
-      "title": "Validación de comprobantes",
-      "subtitle": "Los parámetros con los que la plataforma aprueba sola antes de pedir un humano.",
-      "tolerance_label": "Tolerancia de monto",
-      "tolerance_hint": "Cuánto puede alejarse el comprobante del precio del plan y aun así aprobarse solo.",
-      "confidence_label": "Confianza mínima",
-      "confidence_hint": "Por debajo de este valor en un campo crítico, el comprobante sube de nivel en vez de aprobarse.",
-      "confidence_value": "{value}%",
-      "reservation_label": "Vigencia de la reserva",
-      "reservation_hint": "Días que la vacante queda reservada sin pago aprobado. Después se libera sola.",
-      "reservation_value": "{days} días",
-      "save": "Guardar parámetros",
-      "cancel": "Descartar",
-      "saved_toast": "Parámetros aplicados solo en pantalla. Todavía no hay servidor conectado.",
-      "audit_notice": "Cambiar un parámetro vale para los comprobantes que lleguen después: nunca revalida un pago ya resuelto.",
-      "locked_title": "Solo administración",
-      "locked_body": "Estos parámetros deciden qué se aprueba sin que nadie mire. Los cambia solo quien administra la plataforma."
     },
     "enrollments": {
       "title": "Matrículas",
@@ -960,6 +942,37 @@
       "class_groups_subtitle": "Todo lo que dictas, en curso y cerrado.",
       "no_class_groups_title": "Sin aulas",
       "no_class_groups_body": "Todavía no tienes aulas asignadas en este período."
+    },
+    "settings": {
+      "title": "Configuración",
+      "locked_title": "Solo administración",
+      "locked_body": "Aquí se define la nota que decide quién se certifica y la tolerancia con la que la plataforma aprueba un comprobante sin que nadie mire. Lo cambia solo quien administra la plataforma.",
+      "academic_title": "Reglas académicas y trámites",
+      "passing_grade_label": "Nota mínima de aprobación",
+      "passing_grade_hint": "Escala 0–20. Por debajo de esto no se emite certificado.",
+      "passing_grade_value": "{grade} / 20",
+      "certificate_deadline_label": "Plazo del certificado",
+      "certificate_deadline_hint": "Días hábiles desde que termina el aula para emitir el certificado gratuito.",
+      "business_days_value": "{days} días hábiles",
+      "constancia_fee_label": "Tarifa de constancia de matrícula",
+      "constancia_fee_hint": "La constancia es un trámite pagado: el alumno paga, sube el comprobante y recién entonces se emite.",
+      "contract_alert_label": "Aviso de vencimiento de contrato",
+      "contract_alert_hint": "Cuántos días antes del fin el panel marca el contrato de un docente como por vencer.",
+      "days_value": "{days} días",
+      "academic_notice": "Cambiar un número vale de aquí en adelante: no revisa lo que ya se emitió ni revalida una nota cerrada.",
+      "receipts_title": "Validación de comprobantes",
+      "tolerance_label": "Tolerancia de monto",
+      "tolerance_hint": "Cuánto puede alejarse el comprobante del precio del plan y aun así aprobarse solo.",
+      "confidence_label": "Confianza mínima",
+      "confidence_hint": "Por debajo de este valor en un campo crítico, el comprobante sube de nivel en vez de aprobarse.",
+      "confidence_value": "{value}%",
+      "reservation_label": "Vigencia de la reserva",
+      "reservation_hint": "Días que la vacante queda reservada sin pago aprobado. Después se libera sola.",
+      "reservation_value": "{days} días",
+      "receipts_notice": "Cambiar un parámetro vale para los comprobantes que lleguen después: nunca revalida un pago ya resuelto.",
+      "save": "Guardar cambios",
+      "cancel": "Descartar",
+      "saved_toast": "Cambios aplicados solo en pantalla. Todavía no hay servidor conectado."
     }
   }
 }
