@@ -32,7 +32,7 @@ export default async function PaymentsPage({
   if (!canReviewPayments(staff.role)) {
     return (
       <div className="flex flex-col gap-5">
-        <PageHeader title={t('payments.title')} subtitle={t('payments.subtitle')} />
+        <PageHeader title={t('payments.title')} />
         {/* Money is not the teacher's half of the panel — they run a class
             group. The screen says so; the role on the route in `apps/api` is
             what enforces it (CLAUDE.md §8). */}
@@ -47,7 +47,7 @@ export default async function PaymentsPage({
 
   return (
     <div className="flex flex-col gap-5">
-      <PageHeader title={t('payments.title')} subtitle={t('payments.subtitle')} />
+      <PageHeader title={t('payments.title')} />
       <SectionTabs
         tabs={[
           {

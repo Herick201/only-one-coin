@@ -10,6 +10,7 @@ import {
   canBrowseReports,
   canConfigureSettings,
   canManageEmail,
+  canManageStaff,
   isRestrictedToOwnClassGroups,
 } from '@/lib/backoffice/permissions'
 import {
@@ -191,7 +192,20 @@ export default async function BackofficePanelLayout({
               },
             ]
           : []),
-        { key: 'staff', href: '/backoffice/team', label: t('nav.staff'), soon: true },
+        /* Same rule as its neighbours: the team directory is where a cargo
+           changes, and the anti-escalation rule gives that to `admin` alone
+           (CLAUDE.md §8). Coordination runs the academic side and never
+           promotes anybody, so it is not shown a roster whose only actions it
+           may not take. */
+        ...(canManageStaff(staff.role)
+          ? [
+              {
+                key: 'staff' as const,
+                href: '/backoffice/team',
+                label: t('nav.staff'),
+              },
+            ]
+          : []),
         /* Settings is admin's alone — it holds the grade that decides who is
            certified and the tolerance the platform approves a receipt with when
            nobody is looking. Left out of the rail rather than shown greyed:

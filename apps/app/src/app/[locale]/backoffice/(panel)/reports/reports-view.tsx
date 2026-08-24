@@ -50,6 +50,8 @@ import {
   type TrendLine,
 } from '@/components/backoffice/charts'
 import { AutoGrid } from '@/components/layout/auto-grid'
+import { FiltersDropdown } from '@/components/backoffice/filters-dropdown'
+import { tabClass, tabStripClass } from '@/components/backoffice/tab-strip'
 
 /** The cuts, in the order the module was promised in: course first. */
 const DIMENSIONS: ReportDimension[] = ['course', 'language', 'teacher']
@@ -113,7 +115,6 @@ export function ReportsView({
   const [period, setPeriod] = useState<string>(defaultPeriod)
   const [dimension, setDimension] = useState<ReportDimension>(DEFAULT_DIMENSION)
   const [sort, setSort] = useState<SortKey>('collected')
-  const [filtersOpen, setFiltersOpen] = useState(false)
   const [tab, setTab] = useState<Tab>('charts')
 
   /* What the reader moved away from the state the screen opens in — the number
@@ -350,34 +351,11 @@ export function ReportsView({
           it scopes every number on the screen and the sorting does not. */}
       <div className="flex flex-col gap-3">
         <Toolbar>
-          <button
-            type="button"
-            onClick={() => setFiltersOpen(!filtersOpen)}
-            aria-expanded={filtersOpen}
-            className={`inline-flex items-center gap-1.5 self-start rounded-lg border px-3 py-2 text-sm font-semibold transition ${
-              activeFilters > 0 || filtersOpen
-                ? 'border-brand-blue bg-sky text-brand-blue'
-                : 'border-line bg-white text-muted-foreground hover:text-ink'
-            }`}
+          <FiltersDropdown
+            label={t('reports.filters')}
+            count={activeFilters}
+            panelClassName="flex-col gap-3"
           >
-            <BoIcon name="filter" size={16} />
-            {t('reports.filters')}
-            {activeFilters > 0 && (
-              <span className="rounded-full bg-brand-blue px-1.5 text-xs text-white">
-                {activeFilters}
-              </span>
-            )}
-          </button>
-          <span className="text-sm text-muted-foreground">
-            {t('reports.scope_summary', {
-              period: periodLabel,
-              group: t(`reports.dimension_${dimension}`),
-            })}
-          </span>
-        </Toolbar>
-
-        {filtersOpen && (
-          <Card className="flex flex-col gap-3 p-3">
             <FilterRow label={t('reports.period_label')}>
               <Chip
                 active={period === ALL_PERIODS}
@@ -403,11 +381,20 @@ export function ReportsView({
                 />
               ))}
             </FilterRow>
-          </Card>
-        )}
+          </FiltersDropdown>
+          <span className="text-sm text-muted-foreground">
+            {t('reports.scope_summary', {
+              period: periodLabel,
+              group: t(`reports.dimension_${dimension}`),
+            })}
+          </span>
+        </Toolbar>
       </div>
 
-      <nav role="tablist" className="flex items-center gap-1 border-b border-line">
+      {/* Not `SectionTabs`: those are real routes, and these two are one
+          report read two ways — the same filter, the same period, no URL to
+          bookmark. Same look as every other strip in the panel, though. */}
+      <nav role="tablist" className={tabStripClass}>
         {TABS.map((value) => {
           const active = tab === value
           return (
@@ -417,11 +404,7 @@ export function ReportsView({
               role="tab"
               aria-selected={active}
               onClick={() => setTab(value)}
-              className={`-mb-px border-b-2 px-3 py-2 text-sm font-semibold transition ${
-                active
-                  ? 'border-brand-blue text-brand-blue'
-                  : 'border-transparent text-muted-foreground hover:border-line hover:text-ink'
-              }`}
+              className={tabClass(active)}
             >
               {t(`reports.tab_${value}`)}
             </button>

@@ -38,12 +38,7 @@ export default async function ClassGroupsPage({
 
   return (
     <div className="flex flex-col gap-5">
-      <PageHeader
-        title={restricted ? t('nav.my_class_groups') : t('nav.academic')}
-        subtitle={
-          restricted ? t('class_groups.own_subtitle') : t('class_groups.subtitle')
-        }
-      />
+      <PageHeader title={restricted ? t('nav.my_class_groups') : t('nav.academic')} />
       {/* The catalog tab is coordination's half of the section; a teacher has
           no course to configure, so the strip would be one live tab and one
           dead end. */}

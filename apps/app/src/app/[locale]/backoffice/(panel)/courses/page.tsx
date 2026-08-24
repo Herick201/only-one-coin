@@ -28,7 +28,7 @@ export default async function CoursesPage({
 
   return (
     <div className="flex flex-col gap-5">
-      <PageHeader title={t('nav.academic')} subtitle={t('courses.subtitle')} />
+      <PageHeader title={t('nav.academic')} />
       <SectionTabs
         tabs={[
           { href: '/backoffice/class-groups', label: t('class_groups.title') },

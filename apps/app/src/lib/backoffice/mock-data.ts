@@ -27,6 +27,8 @@ import type {
   ReviewQueueItem,
   SeatReservation,
   SeatWatchItem,
+  StaffMemberRow,
+  StaffRoleChange,
   StaffUser,
   StudentDetail,
   StudentRow,
@@ -3322,6 +3324,221 @@ export function getEnrollmentMetrics(now: Date = new Date()): EnrollmentMetrics 
     ).length,
     released: rows.filter((row) => row.seatStatus === 'released').length,
   }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Team — the accounts that open the panel, and the cargo each one opens it with */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The Asociación's own people, as accounts. Small on purpose: this is staff,
+ * not students — the panel is opened by a dozen people, and every one of them
+ * can reach data that belongs to thousands.
+ *
+ * A `teacher` row points at the teacher record behind it (`teacherId`), which
+ * is what narrows the panel to their own class groups. The rest have none:
+ * administración, coordinación and tesorería are cargos, not fichas.
+ *
+ * Names are fictional, like the rest of this module.
+ */
+const staffMembers: StaffMemberRow[] = [
+  {
+    id: 'staff_01',
+    firstName: 'Lucía',
+    lastName: 'Ramírez',
+    email: 'lucia.ramirez@onlyonecoin.edu.pe',
+    role: 'admin',
+    status: 'active',
+    teacherId: null,
+    mfaEnrolled: true,
+    joinedAt: '2024-03-04',
+    lastAccessAt: '2026-08-21T13:40:00Z',
+  },
+  {
+    /* An admin without a second factor: exactly what the directory exists to
+       make visible, on the cargo where it costs the most (CLAUDE.md §8). */
+    id: 'staff_02',
+    firstName: 'Renzo',
+    lastName: 'Ballón',
+    email: 'renzo.ballon@onlyonecoin.edu.pe',
+    role: 'admin',
+    status: 'active',
+    teacherId: null,
+    mfaEnrolled: false,
+    joinedAt: '2025-01-13',
+    lastAccessAt: '2026-08-20T22:05:00Z',
+  },
+  {
+    id: 'staff_03',
+    firstName: 'Miriam',
+    lastName: 'Quispe',
+    email: 'miriam.quispe@onlyonecoin.edu.pe',
+    role: 'coordinator',
+    status: 'active',
+    teacherId: null,
+    mfaEnrolled: true,
+    joinedAt: '2024-06-10',
+    lastAccessAt: '2026-08-21T15:12:00Z',
+  },
+  {
+    id: 'staff_04',
+    firstName: 'Elena',
+    lastName: 'Vargas',
+    email: 'elena.vargas@onlyonecoin.edu.pe',
+    role: 'treasury',
+    status: 'active',
+    teacherId: null,
+    mfaEnrolled: true,
+    joinedAt: '2025-02-24',
+    lastAccessAt: '2026-08-21T11:02:00Z',
+  },
+  {
+    /* Opened for the busy season and never used since — an account nobody
+       signs into still opens the panel if somebody finds the password. */
+    id: 'staff_05',
+    firstName: 'Iván',
+    lastName: 'Cárdenas',
+    email: 'ivan.cardenas@onlyonecoin.edu.pe',
+    role: 'mass_approver',
+    status: 'active',
+    teacherId: null,
+    mfaEnrolled: false,
+    joinedAt: '2026-07-28',
+    lastAccessAt: null,
+  },
+  {
+    id: 'staff_06',
+    firstName: 'Carlos',
+    lastName: 'Meza',
+    email: 'carlos.meza@onlyonecoin.edu.pe',
+    role: 'teacher',
+    status: 'active',
+    teacherId: 'tea_01',
+    mfaEnrolled: false,
+    joinedAt: '2024-04-02',
+    lastAccessAt: '2026-08-19T23:30:00Z',
+  },
+  {
+    id: 'staff_07',
+    firstName: 'Andrea',
+    lastName: 'Solís',
+    email: 'andrea.solis@onlyonecoin.edu.pe',
+    role: 'teacher',
+    status: 'active',
+    teacherId: 'tea_02',
+    mfaEnrolled: false,
+    joinedAt: '2024-09-16',
+    lastAccessAt: '2026-08-21T02:15:00Z',
+  },
+  {
+    id: 'staff_08',
+    firstName: 'Rosa',
+    lastName: 'Ccahuana',
+    email: 'rosa.ccahuana@onlyonecoin.edu.pe',
+    role: 'teacher',
+    status: 'active',
+    teacherId: 'tea_05',
+    mfaEnrolled: false,
+    joinedAt: '2025-03-11',
+    lastAccessAt: '2026-08-18T01:44:00Z',
+  },
+  {
+    /* Left the Asociación. The account is closed, never deleted: the payments
+       she approved and the entries she signed still point at her
+       (CLAUDE.md §6). */
+    id: 'staff_09',
+    firstName: 'Hugo',
+    lastName: 'Delgado',
+    email: 'hugo.delgado@onlyonecoin.edu.pe',
+    role: 'coordinator',
+    status: 'inactive',
+    teacherId: null,
+    mfaEnrolled: true,
+    joinedAt: '2023-08-21',
+    lastAccessAt: '2026-04-30T16:20:00Z',
+  },
+]
+
+/**
+ * The cargo ledger. In the database this is `audit_log` — append-only, no grant
+ * of UPDATE or DELETE, not even for admin (CLAUDE.md §8) — so the panel reads
+ * it and never edits it. The alta of an account is a line too: `fromRole` null
+ * is "there was no cargo before this one".
+ */
+const staffRoleChanges: StaffRoleChange[] = [
+  {
+    id: 'rol_06',
+    at: '2026-07-28T14:05:00Z',
+    memberId: 'staff_05',
+    memberName: 'Iván Cárdenas',
+    fromRole: null,
+    toRole: 'mass_approver',
+    actorName: 'Lucía Ramírez',
+    actorRole: 'admin',
+  },
+  {
+    id: 'rol_05',
+    at: '2026-05-04T17:30:00Z',
+    memberId: 'staff_03',
+    memberName: 'Miriam Quispe',
+    fromRole: 'treasury',
+    toRole: 'coordinator',
+    actorName: 'Lucía Ramírez',
+    actorRole: 'admin',
+  },
+  {
+    id: 'rol_04',
+    at: '2026-03-11T15:10:00Z',
+    memberId: 'staff_08',
+    memberName: 'Rosa Ccahuana',
+    fromRole: null,
+    toRole: 'teacher',
+    actorName: 'Renzo Ballón',
+    actorRole: 'admin',
+  },
+  {
+    id: 'rol_03',
+    at: '2026-02-24T13:00:00Z',
+    memberId: 'staff_04',
+    memberName: 'Elena Vargas',
+    fromRole: null,
+    toRole: 'treasury',
+    actorName: 'Lucía Ramírez',
+    actorRole: 'admin',
+  },
+  {
+    id: 'rol_02',
+    at: '2025-01-13T16:45:00Z',
+    memberId: 'staff_02',
+    memberName: 'Renzo Ballón',
+    fromRole: 'coordinator',
+    toRole: 'admin',
+    actorName: 'Lucía Ramírez',
+    actorRole: 'admin',
+  },
+  {
+    id: 'rol_01',
+    at: '2024-06-10T14:20:00Z',
+    memberId: 'staff_03',
+    memberName: 'Miriam Quispe',
+    fromRole: null,
+    toRole: 'treasury',
+    actorName: 'Lucía Ramírez',
+    actorRole: 'admin',
+  },
+]
+
+/** The team directory, ordered the way a roster is read: by surname. */
+export function listStaff(): StaffMemberRow[] {
+  return [...staffMembers].sort(
+    (a, b) =>
+      a.lastName.localeCompare(b.lastName) || a.firstName.localeCompare(b.firstName),
+  )
+}
+
+/** The cargo ledger, newest first — it is read as "what changed lately". */
+export function listStaffRoleChanges(): StaffRoleChange[] {
+  return [...staffRoleChanges].sort((a, b) => b.at.localeCompare(a.at))
 }
 
 /* -------------------------------------------------------------------------- */

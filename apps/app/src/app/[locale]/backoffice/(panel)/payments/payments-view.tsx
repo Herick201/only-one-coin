@@ -25,6 +25,7 @@ import {
 } from '@/components/backoffice/ui'
 import { paymentTone } from '@/components/backoffice/status-tone'
 import { BoIcon } from '@/components/backoffice/icons'
+import { FiltersDropdown } from '@/components/backoffice/filters-dropdown'
 import { PaymentDetailDialog } from './payment-detail-dialog'
 import { AutoGrid } from '@/components/layout/auto-grid'
 
@@ -82,7 +83,6 @@ export function PaymentsView({
   const [status, setStatus] = useState<StatusFilter>('all')
   const [method, setMethod] = useState<MethodFilter>('all')
   const [concept, setConcept] = useState<ConceptFilter>('all')
-  const [filtersOpen, setFiltersOpen] = useState(false)
   const [sort, setSort] = useState<'newest' | 'oldest'>('newest')
   const [page, setPage] = useState(0)
 
@@ -197,37 +197,11 @@ export function PaymentsView({
 
           {/* Three axes of chips would be taller than the table itself, so
               they live behind the button — same as the alumnos list. */}
-          <button
-            type="button"
-            onClick={() => setFiltersOpen(!filtersOpen)}
-            aria-expanded={filtersOpen}
-            className={`inline-flex items-center gap-1.5 self-start rounded-lg border px-3 py-2 text-sm font-semibold transition ${
-              activeFilters > 0 || filtersOpen
-                ? 'border-brand-blue bg-sky text-brand-blue'
-                : 'border-line bg-white text-muted-foreground hover:text-ink'
-            }`}
+          <FiltersDropdown
+            label={t('payments.filters')}
+            count={activeFilters}
+            panelClassName="flex-col gap-3"
           >
-            <BoIcon name="filter" size={16} />
-            {t('payments.filters')}
-            {activeFilters > 0 && (
-              <span className="rounded-full bg-brand-blue px-1.5 text-xs text-white">
-                {activeFilters}
-              </span>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setSort(sort === 'newest' ? 'oldest' : 'newest')}
-            className="inline-flex items-center gap-1.5 self-start rounded-lg border border-line bg-white px-3 py-2 text-sm font-semibold text-muted-foreground transition hover:text-ink"
-          >
-            <BoIcon name="sort" size={16} />
-            {t(sort === 'newest' ? 'payments.sort_newest' : 'payments.sort_oldest')}
-          </button>
-        </Toolbar>
-
-        {filtersOpen && (
-          <Card className="flex flex-col gap-3 p-3">
             <FilterRow label={t('payments.filter_status')}>
               {STATUS_FILTERS.map((value) => (
                 <Chip
@@ -273,8 +247,18 @@ export function PaymentsView({
                 />
               ))}
             </FilterRow>
-          </Card>
-        )}
+          </FiltersDropdown>
+
+          <button
+            type="button"
+            onClick={() => setSort(sort === 'newest' ? 'oldest' : 'newest')}
+            className="inline-flex items-center gap-1.5 self-start rounded-lg border border-line bg-white px-3 py-2 text-sm font-semibold text-muted-foreground transition hover:text-ink"
+          >
+            <BoIcon name="sort" size={16} />
+            {t(sort === 'newest' ? 'payments.sort_newest' : 'payments.sort_oldest')}
+          </button>
+        </Toolbar>
+
       </div>
 
       {/* min-w-0: the row is wide enough to push a flex child past the page,

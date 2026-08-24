@@ -56,6 +56,80 @@ export interface StaffUser {
 }
 
 /**
+ * Whether the account still opens the panel. Never a delete: whoever approved a
+ * payment or signed a grade stays pointed at by those rows (CLAUDE.md §6), so
+ * somebody who leaves loses the door, not the record.
+ */
+export type StaffStatus = 'active' | 'inactive'
+
+/**
+ * One row of the team directory — an account that opens the backoffice, and the
+ * cargo it opens it with.
+ *
+ * The `role` is shown here and changed from here, but it is never a field on a
+ * form that writes the user: the only way it moves is the dedicated promotion
+ * usecase, admin-only and behind fresh re-authentication (CLAUDE.md §8). The
+ * screen is where the decision is taken, `apps/api` is where it is allowed.
+ */
+export interface StaffMemberRow {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+  role: StaffRole
+  status: StaffStatus
+  /**
+   * The teacher record behind the account, when the cargo is `teacher` — the
+   * same link `StaffUser` carries, and what scopes the panel to their own class
+   * groups. An account is given to somebody already on the roster: the person
+   * is registered in Docentes first, exactly like a manual enrollment only acts
+   * on a student who already exists (CLAUDE.md §1).
+   */
+  teacherId: string | null
+  /**
+   * Whether the second factor is already set up on the account. Required for
+   * `admin`, `treasury` and `mass_approver` (CLAUDE.md §8) — which makes a
+   * pending one on those cargos a finding, not a preference somebody skipped.
+   * Enrolling it is the account owner's own action; nobody enrolls it for them.
+   */
+  mfaEnrolled: boolean
+  /** ISO date the account was opened. */
+  joinedAt: string
+  /** Last sign-in to the panel; null while the account has never been used. */
+  lastAccessAt: string | null
+}
+
+/**
+ * What the creation form fills in. No password: the account is opened here and
+ * the credentials leave by e-mail, the same way a student's do (CLAUDE.md §8) —
+ * a panel that shows somebody else's password is a panel that has it.
+ */
+export type NewStaffMember = Pick<
+  StaffMemberRow,
+  'firstName' | 'lastName' | 'email' | 'role' | 'teacherId'
+>
+
+/**
+ * One line of the cargo ledger: every change of `role`, and the alta that gave
+ * the account its first one. Append-only in the database — no grant of UPDATE
+ * or DELETE, not even for admin (CLAUDE.md §8) — so this is read, never edited.
+ *
+ * `fromRole` is null on the alta: there was no cargo before it.
+ */
+export interface StaffRoleChange {
+  id: string
+  at: string
+  /** Whose cargo moved. */
+  memberId: string
+  memberName: string
+  fromRole: StaffRole | null
+  toRole: StaffRole
+  /** Who signed it off — always an admin, by the rule that allows it at all. */
+  actorName: string
+  actorRole: StaffRole
+}
+
+/**
  * Derived, not a stored column: `active` = has at least one active enrollment,
  * `under_review` = has an enrollment/payment waiting on review, `inactive` =
  * neither. Kept as a UI concept until the rule is confirmed.

@@ -19,6 +19,7 @@ import {
 import { Toast } from '@/components/backoffice/controls'
 import { studentTone } from '@/components/backoffice/status-tone'
 import { BoIcon } from '@/components/backoffice/icons'
+import { FiltersDropdown } from '@/components/backoffice/filters-dropdown'
 import { NewStudentForm } from './new-student-form'
 
 type StatusFilter = StudentStatus | 'all'
@@ -65,7 +66,6 @@ export function StudentsTable({
    * across every status at once.
    */
   const [minorsOnly, setMinorsOnly] = useState(false)
-  const [filtersOpen, setFiltersOpen] = useState(false)
   const [page, setPage] = useState(0)
 
   const filtered = useMemo(() => {
@@ -163,43 +163,11 @@ export function StudentsTable({
             />
           </label>
 
-          <button
-            type="button"
-            onClick={() => setFiltersOpen(!filtersOpen)}
-            aria-expanded={filtersOpen}
-            className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold transition ${
-              activeFilters > 0 || filtersOpen
-                ? 'border-brand-blue bg-sky text-brand-blue'
-                : 'border-line bg-white text-muted-foreground hover:text-ink'
-            }`}
+          <FiltersDropdown
+            label={t('students.filters')}
+            count={activeFilters}
+            panelClassName="flex-wrap items-center gap-1.5"
           >
-            <BoIcon name="filter" size={16} />
-            {t('students.filters')}
-            {activeFilters > 0 && (
-              <span className="rounded-full bg-brand-blue px-1.5 text-xs text-white">
-                {activeFilters}
-              </span>
-            )}
-          </button>
-
-          {/* The exception path, not the way in: most students arrive by
-              filling `/enrollment` themselves (CLAUDE.md §1). Hidden from
-              whoever may not use it — the enforcing check is the role on the
-              route in `apps/api` (CLAUDE.md §8). */}
-          {canCreate && !creating && (
-            <button
-              type="button"
-              onClick={() => setCreating(true)}
-              className="ml-auto inline-flex items-center gap-1.5 self-start rounded-lg bg-brand-blue px-3 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-deep"
-            >
-              <BoIcon name="plus" size={16} />
-              {t('students.new_student')}
-            </button>
-          )}
-        </Toolbar>
-
-        {filtersOpen && (
-          <Card className="flex flex-wrap items-center gap-1.5 p-3">
             {STATUS_FILTERS.map((value) => {
               const active = status === value
               return (
@@ -239,8 +207,24 @@ export function StudentsTable({
                 {minorCount}
               </span>
             </button>
-          </Card>
-        )}
+          </FiltersDropdown>
+
+          {/* The exception path, not the way in: most students arrive by
+              filling `/enrollment` themselves (CLAUDE.md §1). Hidden from
+              whoever may not use it — the enforcing check is the role on the
+              route in `apps/api` (CLAUDE.md §8). */}
+          {canCreate && !creating && (
+            <button
+              type="button"
+              onClick={() => setCreating(true)}
+              className="ml-auto inline-flex items-center gap-1.5 self-start rounded-lg bg-brand-blue px-3 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-deep"
+            >
+              <BoIcon name="plus" size={16} />
+              {t('students.new_student')}
+            </button>
+          )}
+        </Toolbar>
+
       </div>
 
       {creating && (

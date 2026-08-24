@@ -52,9 +52,6 @@ export async function TeacherHome({
         <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
           {t('dashboard.greeting', { name: staff.firstName })}
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t('teacher_home.subtitle')}
-        </p>
       </header>
 
       <MockNotice label={t('common.mock_notice')} />

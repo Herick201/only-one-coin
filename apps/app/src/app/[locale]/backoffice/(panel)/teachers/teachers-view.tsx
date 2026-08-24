@@ -18,6 +18,8 @@ import {
 } from '@/components/backoffice/ui'
 import { ContractBadge } from '@/components/backoffice/contract-badge'
 import { BoIcon } from '@/components/backoffice/icons'
+import { tabClass, tabStripClass } from '@/components/backoffice/tab-strip'
+import { FiltersDropdown } from '@/components/backoffice/filters-dropdown'
 import { NewTeacherForm } from './new-teacher-form'
 
 /**
@@ -74,7 +76,6 @@ export function TeachersView({
    * cases, and three chips for one errand is three chips nobody clicks.
    */
   const [contractOnly, setContractOnly] = useState(false)
-  const [filtersOpen, setFiltersOpen] = useState(false)
   const [page, setPage] = useState(0)
   const [creating, setCreating] = useState(false)
 
@@ -175,7 +176,7 @@ export function TeachersView({
     <div className="flex flex-col gap-4">
       {/* Not `SectionTabs`: those are real routes, and these two are one list
           cut two ways — the same page, the same filters, no URL to bookmark. */}
-      <nav className="-mt-2 flex items-center gap-1 border-b border-line">
+      <nav className={tabStripClass}>
         {(['roster', 'inactive'] as Tab[]).map((value) => {
           const active = tab === value
           return (
@@ -184,11 +185,7 @@ export function TeachersView({
               type="button"
               onClick={() => openTab(value)}
               aria-current={active ? 'page' : undefined}
-              className={`-mb-px flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-semibold transition ${
-                active
-                  ? 'border-brand-blue text-brand-blue'
-                  : 'border-transparent text-muted-foreground hover:border-line hover:text-ink'
-              }`}
+              className={tabClass(active)}
             >
               {t(value === 'roster' ? 'teachers.tab_roster' : 'teachers.tab_inactive')}
               <span className={active ? 'text-brand-blue/60' : 'text-slate-400'}>
@@ -221,39 +218,11 @@ export function TeachersView({
             />
           </label>
 
-          <button
-            type="button"
-            onClick={() => setFiltersOpen(!filtersOpen)}
-            aria-expanded={filtersOpen}
-            className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold transition ${
-              activeFilters > 0 || filtersOpen
-                ? 'border-brand-blue bg-sky text-brand-blue'
-                : 'border-line bg-white text-muted-foreground hover:text-ink'
-            }`}
+          <FiltersDropdown
+            label={t('teachers.filters')}
+            count={activeFilters}
+            panelClassName="flex-wrap items-center gap-1.5"
           >
-            <BoIcon name="filter" size={16} />
-            {t('teachers.filters')}
-            {activeFilters > 0 && (
-              <span className="rounded-full bg-brand-blue px-1.5 text-xs text-white">
-                {activeFilters}
-              </span>
-            )}
-          </button>
-
-          {canCreate && !creating && (
-            <button
-              type="button"
-              onClick={() => setCreating(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-deep lg:ml-auto"
-            >
-              <BoIcon name="plus" size={16} />
-              {t('teachers.new')}
-            </button>
-          )}
-        </Toolbar>
-
-        {filtersOpen && (
-          <Card className="flex flex-wrap items-center gap-1.5 p-3">
             {onRoster && (
             <button
               type="button"
@@ -316,8 +285,20 @@ export function TeachersView({
                 ))}
               </select>
             </label>
-          </Card>
-        )}
+          </FiltersDropdown>
+
+          {canCreate && !creating && (
+            <button
+              type="button"
+              onClick={() => setCreating(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-deep lg:ml-auto"
+            >
+              <BoIcon name="plus" size={16} />
+              {t('teachers.new')}
+            </button>
+          )}
+        </Toolbar>
+
       </div>
 
       {creating && (
@@ -359,16 +340,10 @@ export function TeachersView({
                   <th className={`${thClass} text-right`}>
                     {t('teachers.col_class_groups')}
                   </th>
-                  {/* Head-count and contract are questions about somebody who
-                      is still teaching; off the roster every row answers them
-                      the same way, and a column of zeros is a column of noise.
-                      "Pendiente" stays: whoever left still owing grades or
+                  {/* The contract is a question about somebody who is still
+                      teaching; off the roster every row answers it the same
+                      way. "Pendiente" stays: whoever left still owing grades or
                       certificates is exactly who must not go quiet. */}
-                  {onRoster && (
-                    <th className={`${thClass} text-right`}>
-                      {t('teachers.col_students')}
-                    </th>
-                  )}
                   <th className={thClass}>{t('teachers.col_pending')}</th>
                   {onRoster && (
                     <th className={thClass}>{t('teachers.col_contract')}</th>
@@ -417,13 +392,6 @@ export function TeachersView({
                         </span>
                       )}
                     </td>
-                    {onRoster && (
-                      <td
-                        className={`${tdClass} text-right text-sm tabular-nums text-muted-foreground`}
-                      >
-                        {row.studentCount}
-                      </td>
-                    )}
                     <td className={`${tdClass} whitespace-nowrap text-xs`}>
                       <span className="flex flex-col leading-tight">
                         {row.pendingGrades > 0 && (

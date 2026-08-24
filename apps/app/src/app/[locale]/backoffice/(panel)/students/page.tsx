@@ -28,7 +28,7 @@ export default async function StudentsPage({
   if (!canBrowseStudents(staff.role)) {
     return (
       <div className="flex flex-col gap-5">
-        <PageHeader title={t('students.title')} subtitle={t('students.subtitle')} />
+        <PageHeader title={t('students.title')} />
         <EmptyState
           icon="shield"
           title={t('students.locked_title')}
@@ -40,7 +40,7 @@ export default async function StudentsPage({
 
   return (
     <div className="flex flex-col gap-5">
-      <PageHeader title={t('students.title')} subtitle={t('students.subtitle')} />
+      <PageHeader title={t('students.title')} />
       <MockNotice label={t('common.mock_notice')} />
       <StudentsTable
         rows={listStudents()}

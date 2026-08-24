@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
+import { useMemo, useState, type MouseEvent } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { Link, useRouter } from '@/i18n/navigation'
 import type { EmailFlow, EmailMetrics } from '@/lib/backoffice/types'
 import { formatNumber, formatPercent, type Locale } from '@/lib/format'
 import { AutoGrid } from '@/components/layout/auto-grid'
+import { FiltersDropdown } from '@/components/backoffice/filters-dropdown'
 import {
   Card,
   EmptyState,
@@ -58,28 +59,6 @@ export function EmailsView({
   const [query, setQuery] = useState('')
   const [audience, setAudience] = useState<AudienceFilter>('all')
   const [pausedOnly, setPausedOnly] = useState(false)
-  const [filtersOpen, setFiltersOpen] = useState(false)
-  const filterRef = useRef<HTMLDivElement>(null)
-
-  /* A dropdown that only closes on its own button is a dropdown that follows
-     you around the page. Outside click and Escape close it, like every menu
-     anybody has ever used. */
-  useEffect(() => {
-    if (!filtersOpen) return
-    function onPointerDown(event: PointerEvent) {
-      if (!filterRef.current?.contains(event.target as Node)) setFiltersOpen(false)
-    }
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') setFiltersOpen(false)
-    }
-    document.addEventListener('pointerdown', onPointerDown)
-    document.addEventListener('keydown', onKeyDown)
-    return () => {
-      document.removeEventListener('pointerdown', onPointerDown)
-      document.removeEventListener('keydown', onKeyDown)
-    }
-  }, [filtersOpen])
-
   /* Names and triggers are translated, so the search runs over what the reader
      actually sees — searching the template codes would find nothing they typed. */
   const filtered = useMemo(() => {
@@ -194,35 +173,12 @@ export function EmailsView({
             />
           </label>
 
-          <div className="relative" ref={filterRef}>
-            <button
-              type="button"
-              onClick={() => setFiltersOpen(!filtersOpen)}
-              aria-expanded={filtersOpen}
-              className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold transition ${
-                activeFilters > 0 || filtersOpen
-                  ? 'border-brand-yellow bg-cream text-ink'
-                  : 'border-line bg-white text-muted-foreground hover:border-brand-yellow hover:bg-cream hover:text-ink'
-              }`}
-            >
-              <BoIcon name="filter" size={16} />
-              {t('emails.filters')}
-              {activeFilters > 0 && (
-                <span className="rounded-full bg-brand-yellow-deep px-1.5 text-xs text-ink">
-                  {activeFilters}
-                </span>
-              )}
-              <BoIcon
-                name="chevron-down"
-                size={14}
-                className={filtersOpen ? 'rotate-180 transition' : 'transition'}
-              />
-            </button>
-
-            {/* Anchored to the button it belongs to, rather than pushing the
-                table down every time somebody opens it. */}
-            {filtersOpen && (
-              <div className="absolute right-0 top-12 z-20 flex w-60 flex-col gap-0.5 rounded-xl border border-line bg-white p-1.5 shadow-float">
+          <FiltersDropdown
+            label={t('emails.filters')}
+            count={activeFilters}
+            panelClassName="w-60 flex-col gap-0.5 p-1.5"
+          >
+            <>
                 {AUDIENCE_FILTERS.map((value) => {
                   const on = audience === value
                   return (
@@ -266,9 +222,8 @@ export function EmailsView({
                   </span>
                   <span className="text-xs text-slate-400">{pausedCount}</span>
                 </button>
-              </div>
-            )}
-          </div>
+            </>
+          </FiltersDropdown>
         </Toolbar>
       </div>
 

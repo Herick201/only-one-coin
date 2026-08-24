@@ -145,6 +145,18 @@ export function canCreateEnrollment(role: StaffRole): boolean {
 }
 
 /**
+ * Who opens the team directory — the panel's own accounts, their cargos and
+ * their second factor. Admin only, and for the reason the section exists at
+ * all: it is the surface where a cargo changes, and the anti-escalation rule
+ * gives that to `admin` alone (CLAUDE.md §8). Coordination runs the academic
+ * side and never promotes anybody, so it is not shown a roster whose only
+ * actions it may not take.
+ */
+export function canManageStaff(role: StaffRole): boolean {
+  return role === 'admin'
+}
+
+/**
  * Who opens the e-mail module. Administration and coordination: the catalog
  * decides what every student receives at the moment their enrollment moves, so
  * it belongs to the two roles that answer for the funnel. Tesorería settles
@@ -173,9 +185,10 @@ export function canConfigureSettings(role: StaffRole): boolean {
 /**
  * Whose second factor is not optional (CLAUDE.md §8). These three roles move
  * money, approve in bulk or hand out roles, so the panel never offers them a
- * switch to turn it off — the screen says the factor is part of the job. The
- * enforcing check is the session policy in `apps/api`; this only decides
- * whether a control is drawn.
+ * switch to turn it off, and an account on one of them with no factor enrolled
+ * is a finding the team directory has to show — it is one password away from
+ * the whole panel. The enforcing check is the session policy in `apps/api`;
+ * this only decides whether a control is drawn.
  */
 export function isMfaMandatory(role: StaffRole): boolean {
   return role === 'admin' || role === 'treasury' || role === 'mass_approver'
