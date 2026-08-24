@@ -78,7 +78,6 @@ export function EmailFlowDetail({
     <div className="flex flex-col gap-5">
       <PageHeader
         title={t(`email_template.${flow.template}`)}
-        subtitle={t(`email_trigger.${flow.template}`)}
         actions={
           <span className="flex flex-wrap items-center gap-2">
             <StatusBadge
@@ -93,6 +92,18 @@ export function EmailFlowDetail({
           </span>
         }
       />
+
+      {/* The one question anybody opens this page with, asked out loud and
+          answered — rather than a sentence under the title that reads as a
+          caption nobody knows what to do with. */}
+      <div className="-mt-2">
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          {t('emails.when_label')}
+        </p>
+        <p className="mt-0.5 text-sm text-ink">
+          {t(`email_trigger.${flow.template}`)}
+        </p>
+      </div>
 
       <div className="grid gap-5 @4xl/page:grid-cols-3">
         {/* The message */}
@@ -125,11 +136,6 @@ export function EmailFlowDetail({
           <p className="flex items-start gap-2 text-xs text-muted-foreground">
             <BoIcon name="alert" size={14} className="mt-0.5 shrink-0" />
             {t('emails.preview_note')}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {`${t('emails.version', { version: flow.version })} · ${t('emails.updated', {
-              date: formatDate(flow.updatedAt, locale),
-            })}`}
           </p>
         </section>
 

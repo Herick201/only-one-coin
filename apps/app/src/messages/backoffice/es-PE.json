@@ -676,6 +676,7 @@
     },
     "emails": {
       "title": "Correos",
+      "when_label": "¿Cuándo se envía?",
       "locked_title": "Esta sección es de administración y coordinación",
       "locked_body": "Los correos automáticos deciden qué recibe cada alumno cuando su matrícula avanza. Tu cargo no los gestiona.",
       "stat_sent": "Enviados",
@@ -696,7 +697,6 @@
       "col_delivered": "Entregados",
       "state_on": "Activo",
       "state_off": "Pausado",
-      "version": "Versión {version}",
       "empty_title": "Ningún correo coincide",
       "empty_body": "Prueba con otro texto o quita el filtro de pausados.",
       "open": "Ver la plantilla",
@@ -729,7 +729,6 @@
       "test_error_invalid": "Esto no parece un correo.",
       "test_toast": "{count, plural, one {Prueba enviada a una dirección} other {Prueba enviada a # direcciones}}",
       "preview_to": "Para",
-      "updated": "Actualizada el {date}",
       "tab_catalog": "Automáticos",
       "tab_journey": "Jornada",
       "new": "Nuevo envío",

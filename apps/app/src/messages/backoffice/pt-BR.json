@@ -676,6 +676,7 @@
     },
     "emails": {
       "title": "E-mails",
+      "when_label": "Quando se envia?",
       "locked_title": "Esta seção é da administração e da coordenação",
       "locked_body": "Os e-mails automáticos decidem o que cada aluno recebe quando a matrícula avança. Seu cargo não os gerencia.",
       "stat_sent": "Enviados",
@@ -696,7 +697,6 @@
       "col_delivered": "Entregues",
       "state_on": "Ativo",
       "state_off": "Pausado",
-      "version": "Versão {version}",
       "empty_title": "Nenhum e-mail corresponde",
       "empty_body": "Tente outro texto ou tire o filtro de pausados.",
       "open": "Ver o modelo",
@@ -729,7 +729,6 @@
       "test_error_invalid": "Isto não parece um e-mail.",
       "test_toast": "{count, plural, one {Teste enviado para um endereço} other {Teste enviado para # endereços}}",
       "preview_to": "Para",
-      "updated": "Atualizado em {date}",
       "tab_catalog": "Automáticos",
       "tab_journey": "Jornada",
       "new": "Novo envio",

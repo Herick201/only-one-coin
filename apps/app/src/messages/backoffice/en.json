@@ -676,6 +676,7 @@
     },
     "emails": {
       "title": "Emails",
+      "when_label": "When is it sent?",
       "locked_title": "This section belongs to administration and coordination",
       "locked_body": "The automatic e-mails decide what every student receives as their enrollment moves. Your role does not manage them.",
       "stat_sent": "Sent",
@@ -696,7 +697,6 @@
       "col_delivered": "Delivered",
       "state_on": "On",
       "state_off": "Paused",
-      "version": "Version {version}",
       "empty_title": "No e-mail matches",
       "empty_body": "Try other words, or drop the paused filter.",
       "open": "See the template",
@@ -729,7 +729,6 @@
       "test_error_invalid": "This does not look like an address.",
       "test_toast": "{count, plural, one {Test sent to one address} other {Test sent to # addresses}}",
       "preview_to": "To",
-      "updated": "Updated on {date}",
       "tab_catalog": "Automatic",
       "tab_journey": "Journey",
       "new": "New send",
