@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, type MouseEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { Link, useRouter } from '@/i18n/navigation'
 import type { EmailFlow, EmailMetrics } from '@/lib/backoffice/types'
@@ -59,6 +59,26 @@ export function EmailsView({
   const [audience, setAudience] = useState<AudienceFilter>('all')
   const [pausedOnly, setPausedOnly] = useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const filterRef = useRef<HTMLDivElement>(null)
+
+  /* A dropdown that only closes on its own button is a dropdown that follows
+     you around the page. Outside click and Escape close it, like every menu
+     anybody has ever used. */
+  useEffect(() => {
+    if (!filtersOpen) return
+    function onPointerDown(event: PointerEvent) {
+      if (!filterRef.current?.contains(event.target as Node)) setFiltersOpen(false)
+    }
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') setFiltersOpen(false)
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [filtersOpen])
 
   /* Names and triggers are translated, so the search runs over what the reader
      actually sees — searching the template codes would find nothing they typed. */
@@ -174,69 +194,82 @@ export function EmailsView({
             />
           </label>
 
-          <button
-            type="button"
-            onClick={() => setFiltersOpen(!filtersOpen)}
-            aria-expanded={filtersOpen}
-            className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold transition ${
-              activeFilters > 0 || filtersOpen
-                ? 'border-brand-blue bg-sky text-brand-blue'
-                : 'border-line bg-white text-muted-foreground hover:border-brand-yellow hover:bg-cream hover:text-ink'
-            }`}
-          >
-            <BoIcon name="filter" size={16} />
-            {t('emails.filters')}
-            {activeFilters > 0 && (
-              <span className="rounded-full bg-brand-blue px-1.5 text-xs text-white">
-                {activeFilters}
-              </span>
-            )}
-          </button>
-        </Toolbar>
-
-        {filtersOpen && (
-          <Card className="flex flex-wrap items-center gap-1.5 p-3">
-            {AUDIENCE_FILTERS.map((value) => {
-              const on = audience === value
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setAudience(value)}
-                  aria-pressed={on}
-                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                    on
-                      ? 'bg-brand-blue text-white'
-                      : 'border border-line bg-white text-muted-foreground hover:bg-cream hover:text-ink'
-                  }`}
-                >
-                  {t(`emails.filter_${value}`)}
-                  <span className={on ? 'text-white/70' : 'text-slate-400'}>
-                    {audienceCounts[value]}
-                  </span>
-                </button>
-              )
-            })}
-
-            <span aria-hidden="true" className="mx-1 h-5 w-px bg-line" />
-
+          <div className="relative" ref={filterRef}>
             <button
               type="button"
-              onClick={() => setPausedOnly(!pausedOnly)}
-              aria-pressed={pausedOnly}
-              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                pausedOnly
-                  ? 'bg-brand-blue text-white'
-                  : 'border border-line bg-white text-muted-foreground hover:bg-cream hover:text-ink'
+              onClick={() => setFiltersOpen(!filtersOpen)}
+              aria-expanded={filtersOpen}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold transition ${
+                activeFilters > 0 || filtersOpen
+                  ? 'border-brand-yellow bg-cream text-ink'
+                  : 'border-line bg-white text-muted-foreground hover:border-brand-yellow hover:bg-cream hover:text-ink'
               }`}
             >
-              {t('emails.filter_paused')}
-              <span className={pausedOnly ? 'text-white/70' : 'text-slate-400'}>
-                {pausedCount}
-              </span>
+              <BoIcon name="filter" size={16} />
+              {t('emails.filters')}
+              {activeFilters > 0 && (
+                <span className="rounded-full bg-brand-yellow-deep px-1.5 text-xs text-ink">
+                  {activeFilters}
+                </span>
+              )}
+              <BoIcon
+                name="chevron-down"
+                size={14}
+                className={filtersOpen ? 'rotate-180 transition' : 'transition'}
+              />
             </button>
-          </Card>
-        )}
+
+            {/* Anchored to the button it belongs to, rather than pushing the
+                table down every time somebody opens it. */}
+            {filtersOpen && (
+              <div className="absolute right-0 top-12 z-20 flex w-60 flex-col gap-0.5 rounded-xl border border-line bg-white p-1.5 shadow-float">
+                {AUDIENCE_FILTERS.map((value) => {
+                  const on = audience === value
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setAudience(value)}
+                      aria-pressed={on}
+                      className={`flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm transition ${
+                        on
+                          ? 'bg-cream font-semibold text-ink'
+                          : 'text-muted-foreground hover:bg-cream hover:text-ink'
+                      }`}
+                    >
+                      <span className="flex items-center gap-1.5">
+                        {on && <BoIcon name="check" size={14} />}
+                        {t(`emails.filter_${value}`)}
+                      </span>
+                      <span className="text-xs text-slate-400">
+                        {audienceCounts[value]}
+                      </span>
+                    </button>
+                  )
+                })}
+
+                <span aria-hidden="true" className="my-1 h-px bg-line" />
+
+                <button
+                  type="button"
+                  onClick={() => setPausedOnly(!pausedOnly)}
+                  aria-pressed={pausedOnly}
+                  className={`flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm transition ${
+                    pausedOnly
+                      ? 'bg-cream font-semibold text-ink'
+                      : 'text-muted-foreground hover:bg-cream hover:text-ink'
+                  }`}
+                >
+                  <span className="flex items-center gap-1.5">
+                    {pausedOnly && <BoIcon name="check" size={14} />}
+                    {t('emails.filter_paused')}
+                  </span>
+                  <span className="text-xs text-slate-400">{pausedCount}</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </Toolbar>
       </div>
 
       <Card>

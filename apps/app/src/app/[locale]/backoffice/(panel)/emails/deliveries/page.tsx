@@ -103,12 +103,12 @@ export default async function EmailDeliveriesPage({
           className={`inline-flex cursor-pointer list-none items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold transition [&::-webkit-details-marker]:hidden ${
             stateFilter === null
               ? 'border-line bg-white text-muted-foreground hover:border-brand-yellow hover:bg-cream hover:text-ink'
-              : 'border-brand-blue bg-sky text-brand-blue'
+              : 'border-brand-yellow bg-cream text-ink'
           }`}
         >
           <BoIcon name="filter" size={16} />
           {active.label}
-          <span className={stateFilter === null ? 'text-slate-400' : 'text-brand-blue/60'}>
+          <span className="text-slate-400">
             {active.count}
           </span>
           <BoIcon name="chevron-down" size={14} />
@@ -121,7 +121,7 @@ export default async function EmailDeliveriesPage({
               aria-current={filter.active ? 'page' : undefined}
               className={`flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm transition ${
                 filter.active
-                  ? 'bg-sky-soft font-semibold text-ink'
+                  ? 'bg-cream font-semibold text-ink'
                   : 'text-muted-foreground hover:bg-cream hover:text-ink'
               }`}
             >
