@@ -230,15 +230,16 @@ export function EmailsView({
                         )}
                       </span>
                     </td>
-                    <td className={`${tdClass} whitespace-nowrap`}>
-                      <span className="flex flex-col leading-tight">
-                        <span className="text-sm text-ink">
-                          {t('emails.version', { version: flow.version })}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {formatDate(flow.updatedAt, locale)}
-                        </span>
+                    {/* Version and date on one line: two stacked lines here
+                        made every row two lines tall for a fact nobody reads
+                        twice a month. */}
+                    <td
+                      className={`${tdClass} whitespace-nowrap text-xs text-muted-foreground`}
+                    >
+                      <span className="text-ink">
+                        {t('emails.version', { version: flow.version })}
                       </span>
+                      {` · ${formatDate(flow.updatedAt, locale)}`}
                     </td>
                     <td className={`${tdClass} text-right`}>
                       <Link

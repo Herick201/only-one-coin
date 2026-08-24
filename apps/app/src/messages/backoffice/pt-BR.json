@@ -572,16 +572,16 @@
       "certificate_issued": "Certificado de conclusão"
     },
     "email_trigger": {
-      "enrollment_submitted": "Assim que o aluno envia o formulário de matrícula.",
-      "payment_under_review": "Quando o comprovante fica esperando uma pessoa.",
-      "payment_approved": "Quando o pagamento é aprovado e a vaga é confirmada.",
+      "enrollment_submitted": "Ao enviar o formulário de matrícula.",
+      "payment_under_review": "Quando o comprovante vai para revisão humana.",
+      "payment_approved": "Quando o pagamento é aprovado.",
       "payment_rejected": "Quando a revisão rejeita o comprovante.",
-      "credentials_issued": "Quando o acesso ao portal do aluno é criado.",
-      "guardian_consent_reminder": "Quando o aluno é menor de idade e falta o consentimento do apoderado.",
-      "seat_reservation_expiring": "Um dia antes de o sistema liberar a vaga reservada.",
-      "class_access_ready": "Três dias antes do início da turma, com o link de acesso.",
-      "enrollment_certificate_issued": "Quando a constancia solicitada é emitida.",
-      "certificate_issued": "Quando a coordenação emite o certificado da turma."
+      "credentials_issued": "Quando o acesso ao portal é criado.",
+      "guardian_consent_reminder": "Quando o aluno é menor e falta o consentimento.",
+      "seat_reservation_expiring": "Um dia antes de a vaga ser liberada.",
+      "class_access_ready": "Três dias antes do início da turma.",
+      "enrollment_certificate_issued": "Ao emitir a constancia solicitada.",
+      "certificate_issued": "Ao emitir o certificado da turma."
     },
     "email_audience": {
       "student": "Aluno",

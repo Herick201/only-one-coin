@@ -572,16 +572,16 @@
       "certificate_issued": "Completion certificate"
     },
     "email_trigger": {
-      "enrollment_submitted": "As soon as the student submits the enrollment form.",
-      "payment_under_review": "When the receipt ends up waiting on a person.",
-      "payment_approved": "When the payment is approved and the seat is confirmed.",
+      "enrollment_submitted": "When the enrollment form is submitted.",
+      "payment_under_review": "When the receipt goes to human review.",
+      "payment_approved": "When the payment is approved.",
       "payment_rejected": "When the review rejects the receipt.",
-      "credentials_issued": "When the student portal account is created.",
-      "guardian_consent_reminder": "When the student is a minor and the guardian has not consented yet.",
-      "seat_reservation_expiring": "One day before the system releases the reserved seat.",
-      "class_access_ready": "Three days before the class group starts, with the access link.",
-      "enrollment_certificate_issued": "When the requested enrollment certificate is issued.",
-      "certificate_issued": "When coordination issues the class group certificates."
+      "credentials_issued": "When the portal account is created.",
+      "guardian_consent_reminder": "When the student is a minor and consent is missing.",
+      "seat_reservation_expiring": "One day before the seat is released.",
+      "class_access_ready": "Three days before the class group starts.",
+      "enrollment_certificate_issued": "When the requested certificate is issued.",
+      "certificate_issued": "When the class group certificates are issued."
     },
     "email_audience": {
       "student": "Student",
