@@ -2809,6 +2809,7 @@ export function getPaymentSettings(): PaymentSettings {
     toleranceCents: 50,
     escalationConfidence: 0.75,
     reservationDays: 5,
+    checkoutHoldMinutes: 15,
   }
 }
 
@@ -3135,6 +3136,16 @@ function classGroupOf(enrollmentId: string): ClassGroupDetail | undefined {
  * (CLAUDE.md §5), while this one only ever counts people sitting in a class
  * group, which is what coordination closes the period against.
  */
+/**
+ * The tracking code the checkout shows the student on its confirmation screen.
+ * Derived here from the enrollment id so the mock is stable; the real one is
+ * issued by `apps/api` at submit and stored on the row.
+ */
+function enrollmentCode(id: string, createdAt: string): string {
+  const digits = id.replace(/\D/g, '').slice(-4).padStart(4, '0')
+  return `OOC-${createdAt.slice(0, 4)}-${digits}`
+}
+
 export function listEnrollments(): EnrollmentRow[] {
   const rows: EnrollmentRow[] = []
 
@@ -3144,6 +3155,7 @@ export function listEnrollments(): EnrollmentRow[] {
       const group = classGroupOf(item.id)
       rows.push({
         id: item.id,
+        code: enrollmentCode(item.id, item.createdAt),
         studentId: student.id,
         studentName,
         courseName: item.courseName,

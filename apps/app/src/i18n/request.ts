@@ -20,10 +20,11 @@ export default getRequestConfig(async ({ requestLocale }) => {
   // namespaces ficam desacoplados (base = login/backoffice login, `portal`, `bo`),
   // evitando colisão de edição entre frentes. O merge é raso de propósito: cada
   // arquivo é dono de namespaces próprios e nunca reabre os do outro.
-  const [base, portal, backoffice] = await Promise.all([
+  const [base, portal, backoffice, enrollment] = await Promise.all([
     import(`../messages/${file}.json`),
     import(`../messages/portal/${file}.json`),
     import(`../messages/backoffice/${file}.json`),
+    import(`../messages/enrollment/${file}.json`),
   ])
   return {
     locale,
@@ -31,6 +32,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
       ...base.default,
       ...portal.default,
       ...backoffice.default,
+      ...enrollment.default,
     },
   }
 })

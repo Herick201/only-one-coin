@@ -8,6 +8,7 @@ backoffice administrativo e módulo de e-mail.
 
 - [`CLAUDE.md`](CLAUDE.md) — contexto permanente: stack fechada, convenções, regras proibidas.
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — estrutura do monorepo, modelo de autorização (Caminho A vs. B), RBAC, custo mensal estimado e o shell/layout responsivo de `apps/app`.
+- [`docs/MATRICULA-CHECKOUT.md`](docs/MATRICULA-CHECKOUT.md) — o funil público de matrícula: wizard de 4 passos com dois modos de entrada (landing e link do vendedor), os dois relógios da vaga e a atribuição de canal.
 - [`docs/DOCUMENTOS-E-CERTIFICADOS.md`](docs/DOCUMENTOS-E-CERTIFICADOS.md) — emissão de constancia e certificado, lote por turma, e-mail pela outbox.
 - [`docs/INFRAESTRUTURA.md`](docs/INFRAESTRUTURA.md) — base de conhecimento: levantamento de mercado (preços, specs, latência) que baseou as escolhas de hospedagem.
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — plano de desenvolvimento em sessões pequenas (1 sessão = 1 PR).
@@ -42,9 +43,24 @@ Domínio e fila já existem, independentes dessa escolha:
   JSON-LD de `EducationalOrganization`, `Course` e `FAQPage`. `/blog` e `/comunidad`
   seguem `noindex` enquanto forem placeholder.
 - `apps/app` — Next.js App Router: layout, roteamento, i18n trilíngue e as telas
-  em **mockup** (sem acesso a dados). Portal do aluno (`/portal`) e backoffice
-  (`/backoffice` para login; painel em `/backoffice/home`). No backoffice já
-  existem: alunos (`/backoffice/students`, com ficha, histórico e edição),
+  em **mockup** (sem acesso a dados). Portal do aluno (`/portal`), backoffice
+  (`/backoffice` para login; painel em `/backoffice/home`) e a **matrícula
+  pública** (`/enrollment`). O checkout público é o wizard de 4 passos —
+  curso + data de início + horário (escolhas separadas, porque o mesmo curso
+  abre em várias datas), dados do aluno nos campos que a Asociación já coleta
+  hoje (nome completo num campo só, documento, celular, nascimento e Gmail
+  obrigatório) mais o bloco do apoderado com consentimento quando menor,
+  pagamento com comprovante obrigatório, e revisão/envio — com **dois
+  modos de entrada** na mesma tela: aberto da landing começa no passo 1, e
+  aberto pelo link do vendedor (`?course=&group=&src=whatsapp`) chega com o
+  passo 1 respondido e cai no passo 2. A vaga é presa no checkout com relógio
+  curto (15 min, parâmetro do backoffice) e o rascunho sobrevive a recarregar a
+  página — sair pra pagar no app do banco não perde o preenchimento. A origem
+  do canal (`whatsapp`/`web`) é resolvida no servidor, na chegada, e carregada
+  até o envio. Desenho e regras em `docs/MATRICULA-CHECKOUT.md`. **Ainda não há
+  CTA na landing apontando pra ele** — falta a variável de ambiente com a URL
+  do app.
+  No backoffice já existem: alunos (`/backoffice/students`, com ficha, histórico e edição),
   turmas (`/backoffice/class-groups`, com lista paginada, ficha da turma,
   emissão de certificados em lote e procedimentos por matrícula — mover,
   congelar, retirar), cursos (`/backoffice/courses`, catálogo com opções por
@@ -55,7 +71,8 @@ Domínio e fila já existem, independentes dessa escolha:
   ficha de decisão do comprovante — extração campo a campo com confiança,
   segunda leitura quando os modelos divergem, aprovar/recusar com motivo; e
   `/backoffice/payments/settings`, os parâmetros de validação — tolerância de
-  valor, confiança mínima e validade da reserva), matrículas
+  valor, confiança mínima e os dois relógios da vaga: os minutos de reserva
+  durante o pagamento e os dias de validade da reserva), matrículas
   (`/backoffice/enrollments`: livro de todas as matrículas — aluno, curso/turma,
   estado da matrícula, da vaga e do pagamento — com métricas do ciclo, busca,
   filtros por estado, vaga, idioma e ciclo, detalhe em modal e abertura manual de

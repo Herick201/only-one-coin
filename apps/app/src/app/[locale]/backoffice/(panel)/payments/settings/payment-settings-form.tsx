@@ -16,7 +16,8 @@ const fieldClass =
  * to be — a constant in the code means a redeploy every time the Asociación
  * changes what "close enough" means (CLAUDE.md §5). The other two are the
  * numbers the rules already fix: the confidence that escalates a field, and
- * the five days a seat stays reserved without an approved payment.
+ * the two clocks a seat runs on — the minutes the public checkout holds it
+ * while somebody pays, and the days it then waits for the payment to clear.
  *
  * Money is edited in soles and kept in integer cents; the input never holds a
  * float that later becomes a price (CLAUDE.md §5).
@@ -31,7 +32,8 @@ export function PaymentSettingsForm({ settings }: { settings: PaymentSettings })
   const dirty =
     draft.toleranceCents !== settings.toleranceCents ||
     draft.escalationConfidence !== settings.escalationConfidence ||
-    draft.reservationDays !== settings.reservationDays
+    draft.reservationDays !== settings.reservationDays ||
+    draft.checkoutHoldMinutes !== settings.checkoutHoldMinutes
 
   function set<K extends keyof PaymentSettings>(key: K, value: PaymentSettings[K]) {
     setDraft({ ...draft, [key]: value })
@@ -94,6 +96,31 @@ export function PaymentSettingsForm({ settings }: { settings: PaymentSettings })
             aria-label={t('payment_settings.reservation_label')}
             value={draft.reservationDays}
             onChange={(event) => set('reservationDays', Number(event.target.value))}
+            className={fieldClass}
+          />
+        </Row>
+
+        {/* The other half of the seat's life. It sits next to the reservation
+            window because the two are one rule read at two speeds: this is the
+            minutes somebody has to pay before the seat goes back, that is the
+            days the paid-but-unreviewed seat waits (`CLAUDE.md` §5). Splitting
+            them across two screens is how they end up contradicting. */}
+        <Row
+          label={t('payment_settings.checkout_hold_label')}
+          hint={t('payment_settings.checkout_hold_hint')}
+          value={t('payment_settings.checkout_hold_value', {
+            minutes: draft.checkoutHoldMinutes,
+          })}
+        >
+          <input
+            type="number"
+            min={5}
+            max={60}
+            aria-label={t('payment_settings.checkout_hold_label')}
+            value={draft.checkoutHoldMinutes}
+            onChange={(event) =>
+              set('checkoutHoldMinutes', Number(event.target.value))
+            }
             className={fieldClass}
           />
         </Row>
