@@ -83,11 +83,17 @@ Domínio e fila já existem, independentes dessa escolha:
   caminho, e cada quadro abre o e-mail; e a página de cada e-mail
   (`/backoffice/emails/[template]`), com a prévia renderizada do template
   versionado do repositório (dados de exemplo, nunca de aluno real), o
-  liga/desliga do envio automático e a prova para até 5 endereços. **Novo envio**
-  (`/backoffice/emails/new`) é o comunicado escrito à mão, em quatro passos —
-  destinatários, conteúdo, prova e revisão: o segmento é calculado no envio e
-  nunca guardado no provedor, a prova perde a validade assim que o texto muda, e
-  o envio para toda a base fica parado à espera da segunda aprovação. Não existe
+  liga/desliga do envio automático e a prova para até 5 endereços. **Não entregues**
+  (`/backoffice/emails/deliveries`) é a única tela da seção sobre pessoas: quem
+  não recebeu, por quê (caixa cheia, domínio errado, erro do provedor), com a
+  linha abrindo a ficha do aluno — e a ação decidida pelo motivo, porque
+  endereço escrito errado não se resolve reenviando. **Novo envio**
+  (`/backoffice/emails/new`) é o comunicado escrito à mão, em quatro passos
+  guiados — destinatários, conteúdo, teste e revisão: o segmento é escolhido
+  entre o que existe e calculado no envio (nunca guardado no provedor), o
+  conteúdo é texto escrito ali ou um HTML carregado (pré-visualizado em iframe
+  sandboxed), o teste perde a validade assim que o conteúdo muda, e o envio para
+  toda a base fica parado à espera da segunda aprovação. Não existe
   botão de enviar por aluno: e-mail transacional é consequência do que aconteceu
   no domínio). O papel `teacher` já entra numa
   **visão restrita**: menu reduzido,

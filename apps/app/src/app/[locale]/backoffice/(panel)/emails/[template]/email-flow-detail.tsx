@@ -10,6 +10,7 @@ import {
   formatPercent,
   type Locale,
 } from '@/lib/format'
+import { Link } from '@/i18n/navigation'
 import { AutoGrid } from '@/components/layout/auto-grid'
 import {
   Card,
@@ -160,15 +161,19 @@ export function EmailFlowDetail({
                 value={formatNumber(flow.metrics.delivered, locale)}
                 hint={rate === null ? undefined : formatPercent(rate, locale)}
               />
+              {/* Both of these are people, not figures — they open the list
+                  of who never received this e-mail. */}
               <Metric
                 label={t('emails.metric_bounced')}
                 value={formatNumber(flow.metrics.bounced, locale)}
                 tone={flow.metrics.bounced > 0 ? 'warning' : undefined}
+                href={`/backoffice/emails/deliveries?state=bounced&template=${flow.template}`}
               />
               <Metric
                 label={t('emails.metric_failed')}
                 value={formatNumber(flow.metrics.failed, locale)}
                 tone={flow.metrics.failed > 0 ? 'danger' : undefined}
+                href={`/backoffice/emails/deliveries?state=failed&template=${flow.template}`}
               />
             </AutoGrid>
           </section>
@@ -192,22 +197,30 @@ export function EmailFlowDetail({
   )
 }
 
-/** One figure of the window. Copy arrives translated (CLAUDE.md §4). */
+/**
+ * One figure of the window. Copy arrives translated (CLAUDE.md §4).
+ *
+ * With an `href` it becomes a way in: the figures that count failures are
+ * counting people, and a number nobody can open is a number nobody can act on.
+ */
 function Metric({
   label,
   value,
   hint,
   tone,
+  href,
 }: {
   label: string
   value: string
   hint?: string
   tone?: 'warning' | 'danger'
+  href?: string
 }) {
   const valueTone =
     tone === 'danger' ? 'text-red-600' : tone === 'warning' ? 'text-amber-700' : 'text-ink'
-  return (
-    <div className="rounded-lg border border-line px-3 py-2">
+
+  const inner = (
+    <>
       <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </dt>
@@ -217,6 +230,19 @@ function Metric({
           <span className="ml-1.5 text-xs font-medium text-muted-foreground">{hint}</span>
         )}
       </dd>
-    </div>
+    </>
+  )
+
+  const box = 'rounded-lg border border-line px-3 py-2'
+
+  return href ? (
+    <Link
+      href={href}
+      className={`${box} block transition hover:border-brand-yellow hover:bg-cream`}
+    >
+      {inner}
+    </Link>
+  ) : (
+    <div className={box}>{inner}</div>
   )
 }

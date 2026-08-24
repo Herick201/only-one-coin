@@ -110,6 +110,7 @@ export default async function EmailJourneyPage({
         tabs={[
           { href: '/backoffice/emails', label: t('emails.tab_catalog'), exact: true },
           { href: '/backoffice/emails/journey', label: t('emails.tab_journey') },
+          { href: '/backoffice/emails/deliveries', label: t('deliveries.tab') },
         ]}
       />
       <MockNotice label={t('common.mock_notice')} />

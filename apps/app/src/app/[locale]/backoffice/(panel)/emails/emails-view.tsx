@@ -106,13 +106,20 @@ export function EmailsView({
             ),
           })}
         />
-        <StatCard
-          icon="alert"
-          tone={metrics.bounced > 0 ? 'warning' : 'neutral'}
-          label={t('emails.stat_bounced')}
-          value={formatNumber(metrics.bounced, locale)}
-          hint={t('emails.stat_bounced_hint')}
-        />
+        {/* The only number here somebody can act on: it names people, so it
+            opens the list of them. */}
+        <Link
+          href="/backoffice/emails/deliveries?state=bounced"
+          className="rounded-xl transition hover:brightness-[0.98]"
+        >
+          <StatCard
+            icon="alert"
+            tone={metrics.bounced > 0 ? 'warning' : 'neutral'}
+            label={t('emails.stat_bounced')}
+            value={formatNumber(metrics.bounced, locale)}
+            hint={t('emails.stat_bounced_hint')}
+          />
+        </Link>
         {/* A paused flow is the one number on this header that is somebody's
             errand — it counts people who are waiting for an e-mail that is
             never coming. */}

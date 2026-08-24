@@ -1,6 +1,12 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
-import { getEmailMetrics, getStaffSession, listEmailFlows } from '@/lib/backoffice/mock-data'
+import {
+  getEmailMetrics,
+  getStaffSession,
+  listEmailDeliveryIssues,
+  listEmailFlows,
+} from '@/lib/backoffice/mock-data'
+import { countDeliveryIssues } from '@/lib/backoffice/email-delivery'
 import { canManageEmail } from '@/lib/backoffice/permissions'
 import { EmptyState, MockNotice, PageHeader } from '@/components/backoffice/ui'
 import { SectionTabs } from '@/components/backoffice/section-tabs'
@@ -30,6 +36,7 @@ export default async function EmailsPage({
   const t = await getTranslations('bo')
 
   const staff = getStaffSession()
+  const undelivered = countDeliveryIssues(listEmailDeliveryIssues())
 
   if (!canManageEmail(staff.role)) {
     return (
@@ -64,9 +71,27 @@ export default async function EmailsPage({
         tabs={[
           { href: '/backoffice/emails', label: t('emails.tab_catalog'), exact: true },
           { href: '/backoffice/emails/journey', label: t('emails.tab_journey') },
+          { href: '/backoffice/emails/deliveries', label: t('deliveries.tab') },
         ]}
       />
       <MockNotice label={t('common.mock_notice')} />
+
+      {/* The one thing on this screen that is somebody's errand today: an
+          e-mail that never reached a person, sitting above the numbers rather
+          than inside them. */}
+      {undelivered.total > 0 && (
+        <Link
+          href="/backoffice/emails/deliveries"
+          className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 transition hover:border-brand-yellow hover:bg-cream"
+        >
+          <BoIcon name="alert" size={16} className="shrink-0" />
+          {t('deliveries.quick_action', { count: undelivered.total })}
+          <span className="ml-auto inline-flex items-center gap-1 text-brand-blue">
+            {t('deliveries.quick_action_link')}
+            <BoIcon name="chevron-right" size={16} />
+          </span>
+        </Link>
+      )}
       <EmailsView flows={listEmailFlows()} metrics={getEmailMetrics()} />
     </div>
   )

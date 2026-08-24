@@ -601,6 +601,17 @@
       "payment_rejected": "si se rechaza",
       "enrollment_certificate_issued": "si la solicita"
     },
+    "email_delivery_reason": {
+      "mailbox_full": "Buzón lleno",
+      "address_unknown": "La dirección no existe",
+      "domain_invalid": "El dominio está mal escrito",
+      "blocked_by_server": "El servidor lo bloqueó",
+      "provider_error": "Error del proveedor"
+    },
+    "email_delivery_state": {
+      "bounced": "Devuelto",
+      "failed": "Falló"
+    },
     "email_preview": {
       "enrollment_submitted": {
         "subject": "Recibimos tu matrícula en {course}",
@@ -1192,6 +1203,28 @@
       "class_groups_subtitle": "Todo lo que dictas, en curso y cerrado.",
       "no_class_groups_title": "Sin aulas",
       "no_class_groups_body": "Todavía no tienes aulas asignadas en este período."
+    },
+    "deliveries": {
+      "title": "Correos que no llegaron",
+      "tab": "Sin entregar",
+      "filter_all": "Todos",
+      "filter_bounced": "Devueltos",
+      "filter_failed": "Fallidos",
+      "col_student": "Alumno",
+      "col_email": "Correo",
+      "col_address": "Dirección",
+      "col_reason": "Motivo",
+      "col_when": "Último intento",
+      "action_open": "Abrir la ficha",
+      "action_resend": "Reenviar",
+      "action_fix": "Corregir la dirección",
+      "resend_toast": "Reenvío encolado",
+      "resend_note": "Reenviar es una excepción auditada: queda registrada con autor y fecha. Una dirección mal escrita no se arregla reenviando — se corrige en la ficha.",
+      "attempts": "{count, plural, one {1 intento} other {# intentos}}",
+      "empty_title": "Todo llegó",
+      "empty_body": "Ningún correo quedó sin entregar con este filtro.",
+      "quick_action": "{count, plural, one {Un correo no llegó a su alumno} other {# correos no llegaron a sus alumnos}}",
+      "quick_action_link": "Ver quiénes"
     }
   }
 }

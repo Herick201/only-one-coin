@@ -601,6 +601,17 @@
       "payment_rejected": "if it is rejected",
       "enrollment_certificate_issued": "if they request it"
     },
+    "email_delivery_reason": {
+      "mailbox_full": "Mailbox full",
+      "address_unknown": "The address does not exist",
+      "domain_invalid": "The domain is misspelled",
+      "blocked_by_server": "The server blocked it",
+      "provider_error": "Provider error"
+    },
+    "email_delivery_state": {
+      "bounced": "Bounced",
+      "failed": "Failed"
+    },
     "email_preview": {
       "enrollment_submitted": {
         "subject": "We received your enrollment in {course}",
@@ -1192,6 +1203,28 @@
       "class_groups_subtitle": "Everything you run, current and closed.",
       "no_class_groups_title": "No class groups",
       "no_class_groups_body": "You have no class groups allocated this period."
+    },
+    "deliveries": {
+      "title": "E-mails that did not land",
+      "tab": "Undelivered",
+      "filter_all": "All",
+      "filter_bounced": "Bounced",
+      "filter_failed": "Failed",
+      "col_student": "Student",
+      "col_email": "E-mail",
+      "col_address": "Address",
+      "col_reason": "Reason",
+      "col_when": "Last attempt",
+      "action_open": "Open the file",
+      "action_resend": "Resend",
+      "action_fix": "Fix the address",
+      "resend_toast": "Resend queued",
+      "resend_note": "A resend is an audited exception: it is recorded with who did it and when. A misspelled address is not fixed by resending — it is fixed on the file.",
+      "attempts": "{count, plural, one {1 attempt} other {# attempts}}",
+      "empty_title": "Everything landed",
+      "empty_body": "No e-mail was left undelivered under this filter.",
+      "quick_action": "{count, plural, one {One e-mail never reached its student} other {# e-mails never reached their students}}",
+      "quick_action_link": "See who"
     }
   }
 }

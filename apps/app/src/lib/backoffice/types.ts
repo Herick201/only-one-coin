@@ -1010,3 +1010,36 @@ export interface EmailDraft {
   subject: string
   body: string
 }
+
+/** Why one delivery did not land. */
+export type EmailDeliveryReason =
+  /** The classic: a Gmail with no space left (`docs/REGRAS-NEGOCIO.md` §7). */
+  | 'mailbox_full'
+  | 'address_unknown'
+  | 'domain_invalid'
+  | 'blocked_by_server'
+  /** Never left the outbox: the provider errored and the retries ran out. */
+  | 'provider_error'
+
+/** Refused by the receiving server, or given up on by the outbox. */
+export type EmailDeliveryState = 'bounced' | 'failed'
+
+/**
+ * One e-mail that did not reach one person. It is a person, not a statistic:
+ * the student is on the other end waiting for credentials that never arrived,
+ * so the row carries who they are and opens their file — which is where the
+ * phone number to call them on lives.
+ */
+export interface EmailDeliveryIssue {
+  id: string
+  template: EmailTemplate
+  studentId: string
+  studentName: string
+  /** The address that failed — the one on the student's file. */
+  address: string
+  state: EmailDeliveryState
+  reason: EmailDeliveryReason
+  /** Last attempt, ISO 8601 UTC. */
+  at: string
+  attempts: number
+}
