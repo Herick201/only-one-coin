@@ -70,7 +70,7 @@ function Stepper({
                   active
                     ? 'border-brand-blue bg-brand-blue text-white'
                     : done
-                      ? 'border-brand-blue bg-white text-brand-blue'
+                      ? 'border-brand-yellow bg-brand-yellow text-ink'
                       : 'border-line bg-white text-muted-foreground'
                 }`}
               >
@@ -89,7 +89,7 @@ function Stepper({
             {position < steps.length - 1 && (
               <span
                 aria-hidden="true"
-                className={`mt-4 h-px flex-1 ${done ? 'bg-brand-blue/40' : 'bg-line'}`}
+                className={`mt-4 h-px flex-1 ${done ? 'bg-brand-yellow' : 'bg-line'}`}
               />
             )}
           </li>
