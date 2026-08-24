@@ -869,6 +869,9 @@ export interface SeatReservation {
 export interface PlanPrice {
   courseName: string
   planName: string
+  /** Which plan this is — the API resolves the current price server-side
+   * from this id, never from a client-supplied planPriceId (CLAUDE.md §5, §8). */
+  planId: string
   planPriceId: string
   amountCents: number
   currency: 'PEN'

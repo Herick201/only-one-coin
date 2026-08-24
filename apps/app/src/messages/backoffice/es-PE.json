@@ -152,7 +152,8 @@
       "consent_notice": "El consentimiento (Ley 29733) no se escribe desde aquí: lo acepta el apoderado y queda con su fecha, su versión y su IP. La ficha nace con el consentimiento pendiente.",
       "create": "Registrar al alumno",
       "cancel": "Cancelar",
-      "created_local_only": "Alumno registrado solo en pantalla. Todavía no hay servidor conectado.",
+      "created": "Alumno registrado.",
+      "submit_error": "No se pudo registrar al alumno. Intenta de nuevo.",
       "missing_fields": "Completa los campos obligatorios para registrar al alumno."
     },
     "national_id_type": {
@@ -523,7 +524,8 @@
       "notice_under_review": "El asiento queda reservado y el comprobante entra a la cola de revisión. Ningún pago se aprueba desde esta pantalla.",
       "create": "Crear la matrícula",
       "cancel": "Cancelar",
-      "created_local_only": "Matrícula creada solo en pantalla. Aún no hay servidor conectado.",
+      "created": "Matrícula creada.",
+      "submit_error": "No se pudo crear la matrícula. Intenta de nuevo.",
       "missing_fields": "Completa los campos obligatorios para crear la matrícula."
     },
     "seat_status": {

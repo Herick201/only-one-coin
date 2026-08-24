@@ -97,6 +97,7 @@ export function NewStudentForm({
   const [guardian, setGuardian] = useState<EditableGuardian>(EMPTY_GUARDIAN)
   const [guardianAsked, setGuardianAsked] = useState(false)
   const [pending, setPending] = useState(false)
+  const [submitError, setSubmitError] = useState(false)
 
   function set<K extends keyof EditableStudent>(key: K, next: EditableStudent[K]) {
     setStudent((prev) => ({ ...prev, [key]: next }))
@@ -148,16 +149,52 @@ export function NewStudentForm({
 
   const ready = studentReady && guardianReady
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (pending || !ready) return
-    // Mock only: fake a round-trip so the pending state is exercisable.
     setPending(true)
-    window.setTimeout(() => {
-      setPending(false)
+    setSubmitError(false)
+
+    try {
+      const response = await fetch('/api/v1/students', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          student: {
+            firstName: student.firstName.trim(),
+            lastName: student.lastName.trim(),
+            nationalIdType: student.nationalIdType,
+            nationalId: student.nationalId.trim(),
+            email: student.email.trim(),
+            phone: student.phone,
+            birthDate: student.birthDate,
+            country: student.country,
+            region: student.region,
+            city: student.city.trim(),
+          },
+          guardian: guardianOpen
+            ? {
+                firstName: guardian.firstName.trim(),
+                lastName: guardian.lastName.trim(),
+                relationship: guardian.relationship,
+                nationalIdType: guardian.nationalIdType,
+                nationalId: guardian.nationalId.trim(),
+                email: guardian.email.trim(),
+                phone: guardian.phone,
+              }
+            : null,
+        }),
+      })
+
+      if (!response.ok) {
+        setSubmitError(true)
+        return
+      }
+
+      const created = (await response.json()) as { student: { id: string } }
       const now = new Date().toISOString()
       onCreate({
-        id: `stu_local_${student.nationalId}`,
+        id: created.student.id,
         firstName: student.firstName.trim(),
         lastName: student.lastName.trim(),
         nationalIdType: student.nationalIdType,
@@ -179,7 +216,11 @@ export function NewStudentForm({
         createdAt: now,
         lastActivityAt: now,
       })
-    }, 500)
+    } catch {
+      setSubmitError(true)
+    } finally {
+      setPending(false)
+    }
   }
 
   return (
@@ -521,6 +562,11 @@ export function NewStudentForm({
           {!ready && (
             <span className="text-xs text-muted-foreground">
               {t('new_student.missing_fields')}
+            </span>
+          )}
+          {submitError && (
+            <span className="text-xs font-medium text-red-600">
+              {t('new_student.submit_error')}
             </span>
           )}
         </div>

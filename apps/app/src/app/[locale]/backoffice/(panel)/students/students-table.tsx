@@ -250,7 +250,7 @@ export function StudentsTable({
             setDirectory((current) => [student, ...current])
             setCreating(false)
             setPage(0)
-            setToast(t('new_student.created_local_only'))
+            setToast(t('new_student.created'))
           }}
         />
       )}

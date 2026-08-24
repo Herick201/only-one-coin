@@ -152,7 +152,8 @@
       "consent_notice": "Consent (Ley 29733) is not written from here: the guardian accepts it, and it keeps their date, their version and their IP. The file starts with consent pending.",
       "create": "Register the student",
       "cancel": "Cancel",
-      "created_local_only": "Student registered on screen only. No server is wired yet.",
+      "created": "Student registered.",
+      "submit_error": "Could not register the student. Try again.",
       "missing_fields": "Fill in the required fields to register the student."
     },
     "national_id_type": {
@@ -523,7 +524,8 @@
       "notice_under_review": "The seat is reserved and the receipt joins the review queue. No payment is ever approved from this screen.",
       "create": "Create the enrollment",
       "cancel": "Cancel",
-      "created_local_only": "Enrollment created on screen only. No server is wired yet.",
+      "created": "Enrollment created.",
+      "submit_error": "Could not create the enrollment. Try again.",
       "missing_fields": "Fill in the required fields to create the enrollment."
     },
     "seat_status": {

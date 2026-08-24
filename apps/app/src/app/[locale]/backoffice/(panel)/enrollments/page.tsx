@@ -2,10 +2,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import {
   getEnrollmentMetrics,
   getStaffSession,
-  listClassGroups,
   listEnrollments,
-  listPlanPrices,
-  listStudents,
 } from '@/lib/backoffice/mock-data'
 import {
   canCreateEnrollment,
@@ -86,9 +83,6 @@ export default async function EnrollmentsPage({
       <EnrollmentsView
         rows={listEnrollments()}
         metrics={getEnrollmentMetrics()}
-        students={listStudents()}
-        classGroups={listClassGroups()}
-        plans={listPlanPrices()}
         canCreate={canCreateEnrollment(staff.role)}
       />
     </div>
