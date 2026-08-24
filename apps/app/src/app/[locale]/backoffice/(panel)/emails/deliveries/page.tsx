@@ -69,6 +69,8 @@ export default async function EmailDeliveriesPage({
     },
   ]
 
+  const active = filters.find((filter) => filter.active) ?? filters[0]
+
   return (
     <div className="flex flex-col gap-5">
       <PageHeader
@@ -92,27 +94,43 @@ export default async function EmailDeliveriesPage({
       />
       <MockNotice label={t('common.mock_notice')} />
 
-      {/* Real links, not client state: a number on another screen has to be
-          able to point at the slice it names. */}
-      <nav className="flex flex-wrap gap-1.5">
-        {filters.map((filter) => (
-          <Link
-            key={filter.href}
-            href={filter.href}
-            aria-current={filter.active ? 'page' : undefined}
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-              filter.active
-                ? 'bg-brand-blue text-white'
-                : 'border border-line bg-white text-muted-foreground hover:border-brand-yellow hover:bg-cream hover:text-ink'
-            }`}
-          >
-            {filter.label}
-            <span className={filter.active ? 'text-white/70' : 'text-slate-400'}>
-              {filter.count}
-            </span>
-          </Link>
-        ))}
-      </nav>
+      {/* One control, not three chips sitting under the tabs pretending to be
+          more of them. Real links inside it, so a number on another screen can
+          still point straight at the slice it names — and a native disclosure,
+          so the menu costs no client component. */}
+      <details className="relative w-fit">
+        <summary
+          className={`inline-flex cursor-pointer list-none items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold transition [&::-webkit-details-marker]:hidden ${
+            stateFilter === null
+              ? 'border-line bg-white text-muted-foreground hover:border-brand-yellow hover:bg-cream hover:text-ink'
+              : 'border-brand-blue bg-sky text-brand-blue'
+          }`}
+        >
+          <BoIcon name="filter" size={16} />
+          {active.label}
+          <span className={stateFilter === null ? 'text-slate-400' : 'text-brand-blue/60'}>
+            {active.count}
+          </span>
+          <BoIcon name="chevron-down" size={14} />
+        </summary>
+        <div className="absolute left-0 top-12 z-20 flex w-60 flex-col gap-0.5 rounded-xl border border-line bg-white p-1.5 shadow-float">
+          {filters.map((filter) => (
+            <Link
+              key={filter.href}
+              href={filter.href}
+              aria-current={filter.active ? 'page' : undefined}
+              className={`flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm transition ${
+                filter.active
+                  ? 'bg-sky-soft font-semibold text-ink'
+                  : 'text-muted-foreground hover:bg-cream hover:text-ink'
+              }`}
+            >
+              {filter.label}
+              <span className="text-xs text-slate-400">{filter.count}</span>
+            </Link>
+          ))}
+        </div>
+      </details>
 
       <DeliveriesView rows={rows} />
     </div>

@@ -58,6 +58,7 @@ export function EmailsView({
   const [query, setQuery] = useState('')
   const [audience, setAudience] = useState<AudienceFilter>('all')
   const [pausedOnly, setPausedOnly] = useState(false)
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
   /* Names and triggers are translated, so the search runs over what the reader
      actually sees — searching the template codes would find nothing they typed. */
@@ -81,6 +82,8 @@ export function EmailsView({
   }, [flows, query, audience, pausedOnly, t])
 
   const pausedCount = flows.filter((flow) => !flow.enabled).length
+
+  const activeFilters = (audience === 'all' ? 0 : 1) + (pausedOnly ? 1 : 0)
 
   const audienceCounts: Record<AudienceFilter, number> = {
     all: flows.length,
@@ -150,67 +153,91 @@ export function EmailsView({
         />
       </AutoGrid>
 
-      {/* The two halves of the catalog: what leaves the institution, and what
-          stays inside it. A teacher's contract warning and a student's
-          credentials have nothing to do with each other. */}
-      <nav className="flex flex-wrap gap-1.5">
-        {AUDIENCE_FILTERS.map((value) => {
-          const active = audience === value
-          return (
+      {/* One control instead of a row of chips under the tabs: the panel opens
+          on demand, and the badge says how many cuts are on without it having
+          to spell them out. Same shape as the teacher roster's. */}
+      <div className="flex flex-col gap-3">
+        <Toolbar>
+          <label className={toolbarSearchClass}>
+            <span className="sr-only">{t('emails.search_label')}</span>
+            <BoIcon
+              name="search"
+              size={16}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            />
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder={t('emails.search_placeholder')}
+              className="w-full rounded-lg border border-line bg-white py-2 pl-9 pr-3 text-sm text-ink outline-none transition placeholder:text-muted-foreground focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15"
+            />
+          </label>
+
+          <button
+            type="button"
+            onClick={() => setFiltersOpen(!filtersOpen)}
+            aria-expanded={filtersOpen}
+            className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold transition ${
+              activeFilters > 0 || filtersOpen
+                ? 'border-brand-blue bg-sky text-brand-blue'
+                : 'border-line bg-white text-muted-foreground hover:border-brand-yellow hover:bg-cream hover:text-ink'
+            }`}
+          >
+            <BoIcon name="filter" size={16} />
+            {t('emails.filters')}
+            {activeFilters > 0 && (
+              <span className="rounded-full bg-brand-blue px-1.5 text-xs text-white">
+                {activeFilters}
+              </span>
+            )}
+          </button>
+        </Toolbar>
+
+        {filtersOpen && (
+          <Card className="flex flex-wrap items-center gap-1.5 p-3">
+            {AUDIENCE_FILTERS.map((value) => {
+              const on = audience === value
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setAudience(value)}
+                  aria-pressed={on}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                    on
+                      ? 'bg-brand-blue text-white'
+                      : 'border border-line bg-white text-muted-foreground hover:bg-cream hover:text-ink'
+                  }`}
+                >
+                  {t(`emails.filter_${value}`)}
+                  <span className={on ? 'text-white/70' : 'text-slate-400'}>
+                    {audienceCounts[value]}
+                  </span>
+                </button>
+              )
+            })}
+
+            <span aria-hidden="true" className="mx-1 h-5 w-px bg-line" />
+
             <button
-              key={value}
               type="button"
-              onClick={() => setAudience(value)}
-              aria-pressed={active}
+              onClick={() => setPausedOnly(!pausedOnly)}
+              aria-pressed={pausedOnly}
               className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                active
+                pausedOnly
                   ? 'bg-brand-blue text-white'
-                  : 'border border-line bg-white text-muted-foreground hover:border-brand-yellow hover:bg-cream hover:text-ink'
+                  : 'border border-line bg-white text-muted-foreground hover:bg-cream hover:text-ink'
               }`}
             >
-              {t(`emails.filter_${value}`)}
-              <span className={active ? 'text-white/70' : 'text-slate-400'}>
-                {audienceCounts[value]}
+              {t('emails.filter_paused')}
+              <span className={pausedOnly ? 'text-white/70' : 'text-slate-400'}>
+                {pausedCount}
               </span>
             </button>
-          )
-        })}
-      </nav>
-
-      <Toolbar>
-        <label className={toolbarSearchClass}>
-          <span className="sr-only">{t('emails.search_label')}</span>
-          <BoIcon
-            name="search"
-            size={16}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-          />
-          <input
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={t('emails.search_placeholder')}
-            className="w-full rounded-lg border border-line bg-white py-2 pl-9 pr-3 text-sm text-ink outline-none transition placeholder:text-muted-foreground focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15"
-          />
-        </label>
-
-        <button
-          type="button"
-          onClick={() => setPausedOnly(!pausedOnly)}
-          aria-pressed={pausedOnly}
-          className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold transition ${
-            pausedOnly
-              ? 'border-brand-blue bg-sky text-brand-blue'
-              : 'border-line bg-white text-muted-foreground hover:text-ink'
-          }`}
-        >
-          <BoIcon name="filter" size={16} />
-          {t('emails.filter_paused')}
-          <span className={pausedOnly ? 'text-brand-blue/60' : 'text-slate-400'}>
-            {pausedCount}
-          </span>
-        </button>
-      </Toolbar>
+          </Card>
+        )}
+      </div>
 
       <Card>
         {filtered.length === 0 ? (

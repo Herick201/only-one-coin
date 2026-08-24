@@ -731,6 +731,7 @@
       "stat_paused_hint": "{count, plural, =0 {Todos os e-mails estão ativos} one {Um e-mail desligado: ninguém o recebe} other {# e-mails desligados: ninguém os recebe}}",
       "search_label": "Buscar um e-mail",
       "search_placeholder": "Buscar pelo nome do e-mail",
+      "filters": "Filtros",
       "filter_paused": "Somente pausados",
       "col_flow": "E-mail",
       "col_audience": "Destinatário",

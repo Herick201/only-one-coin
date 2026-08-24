@@ -731,6 +731,7 @@
       "stat_paused_hint": "{count, plural, =0 {Todos los flujos están activos} one {Un correo apagado: nadie lo recibe} other {# correos apagados: nadie los recibe}}",
       "search_label": "Buscar un correo",
       "search_placeholder": "Buscar por nombre del correo",
+      "filters": "Filtros",
       "filter_paused": "Solo pausados",
       "col_flow": "Correo",
       "col_audience": "Destinatario",

@@ -731,6 +731,7 @@
       "stat_paused_hint": "{count, plural, =0 {Every e-mail is switched on} one {One e-mail is off: nobody receives it} other {# e-mails are off: nobody receives them}}",
       "search_label": "Search an e-mail",
       "search_placeholder": "Search by e-mail name",
+      "filters": "Filters",
       "filter_paused": "Paused only",
       "col_flow": "E-mail",
       "col_audience": "Recipient",
