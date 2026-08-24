@@ -88,7 +88,22 @@ Domínio e fila já existem, independentes dessa escolha:
   grade da semana com as turmas já atribuídas sobrepostas — e as turmas do
   docente. A ficha é onde se tira alguém do quadro e se devolve: a confirmação
   avisa quantas turmas em andamento ainda apontam para ele, e o contrato deixa
-  de ser vigiado enquanto estiver inativo). Fecha a lista a configuração
+  de ser vigiado enquanto estiver inativo) e relatórios
+  (`/backoffice/reports`: matrículas, receita e ocupação do ciclo, cortadas por
+  curso, idioma ou docente, com filtro de período, série de matrículas por mês e
+  exportação em CSV, em duas guias sobre o mesmo filtro de período e corte.
+  **Gráficos** traz os quatro números do ciclo, matrículas por mês (barras),
+  receita por mês (linha), participação nas matrículas (donut), a tendência por
+  ciclo (uma linha por curso, sempre sobre todos os ciclos) e os quatro rankings
+  por curso — matrículas, congelamentos, notas baixas e retiradas, lidos das
+  listas de turma, onde procedimento e nota fechada moram. Todo gráfico responde
+  com o número no hover, no foco e no toque; no donut a resposta aparece no
+  miolo, no lugar do total. **Tabela** é o detalhe linha a linha e o CSV. É
+  leitura pura — nada se decide dali —
+  e cada coluna diz de onde vem: matrícula e dinheiro saem do livro de
+  matrículas, a ocupação sai das vagas das turmas, e os trâmites pagos ficam de
+  fora porque são liquidados em Pagos. A seção é de `admin` e `coordinator`,
+  como o livro de matrículas). Fecha a lista a configuração
   (`/backoffice/settings`, só `admin`), a tela única dos números que o resto do
   painel roda em cima: as regras acadêmicas e de trâmite (nota mínima, prazo do
   certificado, taxa da constancia, antecedência do aviso de contrato) e os

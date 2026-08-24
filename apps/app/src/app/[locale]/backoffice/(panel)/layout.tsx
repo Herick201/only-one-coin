@@ -7,6 +7,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { logoutStaff } from '../actions'
 import { Link } from '@/i18n/navigation'
 import {
+  canBrowseReports,
   canConfigureSettings,
   isRestrictedToOwnClassGroups,
 } from '@/lib/backoffice/permissions'
@@ -160,7 +161,21 @@ export default async function BackofficePanelLayout({
       label: t('nav.group_admin'),
       items: [
         { key: 'email', href: '/backoffice/emails', label: t('nav.email'), soon: true },
-        { key: 'reports', href: '/backoffice/reports', label: t('nav.reports'), soon: true },
+        /* Same rule as settings below: an entry that only ever opens on a
+           locked state is a door that never opens. Tesorería reads its figure
+           of the ciclo in Pagos, beside the receipts it settles; the teacher's
+           narrowed rail never had this group. Whoever arrives by URL still
+           meets the locked screen, and the role on the route in `apps/api` is
+           what enforces it (CLAUDE.md §8). */
+        ...(canBrowseReports(staff.role)
+          ? [
+              {
+                key: 'reports' as const,
+                href: '/backoffice/reports',
+                label: t('nav.reports'),
+              },
+            ]
+          : []),
         { key: 'staff', href: '/backoffice/team', label: t('nav.staff'), soon: true },
         /* Settings is admin's alone — it holds the grade that decides who is
            certified and the tolerance the platform approves a receipt with when

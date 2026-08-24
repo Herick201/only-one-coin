@@ -120,6 +120,19 @@ export function canBrowseEnrollments(role: StaffRole): boolean {
 }
 
 /**
+ * Who may read the reports. Administration and coordination — the same pair
+ * that reads the enrollment ledger, because the report is that ledger summed
+ * up: it carries the courses, the class groups and the seats, which
+ * `docs/ARCHITECTURE.md` §3 puts with coordination and keeps away from
+ * tesorería ("sem acesso a dado acadêmico não financeiro"). Tesorería's own
+ * figure — what came in this ciclo — is on the payments section, next to the
+ * receipts it settles. A teacher reads their own class groups, one at a time.
+ */
+export function canBrowseReports(role: StaffRole): boolean {
+  return role === 'admin' || role === 'coordinator'
+}
+
+/**
  * Who may open an enrollment from the panel. The documented way in is the
  * student filling `/enrollment` themselves (CLAUDE.md §1); this is the exception
  * for the sale that closed on WhatsApp and never reached the form, so it stays
