@@ -5,6 +5,7 @@ import { cookies } from 'next/headers'
 import { LogOut } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { logoutStaff } from '../actions'
+import { Link } from '@/i18n/navigation'
 import { isRestrictedToOwnClassGroups } from '@/lib/backoffice/permissions'
 import {
   getDashboardMetrics,
@@ -13,7 +14,6 @@ import {
 } from '@/lib/backoffice/mock-data'
 import { initials } from '@/lib/format'
 import { BoSidebar, type BoNavGroup } from '@/components/backoffice/bo-sidebar'
-import { LanguageGlobe } from '@/components/language-globe'
 import {
   SidebarInset,
   SidebarProvider,
@@ -193,7 +193,18 @@ export default async function BackofficePanelLayout({
 
   const footer = (
     <>
-      <div className="flex items-center gap-2.5 px-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+      {/*
+        The person's own chip is the door to their own account — password,
+        second factor, open sessions. It lives here rather than in a module
+        group because it is the one screen of the panel that belongs to the
+        reader instead of to the institution, and because a teacher, whose menu
+        is narrowed to their own class groups, has to reach it too.
+      */}
+      <Link
+        href="/backoffice/account"
+        title={t('nav.account')}
+        className="flex items-center gap-2.5 rounded-lg px-1 py-1 transition hover:bg-white/5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+      >
         <Avatar className="size-8 shrink-0">
           <AvatarFallback className="bg-white/10 text-xs font-semibold text-white">
             {monogram}
@@ -207,7 +218,7 @@ export default async function BackofficePanelLayout({
             {t(`role.${staff.role}`)}
           </span>
         </span>
-      </div>
+      </Link>
 
       <form action={logoutStaff}>
         <button
@@ -249,12 +260,18 @@ export default async function BackofficePanelLayout({
                 label={t('nav.sidebar_toggle')}
               />
               <Separator orientation="vertical" className="mr-1 !h-5" />
+              {/*
+                No language switch here. It used to sit on the right of every
+                screen in the panel, which made a once-a-year choice into
+                permanent chrome — and a control that reloads the page under
+                someone mid-task. It lives in `/backoffice/account` now, with
+                the rest of what a person sets about themselves. The login
+                screens keep theirs: before signing in there is no account to
+                open, and someone who cannot read Spanish has to switch there.
+              */}
               <span className="text-sm font-semibold text-foreground">
                 {t('brand.panel_label')}
               </span>
-              <div className="ml-auto flex items-center gap-2">
-                <LanguageGlobe />
-              </div>
             </header>
 
             {/*

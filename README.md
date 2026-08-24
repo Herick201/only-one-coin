@@ -97,8 +97,15 @@ Domínio e fila já existem, independentes dessa escolha:
   tudo escopado pelo `teacherId` da sessão, nunca por dado vindo do cliente. A
   sessão do mockup é fixa em `getStaffSession()`; trocar o papel ali é o que
   mostra essa visão, de propósito não há seletor de papel na tela (`CLAUDE.md`
-  §8). Toda escrita é estado local. Os demais módulos do painel aparecem
-  listados como "pronto/em breve".
+  §8). Cada pessoa do staff, em qualquer papel, gerencia a própria conta em
+  `/backoffice/account` (aberta pelo chip do usuário no rodapé do menu): senha
+  com as exigências listadas enquanto se digita, verificação em dois passos —
+  obrigatória e sem botão de desligar para `admin`, `treasury` e
+  `mass_approver` (`CLAUDE.md` §8), opcional para os demais —, códigos de
+  recuperação, sessões abertas com o encerramento por linha, e o idioma do
+  painel. Nome, e-mail de acesso e cargo ficam de fora de propósito: são
+  identidade, e o cargo só muda pelo usecase de promoção. Toda escrita é estado
+  local. Os demais módulos do painel aparecem listados como "pronto/em breve".
   UI em shadcn/ui sobre Tailwind v4; os tokens de marca vivem em `globals.css`
   (paleta da landing, tipografia Inter). A landing segue com Fredoka/Poppins —
   público diferente.
