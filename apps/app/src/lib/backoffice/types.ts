@@ -244,6 +244,12 @@ export type EmailTemplate =
   | 'class_access_ready'
   | 'enrollment_certificate_issued'
   | 'certificate_issued'
+  /* Internal — the people who run the courses, not the ones taking them. */
+  | 'teacher_credentials_issued'
+  | 'teacher_class_group_assigned'
+  | 'teacher_contract_expiring'
+  | 'teacher_grades_pending'
+  | 'staff_certificates_ready'
 
 /**
  * What an audit entry points at. Either real data (a course name, an operation
@@ -915,8 +921,12 @@ export type EmailStage =
   | 'access'
   | 'documents'
 
-/** Who the template is written to — it decides the tone and the address. */
-export type EmailAudience = 'student' | 'guardian'
+/**
+ * Who the template is written to — it decides the tone, the address, and
+ * whether the message belongs to the student's journey at all. `teacher` and
+ * `staff` are internal: nobody outside the institution ever receives them.
+ */
+export type EmailAudience = 'student' | 'guardian' | 'teacher' | 'staff'
 
 /**
  * What the provider reported back over a rolling window. Delivery, bounce and
@@ -944,6 +954,10 @@ export interface EmailSample {
   studentEmail: string
   guardianName: string
   guardianEmail: string
+  teacherName: string
+  teacherEmail: string
+  staffName: string
+  staffEmail: string
   courseName: string
   classGroupName: string
   /** Integer cents, formatted at render time (CLAUDE.md §5). */
@@ -962,8 +976,12 @@ export interface EmailSample {
 export interface EmailFlow {
   template: EmailTemplate
   audience: EmailAudience
-  /** The event it leaves because of — the flow branches off this. */
-  stage: EmailStage
+  /**
+   * The event it leaves because of — the flow branches off this. Null for the
+   * internal ones: a message to a teacher is not a step of the student's
+   * journey, and putting it on that line would be drawing a path nobody walks.
+   */
+  stage: EmailStage | null
   /**
    * Fires only when the case takes that turn: the receipt that needed a human,
    * the seat nobody paid for, the student who is a minor. The journey has to

@@ -569,7 +569,12 @@
       "seat_reservation_expiring": "Seat about to expire",
       "class_access_ready": "Virtual classroom access",
       "enrollment_certificate_issued": "Enrollment certificate",
-      "certificate_issued": "Completion certificate"
+      "certificate_issued": "Completion certificate",
+      "teacher_credentials_issued": "Teacher access",
+      "teacher_class_group_assigned": "Class group assigned",
+      "teacher_contract_expiring": "Contract about to lapse",
+      "teacher_grades_pending": "Grades still missing",
+      "staff_certificates_ready": "Class group ready for certificates"
     },
     "email_trigger": {
       "enrollment_submitted": "When the enrollment data arrives, after the student fills in the form.",
@@ -581,11 +586,18 @@
       "seat_reservation_expiring": "One day before the seat is released.",
       "class_access_ready": "Three days before the class group starts.",
       "enrollment_certificate_issued": "When the requested certificate is issued.",
-      "certificate_issued": "When the class group certificates are issued."
+      "certificate_issued": "When the class group certificates are issued.",
+      "teacher_credentials_issued": "When the teacher’s panel account is created.",
+      "teacher_class_group_assigned": "When a class group becomes theirs.",
+      "teacher_contract_expiring": "45 days before the contract ends.",
+      "teacher_grades_pending": "At the end of the cycle, if grades of theirs are missing.",
+      "staff_certificates_ready": "When a class group ends and the list is ready for coordination to confirm."
     },
     "email_audience": {
       "student": "Student",
-      "guardian": "Guardian"
+      "guardian": "Guardian",
+      "teacher": "Teacher",
+      "staff": "Coordination"
     },
     "email_stage": {
       "submitted": "Enrollment submitted",
@@ -672,6 +684,36 @@
         "p1": "Hi {name}: congratulations on finishing {course}. Your completion certificate has been issued and is attached to this e-mail.",
         "p2": "It is also kept in your portal, with its verification code.",
         "cta": "See my certificate"
+      },
+      "teacher_credentials_issued": {
+        "subject": "Your access to the Only One Coin panel",
+        "p1": "Hi {name}: we created your panel account. You sign in with this same address, and your class groups, students and pending grades are there.",
+        "p2": "The first time, we will ask you to set a new password. Do not share this e-mail with anyone.",
+        "cta": "Open the panel"
+      },
+      "teacher_class_group_assigned": {
+        "subject": "You have a new class group: {classGroup}",
+        "p1": "Hi {name}: the class group {classGroup} of {course} is yours now. It starts on {date}.",
+        "p2": "The panel has the student list, the schedule and the virtual classroom link.",
+        "cta": "See the class group"
+      },
+      "teacher_contract_expiring": {
+        "subject": "Your contract ends soon",
+        "p1": "Hi {name}: your contract with the Asociación ends on {date}. We are telling you early so it can be renewed before the next cycle starts.",
+        "p2": "Coordination will reach out about signing. If you already discussed it, ignore this e-mail.",
+        "cta": "See my file"
+      },
+      "teacher_grades_pending": {
+        "subject": "Grades are still missing in {classGroup}",
+        "p1": "Hi {name}: the cycle of {classGroup} has closed and grades of yours are still missing.",
+        "p2": "Without them we cannot issue those students’ certificates.",
+        "cta": "Enter the grades"
+      },
+      "staff_certificates_ready": {
+        "subject": "{classGroup} is ready for its certificates",
+        "p1": "Hi {name}: {classGroup} has finished and the list of who meets the requirements is prepared.",
+        "p2": "Nothing is issued on its own: you review it and confirm.",
+        "cta": "Review the list"
       }
     },
     "emails": {
@@ -742,7 +784,10 @@
       "test_add": "Add address",
       "test_remove": "Remove {value}",
       "test_error_duplicate": "That address is already on the list.",
-      "test_error_none": "Add at least one address."
+      "test_error_none": "Add at least one address.",
+      "filter_all": "All",
+      "filter_external": "Students",
+      "filter_internal": "Internal"
     },
     "new_email": {
       "title": "New send",

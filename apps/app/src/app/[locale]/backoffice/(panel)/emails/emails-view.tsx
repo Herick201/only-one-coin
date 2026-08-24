@@ -20,6 +20,15 @@ import {
 } from '@/components/backoffice/ui'
 import { BoIcon } from '@/components/backoffice/icons'
 
+/** Nobody outside the institution ever receives these. */
+function isInternal(flow: EmailFlow): boolean {
+  return flow.audience === 'teacher' || flow.audience === 'staff'
+}
+
+type AudienceFilter = 'all' | 'external' | 'internal'
+
+const AUDIENCE_FILTERS: AudienceFilter[] = ['all', 'external', 'internal']
+
 /** Share of what left that the receiving server accepted. */
 function deliveryRate(flow: EmailFlow): number | null {
   return flow.metrics.sent === 0 ? null : flow.metrics.delivered / flow.metrics.sent
@@ -47,6 +56,7 @@ export function EmailsView({
   const router = useRouter()
 
   const [query, setQuery] = useState('')
+  const [audience, setAudience] = useState<AudienceFilter>('all')
   const [pausedOnly, setPausedOnly] = useState(false)
 
   /* Names and triggers are translated, so the search runs over what the reader
@@ -54,6 +64,8 @@ export function EmailsView({
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase()
     return flows.filter((flow) => {
+      if (audience === 'external' && isInternal(flow)) return false
+      if (audience === 'internal' && !isInternal(flow)) return false
       if (pausedOnly && flow.enabled) return false
       if (!needle) return true
       /* Search what is on screen: the trigger sentence moved to the journey,
@@ -66,9 +78,15 @@ export function EmailsView({
         .toLowerCase()
         .includes(needle)
     })
-  }, [flows, query, pausedOnly, t])
+  }, [flows, query, audience, pausedOnly, t])
 
   const pausedCount = flows.filter((flow) => !flow.enabled).length
+
+  const audienceCounts: Record<AudienceFilter, number> = {
+    all: flows.length,
+    external: flows.filter((flow) => !isInternal(flow)).length,
+    internal: flows.filter(isInternal).length,
+  }
 
   /**
    * The whole row opens the e-mail, and the button inside it stays a real
@@ -131,6 +149,33 @@ export function EmailsView({
           hint={t('emails.stat_paused_hint', { count: pausedCount })}
         />
       </AutoGrid>
+
+      {/* The two halves of the catalog: what leaves the institution, and what
+          stays inside it. A teacher's contract warning and a student's
+          credentials have nothing to do with each other. */}
+      <nav className="flex flex-wrap gap-1.5">
+        {AUDIENCE_FILTERS.map((value) => {
+          const active = audience === value
+          return (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setAudience(value)}
+              aria-pressed={active}
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                active
+                  ? 'bg-brand-blue text-white'
+                  : 'border border-line bg-white text-muted-foreground hover:border-brand-yellow hover:bg-cream hover:text-ink'
+              }`}
+            >
+              {t(`emails.filter_${value}`)}
+              <span className={active ? 'text-white/70' : 'text-slate-400'}>
+                {audienceCounts[value]}
+              </span>
+            </button>
+          )
+        })}
+      </nav>
 
       <Toolbar>
         <label className={toolbarSearchClass}>

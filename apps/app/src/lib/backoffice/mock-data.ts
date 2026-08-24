@@ -3260,6 +3260,10 @@ const studentSample = {
   studentEmail: 'maria.quispe@gmail.com',
   guardianName: 'Rosa Elena Rojas Sánchez',
   guardianEmail: 'rosa.rojas@gmail.com',
+  teacherName: 'Elena Ríos Salazar',
+  teacherEmail: 'elena.rios@onlyonecoin.edu.pe',
+  staffName: 'Lucía Ramírez',
+  staffEmail: 'lucia.ramirez@onlyonecoin.edu.pe',
   courseName: 'Inglés Básico A1',
   classGroupName: 'A1 — Lun/Mié 18:00',
   amountCents: 6990,
@@ -3388,6 +3392,70 @@ export function listEmailFlows(): EmailFlow[] {
       version: 4,
       updatedAt: '2026-08-12T17:25:00Z',
       metrics: { sent: 341, delivered: 336, bounced: 4, failed: 1 },
+      sample: studentSample,
+    },
+
+    /* Internal. Small volumes — there are two dozen teachers, not five
+       thousand students — and no stage: none of these is a step of the
+       student's journey. */
+    {
+      template: 'teacher_credentials_issued',
+      audience: 'teacher',
+      stage: null,
+      conditional: false,
+      enabled: true,
+      version: 2,
+      updatedAt: '2026-07-28T15:10:00Z',
+      metrics: { sent: 4, delivered: 4, bounced: 0, failed: 0 },
+      sample: studentSample,
+    },
+    {
+      template: 'teacher_class_group_assigned',
+      audience: 'teacher',
+      stage: null,
+      conditional: false,
+      enabled: true,
+      version: 3,
+      updatedAt: '2026-08-06T10:35:00Z',
+      metrics: { sent: 21, delivered: 21, bounced: 0, failed: 0 },
+      sample: studentSample,
+    },
+    {
+      /* 45 days out, the number the panel already watches
+         (`CONTRACT_ALERT_DAYS`, CLAUDE.md §1 — provisional). */
+      template: 'teacher_contract_expiring',
+      audience: 'teacher',
+      stage: null,
+      conditional: true,
+      enabled: true,
+      version: 1,
+      updatedAt: '2026-08-19T09:00:00Z',
+      metrics: { sent: 3, delivered: 3, bounced: 0, failed: 0 },
+      sample: studentSample,
+    },
+    {
+      template: 'teacher_grades_pending',
+      audience: 'teacher',
+      stage: null,
+      conditional: true,
+      enabled: true,
+      version: 2,
+      updatedAt: '2026-08-15T13:20:00Z',
+      metrics: { sent: 7, delivered: 7, bounced: 0, failed: 0 },
+      sample: studentSample,
+    },
+    {
+      /* The batch is never fired by a date — the list is prepared and
+         coordination confirms it (`docs/DOCUMENTOS-E-CERTIFICADOS.md`). This
+         e-mail is what tells them the list is ready. */
+      template: 'staff_certificates_ready',
+      audience: 'staff',
+      stage: null,
+      conditional: false,
+      enabled: true,
+      version: 1,
+      updatedAt: '2026-08-17T16:40:00Z',
+      metrics: { sent: 5, delivered: 5, bounced: 0, failed: 0 },
       sample: studentSample,
     },
   ]

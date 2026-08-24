@@ -59,7 +59,15 @@ export function EmailFlowDetail({
    * the preview — a template that does not name the guardian simply ignores it.
    */
   const values = {
-    name: flow.sample.studentName,
+    /* Who `{name}` is depends on who is reading it: the recipient, except on
+       the guardian's templates, where the name in the text is the student and
+       `{guardian}` is the person receiving it. */
+    name:
+      flow.audience === 'teacher'
+        ? flow.sample.teacherName
+        : flow.audience === 'staff'
+          ? flow.sample.staffName
+          : flow.sample.studentName,
     guardian: flow.sample.guardianName,
     course: flow.sample.courseName,
     classGroup: flow.sample.classGroupName,
@@ -67,10 +75,16 @@ export function EmailFlowDetail({
     date: formatDate(flow.sample.date, locale),
   }
 
-  const recipient =
+  const to =
     flow.audience === 'guardian'
-      ? `${flow.sample.guardianName} <${flow.sample.guardianEmail}>`
-      : `${flow.sample.studentName} <${flow.sample.studentEmail}>`
+      ? { name: flow.sample.guardianName, address: flow.sample.guardianEmail }
+      : flow.audience === 'teacher'
+        ? { name: flow.sample.teacherName, address: flow.sample.teacherEmail }
+        : flow.audience === 'staff'
+          ? { name: flow.sample.staffName, address: flow.sample.staffEmail }
+          : { name: flow.sample.studentName, address: flow.sample.studentEmail }
+
+  const recipient = `${to.name} <${to.address}>`
 
   const rate = flow.metrics.sent === 0 ? null : flow.metrics.delivered / flow.metrics.sent
 

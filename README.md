@@ -75,9 +75,12 @@ Domínio e fila já existem, independentes dessa escolha:
   avisa quantas turmas em andamento ainda apontam para ele, e o contrato deixa
   de ser vigiado enquanto estiver inativo) e correio (`/backoffice/emails`, em
   três telas: **Automáticos**, o conjunto dos e-mails transacionais com
-  destinatário, estado e enviados/entregues dos últimos 30 dias;
-  **Jornada** (`/backoffice/emails/journey`), o fluxo: a espinha são os eventos
-  do domínio (matrícula enviada, comprovante em validação, pagamento decidido,
+  destinatário, estado e enviados/entregues dos últimos 30 dias, cortado entre
+  os que saem para o aluno/apoderado e os **internos** (docente e coordenação:
+  acesso ao painel, turma atribuída, contrato a vencer, notas pendentes, turma
+  pronta para certificados);
+  **Jornada** (`/backoffice/emails/journey`), o fluxo do aluno (os internos ficam
+  fora dele de propósito): a espinha são os eventos do domínio (matrícula enviada, comprovante em validação, pagamento decidido,
   acesso liberado, documentos) e os e-mails saem deles como ramos — tracejado e
   com a condição escrita no conector quando o caso pode nunca tomar aquele
   caminho, e cada quadro abre o e-mail; e a página de cada e-mail

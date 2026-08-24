@@ -29,6 +29,8 @@ export interface EmailJourneyStage {
 export function buildEmailJourney(flows: EmailFlow[]): EmailJourneyStage[] {
   return EMAIL_STAGES.map((stage) => ({
     stage,
+    /* Internal e-mails carry no stage on purpose (`EmailFlow.stage`): a
+       message to a teacher is not a step of the student's journey. */
     flows: flows.filter((flow) => flow.stage === stage),
   }))
 }

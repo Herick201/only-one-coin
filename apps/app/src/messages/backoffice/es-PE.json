@@ -569,7 +569,12 @@
       "seat_reservation_expiring": "Vacante por vencer",
       "class_access_ready": "Acceso al aula virtual",
       "enrollment_certificate_issued": "Constancia de matrícula",
-      "certificate_issued": "Certificado de finalización"
+      "certificate_issued": "Certificado de finalización",
+      "teacher_credentials_issued": "Acceso del docente",
+      "teacher_class_group_assigned": "Aula asignada",
+      "teacher_contract_expiring": "Contrato por vencer",
+      "teacher_grades_pending": "Notas pendientes",
+      "staff_certificates_ready": "Aula lista para certificados"
     },
     "email_trigger": {
       "enrollment_submitted": "Al recibir los datos de matrícula, después de que el alumno llena el formulario.",
@@ -581,11 +586,18 @@
       "seat_reservation_expiring": "Un día antes de liberarse la vacante.",
       "class_access_ready": "Tres días antes del inicio del aula.",
       "enrollment_certificate_issued": "Al emitirse la constancia solicitada.",
-      "certificate_issued": "Al emitirse el certificado del aula."
+      "certificate_issued": "Al emitirse el certificado del aula.",
+      "teacher_credentials_issued": "Al crearse la cuenta del docente en el panel.",
+      "teacher_class_group_assigned": "Cuando un aula pasa a estar a su cargo.",
+      "teacher_contract_expiring": "45 días antes de que termine el contrato.",
+      "teacher_grades_pending": "Al cerrar el ciclo, si le faltan notas por cargar.",
+      "staff_certificates_ready": "Cuando un aula termina y la lista queda lista para que coordinación la confirme."
     },
     "email_audience": {
       "student": "Alumno",
-      "guardian": "Apoderado"
+      "guardian": "Apoderado",
+      "teacher": "Docente",
+      "staff": "Coordinación"
     },
     "email_stage": {
       "submitted": "Matrícula enviada",
@@ -672,6 +684,36 @@
         "p1": "Hola {name}: felicitaciones por terminar {course}. Tu certificado de finalización ya está emitido y va adjunto a este correo.",
         "p2": "También queda guardado en tu portal, con su código de verificación.",
         "cta": "Ver mi certificado"
+      },
+      "teacher_credentials_issued": {
+        "subject": "Tu acceso al panel de Only One Coin",
+        "p1": "Hola {name}: creamos tu cuenta del panel. Entras con este mismo correo y ahí ves tus aulas, tus alumnos y las notas por cargar.",
+        "p2": "La primera vez te pediremos crear una contraseña nueva. No compartas este correo con nadie.",
+        "cta": "Entrar al panel"
+      },
+      "teacher_class_group_assigned": {
+        "subject": "Tienes un aula nueva: {classGroup}",
+        "p1": "Hola {name}: el aula {classGroup} de {course} quedó a tu cargo. Empieza el {date}.",
+        "p2": "En el panel ves la lista de alumnos, el horario y el enlace del aula virtual.",
+        "cta": "Ver el aula"
+      },
+      "teacher_contract_expiring": {
+        "subject": "Tu contrato vence pronto",
+        "p1": "Hola {name}: tu contrato con la Asociación termina el {date}. Te avisamos con tiempo para renovarlo antes de que empiece el próximo ciclo.",
+        "p2": "Coordinación se comunica contigo para la firma. Si ya lo conversaste, ignora este correo.",
+        "cta": "Ver mi ficha"
+      },
+      "teacher_grades_pending": {
+        "subject": "Faltan notas por cargar en {classGroup}",
+        "p1": "Hola {name}: el ciclo de {classGroup} cerró y todavía faltan notas tuyas por cargar.",
+        "p2": "Sin ellas no podemos emitir los certificados de esos alumnos.",
+        "cta": "Cargar las notas"
+      },
+      "staff_certificates_ready": {
+        "subject": "{classGroup} está lista para emitir certificados",
+        "p1": "Hola {name}: {classGroup} terminó y la lista de quienes cumplen los requisitos ya está armada.",
+        "p2": "Nada se emite solo: la revisas y confirmas tú.",
+        "cta": "Revisar la lista"
       }
     },
     "emails": {
@@ -742,7 +784,10 @@
       "test_add": "Añadir correo",
       "test_remove": "Quitar {value}",
       "test_error_duplicate": "Esa dirección ya está en la lista.",
-      "test_error_none": "Añade al menos una dirección."
+      "test_error_none": "Añade al menos una dirección.",
+      "filter_all": "Todos",
+      "filter_external": "Alumnos",
+      "filter_internal": "Interno"
     },
     "new_email": {
       "title": "Nuevo envío",
