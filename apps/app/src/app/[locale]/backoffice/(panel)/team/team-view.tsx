@@ -8,7 +8,7 @@ import type {
   StaffRole,
   StaffRoleChange,
 } from '@/lib/backoffice/types'
-import { requiresMfa } from '@/lib/backoffice/permissions'
+import { isMfaMandatory } from '@/lib/backoffice/permissions'
 import { formatDate, formatDateTime, initials, type Locale } from '@/lib/format'
 import {
   Card,
@@ -62,7 +62,7 @@ const selectClass =
 
 /** A cargo that requires the second factor and does not have it yet. */
 function mfaPending(row: StaffMemberRow): boolean {
-  return requiresMfa(row.role) && !row.mfaEnrolled
+  return isMfaMandatory(row.role) && !row.mfaEnrolled
 }
 
 /**
@@ -429,7 +429,7 @@ export function TeamView({
                              sign in is not an errand — chasing it would be
                              chasing a door that is already shut. */
                           <span className="text-xs text-muted-foreground">—</span>
-                        ) : !requiresMfa(row.role) ? (
+                        ) : !isMfaMandatory(row.role) ? (
                           <span className="text-xs text-muted-foreground">
                             {t('team.mfa_optional')}
                           </span>

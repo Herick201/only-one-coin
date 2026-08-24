@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import type { StaffMemberRow, StaffRole } from '@/lib/backoffice/types'
-import { requiresMfa } from '@/lib/backoffice/permissions'
+import { isMfaMandatory } from '@/lib/backoffice/permissions'
 import { Card, RequiredMark } from '@/components/backoffice/ui'
 import { BoIcon } from '@/components/backoffice/icons'
 import { AutoGrid } from '@/components/layout/auto-grid'
@@ -155,7 +155,7 @@ export function NewStaffForm({
           <p className="mt-3 text-xs text-muted-foreground">{t('team.teacher_hint')}</p>
         )}
 
-        {requiresMfa(role) && (
+        {isMfaMandatory(role) && (
           <p className="mt-3 flex items-start gap-2 rounded-lg border border-dashed border-line bg-sky-soft px-3 py-2 text-xs text-muted-foreground">
             <BoIcon name="shield" size={14} className="mt-0.5 shrink-0" />
             {t('team.mfa_note')}

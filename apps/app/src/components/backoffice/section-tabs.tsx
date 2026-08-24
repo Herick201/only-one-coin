@@ -1,7 +1,6 @@
 'use client'
 
 import { Link, usePathname } from '@/i18n/navigation'
-import { BoIcon, type BoIconName } from './icons'
 import { tabClass, tabStripClass } from './tab-strip'
 
 export interface SectionTab {
@@ -15,34 +14,14 @@ export interface SectionTab {
   exact?: boolean
 }
 
-export interface SectionAction {
-  href: string
-  /** Named, never drawn: the icon is the whole button (CLAUDE.md §4). */
-  label: string
-  icon: BoIconName
-}
-
 /**
  * The two halves of a section that share one sidebar entry. Real routes, not
  * client state: a class group opened from a tab is still a link somebody can
  * bookmark or send to a colleague, and the detail pages under it keep their
  * own URLs.
  */
-export function SectionTabs({
-  tabs,
-  action,
-}: {
-  tabs: SectionTab[]
-  /**
-   * A screen of the section that is not a place the reader works — the
-   * parameters behind it. It sits apart, as an icon on the far side, because
-   * a fourth tab reads like a fourth place to go and it is one nobody opens
-   * twice a month.
-   */
-  action?: SectionAction
-}) {
+export function SectionTabs({ tabs }: { tabs: SectionTab[] }) {
   const pathname = usePathname()
-  const actionActive = action !== undefined && pathname === action.href
 
   return (
     <nav className={tabStripClass}>
@@ -63,18 +42,6 @@ export function SectionTabs({
           </Link>
         )
       })}
-
-      {action && (
-        <Link
-          href={action.href}
-          aria-current={actionActive ? 'page' : undefined}
-          aria-label={action.label}
-          title={action.label}
-          className={`${tabClass(actionActive)} ml-auto px-2.5`}
-        >
-          <BoIcon name={action.icon} size={18} />
-        </Link>
-      )}
     </nav>
   )
 }

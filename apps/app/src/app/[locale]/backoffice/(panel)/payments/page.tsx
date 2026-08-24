@@ -4,10 +4,7 @@ import {
   getStaffSession,
   listPayments,
 } from '@/lib/backoffice/mock-data'
-import {
-  canConfigurePayments,
-  canReviewPayments,
-} from '@/lib/backoffice/permissions'
+import { canReviewPayments } from '@/lib/backoffice/permissions'
 import { EmptyState, MockNotice, PageHeader } from '@/components/backoffice/ui'
 import { SectionTabs } from '@/components/backoffice/section-tabs'
 import { PaymentsView } from './payments-view'
@@ -60,17 +57,6 @@ export default async function PaymentsPage({
           },
           { href: '/backoffice/payments/review', label: t('payments.tab_review') },
         ]}
-        /* The parameters are not a third place to work — they are what the
-           other two run on, and only administration changes them. */
-        action={
-          canConfigurePayments(staff.role)
-            ? {
-                href: '/backoffice/payments/settings',
-                label: t('payments.settings_action'),
-                icon: 'settings',
-              }
-            : undefined
-        }
       />
       <MockNotice label={t('common.mock_notice')} />
       <PaymentsView rows={listPayments()} metrics={getPaymentMetrics()} />

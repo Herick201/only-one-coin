@@ -229,7 +229,7 @@ O hold curto existe porque o pagamento acontece **fora da plataforma** (Yape/tra
 
 Enviado o comprovante, a vaga **continua `reserved`** e passa a correr no relógio de 5 dias. Ela só vira `confirmed` quando o pagamento é aprovado (OCR ou revisão humana) — enviar comprovante não confirma matrícula, só garante que a vaga não cai pelo hold curto.
 
-Os dois prazos são **configuráveis no backoffice** (`/backoffice/payments/settings`), nunca constante no código — mesma regra da tolerância de valor.
+Os dois prazos são **configuráveis no backoffice** (`/backoffice/settings`), nunca constante no código — mesma regra da tolerância de valor.
 
 ### Origem da matrícula (atribuição de canal)
 

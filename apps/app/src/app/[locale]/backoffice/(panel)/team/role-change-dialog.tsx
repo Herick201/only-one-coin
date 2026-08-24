@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import type { StaffMemberRow, StaffRole } from '@/lib/backoffice/types'
-import { requiresMfa } from '@/lib/backoffice/permissions'
+import { isMfaMandatory } from '@/lib/backoffice/permissions'
 import { BoIcon } from '@/components/backoffice/icons'
 import {
   Dialog,
@@ -105,7 +105,7 @@ export function RoleChangeDialog({
 
               {/* Moving somebody onto a cargo that demands a second factor is
                   worth saying out loud: the account does not have one yet. */}
-              {requiresMfa(role) && !member.mfaEnrolled && (
+              {isMfaMandatory(role) && !member.mfaEnrolled && (
                 <p className="flex items-start gap-2 rounded-lg border border-dashed border-line bg-sky-soft px-3 py-2 text-xs text-muted-foreground">
                   <BoIcon name="shield" size={14} className="mt-0.5 shrink-0" />
                   {t('team.mfa_note')}

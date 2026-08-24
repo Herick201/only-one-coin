@@ -158,12 +158,14 @@ export default async function BackofficeHomePage({
       label: t('nav.email'),
       body: t('modules.email'),
       icon: Mail,
+      ready: true,
     },
     {
       href: '/backoffice/reports',
       label: t('nav.reports'),
       body: t('modules.reports'),
       icon: BarChart3,
+      ready: true,
     },
     {
       href: '/backoffice/team',

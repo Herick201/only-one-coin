@@ -175,7 +175,7 @@ Consequências de desenho:
 - **Recarregar a página não perde nada** (Sessão 20). O estado do wizard
   persiste no navegador; o hold persiste no servidor.
 - Os dois prazos são **parâmetros no backoffice**
-  (`/backoffice/payments/settings`), como a tolerância de valor.
+  (`/backoffice/settings`), como a tolerância de valor.
 
 > O prazo começou em 10 minutos e subiu para **15** antes de ir ao ar: Yape
 > leva ~1 minuto, mas uma transferência entre bancos leva bem mais, e expirar
