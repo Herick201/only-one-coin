@@ -572,7 +572,7 @@
       "certificate_issued": "Certificado de conclusão"
     },
     "email_trigger": {
-      "enrollment_submitted": "Ao enviar o formulário de matrícula.",
+      "enrollment_submitted": "Ao receber os dados da matrícula, depois que o aluno preenche o formulário.",
       "payment_under_review": "Quando o comprovante vai para revisão humana.",
       "payment_approved": "Quando o pagamento é aprovado.",
       "payment_rejected": "Quando a revisão rejeita o comprovante.",
@@ -705,18 +705,17 @@
       "state_hint_off": "Está pausado: ninguém o recebe, nem quem está esperando por ele.",
       "toast_enabled": "E-mail ativado",
       "toast_paused": "E-mail pausado",
-      "audit_notice": "Ativar ou pausar um e-mail fica na auditoria, com quem fez e quando.",
       "no_send_notice": "Não existe botão de enviar por aluno: cada e-mail sai como consequência do que aconteceu no sistema, e reenviar é uma exceção auditada.",
       "test_title": "Enviar um teste",
-      "test_hint": "Até {max} endereços, separados por vírgula. O assunto sai com o prefixo {prefix}.",
+      "test_hint": "Até {max} endereços. O assunto sai com o prefixo {prefix}.",
       "test_prefix": "[PRUEBA]",
       "test_label": "Endereços",
       "test_placeholder": "nome@onlyonecoin.edu.pe",
       "test_guard": "Fora de produção o provedor só aceita endereços da lista permitida.",
       "test_send": "Enviar teste",
-      "test_error_empty": "Escreva pelo menos um endereço.",
+      "test_error_empty": "Escreva um endereço.",
       "test_error_max": "São {max} endereços no máximo.",
-      "test_error_invalid": "Este endereço não parece um e-mail: {value}.",
+      "test_error_invalid": "Isto não parece um e-mail.",
       "test_toast": "{count, plural, one {Teste enviado para um endereço} other {Teste enviado para # endereços}}",
       "preview_to": "Para",
       "updated": "Atualizado em {date}",
@@ -729,7 +728,11 @@
       "help_condition": "A etiqueta cinza é a condição: esse e-mail só sai se o caso tomar aquele caminho.",
       "help_guardian": "Apoderado: quem recebe é ele, não o aluno.",
       "help_paused": "Pausado: esse e-mail está desligado e naquele ponto ninguém recebe nada.",
-      "help_open": "Cada quadro abre o e-mail, com o modelo dele."
+      "help_open": "Cada quadro abre o e-mail, com o modelo dele.",
+      "test_add": "Adicionar e-mail",
+      "test_remove": "Remover {value}",
+      "test_error_duplicate": "Esse endereço já está na lista.",
+      "test_error_none": "Adicione pelo menos um endereço."
     },
     "new_email": {
       "title": "Novo envio",

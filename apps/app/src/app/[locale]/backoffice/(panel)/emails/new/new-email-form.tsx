@@ -4,13 +4,10 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import type { EnrollmentStatus } from '@/lib/backoffice/types'
-import {
-  MAX_TEST_RECIPIENTS,
-  parseTestRecipients,
-} from '@/lib/backoffice/email-proof'
 import { Card, EmptyState, SectionTitle } from '@/components/backoffice/ui'
 import { Toast } from '@/components/backoffice/controls'
 import { BoIcon } from '@/components/backoffice/icons'
+import { ProofSend } from '../proof-send'
 
 /** Which question the segment asks. The answer is resolved at send time. */
 type SegmentKind = 'all' | 'course' | 'class_group' | 'enrollment_status'
@@ -68,7 +65,6 @@ export function NewEmailForm({
   )
   const [subject, setSubject] = useState('')
   const [body, setBody] = useState('')
-  const [proofTo, setProofTo] = useState('')
   /** Cleared by any edit to the text — that is the whole point of it. */
   const [proofSent, setProofSent] = useState(false)
   const [confirmed, setConfirmed] = useState(false)
@@ -133,21 +129,10 @@ export function NewEmailForm({
     if (step === 'test') go('review')
   }
 
-  function sendProof() {
-    const parsed = parseTestRecipients(proofTo)
-    if (!parsed.ok) {
-      /* Written out rather than nested: the invalid case is the only one
-         carrying the address that failed, and a ternary chain hides that. */
-      if (parsed.reason === 'empty') setError(t('emails.test_error_empty'))
-      else if (parsed.reason === 'max')
-        setError(t('emails.test_error_max', { max: MAX_TEST_RECIPIENTS }))
-      else setError(t('emails.test_error_invalid', { value: parsed.value }))
-      return
-    }
+  function proofSentTo(count: number) {
     setError(null)
-    setProofTo('')
     setProofSent(true)
-    setToast(t('emails.test_toast', { count: parsed.list.length }))
+    setToast(t('emails.test_toast', { count }))
   }
 
   function send() {
@@ -361,29 +346,7 @@ export function NewEmailForm({
         {step === 'test' && (
           <>
             <SectionTitle icon="email">{t('emails.test_title')}</SectionTitle>
-            <p className="text-xs text-muted-foreground">
-              {t('emails.test_hint', {
-                max: MAX_TEST_RECIPIENTS,
-                prefix: t('emails.test_prefix'),
-              })}
-            </p>
-            <label className="flex flex-col gap-1.5">
-              <span className="sr-only">{t('emails.test_label')}</span>
-              <input
-                type="text"
-                value={proofTo}
-                onChange={(event) => {
-                  setProofTo(event.target.value)
-                  setError(null)
-                }}
-                placeholder={t('emails.test_placeholder')}
-                className={fieldClass}
-              />
-            </label>
-            <button type="button" onClick={sendProof} className={primaryButtonClass}>
-              <BoIcon name="email" size={16} />
-              {t('emails.test_send')}
-            </button>
+            <ProofSend onSent={proofSentTo} />
             <p
               className={`flex items-start gap-2 text-xs font-medium ${
                 proofSent ? 'text-emerald-700' : 'text-amber-700'
@@ -399,10 +362,6 @@ export function NewEmailForm({
             <p className="flex items-start gap-2 text-xs text-muted-foreground">
               <BoIcon name="alert" size={14} className="mt-0.5 shrink-0" />
               {t('new_email.test_note')}
-            </p>
-            <p className="flex items-start gap-2 rounded-lg border border-dashed border-line bg-sky-soft px-3 py-2 text-xs text-muted-foreground">
-              <BoIcon name="shield" size={14} className="mt-0.5 shrink-0" />
-              {t('emails.test_guard')}
             </p>
           </>
         )}

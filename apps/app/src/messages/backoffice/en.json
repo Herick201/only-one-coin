@@ -572,7 +572,7 @@
       "certificate_issued": "Completion certificate"
     },
     "email_trigger": {
-      "enrollment_submitted": "When the enrollment form is submitted.",
+      "enrollment_submitted": "When the enrollment data arrives, after the student fills in the form.",
       "payment_under_review": "When the receipt goes to human review.",
       "payment_approved": "When the payment is approved.",
       "payment_rejected": "When the review rejects the receipt.",
@@ -705,18 +705,17 @@
       "state_hint_off": "It is paused: nobody receives it, not even the person waiting for it.",
       "toast_enabled": "E-mail switched on",
       "toast_paused": "E-mail paused",
-      "audit_notice": "Switching an e-mail on or off goes to the audit log, with who did it and when.",
       "no_send_notice": "There is no per-student send button: every e-mail goes out as a consequence of something that happened in the system, and a resend is an audited exception.",
       "test_title": "Send a test",
-      "test_hint": "Up to {max} addresses, comma separated. The subject goes out prefixed with {prefix}.",
+      "test_hint": "Up to {max} addresses. The subject goes out prefixed with {prefix}.",
       "test_prefix": "[PRUEBA]",
       "test_label": "Addresses",
       "test_placeholder": "name@onlyonecoin.edu.pe",
       "test_guard": "Outside production the provider only accepts addresses on the allowlist.",
       "test_send": "Send test",
-      "test_error_empty": "Write at least one address.",
+      "test_error_empty": "Write an address.",
       "test_error_max": "That is {max} addresses at most.",
-      "test_error_invalid": "This one does not look like an address: {value}.",
+      "test_error_invalid": "This does not look like an address.",
       "test_toast": "{count, plural, one {Test sent to one address} other {Test sent to # addresses}}",
       "preview_to": "To",
       "updated": "Updated on {date}",
@@ -729,7 +728,11 @@
       "help_condition": "The grey label is the condition: that e-mail only goes out when the case takes that turn.",
       "help_guardian": "Guardian: they receive it, not the student.",
       "help_paused": "Paused: that e-mail is switched off, and nobody receives anything at that point.",
-      "help_open": "Every box opens the e-mail, with its template."
+      "help_open": "Every box opens the e-mail, with its template.",
+      "test_add": "Add address",
+      "test_remove": "Remove {value}",
+      "test_error_duplicate": "That address is already on the list.",
+      "test_error_none": "Add at least one address."
     },
     "new_email": {
       "title": "New send",

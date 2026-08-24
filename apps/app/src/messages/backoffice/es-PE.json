@@ -572,7 +572,7 @@
       "certificate_issued": "Certificado de finalización"
     },
     "email_trigger": {
-      "enrollment_submitted": "Al enviarse el formulario de matrícula.",
+      "enrollment_submitted": "Al recibir los datos de matrícula, después de que el alumno llena el formulario.",
       "payment_under_review": "Cuando el comprobante pasa a revisión humana.",
       "payment_approved": "Cuando el pago queda aprobado.",
       "payment_rejected": "Cuando la revisión rechaza el comprobante.",
@@ -705,18 +705,17 @@
       "state_hint_off": "Está pausado: nadie lo recibe, ni siquiera quien lo está esperando.",
       "toast_enabled": "Correo activado",
       "toast_paused": "Correo pausado",
-      "audit_notice": "Activar o pausar un correo queda en la auditoría, con quién lo hizo y cuándo.",
       "no_send_notice": "No hay un botón de enviar por alumno: cada correo sale como consecuencia de lo que ocurrió en el sistema, y un reenvío es una excepción auditada.",
       "test_title": "Enviar una prueba",
-      "test_hint": "Hasta {max} direcciones, separadas por coma. El asunto sale con el prefijo {prefix}.",
+      "test_hint": "Hasta {max} direcciones. El asunto sale con el prefijo {prefix}.",
       "test_prefix": "[PRUEBA]",
       "test_label": "Direcciones",
       "test_placeholder": "nombre@onlyonecoin.edu.pe",
       "test_guard": "Fuera de producción el proveedor solo acepta direcciones de la lista permitida.",
       "test_send": "Enviar prueba",
-      "test_error_empty": "Escribe al menos una dirección.",
+      "test_error_empty": "Escribe una dirección.",
       "test_error_max": "Son {max} direcciones como máximo.",
-      "test_error_invalid": "Esta dirección no parece un correo: {value}.",
+      "test_error_invalid": "Esto no parece un correo.",
       "test_toast": "{count, plural, one {Prueba enviada a una dirección} other {Prueba enviada a # direcciones}}",
       "preview_to": "Para",
       "updated": "Actualizada el {date}",
@@ -729,7 +728,11 @@
       "help_condition": "La etiqueta gris es la condición: ese correo solo sale si el caso toma ese camino.",
       "help_guardian": "Apoderado: lo recibe él, no el alumno.",
       "help_paused": "Pausado: ese correo está apagado y en ese punto nadie recibe nada.",
-      "help_open": "Cada recuadro abre el correo, con su plantilla."
+      "help_open": "Cada recuadro abre el correo, con su plantilla.",
+      "test_add": "Añadir correo",
+      "test_remove": "Quitar {value}",
+      "test_error_duplicate": "Esa dirección ya está en la lista.",
+      "test_error_none": "Añade al menos una dirección."
     },
     "new_email": {
       "title": "Nuevo envío",

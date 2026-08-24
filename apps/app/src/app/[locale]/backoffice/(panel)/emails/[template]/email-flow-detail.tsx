@@ -10,10 +10,6 @@ import {
   formatPercent,
   type Locale,
 } from '@/lib/format'
-import {
-  MAX_TEST_RECIPIENTS,
-  parseTestRecipients,
-} from '@/lib/backoffice/email-proof'
 import { AutoGrid } from '@/components/layout/auto-grid'
 import {
   Card,
@@ -23,6 +19,7 @@ import {
 } from '@/components/backoffice/ui'
 import { Toast, Toggle } from '@/components/backoffice/controls'
 import { BoIcon } from '@/components/backoffice/icons'
+import { ProofSend } from '../proof-send'
 
 /**
  * The e-mail itself. Two columns where the column is wide enough for them: the
@@ -49,30 +46,11 @@ export function EmailFlowDetail({
   const locale = useLocale() as Locale
 
   const [enabled, setEnabled] = useState(flow.enabled)
-  const [recipients, setRecipients] = useState('')
-  const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
 
   function toggle(next: boolean) {
     setEnabled(next)
     setToast(t(next ? 'emails.toast_enabled' : 'emails.toast_paused'))
-  }
-
-  function sendTest() {
-    const parsed = parseTestRecipients(recipients)
-    if (!parsed.ok) {
-      /* Written out rather than nested: the invalid case is the only one
-         carrying the address that failed, and a ternary chain hides that. */
-      if (parsed.reason === 'empty') setError(t('emails.test_error_empty'))
-      else if (parsed.reason === 'max')
-        setError(t('emails.test_error_max', { max: MAX_TEST_RECIPIENTS }))
-      else setError(t('emails.test_error_invalid', { value: parsed.value }))
-      return
-    }
-
-    setError(null)
-    setRecipients('')
-    setToast(t('emails.test_toast', { count: parsed.list.length }))
   }
 
   /**
@@ -166,10 +144,6 @@ export function EmailFlowDetail({
                 hint={t(enabled ? 'emails.state_hint_on' : 'emails.state_hint_off')}
               />
             </Card>
-            <p className="flex items-start gap-2 text-xs text-muted-foreground">
-              <BoIcon name="shield" size={14} className="mt-0.5 shrink-0" />
-              {t('emails.audit_notice')}
-            </p>
           </section>
 
           <section className="flex flex-col gap-3">
@@ -201,42 +175,9 @@ export function EmailFlowDetail({
 
           <section className="flex flex-col gap-3">
             <SectionTitle icon="email">{t('emails.test_title')}</SectionTitle>
-            <p className="text-xs text-muted-foreground">
-              {t('emails.test_hint', {
-                max: MAX_TEST_RECIPIENTS,
-                prefix: t('emails.test_prefix'),
-              })}
-            </p>
-            <label className="flex flex-col gap-1.5">
-              <span className="sr-only">{t('emails.test_label')}</span>
-              <input
-                type="text"
-                value={recipients}
-                onChange={(event) => {
-                  setRecipients(event.target.value)
-                  setError(null)
-                }}
-                placeholder={t('emails.test_placeholder')}
-                aria-invalid={error !== null}
-                className="w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink outline-none transition placeholder:text-muted-foreground focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15"
-              />
-            </label>
-            {error && <p className="text-xs font-medium text-red-600">{error}</p>}
-            <button
-              type="button"
-              onClick={sendTest}
-              className="inline-flex items-center justify-center gap-1.5 self-start rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-yellow hover:text-ink active:bg-brand-yellow-deep"
-            >
-              <BoIcon name="email" size={16} />
-              {t('emails.test_send')}
-            </button>
-            {/* The staging guard, said out loud: outside production the
-                provider refuses anything off the allowlist (CLAUDE.md §6), so a
-                proof that never arrives is the rule working. */}
-            <p className="flex items-start gap-2 rounded-lg border border-dashed border-line bg-sky-soft px-3 py-2 text-xs text-muted-foreground">
-              <BoIcon name="shield" size={14} className="mt-0.5 shrink-0" />
-              {t('emails.test_guard')}
-            </p>
+            <ProofSend
+              onSent={(count) => setToast(t('emails.test_toast', { count }))}
+            />
           </section>
 
           <p className="flex items-start gap-2 border-t border-line pt-4 text-xs text-muted-foreground">
