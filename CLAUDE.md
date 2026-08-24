@@ -222,7 +222,7 @@ Estados de vaga: `reserved` → `confirmed` (pagamento aprovado) → `released` 
 
 | Relógio | De → até | Prazo | Quem devolve a vaga |
 | --- | --- | --- | --- |
-| **Hold de checkout** | vaga presa no checkout → comprovante enviado | **10 min** | o próprio checkout, ao expirar |
+| **Hold de checkout** | vaga presa no checkout → comprovante enviado | **15 min** | o próprio checkout, ao expirar |
 | **Janela de revisão** | comprovante enviado → pagamento aprovado ou recusado | **5 dias** | cron de reserva parada |
 
 O hold curto existe porque o pagamento acontece **fora da plataforma** (Yape/transferência, `CLAUDE.md` §2 — não há pasarela): a pessoa sai da página, paga no app do banco e volta. Sem o hold, ela paga e descobre a turma cheia na volta — e não existe fluxo de devolução. Expirado o hold sem comprovante, a vaga volta pra turma e o checkout recomeça do passo da turma.

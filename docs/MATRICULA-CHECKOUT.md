@@ -151,13 +151,13 @@ a prova**:
 A regra está fechada no `CLAUDE.md` §5; aqui está por que ela existe.
 
 ```
-passo 1 concluído ──► vaga reserved ──┬── comprovante em ≤ 10 min ──► segue reserved (janela de 5 dias)
+passo 1 concluído ──► vaga reserved ──┬── comprovante em ≤ 15 min ──► segue reserved (janela de 5 dias)
    (turma escolhida)                  │                                        │
                                       │                                        ├── pagamento aprovado ──► confirmed
-                                      └── 10 min sem comprovante ──► released  └── recusado / 5 dias ──► released
+                                      └── 15 min sem comprovante ──► released  └── recusado / 5 dias ──► released
 ```
 
-**Hold de checkout — 10 minutos.** Prende a vaga assim que a turma é escolhida,
+**Hold de checkout — 15 minutos.** Prende a vaga assim que a turma é escolhida,
 antes do pagamento. Existe porque o pagamento é fora da plataforma: a pessoa sai
 do navegador, abre o app do banco, paga, tira o print e volta. Sem o hold ela
 pode voltar para uma turma cheia — e **não existe fluxo de devolução** no
@@ -177,10 +177,11 @@ Consequências de desenho:
 - Os dois prazos são **parâmetros no backoffice**
   (`/backoffice/payments/settings`), como a tolerância de valor.
 
-> ⚠️ **A confirmar com o cliente:** 10 minutos é apertado para transferência
-> BCP (Yape leva ~1 min; uma transferência entre bancos, mais). O valor é
-> configurável exatamente por isso — a primeira leitura da taxa de expiração em
-> produção deve decidir se sobe.
+> O prazo começou em 10 minutos e subiu para **15** antes de ir ao ar: Yape
+> leva ~1 minuto, mas uma transferência entre bancos leva bem mais, e expirar
+> com o dinheiro já enviado é o pior desfecho possível deste fluxo — não há
+> devolução. O valor segue configurável no backoffice, e a taxa de expiração em
+> produção decide se muda de novo.
 
 ---
 

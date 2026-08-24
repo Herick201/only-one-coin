@@ -54,7 +54,7 @@ Domínio e fila já existem, independentes dessa escolha:
   modos de entrada** na mesma tela: aberto da landing começa no passo 1, e
   aberto pelo link do vendedor (`?course=&group=&src=whatsapp`) chega com o
   passo 1 respondido e cai no passo 2. A vaga é presa no checkout com relógio
-  curto (10 min, parâmetro do backoffice) e o rascunho sobrevive a recarregar a
+  curto (15 min, parâmetro do backoffice) e o rascunho sobrevive a recarregar a
   página — sair pra pagar no app do banco não perde o preenchimento. A origem
   do canal (`whatsapp`/`web`) é resolvida no servidor, na chegada, e carregada
   até o envio. Desenho e regras em `docs/MATRICULA-CHECKOUT.md`. **Ainda não há

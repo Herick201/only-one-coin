@@ -225,9 +225,10 @@ export function getPublicCatalog(): PublicCatalog {
     classGroups,
     accounts,
     settings: {
-      // The short clock: long enough to open the banking app and pay, short
-      // enough that an abandoned checkout gives the seat back the same hour.
-      holdMinutes: 10,
+      // The short clock: long enough to open the banking app and pay — a
+      // transfer between banks is slower than a Yape — and short enough that
+      // an abandoned checkout gives the seat back the same hour.
+      holdMinutes: 15,
       reservationDays: 5,
       maxReceiptBytes: 8_000_000,
       consentVersion: '2026-08-v1',

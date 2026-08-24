@@ -109,7 +109,7 @@ de peças da Fase 0 que ainda não existem (autorização deny-by-default da Ses
 | 25 | — | Turnstile, rate limit na borda, cache de idempotência |
 
 **Decisão nova desta sessão, que muda o desenho da Sessão 24:** a vaga passa a
-ter **dois relógios** (`CLAUDE.md` §5) — um *hold de checkout* de 10 minutos,
+ter **dois relógios** (`CLAUDE.md` §5) — um *hold de checkout* de 15 minutos,
 que prende a vaga antes do pagamento, e a janela de revisão de 5 dias, que já
 existia. Os dois são parâmetros do backoffice, não constantes. Motivo: o
 pagamento acontece fora da plataforma, e sem o hold curto a pessoa paga e volta
