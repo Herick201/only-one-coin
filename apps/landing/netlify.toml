@@ -19,8 +19,16 @@
   # variáveis de staging
 
 # A matrícula e o portal moram em `apps/app`, num domínio próprio — mas os
-# links da landing são relativos (`/enrollment`, `/pt/enrollment`), porque para
-# quem lê é tudo o mesmo site. Estes redirects são a costura entre os dois.
+# links da landing são relativos (`/enrollment`, `/login`, `/pt/enrollment`),
+# porque para quem lê é tudo o mesmo site. Estes redirects são a costura entre
+# os dois — e `astro dev` faz o mesmo 302 no local
+# (`integrations/app-redirects.mjs`), para que o CTA não morra em 404 fora daqui.
+#
+# O header manda para `/login`, não para `/portal`: quem chega da landing não
+# tem sessão, e a porta do aluno é a tela de login (`CLAUDE.md` §8 — pontos de
+# entrada separados; o backoffice tem a sua, discreta e não linkada daqui).
+# `/portal*` continua redirecionado porque link salvo e link compartilhado
+# existem — quem decide se aquilo abre ou volta ao login é o app.
 #
 # 302 e não proxy (200): um proxy manteria o domínio da landing na barra, ao
 # custo de cookies de sessão e CSP atravessando origens — frágil demais para a
@@ -48,6 +56,42 @@
   status = 302
   force = true
 
+[[redirects]]
+  from = "/login*"
+  to = "https://aula.onlyonecoin.edu.pe/login:splat"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/pt/login*"
+  to = "https://aula.onlyonecoin.edu.pe/pt/login:splat"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/en/login*"
+  to = "https://aula.onlyonecoin.edu.pe/en/login:splat"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/portal*"
+  to = "https://aula.onlyonecoin.edu.pe/portal:splat"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/pt/portal*"
+  to = "https://aula.onlyonecoin.edu.pe/pt/portal:splat"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/en/portal*"
+  to = "https://aula.onlyonecoin.edu.pe/en/portal:splat"
+  status = 302
+  force = true
+
 # Staging aponta para o app de staging (`CLAUDE.md` §7). Sem isto, um deploy de
 # branch mandaria quem testa direto para produção.
 [[context.branch-deploy.redirects]]
@@ -65,6 +109,42 @@
 [[context.branch-deploy.redirects]]
   from = "/en/enrollment*"
   to = "https://staging.aula.onlyonecoin.edu.pe/en/enrollment:splat"
+  status = 302
+  force = true
+
+[[context.branch-deploy.redirects]]
+  from = "/login*"
+  to = "https://staging.aula.onlyonecoin.edu.pe/login:splat"
+  status = 302
+  force = true
+
+[[context.branch-deploy.redirects]]
+  from = "/pt/login*"
+  to = "https://staging.aula.onlyonecoin.edu.pe/pt/login:splat"
+  status = 302
+  force = true
+
+[[context.branch-deploy.redirects]]
+  from = "/en/login*"
+  to = "https://staging.aula.onlyonecoin.edu.pe/en/login:splat"
+  status = 302
+  force = true
+
+[[context.branch-deploy.redirects]]
+  from = "/portal*"
+  to = "https://staging.aula.onlyonecoin.edu.pe/portal:splat"
+  status = 302
+  force = true
+
+[[context.branch-deploy.redirects]]
+  from = "/pt/portal*"
+  to = "https://staging.aula.onlyonecoin.edu.pe/pt/portal:splat"
+  status = 302
+  force = true
+
+[[context.branch-deploy.redirects]]
+  from = "/en/portal*"
+  to = "https://staging.aula.onlyonecoin.edu.pe/en/portal:splat"
   status = 302
   force = true
 
