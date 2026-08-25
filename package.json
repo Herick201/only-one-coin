@@ -12,6 +12,7 @@
   },
   "scripts": {
     "dev": "pnpm --filter @ooc/landing dev",
+    "dev:web": "pnpm --parallel --filter @ooc/landing --filter @ooc/app dev",
     "dev:landing": "pnpm --filter @ooc/landing dev",
     "dev:app": "pnpm --filter @ooc/app dev",
     "dev:api": "pnpm --filter @ooc/api dev",

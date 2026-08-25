@@ -5,7 +5,8 @@
       "description": "Choose your course, hold your seat and send your payment receipt in four steps."
     },
     "brand": {
-      "label": "Online enrolment"
+      "label": "Online enrolment",
+      "back_to_site": "Back to site"
     },
     "footer": {
       "secure": "Secure connection. Your data is used only for your enrolment.",

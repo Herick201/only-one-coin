@@ -60,8 +60,8 @@ const valueIcons = [
       <p class="lead">{lead}</p>
       <p class="text-muted">{a.lead2}</p>
       <div class="intro-actions">
-        <a href={withLang(lang, "/courses")} class="btn btn-yellow">{t.hero.ctaCourses}</a>
-        <a href={withLang(lang, "/contact")} class="btn btn-outline">{t.nav.contact}</a>
+        <a href={withLang(lang, "/enrollment")} class="btn btn-yellow">{t.hero.ctaEnroll}</a>
+        <a href={withLang(lang, "/contact")} class="link-quiet">{t.nav.contact}</a>
       </div>
     </div>
 
@@ -272,8 +272,9 @@ const valueIcons = [
   }
   .intro-actions {
     display: flex;
+    align-items: center;
     flex-wrap: wrap;
-    gap: 14px;
+    gap: 22px;
     margin-top: 28px;
   }
 

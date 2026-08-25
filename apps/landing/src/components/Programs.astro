@@ -1,9 +1,19 @@
 ---
 import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
+import { courseIdBySlug, englishKidsCourseId, enrollmentHref } from "../data/checkout";
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const p = t.programs;
+
+// Ordenado igual a `programs.items` em todos os idiomas, como `audienceAnchors`:
+// o card de crianças e o de jovens/adultos são cursos diferentes no catálogo,
+// então cada um leva ao checkout já no seu.
+const programCourses = [
+  { courseId: englishKidsCourseId, content: "programs_kids" },
+  { courseId: courseIdBySlug.english, content: "programs_teens_adults" },
+];
+const enrollPath = withLang(lang, "/enrollment");
 ---
 
 <section class="section programs" id="courses">
@@ -12,18 +22,28 @@ const p = t.programs;
 
     <div class="grid">
       {
-        p.items.map((item) => (
+        p.items.map((item, i) => (
           <article class="program">
             <span class="tag">{item.tag}</span>
             <h3>{item.title}</h3>
             <p class="text-muted">{item.text}</p>
-            <a href={withLang(lang, item.href)} class="btn btn-yellow view-course">
-              <span>{p.viewCourse}</span>
-              <svg class="vc-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M5 12h14"></path>
-                <path d="m12 5 7 7-7 7"></path>
-              </svg>
-            </a>
+            <div class="program-actions">
+              {/* A matrícula é a ação; ver o curso continua existindo para
+                  quem ainda está decidindo (é lá que mora o preço). */}
+              <a
+                href={enrollmentHref(enrollPath, programCourses[i])}
+                class="btn btn-yellow view-course"
+              >
+                <span>{t.hero.ctaEnroll}</span>
+                <svg class="vc-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M5 12h14"></path>
+                  <path d="m12 5 7 7-7 7"></path>
+                </svg>
+              </a>
+              <a href={withLang(lang, item.href)} class="link-quiet">
+                {p.viewCourse}
+              </a>
+            </div>
           </article>
         ))
       }
@@ -98,6 +118,12 @@ const p = t.programs;
     margin-top: 8px;
   }
   /* "Ver curso" — arrow slides + a subtle nudge on hover */
+  .program-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 18px;
+  }
   .view-course .vc-arrow {
     width: 18px;
     height: 18px;

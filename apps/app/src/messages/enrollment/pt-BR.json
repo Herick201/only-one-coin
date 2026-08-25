@@ -5,7 +5,8 @@
       "description": "Escolha seu curso, reserve sua vaga e envie o comprovante de pagamento em quatro passos."
     },
     "brand": {
-      "label": "Matrícula online"
+      "label": "Matrícula online",
+      "back_to_site": "Voltar ao site"
     },
     "footer": {
       "secure": "Conexão segura. Seus dados são usados apenas para a sua matrícula.",

@@ -60,6 +60,8 @@ export function tabTitle(url: URL, lang: Lang): string {
         : t.nav.courses;
     case "faq":
       return t.nav.faq;
+    case "preuniversitario":
+      return t.nav.preuniversitario;
     case "blog":
       return t.nav.blog;
     case "community":

@@ -58,7 +58,10 @@ const ogImageUrl = new URL(ogImage.src, Astro.site).href;
 const orgJsonLd = {
   "@context": "https://schema.org",
   "@type": "EducationalOrganization",
-  name: "Asociación Only One Coin Perú",
+  name: "Only One Coin Perú",
+  // A razão social fica no `legalName`: o buscador mostra o `name`, e o
+  // dado estruturado continua verdadeiro sobre quem é a entidade.
+  legalName: "Asociación Only One Coin Perú",
   alternateName: t.meta.siteName,
   url: new URL("/", Astro.site).href,
   logo: new URL("/brand/logo.png", Astro.site).href,

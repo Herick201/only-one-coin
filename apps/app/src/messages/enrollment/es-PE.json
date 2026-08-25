@@ -5,7 +5,8 @@
       "description": "Elige tu curso, reserva tu vacante y envía tu comprobante de pago en cuatro pasos."
     },
     "brand": {
-      "label": "Matrícula en línea"
+      "label": "Matrícula en línea",
+      "back_to_site": "Volver al sitio"
     },
     "footer": {
       "secure": "Conexión segura. Tus datos se usan solo para tu matrícula.",

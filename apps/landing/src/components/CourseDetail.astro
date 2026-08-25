@@ -1,7 +1,9 @@
 ---
 import type { CourseSlug } from "../i18n/ui";
-import { audienceAnchors, coursePrices, htmlLang, whatsappUrl } from "../i18n/ui";
+import { audienceAnchors, courseParent, coursePrices, htmlLang, levelsOf, whatsappUrl } from "../i18n/ui";
 import { getLangFromUrl, useTranslations, withLang, formatPEN } from "../i18n/utils";
+import { courseIdBySlug, enrollmentHref } from "../data/checkout";
+import { courseContent } from "../i18n/courses-content";
 
 interface Props {
   slug: CourseSlug;
@@ -12,7 +14,45 @@ const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const d = t.courseDetail;
 const name = t.courses.list[slug];
-const price = formatPEN(coursePrices[slug], lang);
+const rawPrice = coursePrices[slug];
+const price = rawPrice === null ? null : formatPEN(rawPrice, lang);
+// Matrícula desta página já cai no checkout com ESTE curso escolhido.
+// Programa real deste curso, quando a coordenação já entregou o documento.
+// Sem ele a página segue no texto genérico, com o aviso de exemplo.
+const program = courseContent[lang][slug] ?? null;
+
+// Idioma e seus níveis. A página de um idioma lista os níveis dela; a página
+// de um nível oferece o caminho de volta ao idioma.
+const parentSlug = courseParent[slug] ?? null;
+const familyRoot = parentSlug ?? slug;
+const siblings = [familyRoot, ...levelsOf(familyRoot)];
+const levels =
+  siblings.length > 1
+    ? siblings.map((levelSlug) => ({
+        slug: levelSlug,
+        name: t.courses.list[levelSlug],
+        href: withLang(lang, `/courses/${levelSlug}`),
+        level: courseContent[lang][levelSlug]?.level ?? null,
+        sessions: courseContent[lang][levelSlug]?.sessions ?? null,
+        // O que se vê no nível: os títulos das unidades, que é o que a pessoa
+        // quer comparar entre um nível e outro. O detalhe fica na malha.
+        units: (courseContent[lang][levelSlug]?.curriculum ?? []).map((u) => u.title),
+        enrollHref: enrollmentHref(withLang(lang, "/enrollment"), {
+          courseId: courseIdBySlug[levelSlug],
+          content: "course_level",
+        }),
+        price:
+          coursePrices[levelSlug] === null
+            ? null
+            : formatPEN(coursePrices[levelSlug] as number, lang),
+        current: levelSlug === slug,
+      }))
+    : [];
+
+const enrollHref = enrollmentHref(withLang(lang, "/enrollment"), {
+  courseId: courseIdBySlug[slug],
+  content: "course_page",
+});
 
 // Icons per feature (Lucide) — decorative, not translatable content.
 const featureIcons = [
@@ -33,7 +73,8 @@ const courseJsonLd = {
   url: new URL(withLang(lang, `/courses/${slug}`), Astro.site).href,
   provider: {
     "@type": "EducationalOrganization",
-    name: "Asociación Only One Coin Perú",
+    name: "Only One Coin Perú",
+    legalName: "Asociación Only One Coin Perú",
     url: new URL("/", Astro.site).href,
   },
   isAccessibleForFree: false,
@@ -48,7 +89,7 @@ const courseJsonLd = {
     {
       "@type": "Offer",
       category: "Paid",
-      price: coursePrices[slug].toFixed(2),
+      price: (rawPrice ?? 0).toFixed(2),
       priceCurrency: "PEN",
       availability: "https://schema.org/InStock",
     },
@@ -59,54 +100,117 @@ const courseJsonLd = {
 <article class="course">
   <script type="application/ld+json" set:html={JSON.stringify(courseJsonLd)} is:inline />
   <div class="container">
-    <a class="back" href={withLang(lang, "/courses")}>
+    <a
+      class="back"
+      href={parentSlug ? withLang(lang, `/courses/${parentSlug}`) : withLang(lang, "/courses")}
+    >
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
-      {d.backToCourses}
+      {parentSlug ? `${d.parentBack} ${t.courses.list[parentSlug]}` : d.backToCourses}
     </a>
 
     <header class="course-head">
-      <h1>{d.titlePre}<span class="accent">{name}</span>{d.titlePost}</h1>
-      <p class="lead text-muted">{d.leadPre}{name}{d.leadPost}</p>
-      <p class="price-tag">
-        <span class="price-tag-label">{d.priceLabel}</span>
-        <span class="price-tag-amount">{price}</span>
+      {/* Urgência que corresponde a um fato: a turma tem capacidade e a vaga
+          acaba (`CLAUDE.md` §5).
+
+          A etiqueta de desconto ao lado É uma etiqueta: bico à esquerda e furo,
+          como a que vem pendurada na roupa. Vermelha porque é a cor que o mundo
+          inteiro lê como desconto — a única coisa fora da paleta da marca nesta
+          página, e de propósito. Só em inglés, por decisão do dono
+          (o preço do plano segue sendo o vigente, `CLAUDE.md` §1). */}
+      <p class="badges">
+        <span class="urgency">{d.urgency}</span>
       </p>
-      <p class="example-note">{d.exampleNote}</p>
+      <h1>
+        {d.titlePre}
+        <span class="accent name-wrap">
+          {name}
+          {slug === "english" && (
+            <span class="discount">
+              <span class="tag-string" aria-hidden="true" />
+              <span class="discount-amount">{d.discountAmount}</span>
+              <span class="discount-label">{d.discountLabel}</span>
+            </span>
+          )}
+        </span>
+        {d.titlePost}
+      </h1>
+      {program ? (
+        <div class="pitch">
+          {program.sessions && (
+            <p class="pitch-lead">
+              <strong>{program.sessions}</strong> <span>{d.liveClasses}</span>
+            </p>
+          )}
+          <ul class="perks">
+            <li>{d.perkTeacher}</li>
+            <li>{d.perkSchedule}</li>
+            <li>{d.perkIncludes}</li>
+          </ul>
+        </div>
+      ) : (
+        <p class="lead text-muted">{d.leadPre}{name}{d.leadPost}</p>
+      )}
+
+      {/* O que a página grita é o sol por sessão; o total do paquete continua
+          logo abaixo, menor — quem decide precisa dele à vista. */}
+      {/* Renderização condicional, não `hidden`: o atributo perde para o
+          `display: flex` da regra e o bloco reaparecia num curso sem preço. */}
+      {price && (
+        <p class="price-hook">
+          <span class="hook-pre">{d.priceHookPre}</span>
+          <span class="hook-amount">
+            {t.hero.price}<span class="hook-unit">{t.hero.priceUnit}</span>
+          </span>
+        </p>
+      )}
+      {!program && <p class="example-note">{d.exampleNote}</p>}
     </header>
 
-    <section class="block">
-      <h2 class="block-title">{d.audiencesTitle}</h2>
-      <div class="audiences">
-        {
-          /* Anchor targets for the homepage "Programas" cards
-             (programs.items[].href). `audienceAnchors` is ordered to match
-             this list — same two audiences, same order, in every locale. */
-          d.audiences.map((a, i) => (
-            <div class="audience" id={audienceAnchors[i]}>
-              <span class="tag">{a.tag}</span>
-              <h3>{a.title}</h3>
-              <p class="text-muted">{a.text}</p>
-            </div>
-          ))
-        }
-      </div>
-    </section>
+    {/* Idioma com um nível só não precisa de comparação: mostra direto o que
+        se estuda. Com dois ou mais, a comparação É a seção. */}
+    {levels.length === 0 && program && program.curriculum.length > 0 && (
+      <section class="block">
+        <h2 class="block-title">{d.curriculumTitle}</h2>
+        <ul class="level-units single-units">
+          {program.curriculum.map((unit) => <li>{unit.title}</li>)}
+        </ul>
+      </section>
+    )}
 
-    <section class="block">
-      <h2 class="block-title">{d.featuresTitle}</h2>
-      <div class="features">
-        {
-          d.features.map((f, i) => (
-            <div class="feature">
-              <span class="feature-icon" set:html={featureIcons[i]} />
-              <div>
-                <h3>{f.title}</h3>
-                <p class="text-muted">{f.text}</p>
-              </div>
-            </div>
-          ))
-        }
-      </div>
+    {levels.length > 0 && (
+      <section class="block">
+        <h2 class="block-title">{d.levelsTitle}</h2>
+        <p class="block-lead text-muted">{d.levelsLead}</p>
+        <div class="levels">
+          {levels.map((level) => (
+            <article class={level.current ? "level level-current" : "level"}>
+              <header class="level-head">
+                <h3>{level.name}</h3>
+                <p class="level-meta text-muted">
+                  {[level.level, level.sessions].filter(Boolean).join(" · ")}
+                </p>
+                {level.price && <p class="level-price">{level.price}</p>}
+              </header>
+              {level.units.length > 0 && (
+                <ul class="level-units">
+                  {level.units.map((unit) => <li>{unit}</li>)}
+                </ul>
+              )}
+              <a class="btn btn-yellow level-cta" href={level.enrollHref}>
+                {t.hero.ctaEnroll}
+              </a>
+            </article>
+          ))}
+        </div>
+      </section>
+    )}
+
+    {/* A matrícula fica na parte branca, no meio da página: é onde a pessoa
+        acabou de ler o que o curso inclui. O bloco azul do fim é para quem
+        ainda tem dúvida, e dúvida se resolve no WhatsApp. */}
+    <section class="enroll-band">
+      <a class="btn btn-yellow enroll-cta" href={enrollHref}>{t.hero.ctaEnroll}</a>
+      <p class="enroll-note text-muted">{d.urgency}</p>
     </section>
 
     <section class="course-cta">
@@ -115,7 +219,6 @@ const courseJsonLd = {
         <p>{d.ctaText}</p>
       </div>
       <div class="course-cta-actions">
-        <a class="btn btn-yellow" href={withLang(lang, "/enrollment")}>{d.ctaEnroll}</a>
         <a class="btn btn-ghost-blue" href={whatsappUrl} target="_blank" rel="noopener">{d.ctaWhatsApp}</a>
       </div>
     </section>
@@ -148,6 +251,161 @@ const courseJsonLd = {
   .course-head {
     max-width: 720px;
   }
+  .enroll-band {
+    margin-top: 62px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    text-align: center;
+  }
+  .enroll-cta {
+    font-size: 1.18rem;
+    padding: 20px 52px;
+  }
+  .enroll-note {
+    margin: 0;
+    font-size: 0.92rem;
+    font-weight: 600;
+  }
+  .badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 16px;
+  }
+  /* Etiqueta de preço, a de pendurar: bico à esquerda, furo do barbante e o
+     pontilhado costurado por dentro — colada meio torta, como na vitrine.
+     Tudo em CSS: acompanha o texto em qualquer idioma, sem virar imagem. */
+  /* Âncora da etiqueta: o fim da palavra, não uma distância fixa — "Inglés",
+     "English" e "Inglês" têm larguras diferentes. */
+  .name-wrap {
+    position: relative;
+    display: inline-block;
+  }
+  /* O barbante, saindo da última letra até o furo da etiqueta. */
+  .tag-string {
+    position: absolute;
+    left: -15px;
+    top: 50%;
+    width: 17px;
+    height: 2px;
+    background: #c9101f;
+    transform: rotate(12deg);
+    border-radius: 2px;
+  }
+  .discount {
+    position: absolute;
+    left: calc(100% + 16px);
+    top: 26%;
+    /* A etiqueta nunca quebra em duas linhas: ela é um objeto, não um
+       parágrafo — e o título é grande demais para ela crescer em altura. */
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 13px 24px 13px 46px;
+    background: linear-gradient(145deg, #ee2a36, #c9101f);
+    color: #fff;
+    transform: rotate(-7deg);
+    clip-path: polygon(0% 50%, 24px 0%, 100% 0%, 100% 100%, 24px 100%);
+    z-index: 1;
+    filter: drop-shadow(0 8px 14px rgba(201, 16, 31, 0.34));
+  }
+  /* Furo do barbante. Pintado da cor do fundo da seção: clip-path já recortou
+     a peça, e não dá para recortar de novo por dentro. */
+  .discount::before {
+    content: "";
+    position: absolute;
+    left: 28px;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--sky-soft);
+    transform: translateY(-50%);
+  }
+  /* A costura pontilhada, afastada da borda como na etiqueta de verdade. */
+  .discount::after {
+    content: "";
+    position: absolute;
+    inset: 5px 7px 5px 42px;
+    border: 2px dashed rgba(255, 255, 255, 0.7);
+    border-radius: 5px;
+    pointer-events: none;
+  }
+  .discount-amount {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.5rem;
+    line-height: 1;
+    letter-spacing: -0.01em;
+  }
+  .discount-label {
+    font-weight: 800;
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  /* Sem largura para pendurar ao lado, a etiqueta desce e vira um selo comum:
+     melhor abaixo do título do que empurrando a página para o lado. */
+  @media (max-width: 700px) {
+    .name-wrap {
+      display: inline;
+    }
+    .discount {
+      position: static;
+      margin-top: 14px;
+      transform: rotate(-3deg);
+    }
+    .tag-string {
+      display: none;
+    }
+  }
+  .price-hook {
+    margin-top: 24px;
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .hook-pre {
+    font-family: var(--font-display);
+    font-size: clamp(1.2rem, 2.4vw, 1.7rem);
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .hook-amount {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    background: linear-gradient(135deg, var(--yellow-bright), var(--yellow));
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2rem, 4.4vw, 3rem);
+    line-height: 1;
+    padding: 10px 24px;
+    border-radius: 18px;
+    box-shadow: var(--shadow-yellow);
+  }
+  .hook-unit {
+    font-family: var(--font);
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+  .urgency {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 18px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--yellow-bright), var(--yellow));
+    color: var(--ink);
+    font-weight: 700;
+    font-size: 0.9rem;
+    box-shadow: var(--shadow-yellow);
+  }
   .course-head h1 {
     margin-top: 10px;
     font-size: clamp(2.2rem, 6vw, 3.6rem);
@@ -179,6 +437,230 @@ const courseJsonLd = {
     padding: 4px 18px;
     border-radius: 12px;
     box-shadow: var(--shadow-yellow);
+  }
+  /* As quatro coisas que decidem a matrícula: quantas clases, que son en
+     vivo, cuándo, y qué viene incluido. O resto do programa está mais abaixo
+     para quem quiser — aqui em cima não cabe um texto. */
+  .pitch {
+    margin-top: 20px;
+  }
+  .pitch-lead {
+    margin: 0 0 16px;
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-family: var(--font-display);
+    line-height: 1.05;
+  }
+  .pitch-lead strong {
+    font-size: clamp(1.7rem, 3.6vw, 2.4rem);
+    font-weight: 700;
+    color: var(--blue);
+  }
+  .pitch-lead span {
+    font-size: clamp(1rem, 2vw, 1.3rem);
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .perks {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 10px;
+    max-width: 62ch;
+  }
+  .perks li {
+    position: relative;
+    padding-left: 30px;
+    font-size: 1.02rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .perks li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.35em;
+    width: 16px;
+    height: 9px;
+    border-left: 3px solid var(--yellow-deep);
+    border-bottom: 3px solid var(--yellow-deep);
+    transform: rotate(-45deg);
+  }
+  .lead-more {
+    margin-top: 12px;
+    max-width: 72ch;
+  }
+  /* Duração, nível e modalidade: os três números que a pessoa procura antes de
+     ler qualquer outra coisa. */
+  .facts {
+    margin: 26px 0 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 14px;
+  }
+  .facts > div {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    box-shadow: var(--shadow-sm);
+  }
+  .facts dt {
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--blue);
+  }
+  .facts dd {
+    margin: 6px 0 0;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  /* Competências, método, avaliação e resultados: quatro listas curtas que
+     leem melhor em duas colunas do que em quatro seções empilhadas. */
+  .two-up {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 10px 46px;
+  }
+  .block-lead {
+    margin: -8px 0 20px;
+  }
+  .levels {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+  }
+  .level {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 26px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .level-head h3 {
+    font-size: 1.25rem;
+  }
+  .level-units {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+    color: var(--text-muted);
+  }
+  .level-units li {
+    position: relative;
+    padding-left: 24px;
+    font-size: 0.96rem;
+  }
+  .level-units li::before {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: 0.55em;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--yellow);
+  }
+  .single-units {
+    columns: 2;
+    column-gap: 46px;
+    max-width: 70ch;
+  }
+  @media (max-width: 640px) {
+    .single-units {
+      columns: 1;
+    }
+  }
+  .level-cta {
+    margin-top: auto;
+    align-self: flex-start;
+  }
+  /* O nível aberto fica marcado, não escondido: a pessoa precisa saber onde
+     está dentro do idioma. */
+  .level-current {
+    border-color: var(--blue);
+    box-shadow: var(--shadow-blue);
+  }
+  .level h3 {
+    font-size: 1.05rem;
+  }
+  .level-meta {
+    margin: 0;
+    font-size: 0.9rem;
+  }
+  .level-price {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.3rem;
+    color: var(--ink);
+  }
+  .units {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  .unit {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+  }
+  .unit h3 {
+    font-size: 1.05rem;
+    margin-bottom: 12px;
+    color: var(--blue-deep);
+  }
+  .unit ul {
+    margin: 0;
+    padding-left: 18px;
+    display: grid;
+    gap: 6px;
+    color: var(--text-muted);
+    font-size: 0.94rem;
+  }
+  .ticks {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 10px;
+    color: var(--text-muted);
+  }
+  .ticks li {
+    position: relative;
+    padding-left: 26px;
+  }
+  .ticks li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.45em;
+    width: 14px;
+    height: 8px;
+    border-left: 2.5px solid var(--blue);
+    border-bottom: 2.5px solid var(--blue);
+    transform: rotate(-45deg);
+  }
+  .outcome-note {
+    margin-top: 16px;
+    padding: 14px 18px;
+    border-left: 3px solid var(--yellow);
+    background: var(--cream);
+    border-radius: 0 12px 12px 0;
+    font-size: 0.94rem;
+    color: var(--text);
   }
   .example-note {
     margin-top: 16px;

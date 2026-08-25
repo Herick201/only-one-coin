@@ -24,7 +24,9 @@ export type Lang = keyof typeof languages;
 // and by the language finder). The display name is localized per dictionary.
 export const courseSlugs = [
   "english",
+  "cambridge-b1",
   "french",
+  "french-advanced",
   "italian",
   "german",
   "portuguese",
@@ -33,6 +35,26 @@ export const courseSlugs = [
 ] as const;
 
 export type CourseSlug = (typeof courseSlugs)[number];
+
+/**
+ * Um curso que é NÍVEL de um idioma, não um idioma à parte.
+ *
+ * O menu e a lista mostram idiomas; os níveis aparecem dentro da página do
+ * idioma. Sem isto, "Inglés" e "Inglés B1 · Cambridge" ficavam lado a lado no
+ * mesmo menu, como se fossem dois idiomas diferentes.
+ */
+export const courseParent: Partial<Record<CourseSlug, CourseSlug>> = {
+  "cambridge-b1": "english",
+  "french-advanced": "french",
+};
+
+/** Os idiomas — o que entra no menu, na lista e no seletor por geo. */
+export const languageSlugs = courseSlugs.filter((slug) => !courseParent[slug]);
+
+/** Níveis de um idioma, na ordem em que aparecem. */
+export function levelsOf(slug: CourseSlug): CourseSlug[] {
+  return courseSlugs.filter((candidate) => courseParent[candidate] === slug);
+}
 
 // Anchor names for the two audience blocks on a course page, in the order they
 // are listed in `courses.detail.audiences`. They end up in the address bar, so
@@ -46,9 +68,13 @@ export const audienceAnchors = ["kids", "teens-and-adults"] as const;
 // number; format per locale with `formatPEN` (utils). The "1 sol" hook comes
 // from the monthly modality (≈S/20 / 20 sesiones = 1 sol por sesión), NOT from
 // these package prices — never present a course as costing only S/1.
-export const coursePrices: Record<CourseSlug, number> = {
+export const coursePrices: Record<CourseSlug, number | null> = {
   "english": 69.9,
+  // `null` = preço ainda não definido pela coordenação. A página omite o valor
+  // em vez de inventar um: preço é dado de negócio, nunca chute (CLAUDE.md §9).
+  "cambridge-b1": null,
   "french": 80,
+  "french-advanced": null,
   "italian": 80,
   "german": 30,
   "portuguese": 80,
@@ -131,7 +157,7 @@ export const content = {
       description:
         "Clases 100% online para todo el Perú: inglés, francés, italiano, alemán, portugués, chino y coreano. Paquete completo de pago único, certificado y talleres gratis.",
       siteName: "Only One Coin",
-      imageAlt: "Asociación Only One Coin Perú — cursos de idiomas online",
+      imageAlt: "Only One Coin Perú — cursos de idiomas online",
       courses: {
         title: "Cursos de idiomas online: precios y paquetes — Only One Coin",
         description:
@@ -142,49 +168,57 @@ export const content = {
         titleMid: " online en Perú · ",
         titlePost: " pago único",
         descPre: "Aprende ",
-        descMid: " online con la Asociación Only One Coin Perú: paquete completo por ",
+        descMid: " online con Only One Coin Perú: paquete completo por ",
         descPost: " de pago único, desde los 6 años, con certificado digital y talleres gratis.",
       },
       faq: {
         title: "Preguntas frecuentes sobre los cursos online — Only One Coin",
         description:
-          "Resolvemos las dudas más comunes sobre matrícula, precios, horarios, certificados y talleres gratuitos de la Asociación Only One Coin Perú.",
+          "Resolvemos las dudas más comunes sobre matrícula, precios, horarios, certificados y talleres gratuitos de Only One Coin Perú.",
       },
       blog: {
         title: "Blog de idiomas y aprendizaje — Only One Coin",
         description:
-          "Consejos para aprender idiomas online, novedades de la Asociación Only One Coin Perú y recursos gratuitos para nuestros alumnos.",
+          "Consejos para aprender idiomas online, novedades de Only One Coin Perú y recursos gratuitos para nuestros alumnos.",
       },
       community: {
         title: "Comunidad de alumnos en todo el Perú — Only One Coin",
         description:
-          "Miles de estudiantes de todo el Perú aprenden idiomas online con la Asociación Only One Coin. Conoce nuestra comunidad y súmate.",
+          "Miles de estudiantes de todo el Perú aprenden idiomas online con Only One Coin. Conoce nuestra comunidad y súmate.",
       },
       terms: {
         title: "Términos y condiciones de uso — Only One Coin",
         description:
-          "Términos y condiciones de uso del sitio web de la Asociación Only One Coin Perú: servicios, registro de usuarios, propiedad intelectual, responsabilidad y ley aplicable.",
+          "Términos y condiciones de uso del sitio web de Only One Coin Perú: servicios, registro de usuarios, propiedad intelectual, responsabilidad y ley aplicable.",
       },
       privacy: {
         title: "Política de privacidad — Only One Coin",
         description:
-          "Cómo la Asociación Only One Coin Perú recopila, usa, almacena y protege tus datos personales, y cómo ejercer tus derechos de acceso, rectificación, cancelación y oposición.",
+          "Cómo Only One Coin Perú recopila, usa, almacena y protege tus datos personales, y cómo ejercer tus derechos de acceso, rectificación, cancelación y oposición.",
+      },
+      preuni: {
+        title: "Preuniversitario — Only One Coin Perú",
+        description:
+          "Programa Preuniversitario de Only One Coin: preparación integral para San Marcos y las universidades más exigentes del Perú. Próximamente.",
       },
       about: {
-        title: "Nosotros — Asociación Only One Coin Perú",
+        title: "Nosotros — Only One Coin Perú",
         description:
-          "Conoce a la Asociación Only One Coin Perú: educación accesible para todos, clases de inglés desde S/1.00 por sesión, y nuestra misión, visión y valores.",
+          "Conoce a Only One Coin Perú: educación accesible para todos, clases de inglés desde S/1.00 por sesión, y nuestra misión, visión y valores.",
       },
       contact: {
-        title: "Contacto — Asociación Only One Coin Perú",
+        title: "Contacto — Only One Coin Perú",
         description:
           "Escríbenos por WhatsApp, llámanos o envíanos un correo. Atención de lunes a viernes para matrícula, horarios y cursos disponibles.",
       },
     },
     nav: {
       about: "Nosotros",
-      courses: "Cursos",
-      coursesAll: "Ver todos los cursos",
+      courses: "Idiomas",
+      coursesAll: "Ver todos los idiomas",
+      programs: "Cursos",
+      preuniversitario: "Preuniversitario",
+      soon: "Próximamente",
       resources: "Recursos",
       community: "Comunidad",
       blog: "Blog",
@@ -195,16 +229,15 @@ export const content = {
       closeMenu: "Cerrar menú",
     },
     hero: {
-      w1: "¡Aprende",
-      w2: "Inglés",
+      w1: "¡Estudia",
+      w2: "Idiomas",
       w3: "desde",
-      price: "S/1",
+      price: "S/1.00",
       priceUnit: "por sesión",
+      worldwide: "Estudia desde cualquier parte del mundo",
       subHtml:
         '¡Abierto para <strong>TODAS LAS EDADES</strong><br />desde los <span class="accent">6 años</span> en adelante!',
-      packageNote:
-        'Paquete completo de Inglés: <strong>pago único de S/69.90</strong>. Incluye matrícula, libro, certificado y talleres gratuitos.',
-      ctaEnroll: "Matricúlate ahora",
+      ctaEnroll: "MATRICÚLATE YA",
       ctaCourses: "Ver cursos",
       imgAlt: "Estudiantes de Only One Coin",
       badgeHtml:
@@ -318,9 +351,10 @@ export const content = {
     stats: {
       title: "La confianza de miles de familias",
       items: [
-        { value: "+200 000", label: "Alumnos formados" },
-        { value: "+4", label: "Años en el mercado" },
-        { value: "+7", label: "Idiomas disponibles" },
+        { value: "+5 años", label: "De experiencia" },
+        { value: "+1.5 millones", label: "Alumnos registrados" },
+        { value: "+350", label: "Docentes calificados" },
+        { value: "+2M", label: "Seguidores en redes" },
       ],
     },
     courses: {
@@ -332,6 +366,8 @@ export const content = {
         "portuguese": "Portugués",
         "mandarin-chinese": "Chino Mandarín",
         "korean": "Coreano",
+        "cambridge-b1": "Inglés B1 · Cambridge",
+        "french-advanced": "Francés Intermedio",
       },
       indexEyebrow: "Nuestros idiomas",
       indexTitlePre: "Elige el idioma que ",
@@ -343,6 +379,27 @@ export const content = {
     },
     courseDetail: {
       backToCourses: "Volver a cursos",
+      urgency: "¡Vacantes limitadas por aula! Asegura la tuya hoy.",
+      discountAmount: "40%",
+      discountLabel: "de descuento",
+      priceHookPre: "desde",
+      factDuration: "Duración",
+      factLevel: "Nivel",
+      factModality: "Modalidad",
+      liveClasses: "con CLASES EN VIVO",
+      perkTeacher: "Interactúas con tu docente",
+      perkSchedule: "Una hora diaria de lunes a viernes · más de 6 horarios",
+      perkIncludes: "Incluye libro, matrícula y certificado GRATUITO",
+      levelsTitle: "Niveles disponibles",
+      levelsLead: "Elige por dónde empezar. Cada nivel se matricula por separado.",
+      levelCurrent: "Estás viendo este nivel",
+      levelSee: "Ver este nivel",
+      parentBack: "Ver todos los niveles de",
+      curriculumTitle: "Malla curricular",
+      goalsTitle: "Competencias que vas a desarrollar",
+      methodTitle: "Cómo se enseña",
+      evaluationTitle: "Cómo se evalúa",
+      outcomesTitle: "Al finalizar el curso vas a poder",
       eyebrowPre: "Curso de ",
       eyebrowPost: "",
       titlePre: "Aprende ",
@@ -365,15 +422,54 @@ export const content = {
       ],
       ctaTitle: "¿List@ para empezar?",
       ctaText: "Reserva tu cupo por WhatsApp y matricúlate hoy.",
-      ctaEnroll: "Matricúlate ahora",
+      ctaEnroll: "MATRICÚLATE YA",
       ctaWhatsApp: "Escríbenos por WhatsApp",
+    },
+    preuni: {
+      badge: "Próximamente",
+      eyebrow: "Programa Preuniversitario",
+      titlePre: "Prepárate para ",
+      titleAccent: "ingresar",
+      titlePost: "",
+      lead: "Una preparación integral para postular a San Marcos y a las universidades más exigentes del país, con el mismo principio de siempre: educación de calidad al alcance de todos.",
+      intro: "El programa desarrolla, de forma progresiva, todas las áreas que se evalúan en los exámenes de admisión, con clases en vivo, ejercicios tipo examen y evaluaciones constantes para medir tu avance.",
+      goalTitle: "Objetivo del programa",
+      goal: "Que domines los contenidos y las estrategias de resolución necesarias para afrontar con éxito un examen de admisión — no solo memorizar, sino analizar, interpretar y decidir bajo presión.",
+      areasTitle: "Qué vas a estudiar",
+      areas: [
+        { title: "Habilidad Verbal", text: "Comprensión lectora, ideas principales, relaciones semánticas e inferencias." },
+        { title: "Habilidad Lógico-Matemática", text: "Razonamiento lógico y resolución de problemas con estrategias inductivas y deductivas." },
+        { title: "Matemáticas", text: "Aritmética, Álgebra, Geometría y Trigonometría aplicadas a problemas de admisión." },
+        { title: "Ciencias", text: "Física, Química y Biología: principios fundamentales y método científico." },
+        { title: "Lenguaje y Literatura", text: "Gramática, sintaxis y normativa, con análisis de textos literarios y no literarios." },
+        { title: "Ciencias Sociales", text: "Historia, Geografía, Economía, Educación Cívica y Filosofía, con mirada crítica del Perú y el mundo." },
+      ],
+      methodTitle: "Cómo se enseña",
+      method: [
+        "Desarrollo progresivo de contenidos",
+        "Resolución de ejercicios tipo examen de admisión",
+        "Análisis y discusión de problemas en clase",
+        "Evaluaciones constantes para medir el avance",
+        "Refuerzo de hábitos de estudio y autonomía",
+      ],
+      resultsTitle: "Al terminar el programa vas a poder",
+      results: [
+        "Resolver con eficacia preguntas tipo examen de admisión",
+        "Aplicar conocimientos en distintas áreas del saber",
+        "Analizar información de manera crítica y estructurada",
+        "Sostener tu desempeño académico con seguridad y autonomía",
+        "Afrontar la admisión con un nivel competitivo",
+      ],
+      ctaTitle: "Aún no abrimos matrícula",
+      ctaText: "Escríbenos por WhatsApp y te avisamos apenas se abran las vacantes, con fechas, horarios y costo.",
+      ctaWhatsApp: "Quiero que me avisen",
     },
     pages: {
       blog: {
         titlePre: "Nuestro ",
         titleAccent: "blog",
         titlePost: "",
-        lead: "Consejos para aprender idiomas, novedades de la Asociación y recursos gratuitos para nuestros alumnos.",
+        lead: "Consejos para aprender idiomas, novedades de Only One Coin y recursos gratuitos para nuestros alumnos.",
         soonTitle: "Muy pronto",
         soonText: "Estamos preparando nuestros primeros artículos. Vuelve pronto para leer nuestras publicaciones.",
       },
@@ -386,14 +482,14 @@ export const content = {
         soonText: "Estamos construyendo el espacio de nuestra comunidad. Mientras tanto, síguenos en nuestras redes sociales.",
       },
       about: {
-        eyebrow: "Asociación Only One Coin",
+        eyebrow: "Only One Coin",
         titlePre: "Educación accesible ",
         titleAccent: "para todos",
         titlePost: "",
         // {years} is filled from `org.foundedYear` so the claim never goes stale.
-        lead: "En la Asociación Only One Coin creemos firmemente que la educación es un derecho fundamental y no un privilegio. Con esta visión, llevamos {years} años ofreciendo clases de inglés a un precio simbólico de S/1.00 por sesión.",
+        lead: "En Only One Coin creemos firmemente que la educación es un derecho fundamental y no un privilegio. Con esta visión, llevamos {years} años ofreciendo clases de inglés a un precio simbólico de S/1.00 por sesión.",
         lead2: "Nuestro compromiso es brindar a niños, jóvenes y adultos de todas las edades y niveles sociales la oportunidad de aprender y crecer, sin barreras económicas.",
-        teamAlt: "Equipo de la Asociación Only One Coin en su oficina de Lima",
+        teamAlt: "Equipo de Only One Coin en su oficina de Lima",
         coinAlt: "Una moneda de un sol: el precio simbólico de cada sesión",
         whyTitle: "¿Por qué elegirnos?",
         whyText: "Nuestro equipo de profesores está altamente calificado y comprometido con la enseñanza. Utilizamos métodos innovadores y dinámicos para asegurar que cada estudiante aprenda de manera efectiva y disfrute del proceso.",
@@ -432,7 +528,7 @@ export const content = {
         // once and a rename never leaves a locale behind.
         partnerTitlePre: "Tecnología con propósito, junto a ",
         partnerTitleAccent: "{partner}",
-        partnerText: "{partner} es nuestro socio estratégico en tecnología: diseñó y desarrolló la plataforma digital de la Asociación, y acompaña su evolución para que estudiar con nosotros sea simple desde cualquier lugar del mundo.",
+        partnerText: "{partner} es nuestro socio estratégico en tecnología: diseñó y desarrolló la plataforma digital de Only One Coin, y acompaña su evolución para que estudiar con nosotros sea simple desde cualquier lugar del mundo.",
         partnerCta: "Conocer a {partner}",
       },
       contact: {
@@ -452,8 +548,8 @@ export const content = {
     },
     footer: {
       tagline: "Educación de idiomas de calidad al alcance de todos, en todo el Perú.",
-      orgHtml: "Asociación Only One Coin Perú<br />RUC 20610561463",
-      col1Title: "La Asociación",
+      orgHtml: "Only One Coin Perú<br />RUC 20610561463",
+      col1Title: "Only One Coin",
       about: "Nosotros",
       courses: "Cursos",
       contact: "Contacto",
@@ -465,7 +561,7 @@ export const content = {
       hoursLabel: "Horario de atención",
       hours: "Lunes a viernes · 9:00 AM – 10:00 PM",
       followTitle: "Síguenos",
-      copyOrg: "Asociación Only One Coin",
+      copyOrg: "Only One Coin",
       rights: "Todos los derechos reservados",
       madeIn: "Hecho con ❤ en el Perú",
       partnerLabel: "Plataforma desarrollada por nuestro socio estratégico",
@@ -482,7 +578,7 @@ export const content = {
       description:
         "100% online classes across Peru: English, French, Italian, German, Portuguese, Chinese and Korean. Full package with a single payment, certificate and free workshops from age 6.",
       siteName: "Only One Coin",
-      imageAlt: "Only One Coin Perú Association — online language courses",
+      imageAlt: "Only One Coin Perú — online language courses",
       courses: {
         title: "Online language courses: prices and packages — Only One Coin",
         description:
@@ -493,49 +589,57 @@ export const content = {
         titleMid: " course in Peru · ",
         titlePost: " single payment",
         descPre: "Learn ",
-        descMid: " online with the Only One Coin Perú Association: full package for ",
+        descMid: " online with Only One Coin Perú: full package for ",
         descPost: " as a single payment, from age 6, with a digital certificate and free workshops.",
       },
       faq: {
         title: "FAQ about our online courses — Only One Coin",
         description:
-          "Answers to the most common questions about enrolment, prices, schedules, certificates and the free workshops of the Only One Coin Perú Association.",
+          "Answers to the most common questions about enrolment, prices, schedules, certificates and the free workshops of Only One Coin Perú.",
       },
       blog: {
         title: "Language learning blog — Only One Coin",
         description:
-          "Tips for learning languages online, news from the Only One Coin Perú Association and free resources for our students.",
+          "Tips for learning languages online, news from Only One Coin Perú and free resources for our students.",
       },
       community: {
         title: "Our student community across Peru — Only One Coin",
         description:
-          "Thousands of students across Peru learn languages online with the Only One Coin Association. Meet our community and join in.",
+          "Thousands of students across Peru learn languages online with Only One Coin. Meet our community and join in.",
       },
       terms: {
         title: "Terms and conditions of use — Only One Coin",
         description:
-          "Terms and conditions for using the Only One Coin Perú Association website: services, user registration, intellectual property, liability and governing law.",
+          "Terms and conditions for using Only One Coin Perú website: services, user registration, intellectual property, liability and governing law.",
       },
       privacy: {
         title: "Privacy policy — Only One Coin",
         description:
-          "How the Only One Coin Perú Association collects, uses, stores and protects your personal data, and how to exercise your access, rectification, erasure and objection rights.",
+          "How Only One Coin Perú collects, uses, stores and protects your personal data, and how to exercise your access, rectification, erasure and objection rights.",
+      },
+      preuni: {
+        title: "University Prep — Only One Coin Perú",
+        description:
+          "Only One Coin's University Prep Program: full preparation for San Marcos and Peru's most demanding universities. Coming soon.",
       },
       about: {
-        title: "About us — Only One Coin Perú Association",
+        title: "About us — Only One Coin Perú",
         description:
-          "Meet the Only One Coin Perú Association: accessible education for everyone, English classes from S/1.00 a session, and our mission, vision and values.",
+          "Meet Only One Coin Perú: accessible education for everyone, English classes from S/1.00 a session, and our mission, vision and values.",
       },
       contact: {
-        title: "Contact — Only One Coin Perú Association",
+        title: "Contact — Only One Coin Perú",
         description:
           "Message us on WhatsApp, call us or send an email. We answer Monday to Friday about enrolment, schedules and available courses.",
       },
     },
     nav: {
       about: "About",
-      courses: "Courses",
-      coursesAll: "See all courses",
+      courses: "Languages",
+      coursesAll: "See all languages",
+      programs: "Courses",
+      preuniversitario: "University prep",
+      soon: "Coming soon",
       resources: "Resources",
       community: "Community",
       blog: "Blog",
@@ -546,16 +650,15 @@ export const content = {
       closeMenu: "Close menu",
     },
     hero: {
-      w1: "Learn",
-      w2: "English",
+      w1: "Study",
+      w2: "Languages",
       w3: "from",
-      price: "S/1",
+      price: "S/1.00",
       priceUnit: "per session",
+      worldwide: "Study from anywhere in the world",
       subHtml:
         'Open to <strong>ALL AGES</strong><br />from <span class="accent">6 years old</span> and up!',
-      packageNote:
-        'Full English package: <strong>one-time payment of S/69.90</strong>. Includes enrollment, book, certificate and free workshops.',
-      ctaEnroll: "Enroll now",
+      ctaEnroll: "ENROLL NOW",
       ctaCourses: "View courses",
       imgAlt: "Only One Coin students",
       badgeHtml:
@@ -669,9 +772,10 @@ export const content = {
     stats: {
       title: "Trusted by thousands of families",
       items: [
-        { value: "+200,000", label: "Students taught" },
-        { value: "+4", label: "Years in the market" },
-        { value: "+7", label: "Languages offered" },
+        { value: "+5 years", label: "Of experience" },
+        { value: "+1.5 million", label: "Registered students" },
+        { value: "+350", label: "Qualified teachers" },
+        { value: "+2M", label: "Followers on social media" },
       ],
     },
     courses: {
@@ -683,6 +787,8 @@ export const content = {
         "portuguese": "Portuguese",
         "mandarin-chinese": "Mandarin Chinese",
         "korean": "Korean",
+        "cambridge-b1": "English B1 · Cambridge",
+        "french-advanced": "French Intermediate",
       },
       indexEyebrow: "Our languages",
       indexTitlePre: "Choose the language you ",
@@ -694,6 +800,27 @@ export const content = {
     },
     courseDetail: {
       backToCourses: "Back to courses",
+      urgency: "Limited seats per class! Secure yours today.",
+      discountAmount: "40%",
+      discountLabel: "off",
+      priceHookPre: "from",
+      factDuration: "Duration",
+      factLevel: "Level",
+      factModality: "Format",
+      liveClasses: "with LIVE CLASSES",
+      perkTeacher: "You interact with your teacher",
+      perkSchedule: "One hour a day, Monday to Friday · more than 6 time slots",
+      perkIncludes: "Includes book, enrollment and FREE certificate",
+      levelsTitle: "Available levels",
+      levelsLead: "Choose where to start. Each level is enrolled separately.",
+      levelCurrent: "You're viewing this level",
+      levelSee: "See this level",
+      parentBack: "See all levels of",
+      curriculumTitle: "Curriculum",
+      goalsTitle: "Skills you'll develop",
+      methodTitle: "How it is taught",
+      evaluationTitle: "How you are assessed",
+      outcomesTitle: "By the end of the course you'll be able to",
       eyebrowPre: "",
       eyebrowPost: " course",
       titlePre: "Learn ",
@@ -716,15 +843,54 @@ export const content = {
       ],
       ctaTitle: "Ready to start?",
       ctaText: "Reserve your spot on WhatsApp and enroll today.",
-      ctaEnroll: "Enroll now",
+      ctaEnroll: "ENROLL NOW",
       ctaWhatsApp: "Message us on WhatsApp",
+    },
+    preuni: {
+      badge: "Coming soon",
+      eyebrow: "University Prep Program",
+      titlePre: "Get ready to ",
+      titleAccent: "get in",
+      titlePost: "",
+      lead: "Full preparation for the entrance exams of San Marcos and Peru's most demanding universities, with the same principle as always: quality education within everyone's reach.",
+      intro: "The program works through every area assessed in admission exams, step by step, with live classes, exam-style exercises and constant assessments to track your progress.",
+      goalTitle: "Program goal",
+      goal: "That you master both the content and the problem-solving strategies an entrance exam demands — not memorising, but analysing, interpreting and deciding under pressure.",
+      areasTitle: "What you'll study",
+      areas: [
+        { title: "Verbal Reasoning", text: "Reading comprehension, main ideas, semantic relationships and inference." },
+        { title: "Logical-Mathematical Reasoning", text: "Logical reasoning and problem solving with inductive and deductive strategies." },
+        { title: "Mathematics", text: "Arithmetic, Algebra, Geometry and Trigonometry applied to admission problems." },
+        { title: "Sciences", text: "Physics, Chemistry and Biology: core principles and the scientific method." },
+        { title: "Language & Literature", text: "Grammar, syntax and usage, with analysis of literary and non-literary texts." },
+        { title: "Social Sciences", text: "History, Geography, Economics, Civics and Philosophy, with a critical view of Peru and the world." },
+      ],
+      methodTitle: "How it is taught",
+      method: [
+        "Content built up step by step",
+        "Exam-style exercises throughout",
+        "Problems analysed and discussed in class",
+        "Constant assessments to measure progress",
+        "Study habits and independent learning",
+      ],
+      resultsTitle: "By the end of the program you'll be able to",
+      results: [
+        "Answer admission-exam questions effectively",
+        "Apply knowledge across different subject areas",
+        "Analyse information critically and methodically",
+        "Sustain your academic performance with confidence",
+        "Face the admission process at a competitive level",
+      ],
+      ctaTitle: "Enrollment is not open yet",
+      ctaText: "Message us on WhatsApp and we'll let you know as soon as seats open, with dates, schedules and price.",
+      ctaWhatsApp: "Let me know when it opens",
     },
     pages: {
       blog: {
         titlePre: "Our ",
         titleAccent: "blog",
         titlePost: "",
-        lead: "Tips for learning languages, news from the Association and free resources for our students.",
+        lead: "Tips for learning languages, news from Only One Coin and free resources for our students.",
         soonTitle: "Coming soon",
         soonText: "We're preparing our first articles. Check back soon to read our posts.",
       },
@@ -737,13 +903,13 @@ export const content = {
         soonText: "We're building our community space. In the meantime, follow us on our social media.",
       },
       about: {
-        eyebrow: "Only One Coin Association",
+        eyebrow: "Only One Coin",
         titlePre: "Accessible education ",
         titleAccent: "for everyone",
         titlePost: "",
-        lead: "At the Only One Coin Association we firmly believe that education is a fundamental right, not a privilege. With that in mind, we have spent {years} years offering English classes at a symbolic price of S/1.00 a session.",
+        lead: "At Only One Coin we firmly believe that education is a fundamental right, not a privilege. With that in mind, we have spent {years} years offering English classes at a symbolic price of S/1.00 a session.",
         lead2: "Our commitment is to give children, teenagers and adults of every age and background the chance to learn and grow, with no financial barriers.",
-        teamAlt: "The Only One Coin Association team at their office in Lima",
+        teamAlt: "The Only One Coin team at their office in Lima",
         coinAlt: "A one-sol coin: the symbolic price of each session",
         whyTitle: "Why choose us?",
         whyText: "Our teachers are highly qualified and committed to teaching. We use innovative, dynamic methods so that every student learns effectively and enjoys the process.",
@@ -782,7 +948,7 @@ export const content = {
         // once and a rename never leaves a locale behind.
         partnerTitlePre: "Technology with purpose, alongside ",
         partnerTitleAccent: "{partner}",
-        partnerText: "{partner} is our strategic technology partner: they designed and built the Association's digital platform, and they keep it evolving so that studying with us is simple from anywhere in the world.",
+        partnerText: "{partner} is our strategic technology partner: they designed and built Only One Coin's digital platform, and they keep it evolving so that studying with us is simple from anywhere in the world.",
         partnerCta: "Meet {partner}",
       },
       contact: {
@@ -802,8 +968,8 @@ export const content = {
     },
     footer: {
       tagline: "Quality language education within everyone's reach, across all of Peru.",
-      orgHtml: "Only One Coin Perú Association<br />RUC 20610561463",
-      col1Title: "The Association",
+      orgHtml: "Only One Coin Perú<br />RUC 20610561463",
+      col1Title: "Only One Coin",
       about: "About",
       courses: "Courses",
       contact: "Contact",
@@ -815,7 +981,7 @@ export const content = {
       hoursLabel: "Business hours",
       hours: "Monday to Friday · 9:00 AM – 10:00 PM",
       followTitle: "Follow us",
-      copyOrg: "Only One Coin Association",
+      copyOrg: "Only One Coin",
       rights: "All rights reserved",
       madeIn: "Made with ❤ in Peru",
       partnerLabel: "Platform built by our strategic partner",
@@ -832,7 +998,7 @@ export const content = {
       description:
         "Aulas 100% online para todo o Peru: inglês, francês, italiano, alemão, português, chinês e coreano. Pacote completo em pagamento único, certificado e oficinas grátis.",
       siteName: "Only One Coin",
-      imageAlt: "Associação Only One Coin Peru — cursos de idiomas online",
+      imageAlt: "Only One Coin Peru — cursos de idiomas online",
       courses: {
         title: "Cursos de idiomas online: preços e pacotes — Only One Coin",
         description:
@@ -843,49 +1009,57 @@ export const content = {
         titleMid: " online no Peru · ",
         titlePost: " pagamento único",
         descPre: "Aprenda ",
-        descMid: " online com a Associação Only One Coin Peru: pacote completo por ",
+        descMid: " online com a Only One Coin Peru: pacote completo por ",
         descPost: " em pagamento único, a partir dos 6 anos, com certificado digital e oficinas grátis.",
       },
       faq: {
         title: "Perguntas frequentes sobre os cursos online — Only One Coin",
         description:
-          "Respondemos as dúvidas mais comuns sobre matrícula, preços, horários, certificados e oficinas gratuitas da Associação Only One Coin Peru.",
+          "Respondemos as dúvidas mais comuns sobre matrícula, preços, horários, certificados e oficinas gratuitas da Only One Coin Peru.",
       },
       blog: {
         title: "Blog de idiomas e aprendizagem — Only One Coin",
         description:
-          "Dicas para aprender idiomas online, novidades da Associação Only One Coin Peru e recursos gratuitos para os nossos alunos.",
+          "Dicas para aprender idiomas online, novidades da Only One Coin Peru e recursos gratuitos para os nossos alunos.",
       },
       community: {
         title: "Comunidade de alunos em todo o Peru — Only One Coin",
         description:
-          "Milhares de estudantes de todo o Peru aprendem idiomas online com a Associação Only One Coin. Conheça a nossa comunidade e participe.",
+          "Milhares de estudantes de todo o Peru aprendem idiomas online com a Only One Coin. Conheça a nossa comunidade e participe.",
       },
       terms: {
         title: "Termos e condições de uso — Only One Coin",
         description:
-          "Termos e condições de uso do site da Associação Only One Coin Peru: serviços, cadastro de usuários, propriedade intelectual, responsabilidade e lei aplicável.",
+          "Termos e condições de uso do site da Only One Coin Peru: serviços, cadastro de usuários, propriedade intelectual, responsabilidade e lei aplicável.",
       },
       privacy: {
         title: "Política de privacidade — Only One Coin",
         description:
-          "Como a Associação Only One Coin Peru coleta, usa, armazena e protege seus dados pessoais, e como exercer seus direitos de acesso, retificação, cancelamento e oposição.",
+          "Como a Only One Coin Peru coleta, usa, armazena e protege seus dados pessoais, e como exercer seus direitos de acesso, retificação, cancelamento e oposição.",
+      },
+      preuni: {
+        title: "Pré-universitário — Only One Coin Perú",
+        description:
+          "Programa Pré-universitário da Only One Coin: preparação completa para a San Marcos e as universidades mais exigentes do Peru. Em breve.",
       },
       about: {
-        title: "Sobre nós — Associação Only One Coin Peru",
+        title: "Sobre nós — Only One Coin Peru",
         description:
-          "Conheça a Associação Only One Coin Peru: educação acessível para todos, aulas de inglês a partir de S/1,00 por sessão, e nossa missão, visão e valores.",
+          "Conheça a Only One Coin Peru: educação acessível para todos, aulas de inglês a partir de S/1,00 por sessão, e nossa missão, visão e valores.",
       },
       contact: {
-        title: "Contato — Associação Only One Coin Peru",
+        title: "Contato — Only One Coin Peru",
         description:
           "Fale com a gente no WhatsApp, ligue ou mande um e-mail. Atendimento de segunda a sexta sobre matrícula, horários e cursos disponíveis.",
       },
     },
     nav: {
       about: "Sobre",
-      courses: "Cursos",
-      coursesAll: "Ver todos os cursos",
+      courses: "Idiomas",
+      coursesAll: "Ver todos os idiomas",
+      programs: "Cursos",
+      preuniversitario: "Pré-universitário",
+      soon: "Em breve",
       resources: "Recursos",
       community: "Comunidade",
       blog: "Blog",
@@ -896,16 +1070,15 @@ export const content = {
       closeMenu: "Fechar menu",
     },
     hero: {
-      w1: "Aprenda",
-      w2: "Inglês",
+      w1: "Estude",
+      w2: "Idiomas",
       w3: "a partir de",
-      price: "S/1",
+      price: "S/1,00",
       priceUnit: "por sessão",
+      worldwide: "Estude de qualquer lugar do mundo",
       subHtml:
         'Aberto para <strong>TODAS AS IDADES</strong><br />a partir dos <span class="accent">6 anos</span>!',
-      packageNote:
-        'Pacote completo de Inglês: <strong>pagamento único de S/69,90</strong>. Inclui matrícula, livro, certificado e oficinas gratuitas.',
-      ctaEnroll: "Matricule-se agora",
+      ctaEnroll: "MATRICULE-SE JÁ",
       ctaCourses: "Ver cursos",
       imgAlt: "Estudantes da Only One Coin",
       badgeHtml:
@@ -1019,9 +1192,10 @@ export const content = {
     stats: {
       title: "A confiança de milhares de famílias",
       items: [
-        { value: "+200.000", label: "Alunos formados" },
-        { value: "+4", label: "Anos de mercado" },
-        { value: "+7", label: "Idiomas disponíveis" },
+        { value: "+5 anos", label: "De experiência" },
+        { value: "+1,5 milhão", label: "Alunos registrados" },
+        { value: "+350", label: "Docentes qualificados" },
+        { value: "+2M", label: "Seguidores nas redes" },
       ],
     },
     courses: {
@@ -1033,6 +1207,8 @@ export const content = {
         "portuguese": "Português",
         "mandarin-chinese": "Chinês Mandarim",
         "korean": "Coreano",
+        "cambridge-b1": "Inglês B1 · Cambridge",
+        "french-advanced": "Francês Intermediário",
       },
       indexEyebrow: "Nossos idiomas",
       indexTitlePre: "Escolha o idioma que ",
@@ -1044,6 +1220,27 @@ export const content = {
     },
     courseDetail: {
       backToCourses: "Voltar aos cursos",
+      urgency: "Vagas limitadas por turma! Garanta a sua hoje.",
+      discountAmount: "40%",
+      discountLabel: "de desconto",
+      priceHookPre: "a partir de",
+      factDuration: "Duração",
+      factLevel: "Nível",
+      factModality: "Modalidade",
+      liveClasses: "com AULAS AO VIVO",
+      perkTeacher: "Você interage com seu docente",
+      perkSchedule: "Uma hora por dia, de segunda a sexta · mais de 6 horários",
+      perkIncludes: "Inclui livro, matrícula e certificado GRATUITO",
+      levelsTitle: "Níveis disponíveis",
+      levelsLead: "Escolha por onde começar. Cada nível é matriculado separadamente.",
+      levelCurrent: "Você está vendo este nível",
+      levelSee: "Ver este nível",
+      parentBack: "Ver todos os níveis de",
+      curriculumTitle: "Grade curricular",
+      goalsTitle: "Competências que você vai desenvolver",
+      methodTitle: "Como é ensinado",
+      evaluationTitle: "Como é avaliado",
+      outcomesTitle: "Ao terminar o curso você vai conseguir",
       eyebrowPre: "Curso de ",
       eyebrowPost: "",
       titlePre: "Aprenda ",
@@ -1066,15 +1263,54 @@ export const content = {
       ],
       ctaTitle: "Pronto para começar?",
       ctaText: "Reserve sua vaga no WhatsApp e matricule-se hoje.",
-      ctaEnroll: "Matricule-se agora",
+      ctaEnroll: "MATRICULE-SE JÁ",
       ctaWhatsApp: "Fale conosco no WhatsApp",
+    },
+    preuni: {
+      badge: "Em breve",
+      eyebrow: "Programa Pré-universitário",
+      titlePre: "Prepare-se para ",
+      titleAccent: "entrar",
+      titlePost: "",
+      lead: "Preparação completa para o vestibular da San Marcos e das universidades mais exigentes do Peru, com o princípio de sempre: educação de qualidade ao alcance de todos.",
+      intro: "O programa percorre, de forma progressiva, todas as áreas cobradas nos exames de admissão, com aulas ao vivo, exercícios no formato da prova e avaliações constantes para medir seu avanço.",
+      goalTitle: "Objetivo do programa",
+      goal: "Que você domine o conteúdo e as estratégias de resolução que um exame de admissão exige — não decorar, mas analisar, interpretar e decidir sob pressão.",
+      areasTitle: "O que você vai estudar",
+      areas: [
+        { title: "Habilidade Verbal", text: "Compreensão de leitura, ideias principais, relações semânticas e inferências." },
+        { title: "Raciocínio Lógico-Matemático", text: "Raciocínio lógico e resolução de problemas com estratégias indutivas e dedutivas." },
+        { title: "Matemática", text: "Aritmética, Álgebra, Geometria e Trigonometria aplicadas às questões de admissão." },
+        { title: "Ciências", text: "Física, Química e Biologia: princípios fundamentais e método científico." },
+        { title: "Linguagem e Literatura", text: "Gramática, sintaxe e normas, com análise de textos literários e não literários." },
+        { title: "Ciências Sociais", text: "História, Geografia, Economia, Educação Cívica e Filosofia, com olhar crítico sobre o Peru e o mundo." },
+      ],
+      methodTitle: "Como é ensinado",
+      method: [
+        "Conteúdo construído de forma progressiva",
+        "Exercícios no formato do exame de admissão",
+        "Problemas analisados e discutidos em aula",
+        "Avaliações constantes para medir o avanço",
+        "Hábitos de estudo e autonomia no aprendizado",
+      ],
+      resultsTitle: "Ao terminar o programa você vai conseguir",
+      results: [
+        "Resolver com eficácia questões de exame de admissão",
+        "Aplicar conhecimento em diferentes áreas",
+        "Analisar informação de forma crítica e estruturada",
+        "Sustentar seu desempenho acadêmico com segurança",
+        "Encarar a admissão em nível competitivo",
+      ],
+      ctaTitle: "A matrícula ainda não está aberta",
+      ctaText: "Fale com a gente no WhatsApp e avisamos assim que as vagas abrirem, com datas, horários e valor.",
+      ctaWhatsApp: "Quero ser avisado",
     },
     pages: {
       blog: {
         titlePre: "Nosso ",
         titleAccent: "blog",
         titlePost: "",
-        lead: "Dicas para aprender idiomas, novidades da Associação e recursos gratuitos para nossos alunos.",
+        lead: "Dicas para aprender idiomas, novidades da Only One Coin e recursos gratuitos para nossos alunos.",
         soonTitle: "Em breve",
         soonText: "Estamos preparando nossos primeiros artigos. Volte em breve para ler nossas publicações.",
       },
@@ -1087,13 +1323,13 @@ export const content = {
         soonText: "Estamos construindo o espaço da nossa comunidade. Enquanto isso, siga a gente nas redes sociais.",
       },
       about: {
-        eyebrow: "Associação Only One Coin",
+        eyebrow: "Only One Coin",
         titlePre: "Educação acessível ",
         titleAccent: "para todos",
         titlePost: "",
-        lead: "Na Associação Only One Coin acreditamos firmemente que a educação é um direito fundamental, e não um privilégio. Com essa visão, há {years} anos oferecemos aulas de inglês a um preço simbólico de S/1,00 por sessão.",
+        lead: "Na Only One Coin acreditamos firmemente que a educação é um direito fundamental, e não um privilégio. Com essa visão, há {years} anos oferecemos aulas de inglês a um preço simbólico de S/1,00 por sessão.",
         lead2: "Nosso compromisso é dar a crianças, jovens e adultos de todas as idades e classes sociais a oportunidade de aprender e crescer, sem barreiras econômicas.",
-        teamAlt: "Equipe da Associação Only One Coin no escritório em Lima",
+        teamAlt: "Equipe da Only One Coin no escritório em Lima",
         coinAlt: "Uma moeda de um sol: o preço simbólico de cada sessão",
         whyTitle: "Por que nos escolher?",
         whyText: "Nosso time de professores é altamente qualificado e comprometido com o ensino. Usamos métodos inovadores e dinâmicos para garantir que cada estudante aprenda de forma efetiva e aproveite o processo.",
@@ -1132,7 +1368,7 @@ export const content = {
         // once and a rename never leaves a locale behind.
         partnerTitlePre: "Tecnologia com propósito, ao lado de ",
         partnerTitleAccent: "{partner}",
-        partnerText: "{partner} é nosso parceiro estratégico de tecnologia: desenhou e desenvolveu a plataforma digital da Associação e acompanha a sua evolução para que estudar com a gente seja simples de qualquer lugar do mundo.",
+        partnerText: "{partner} é nosso parceiro estratégico de tecnologia: desenhou e desenvolveu a plataforma digital da Only One Coin e acompanha a sua evolução para que estudar com a gente seja simples de qualquer lugar do mundo.",
         partnerCta: "Conhecer a {partner}",
       },
       contact: {
@@ -1152,8 +1388,8 @@ export const content = {
     },
     footer: {
       tagline: "Educação de idiomas de qualidade ao alcance de todos, em todo o Peru.",
-      orgHtml: "Associação Only One Coin Peru<br />RUC 20610561463",
-      col1Title: "A Associação",
+      orgHtml: "Only One Coin Peru<br />RUC 20610561463",
+      col1Title: "Only One Coin",
       about: "Sobre",
       courses: "Cursos",
       contact: "Contato",
@@ -1165,7 +1401,7 @@ export const content = {
       hoursLabel: "Horário de atendimento",
       hours: "Segunda a sexta · 9:00 – 22:00",
       followTitle: "Siga a gente",
-      copyOrg: "Associação Only One Coin",
+      copyOrg: "Only One Coin",
       rights: "Todos os direitos reservados",
       madeIn: "Feito com ❤ no Peru",
       partnerLabel: "Plataforma desenvolvida pelo nosso parceiro estratégico",
