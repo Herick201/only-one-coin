@@ -88,7 +88,8 @@
         "guardian_section": "Apoderado",
         "payment_section": "Pago",
         "consent_given": "Aceptado (versión {version})",
-        "what_happens": "Al enviar, tu vacante queda reservada y tu comprobante entra a revisión. Tienes hasta {days} días para que se apruebe el pago; te avisamos por correo en cuanto esté listo."
+        "what_happens": "Al enviar, tu vacante queda reservada y tu comprobante entra a revisión. Tienes hasta {days} días para que se apruebe el pago; te avisamos por correo en cuanto esté listo.",
+        "submit_failed": "No pudimos enviar tu matrícula. Puedes volver a intentarlo — no se creará una vacante duplicada."
       }
     },
     "time_range": "{start} a {end}",
@@ -120,7 +121,8 @@
       "receipt": "Comprobante"
     },
     "field": {
-      "full_name": "Nombres y apellidos",
+      "first_name": "Nombres",
+      "last_name": "Apellidos",
       "national_id_type": "Tipo de documento",
       "national_id": "Número de documento",
       "phone": "Celular",
@@ -132,7 +134,11 @@
       "email": "Correo electrónico",
       "relationship": "Parentesco",
       "operation_number": "Número de operación",
-      "receipt": "Comprobante de pago"
+      "receipt": "Comprobante de pago",
+      "region": "Departamento",
+      "region_placeholder": "Selecciona…",
+      "city": "Ciudad",
+      "city_needs_region": "Elige primero el departamento"
     },
     "national_id_type": {
       "DNI": "DNI",
@@ -165,7 +171,6 @@
     },
     "error": {
       "required": "Completa este campo.",
-      "full_name_incomplete": "Escribe tus nombres y apellidos completos.",
       "national_id_format": "Revisa el número: el DNI tiene 8 dígitos.",
       "phone_format": "Escribe un número de celular válido.",
       "email_format": "Escribe un correo válido.",

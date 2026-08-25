@@ -17,6 +17,7 @@ export class BetterAuthCurrentSessionPort implements ICurrentSessionPort {
     return {
       id: user.id,
       email: user.email,
+      name: user.name,
       role: (user as unknown as { role: Role }).role,
     };
   }

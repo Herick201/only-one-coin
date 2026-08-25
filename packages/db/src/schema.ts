@@ -48,6 +48,13 @@ export const courses = pgTable(
     name: text("name").notNull(),
     language: text("language").notNull(),
     minAge: integer("min_age").notNull(),
+    // Catalog label ("A1", "Kids", "Básico a Avanzado") — data, not an enum
+    // (apps/app/src/lib/enrollment/types.ts CatalogCourse.level). Default ''
+    // only so the column can land aditively on existing rows; every course
+    // the public catalog is meant to show should set a real one.
+    level: text("level").notNull().default(""),
+    modules: integer("modules").notNull().default(1),
+    totalHours: integer("total_hours").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -55,7 +62,11 @@ export const courses = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (table) => [check("courses_min_age_check", sql`${table.minAge} > 0`)],
+  (table) => [
+    check("courses_min_age_check", sql`${table.minAge} > 0`),
+    check("courses_modules_check", sql`${table.modules} > 0`),
+    check("courses_total_hours_check", sql`${table.totalHours} >= 0`),
+  ],
 );
 
 // A plan varies package/pricing shape within the same course (e.g. "Plano
@@ -125,7 +136,24 @@ export const classGroups = pgTable(
       .notNull()
       .references(() => academicPeriods.id, { onDelete: "restrict" }),
     schedule: text("schedule").notNull(),
+    // Structured weekly slots (apps/app/src/lib/enrollment/types.ts
+    // WeeklySlot[]) — added beside `schedule` rather than replacing it
+    // (CLAUDE.md §7, migrations are additive; expand/contract is a separate
+    // step). Default '[]' only for existing rows to land on; every class
+    // group the public catalog is meant to show should carry real slots.
+    slots: jsonb("slots").notNull().default([]),
+    // Printed on paperwork, never shown in the public checkout itself
+    // (CatalogClassGroup.code doc comment) — carried for the backoffice
+    // side. Default '' only so the column can land aditively.
+    code: text("code").notNull().default(""),
+    // Plain text, not a `teachers` FK — there is no `teachers` table yet
+    // (docs/ROADMAP.md Sessão 36). Denormalized placeholder until then.
+    teacherName: text("teacher_name").notNull().default(""),
     startsOn: timestamp("starts_on", { withTimezone: true }).notNull(),
+    // A class group can end before its academic_period does (a 4-module
+    // course inside a longer sales period) — CatalogClassGroup.endDate on
+    // the public catalog needs its own date, not the period's.
+    endsOn: timestamp("ends_on", { withTimezone: true }).notNull(),
     capacity: integer("capacity").notNull(),
     seatsTaken: integer("seats_taken").notNull().default(0),
     status: text("status").notNull().default("enrolling"),

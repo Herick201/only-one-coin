@@ -47,4 +47,21 @@ export class Enrollment extends BaseModel {
       seatStatus: "reserved",
     });
   }
+
+  /**
+   * Public checkout self-enrollment. Same shape as `createManual` — the seat
+   * always starts `reserved`, confirmation only follows an approved payment
+   * — kept as its own factory rather than reused so each call site names
+   * which flow it belongs to, the way `Payment.createManual` /
+   * `createFromPublicCheckout` do.
+   */
+  static createFromPublicCheckout(params: { studentId: string; classGroupId: string; planPriceId: string }): Enrollment {
+    return new Enrollment({
+      id: uuid(),
+      studentId: params.studentId,
+      classGroupId: params.classGroupId,
+      planPriceId: params.planPriceId,
+      seatStatus: "reserved",
+    });
+  }
 }

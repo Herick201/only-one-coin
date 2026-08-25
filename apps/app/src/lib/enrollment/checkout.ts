@@ -241,11 +241,6 @@ export function phoneNumberOf(phone: string): string {
   return splitPhone(phone).number.trim()
 }
 
-/** A full name is at least two words: one word is half a name on a certificate. */
-function isFullName(value: string): boolean {
-  return value.trim().split(/\s+/).filter((part) => part.length > 1).length >= 2
-}
-
 export function validateStudent(
   draft: StudentDraft,
   course: CatalogCourse | null,
@@ -253,8 +248,8 @@ export function validateStudent(
 ): FieldErrors<StudentField> {
   const errors: FieldErrors<StudentField> = {}
 
-  if (draft.fullName.trim() === '') errors.fullName = 'required'
-  else if (!isFullName(draft.fullName)) errors.fullName = 'full_name_incomplete'
+  if (draft.firstName.trim() === '') errors.firstName = 'required'
+  if (draft.lastName.trim() === '') errors.lastName = 'required'
 
   const id = draft.nationalId.trim()
   if (id === '') errors.nationalId = 'required'
@@ -280,6 +275,9 @@ export function validateStudent(
     else if (course && age < course.minAge) errors.minAge = 'min_age'
   }
 
+  if (!draft.region) errors.region = 'required'
+  if (draft.city.trim() === '') errors.city = 'required'
+
   return errors
 }
 
@@ -298,8 +296,8 @@ export function isMinor(birthDate: string, now = new Date()): boolean {
 export function validateGuardian(draft: GuardianDraft): FieldErrors<GuardianField> {
   const errors: FieldErrors<GuardianField> = {}
 
-  if (draft.fullName.trim() === '') errors.fullName = 'required'
-  else if (!isFullName(draft.fullName)) errors.fullName = 'full_name_incomplete'
+  if (draft.firstName.trim() === '') errors.firstName = 'required'
+  if (draft.lastName.trim() === '') errors.lastName = 'required'
 
   const id = draft.nationalId.trim()
   if (id === '') errors.nationalId = 'required'
@@ -355,15 +353,19 @@ export function emptyDraft(source: EnrollmentSource = 'web'): CheckoutDraft {
       classGroupId: null,
     },
     student: {
-      fullName: '',
+      firstName: '',
+      lastName: '',
       nationalIdType: 'DNI',
       nationalId: '',
       phone: '',
       email: '',
       birthDate: '',
+      region: null,
+      city: '',
     },
     guardian: {
-      fullName: '',
+      firstName: '',
+      lastName: '',
       nationalIdType: 'DNI',
       nationalId: '',
       relationship: 'mother',

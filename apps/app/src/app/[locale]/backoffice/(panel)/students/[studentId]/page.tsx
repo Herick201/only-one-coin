@@ -1,10 +1,11 @@
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
-import { getStaffSession, getStudent } from '@/lib/backoffice/mock-data'
+import { getStudent } from '@/lib/backoffice/students'
+import { getStaffSession } from '@/lib/backoffice/session'
 import { canBrowseStudents } from '@/lib/backoffice/permissions'
 import { initials } from '@/lib/format'
-import { Card, MockNotice, StatusBadge } from '@/components/backoffice/ui'
+import { Card, StatusBadge } from '@/components/backoffice/ui'
 import { studentTone } from '@/components/backoffice/status-tone'
 import { BoIcon } from '@/components/backoffice/icons'
 import { StudentFile } from './student-file'
@@ -23,9 +24,9 @@ export default async function StudentDetailPage({
   setRequestLocale(locale)
   const t = await getTranslations('bo')
 
-  if (!canBrowseStudents(getStaffSession().role)) notFound()
+  if (!canBrowseStudents((await getStaffSession()).role)) notFound()
 
-  const student = getStudent(studentId)
+  const student = await getStudent(studentId)
   if (!student) notFound()
 
   const fullName = `${student.firstName} ${student.lastName}`
@@ -75,8 +76,6 @@ export default async function StudentDetailPage({
           </div>
         </div>
       </Card>
-
-      <MockNotice label={t('common.mock_notice')} />
 
       <StudentFile student={student} />
     </div>

@@ -76,7 +76,12 @@ describe("authorization plugin", () => {
 
   it("rejects a role-gated route when the session belongs to the wrong role", async () => {
     const app = await buildTestApp();
-    const treasuryUser: AuthenticatedUser = { id: "u1", email: "t@example.com", role: "treasury" };
+    const treasuryUser: AuthenticatedUser = {
+      id: "u1",
+      email: "t@example.com",
+      name: "Treasury User",
+      role: "treasury",
+    };
     vi.spyOn(container.identity.currentSession, "resolve").mockResolvedValue(treasuryUser);
 
     const response = await app.inject({
@@ -90,7 +95,12 @@ describe("authorization plugin", () => {
 
   it("allows a role-gated route when the session role is in the allowed list", async () => {
     const app = await buildTestApp();
-    const coordinatorUser: AuthenticatedUser = { id: "u2", email: "c@example.com", role: "coordinator" };
+    const coordinatorUser: AuthenticatedUser = {
+      id: "u2",
+      email: "c@example.com",
+      name: "Coordinator User",
+      role: "coordinator",
+    };
     vi.spyOn(container.identity.currentSession, "resolve").mockResolvedValue(coordinatorUser);
 
     const response = await app.inject({

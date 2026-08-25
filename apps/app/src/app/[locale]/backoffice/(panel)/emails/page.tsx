@@ -2,10 +2,10 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
 import {
   getEmailMetrics,
-  getStaffSession,
   listEmailDeliveryIssues,
   listEmailFlows,
 } from '@/lib/backoffice/mock-data'
+import { getStaffSession } from '@/lib/backoffice/session'
 import { countDeliveryIssues } from '@/lib/backoffice/email-delivery'
 import { canManageEmail } from '@/lib/backoffice/permissions'
 import { EmptyState, MockNotice, PageHeader } from '@/components/backoffice/ui'
@@ -35,7 +35,7 @@ export default async function EmailsPage({
   setRequestLocale(locale)
   const t = await getTranslations('bo')
 
-  const staff = getStaffSession()
+  const staff = await getStaffSession()
   const undelivered = countDeliveryIssues(listEmailDeliveryIssues())
 
   if (!canManageEmail(staff.role)) {

@@ -49,30 +49,6 @@ import { daysUntil } from './contract'
  */
 
 /**
- * Signed-in staff member driving the mocked session.
- *
- * One place decides the role, and the whole panel follows it: the sidebar, the
- * home, and every screen that narrows to a teacher's own class groups. Flip
- * `role` to `'teacher'` (and give `teacherId` a value from the roster below) to
- * see the restricted view.
- *
- * There is deliberately no switch for this on screen. The client never picks
- * its own role — the real session reads it from the protected table on every
- * sensitive request, server-side (CLAUDE.md §8), and a demo toggle is exactly
- * the shortcut that survives into production.
- */
-export function getStaffSession(): StaffUser {
-  return {
-    id: 'staff_01',
-    firstName: 'Lucía',
-    lastName: 'Ramírez',
-    email: 'lucia.ramirez@onlyonecoin.edu.pe',
-    role: 'admin',
-    teacherId: null,
-  }
-}
-
-/**
  * The signed-in staff member's own account — access, never identity. Shaped
  * like the rows behind it: the protected `user` row (CLAUDE.md §8), the
  * password/second-factor state beside it, and the open sessions the auth
@@ -84,7 +60,19 @@ export function getStaffSession(): StaffUser {
  */
 export function getAccountOverview(): AccountOverview {
   return {
-    user: getStaffSession(),
+    // Only the identity half is real elsewhere now (`lib/backoffice/session`,
+    // used by the panel shell) — the rest of this account screen (password,
+    // MFA, open sessions) is still mock, so this stays a literal rather than
+    // reaching for the real session and making every caller async for a
+    // field the rest of the object doesn't back yet.
+    user: {
+      id: 'staff_01',
+      firstName: 'Lucía',
+      lastName: 'Ramírez',
+      email: 'lucia.ramirez@onlyonecoin.edu.pe',
+      role: 'admin',
+      teacherId: null,
+    },
     security: {
       passwordUpdatedAt: '2026-05-14T13:40:00Z',
       mfa: {
@@ -1350,31 +1338,6 @@ const students: StudentDetail[] = [
   ...pendingReceipts.map(pendingStudent),
 ]
 
-export function listStudents(): StudentRow[] {
-  return students.map(
-    ({
-      guardian,
-      enrollments,
-      documents,
-      documentRequests,
-      attachments,
-      activity,
-      ...row
-    }) => {
-      void guardian
-      void enrollments
-      void documents
-      void documentRequests
-      void attachments
-      void activity
-      return row
-    },
-  )
-}
-
-export function getStudent(id: string): StudentDetail | undefined {
-  return students.find((s) => s.id === id)
-}
 
 export function getDashboardMetrics(): DashboardMetrics {
   return {

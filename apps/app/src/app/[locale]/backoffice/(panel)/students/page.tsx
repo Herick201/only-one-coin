@@ -1,10 +1,11 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { getStaffSession, listStudents } from '@/lib/backoffice/mock-data'
+import { listStudents } from '@/lib/backoffice/students'
+import { getStaffSession } from '@/lib/backoffice/session'
 import {
   canBrowseStudents,
   canCreateStudent,
 } from '@/lib/backoffice/permissions'
-import { EmptyState, MockNotice, PageHeader } from '@/components/backoffice/ui'
+import { EmptyState, PageHeader } from '@/components/backoffice/ui'
 import { StudentsTable } from './students-table'
 
 /**
@@ -20,7 +21,7 @@ export default async function StudentsPage({
   setRequestLocale(locale)
   const t = await getTranslations('bo')
 
-  const staff = getStaffSession()
+  const staff = await getStaffSession()
 
   /* A teacher reaches a student through their own class group, never through a
      roster of everybody in the institution. The screen says so; the check that
@@ -38,14 +39,12 @@ export default async function StudentsPage({
     )
   }
 
+  const rows = await listStudents()
+
   return (
     <div className="flex flex-col gap-5">
       <PageHeader title={t('students.title')} />
-      <MockNotice label={t('common.mock_notice')} />
-      <StudentsTable
-        rows={listStudents()}
-        canCreate={canCreateStudent(staff.role)}
-      />
+      <StudentsTable rows={rows} canCreate={canCreateStudent(staff.role)} />
     </div>
   )
 }

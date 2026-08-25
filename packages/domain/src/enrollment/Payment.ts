@@ -82,4 +82,40 @@ export class Payment extends BaseModel {
 
     return new Payment(result.data);
   }
+
+  /**
+   * Public checkout self-enrollment. Always `pending`, never `under_review`:
+   * CLAUDE.md §5's OCR ladder is what moves a payment out of `pending`, and
+   * this reduced slice does not run it yet (no upload, no worker) — a
+   * receipt the student describes but this never stores. `idempotencyKey`
+   * comes from the client, generated once per submit attempt and resent
+   * unchanged on retry (CLAUDE.md §5, "duplo POST de celular ruim é
+   * certeza") — unlike `createManual`, which mints its own because staff
+   * retrying a click is not the same risk as a flaky mobile connection.
+   */
+  static createFromPublicCheckout(params: {
+    enrollmentId: string;
+    idempotencyKey: string;
+    method: PaymentMethod;
+    methodDetail: string | null;
+    amountCents: number;
+    operationNumber: string;
+  }): Payment {
+    const result = PaymentPropsSchema.safeParse({
+      id: uuid(),
+      enrollmentId: params.enrollmentId,
+      idempotencyKey: params.idempotencyKey,
+      status: "pending",
+      method: params.method,
+      methodDetail: params.methodDetail,
+      amountCents: params.amountCents,
+      operationNumber: params.operationNumber,
+    });
+
+    if (!result.success) {
+      throw new Error("Invalid data");
+    }
+
+    return new Payment(result.data);
+  }
 }

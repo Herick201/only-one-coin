@@ -50,7 +50,6 @@
     "generic_error": "Não conseguimos validar esses dados. Confira e tente de novo.",
     "error_reference": "Código de referência: {errorId}",
     "security_notice": "Este acesso é monitorado. Cada tentativa fica registrada.",
-    "mock_notice": "Prévia — ainda sem conexão com o servidor.",
     "show_password": "Mostrar senha",
     "hide_password": "Ocultar senha",
     "forgot_password": "Esqueceu sua senha?",

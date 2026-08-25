@@ -1,9 +1,9 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import {
   getEnrollmentMetrics,
-  getStaffSession,
   listEnrollments,
 } from '@/lib/backoffice/mock-data'
+import { getStaffSession } from '@/lib/backoffice/session'
 import {
   canCreateEnrollment,
   canBrowseEnrollments,
@@ -37,7 +37,7 @@ export default async function EnrollmentsPage({
   setRequestLocale(locale)
   const t = await getTranslations('bo')
 
-  const staff = getStaffSession()
+  const staff = await getStaffSession()
 
   /* Enrollments belong to administration and coordination
      (`docs/ARCHITECTURE.md` §3). Tesorería settles the money in the payments

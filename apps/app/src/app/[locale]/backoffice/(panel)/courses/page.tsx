@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { getStaffSession, listCourses } from '@/lib/backoffice/mock-data'
+import { listCourses } from '@/lib/backoffice/mock-data'
+import { getStaffSession } from '@/lib/backoffice/session'
 import { canConfigureCourse, canCreateCourse } from '@/lib/backoffice/permissions'
 import { MockNotice, PageHeader } from '@/components/backoffice/ui'
 import { SectionTabs } from '@/components/backoffice/section-tabs'
@@ -24,7 +25,7 @@ export default async function CoursesPage({
   setRequestLocale(locale)
   const t = await getTranslations('bo')
 
-  const staff = getStaffSession()
+  const staff = await getStaffSession()
 
   return (
     <div className="flex flex-col gap-5">

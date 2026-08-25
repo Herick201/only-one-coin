@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
-import { getEmailFlow, getEmailMetrics, getStaffSession } from '@/lib/backoffice/mock-data'
+import { getEmailFlow, getEmailMetrics } from '@/lib/backoffice/mock-data'
+import { getStaffSession } from '@/lib/backoffice/session'
 import { canManageEmail } from '@/lib/backoffice/permissions'
 import { MockNotice } from '@/components/backoffice/ui'
 import { BoIcon } from '@/components/backoffice/icons'
@@ -34,7 +35,7 @@ export default async function EmailFlowPage({
   setRequestLocale(locale)
   const t = await getTranslations('bo')
 
-  const staff = getStaffSession()
+  const staff = await getStaffSession()
   if (!canManageEmail(staff.role)) notFound()
 
   const flow = getEmailFlow(template)

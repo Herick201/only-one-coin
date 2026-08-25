@@ -9,9 +9,13 @@ import { rootRoute } from "@/http/RootRoute.js";
 import { healthCheckRoute } from "@/http/HealthCheckRoute.js";
 import { registerAuthRoutes } from "@/http/auth/AuthCatchAllRoute.js";
 import { registerStudentRoute } from "@/http/student/RegisterStudentRoute.js";
-import { searchStudentsRoute } from "@/http/student/SearchStudentsRoute.js";
+import { listStudentsRoute } from "@/http/student/ListStudentsRoute.js";
+import { getStudentRoute } from "@/http/student/GetStudentRoute.js";
 import { createManualEnrollmentRoute } from "@/http/enrollment/CreateManualEnrollmentRoute.js";
+import { submitPublicEnrollmentRoute } from "@/http/enrollment/SubmitPublicEnrollmentRoute.js";
 import { listOpenClassGroupsRoute } from "@/http/catalog/ListOpenClassGroupsRoute.js";
+import { getPublicCatalogRoute } from "@/http/catalog/GetPublicCatalogRoute.js";
+import { getCurrentStaffRoute } from "@/http/identity/GetCurrentStaffRoute.js";
 import { container } from "@/container.js";
 
 export async function buildApp(): Promise<FastifyInstance> {
@@ -48,9 +52,13 @@ export async function buildApp(): Promise<FastifyInstance> {
     provider.register(
       (instance, _opts, done) => {
         instance.withTypeProvider<ZodTypeProvider>().route(registerStudentRoute);
-        instance.withTypeProvider<ZodTypeProvider>().route(searchStudentsRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(listStudentsRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(getStudentRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(createManualEnrollmentRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(submitPublicEnrollmentRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(listOpenClassGroupsRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(getPublicCatalogRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(getCurrentStaffRoute);
         done();
       },
       { prefix: "/api/v1" },

@@ -88,7 +88,8 @@
         "guardian_section": "Guardian",
         "payment_section": "Payment",
         "consent_given": "Accepted (version {version})",
-        "what_happens": "When you send, your seat is held and your receipt goes to review. You have up to {days} days for the payment to be approved; we will email you as soon as it is."
+        "what_happens": "When you send, your seat is held and your receipt goes to review. You have up to {days} days for the payment to be approved; we will email you as soon as it is.",
+        "submit_failed": "We could not submit your enrollment. You can try again — it will not create a duplicate seat."
       }
     },
     "time_range": "{start} to {end}",
@@ -120,7 +121,8 @@
       "receipt": "Receipt"
     },
     "field": {
-      "full_name": "Full name",
+      "first_name": "First name",
+      "last_name": "Last name",
       "national_id_type": "Document type",
       "national_id": "Document number",
       "phone": "Mobile",
@@ -132,7 +134,11 @@
       "email": "Email address",
       "relationship": "Relationship",
       "operation_number": "Operation number",
-      "receipt": "Payment receipt"
+      "receipt": "Payment receipt",
+      "region": "Region",
+      "region_placeholder": "Select…",
+      "city": "City",
+      "city_needs_region": "Pick the region first"
     },
     "national_id_type": {
       "DNI": "DNI",
@@ -165,7 +171,6 @@
     },
     "error": {
       "required": "Please fill in this field.",
-      "full_name_incomplete": "Please write your full name and surname.",
       "national_id_format": "Check the number: a DNI has 8 digits.",
       "phone_format": "Enter a valid mobile number.",
       "email_format": "Enter a valid email address.",

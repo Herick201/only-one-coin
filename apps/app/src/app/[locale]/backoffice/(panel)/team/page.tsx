@@ -1,10 +1,10 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import {
-  getStaffSession,
   listStaff,
   listStaffRoleChanges,
   listTeachers,
 } from '@/lib/backoffice/mock-data'
+import { getStaffSession } from '@/lib/backoffice/session'
 import { canManageStaff } from '@/lib/backoffice/permissions'
 import { EmptyState, MockNotice, PageHeader } from '@/components/backoffice/ui'
 import { TeamView } from './team-view'
@@ -30,7 +30,7 @@ export default async function TeamPage({
   setRequestLocale(locale)
   const t = await getTranslations('bo')
 
-  const staff = getStaffSession()
+  const staff = await getStaffSession()
 
   if (!canManageStaff(staff.role)) {
     return (

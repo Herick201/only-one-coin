@@ -131,7 +131,6 @@ export default async function BackofficePage({
               <ShieldIcon size={14} className="mt-0.5 shrink-0 text-brand-blue" />
               {t('security_notice')}
             </p>
-            <p className="mt-2 text-xs text-muted-foreground">{t('mock_notice')}</p>
           </div>
         </div>
       </main>

@@ -41,23 +41,32 @@ export function StepReview({
   draft: CheckoutDraft
   onEdit: (step: StepId) => void
   onBack: () => void
-  onSubmit: () => void
+  onSubmit: () => Promise<void>
 }) {
   const t = useTranslations('enrollment')
   const locale = useLocale() as Locale
   const [sending, setSending] = useState(false)
+  const [submitFailed, setSubmitFailed] = useState(false)
 
   const course = courseById(catalog, draft.course.courseId)
   const group = groupById(catalog, draft.course.classGroupId)
   const plan = planOfCourse(catalog, draft.course.courseId)
   const minorFlow = draft.guardian.consentAccepted
 
-  function send() {
+  async function send() {
     // Guards the double POST from a bad phone connection on the screen side;
     // the guarantee is the idempotency key on the payment (`CLAUDE.md` §5).
     if (sending) return
     setSending(true)
-    onSubmit()
+    setSubmitFailed(false)
+    try {
+      await onSubmit()
+    } catch {
+      // Retriable: the idempotency key is stable across attempts, so a
+      // second click is safe rather than a second seat.
+      setSending(false)
+      setSubmitFailed(true)
+    }
   }
 
   return (
@@ -103,7 +112,7 @@ export function StepReview({
         />
         <dl className="divide-y divide-line">
           <SummaryRow label={t('summary.full_name')}>
-            {draft.student.fullName}
+            {`${draft.student.firstName} ${draft.student.lastName}`}
           </SummaryRow>
           <SummaryRow label={t('summary.document')}>
             {`${t(`national_id_type.${draft.student.nationalIdType}`)} ${draft.student.nationalId}`}
@@ -124,7 +133,7 @@ export function StepReview({
             </p>
             <dl className="divide-y divide-line">
               <SummaryRow label={t('summary.full_name')}>
-                {draft.guardian.fullName}
+                {`${draft.guardian.firstName} ${draft.guardian.lastName}`}
               </SummaryRow>
               <SummaryRow label={t('field.relationship')}>
                 {t(`relationship.${draft.guardian.relationship}`)}
@@ -185,6 +194,8 @@ export function StepReview({
       <Note tone="info">
         {t('step.review.what_happens', { days: catalog.settings.reservationDays })}
       </Note>
+
+      {submitFailed && <Note tone="danger">{t('step.review.submit_failed')}</Note>}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <GhostButton onClick={onBack}>
