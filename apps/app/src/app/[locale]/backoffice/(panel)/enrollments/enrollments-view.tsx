@@ -4,13 +4,10 @@ import { useMemo, useState, type MouseEvent, type ReactNode } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import type {
-  ClassGroupRow,
   EnrollmentMetrics,
   EnrollmentRow,
   EnrollmentStatus,
-  PlanPrice,
   SeatStatus,
-  StudentRow,
 } from '@/lib/backoffice/types'
 import { formatDateTime, type Locale } from '@/lib/format'
 import {
@@ -69,16 +66,10 @@ const PAGE_SIZE = 15
 export function EnrollmentsView({
   rows,
   metrics,
-  students,
-  classGroups,
-  plans,
   canCreate,
 }: {
   rows: EnrollmentRow[]
   metrics: EnrollmentMetrics
-  students: StudentRow[]
-  classGroups: ClassGroupRow[]
-  plans: PlanPrice[]
   canCreate: boolean
 }) {
   const t = useTranslations('bo')
@@ -333,15 +324,12 @@ export function EnrollmentsView({
 
       {creating && (
         <NewEnrollmentForm
-          students={students}
-          classGroups={classGroups}
-          plans={plans}
           onCancel={() => setCreating(false)}
           onCreate={(row) => {
             setCreated((current) => [row, ...current])
             setCreating(false)
             setPage(0)
-            setToast(t('new_enrollment.created_local_only'))
+            setToast(t('new_enrollment.created'))
           }}
         />
       )}

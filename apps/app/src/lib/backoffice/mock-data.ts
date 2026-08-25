@@ -3148,16 +3148,16 @@ export function listReceiptExtractions(): Record<string, ReceiptExtraction> {
  * `plan_price_id` in force (CLAUDE.md §5) — which is why the id travels with
  * the amount and never gets recomputed from it.
  */
-const PLAN_PRICES: Record<string, { amountCents: number; planPriceId: string }> = {
-  'Inglés Básico A1': { amountCents: 6990, planPriceId: 'pp_en_a1_v3' },
-  'Inglés Intermedio B1': { amountCents: 7990, planPriceId: 'pp_en_b1_v2' },
-  'Inglés Introductorio': { amountCents: 4990, planPriceId: 'pp_en_int_v1' },
-  'Francés Inicial': { amountCents: 6490, planPriceId: 'pp_fr_i_v2' },
-  'Alemán Inicial': { amountCents: 6990, planPriceId: 'pp_de_i_v1' },
-  'Italiano Inicial': { amountCents: 6490, planPriceId: 'pp_it_i_v1' },
-  'Portugués Inicial': { amountCents: 5990, planPriceId: 'pp_pt_i_v2' },
-  'Quechua Conversacional': { amountCents: 5490, planPriceId: 'pp_qu_i_v1' },
-  'Chino Mandarín Básico': { amountCents: 7490, planPriceId: 'pp_zh_b_v1' },
+const PLAN_PRICES: Record<string, { amountCents: number; planId: string; planPriceId: string }> = {
+  'Inglés Básico A1': { amountCents: 6990, planId: 'pl_en_a1', planPriceId: 'pp_en_a1_v3' },
+  'Inglés Intermedio B1': { amountCents: 7990, planId: 'pl_en_b1', planPriceId: 'pp_en_b1_v2' },
+  'Inglés Introductorio': { amountCents: 4990, planId: 'pl_en_int', planPriceId: 'pp_en_int_v1' },
+  'Francés Inicial': { amountCents: 6490, planId: 'pl_fr_i', planPriceId: 'pp_fr_i_v2' },
+  'Alemán Inicial': { amountCents: 6990, planId: 'pl_de_i', planPriceId: 'pp_de_i_v1' },
+  'Italiano Inicial': { amountCents: 6490, planId: 'pl_it_i', planPriceId: 'pp_it_i_v1' },
+  'Portugués Inicial': { amountCents: 5990, planId: 'pl_pt_i', planPriceId: 'pp_pt_i_v2' },
+  'Quechua Conversacional': { amountCents: 5490, planId: 'pl_qu_i', planPriceId: 'pp_qu_i_v1' },
+  'Chino Mandarín Básico': { amountCents: 7490, planId: 'pl_zh_b', planPriceId: 'pp_zh_b_v1' },
 }
 
 /** The only plan sold today — the whole package, one payment (CLAUDE.md §1). */
@@ -3174,6 +3174,7 @@ export function getPlanPrice(courseName: string): PlanPrice | null {
   return {
     courseName,
     planName: PLAN_NAME,
+    planId: price.planId,
     planPriceId: price.planPriceId,
     amountCents: price.amountCents,
     currency: 'PEN',

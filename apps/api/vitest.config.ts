@@ -1,0 +1,23 @@
+import { fileURLToPath } from "node:url";
+import { defineConfig } from "vitest/config";
+
+export default defineConfig({
+  resolve: {
+    alias: {
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+    },
+  },
+  test: {
+    // container.ts builds the app container at import time and validates
+    // env eagerly (config.ts) — these let it build in tests without a real
+    // Postgres/Redis reachable; no route under test touches either.
+    env: {
+      NODE_ENV: "test",
+      REDIS_URL: "redis://127.0.0.1:6379",
+      DATABASE_URL: "postgres://ooc:ooc@localhost:5432/ooc_dev",
+      BETTER_AUTH_URL: "http://localhost:3333/api/auth",
+      BETTER_AUTH_SECRET: "test-secret-at-least-32-characters-long",
+      APP_PUBLIC_URL: "http://localhost:3000",
+    },
+  },
+});

@@ -1,0 +1,91 @@
+// TODO: switch to native crypto.randomUUIDv7() once engines.node requires >=26 (LTS ~out/2026)
+import { v7 as uuid } from "uuid";
+import { z } from "zod";
+import { BaseModel } from "../shared/base/BaseModel.js";
+
+export const NationalIdTypeSchema = z.enum(["DNI", "CE", "passport"]);
+export type NationalIdType = z.infer<typeof NationalIdTypeSchema>;
+
+export const StudentPropsSchema = z.object({
+  id: z.string().uuid(),
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+  nationalIdType: NationalIdTypeSchema,
+  nationalId: z.string().min(1),
+  email: z.string().email(),
+  phone: z.string().min(1),
+  birthDate: z.coerce.date(),
+  // ISO 3166-1 alpha-2.
+  country: z.string().length(2),
+  // First-level division ("departamento" in Peru). Null outside it.
+  region: z.string().min(1).nullable(),
+  city: z.string().min(1),
+});
+
+export const CreateStudentSchema = StudentPropsSchema.omit({ id: true });
+
+export type StudentProps = z.infer<typeof StudentPropsSchema>;
+export type CreateStudentDTO = z.infer<typeof CreateStudentSchema>;
+
+export class Student extends BaseModel {
+  // Peru's Código Civil sets the age of majority at 18 — same value the
+  // backoffice mock already computes against
+  // (apps/app/.../students/new-student-form.tsx, MAJORITY_AGE).
+  static readonly MAJORITY_AGE = 18;
+
+  public firstName: string;
+  public lastName: string;
+  public nationalIdType: NationalIdType;
+  public nationalId: string;
+  public email: string;
+  public phone: string;
+  public birthDate: Date;
+  public country: string;
+  public region: string | null;
+  public city: string;
+
+  constructor(props: StudentProps) {
+    super(props.id);
+    this.firstName = props.firstName;
+    this.lastName = props.lastName;
+    this.nationalIdType = props.nationalIdType;
+    this.nationalId = props.nationalId;
+    this.email = props.email;
+    this.phone = props.phone;
+    this.birthDate = props.birthDate;
+    this.country = props.country;
+    this.region = props.region;
+    this.city = props.city;
+  }
+
+  /** Whether the student is under Student.MAJORITY_AGE as of today — drives
+   * whether a guardian is required (CLAUDE.md §1). */
+  get isMinor(): boolean {
+    const today = new Date();
+    let age = today.getUTCFullYear() - this.birthDate.getUTCFullYear();
+
+    const hasHadBirthdayThisYear =
+      today.getUTCMonth() > this.birthDate.getUTCMonth() ||
+      (today.getUTCMonth() === this.birthDate.getUTCMonth() &&
+        today.getUTCDate() >= this.birthDate.getUTCDate());
+
+    if (!hasHadBirthdayThisYear) {
+      age -= 1;
+    }
+
+    return age < Student.MAJORITY_AGE;
+  }
+
+  static create(dto: CreateStudentDTO): Student {
+    const result = CreateStudentSchema.safeParse(dto);
+
+    if (!result.success) {
+      throw new Error("Invalid data");
+    }
+
+    return new Student({
+      id: uuid(),
+      ...result.data,
+    });
+  }
+}

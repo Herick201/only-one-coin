@@ -10,6 +10,7 @@ export const healthCheckRoute = RouteBuilder.get("/health")
   })
   .response(200, z.object({ status: z.string() }))
   .response(500, ErrorResponseSchema)
+  .public()
   .handler(async (_request, reply) => {
     reply.send({ status: "ok" });
   });

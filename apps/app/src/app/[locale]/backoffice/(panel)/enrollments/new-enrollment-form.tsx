@@ -1,14 +1,8 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
-import type {
-  ClassGroupRow,
-  EnrollmentRow,
-  PaymentMethod,
-  PlanPrice,
-  StudentRow,
-} from '@/lib/backoffice/types'
+import type { EnrollmentRow, NationalIdType, PaymentMethod } from '@/lib/backoffice/types'
 import { formatMoney, type Locale } from '@/lib/format'
 import { formatPaymentMethod } from '@/lib/payment-method'
 import {
@@ -34,8 +28,37 @@ const labelClass =
  */
 const METHODS: PaymentMethod[] = ['yape', 'plin', 'bcp', 'interbank', 'other']
 
-/** Enough matches to recognise the right person, few enough to read at a glance. */
-const MAX_MATCHES = 6
+/** Minimum characters before searching — matches the API's own floor
+ * (GET /api/v1/students), which refuses to turn a search box into a
+ * directory-enumeration primitive. */
+const MIN_QUERY_LENGTH = 2
+
+/** Debounce so every keystroke doesn't fire its own request. */
+const SEARCH_DEBOUNCE_MS = 250
+
+interface StudentSearchResult {
+  id: string
+  firstName: string
+  lastName: string
+  nationalIdType: NationalIdType
+  nationalId: string
+}
+
+interface OpenClassGroup {
+  id: string
+  courseId: string
+  courseName: string
+  academicPeriodName: string
+  schedule: string
+  startsOn: string
+  capacity: number
+  seatsTaken: number
+  status: string
+  planId: string
+  planName: string
+  planPriceId: string
+  amountCents: number
+}
 
 /**
  * Opening an enrollment from the panel — the exception, not the way in. The
@@ -47,28 +70,24 @@ const MAX_MATCHES = 6
  * - It does not create a student. It enrolls somebody already on file, found by
  *   name or document. Registering a person carries the guardian consent record
  *   (Ley 29733, CLAUDE.md §8) and that is not a side effect of a seat.
- * - It does not price anything. The amount is the plan price in force, shown
- *   read-only: there are no discounts, ever (CLAUDE.md §1), so a field somebody
- *   can type into is a field somebody can undercharge from.
+ * - It does not price anything. The amount is the plan price in force, resolved
+ *   server-side and shown read-only: there are no discounts, ever (CLAUDE.md
+ *   §1), so a field somebody can type into is a field somebody can undercharge
+ *   from.
  * - It does not approve money. The seat is reserved and the payment goes in
  *   open — with a receipt attached it enters the same review ladder every other
  *   receipt does (CLAUDE.md §5). Whoever creates an enrollment must not also be
  *   the one who settles it.
  *
- * Screen-local, like the class group and course forms: the real write is a
- * usecase in `packages/domain` behind `apps/api`, never the browser
- * (CLAUDE.md §8).
+ * Student search and the open class group list are both real reads against
+ * `apps/api` (GET /api/v1/students, GET /api/v1/class-groups) — teacher and
+ * language aren't modeled on a class group yet (no teachers bounded context
+ * built), so this form doesn't show or send them.
  */
 export function NewEnrollmentForm({
-  students,
-  classGroups,
-  plans,
   onCancel,
   onCreate,
 }: {
-  students: StudentRow[]
-  classGroups: ClassGroupRow[]
-  plans: PlanPrice[]
   onCancel: () => void
   onCreate: (enrollment: EnrollmentRow) => void
 }) {
@@ -76,102 +95,151 @@ export function NewEnrollmentForm({
   const locale = useLocale() as Locale
 
   const [studentQuery, setStudentQuery] = useState('')
-  const [studentId, setStudentId] = useState<string | null>(null)
+  const [matches, setMatches] = useState<StudentSearchResult[]>([])
+  const [selectedStudent, setSelectedStudent] = useState<StudentSearchResult | null>(null)
+
+  const [openGroups, setOpenGroups] = useState<OpenClassGroup[]>([])
+  const [groupsLoaded, setGroupsLoaded] = useState(false)
   const [classGroupId, setClassGroupId] = useState('')
+
   const [method, setMethod] = useState<PaymentMethod>('yape')
   const [methodDetail, setMethodDetail] = useState('')
   const [operationNumber, setOperationNumber] = useState('')
   const [receiptAttached, setReceiptAttached] = useState(false)
+  const [pending, setPending] = useState(false)
+  const [submitError, setSubmitError] = useState(false)
 
-  const student = students.find((row) => row.id === studentId) ?? null
+  useEffect(() => {
+    let cancelled = false
 
-  /**
-   * Only class groups still taking people, and only while they have a seat: the
-   * seat is claimed by a single atomic instruction on the server
-   * (CLAUDE.md §5), so a form that offers a full class group is a form whose
-   * submit fails after the reader filled everything in.
-   */
-  const openGroups = useMemo(
-    () =>
-      classGroups.filter(
-        (group) => group.status === 'enrolling' && group.seatsTaken < group.capacity,
-      ),
-    [classGroups],
-  )
+    fetch('/api/v1/class-groups')
+      .then((response) => (response.ok ? (response.json() as Promise<OpenClassGroup[]>) : []))
+      .then((data) => {
+        if (!cancelled) setOpenGroups(data)
+      })
+      .catch(() => {
+        if (!cancelled) setOpenGroups([])
+      })
+      .finally(() => {
+        if (!cancelled) setGroupsLoaded(true)
+      })
 
-  const matches = useMemo(() => {
-    const needle = studentQuery.trim().toLowerCase()
-    if (!needle) return []
-    return students
-      .filter((row) =>
-        `${row.firstName} ${row.lastName} ${row.nationalId}`
-          .toLowerCase()
-          .includes(needle),
-      )
-      .slice(0, MAX_MATCHES)
-  }, [students, studentQuery])
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    const query = studentQuery.trim()
+    if (query.length < MIN_QUERY_LENGTH) {
+      setMatches([])
+      return
+    }
+
+    let cancelled = false
+    const timeout = window.setTimeout(() => {
+      fetch(`/api/v1/students?q=${encodeURIComponent(query)}`)
+        .then((response) => (response.ok ? (response.json() as Promise<StudentSearchResult[]>) : []))
+        .then((data) => {
+          if (!cancelled) setMatches(data)
+        })
+        .catch(() => {
+          if (!cancelled) setMatches([])
+        })
+    }, SEARCH_DEBOUNCE_MS)
+
+    return () => {
+      cancelled = true
+      window.clearTimeout(timeout)
+    }
+  }, [studentQuery])
 
   const group = openGroups.find((item) => item.id === classGroupId) ?? null
-  const plan = group
-    ? (plans.find((item) => item.courseName === group.courseName) ?? null)
-    : null
-
-  const schedule = group
-    ? `${group.weekdays.map((day) => t(`weekday.${day}`)).join('/')} · ${group.startTime}`
-    : ''
 
   /**
    * Everything the form asks for is required, and the button is where that is
    * enforced: a seat opened without the operation number is a payment tesorería
    * cannot match against a bank statement, and it lands in the review queue
    * anyway — one field short of settleable.
-   *
-   * The price is in the list for a different reason: no price in force means no
-   * enrollment at all, because guessing an amount undercharges.
    */
   const detailNeeded = method === 'other'
   const missing =
-    student === null ||
+    selectedStudent === null ||
     group === null ||
-    plan === null ||
     operationNumber.trim() === '' ||
     (detailNeeded && methodDetail.trim() === '')
-  const ready = !missing
+  const ready = !missing && !pending
 
-  function submit() {
-    if (!ready || !student || !group || !plan) return
-    const now = new Date().toISOString()
-    onCreate({
-      id: `enr_local_${student.id}_${group.id}`,
-      code: `OOC-${now.slice(0, 4)}-${student.nationalId.slice(-4)}`,
-      studentId: student.id,
-      studentName: `${student.firstName} ${student.lastName}`,
-      courseName: group.courseName,
-      classGroupId: group.id,
-      classGroupName: `${group.code} · ${schedule}`,
-      teacherName: group.teacherName,
-      language: group.language,
-      modality: group.modality,
-      academicPeriodName: group.academicPeriodName,
-      status: 'under_review',
-      // The seat is held, not granted: it goes back if the money never lands
-      // (CLAUDE.md §5).
-      seatStatus: 'reserved',
-      planName: plan.planName,
-      planPriceId: plan.planPriceId,
-      amountCents: plan.amountCents,
-      currency: plan.currency,
-      // With a receipt it enters the ladder; without one it is still waiting
-      // for the student to send it. Never `approved` from here.
-      paymentStatus: receiptAttached ? 'under_review' : 'pending',
-      paymentMethod: method,
-      // The rails name themselves; `other` is only ever as good as the text.
-      paymentMethodDetail: method === 'other' ? methodDetail.trim() : null,
-      operationNumber: operationNumber.trim(),
-      createdAt: now,
-      paidAt: null,
-      progressPct: null,
-    })
+  async function submit() {
+    if (!ready || !selectedStudent || !group) return
+    setPending(true)
+    setSubmitError(false)
+
+    try {
+      const response = await fetch('/api/v1/enrollments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentId: selectedStudent.id,
+          classGroupId: group.id,
+          planId: group.planId,
+          method,
+          methodDetail: method === 'other' ? methodDetail.trim() : null,
+          operationNumber: operationNumber.trim(),
+          receiptAttached,
+        }),
+      })
+
+      if (!response.ok) {
+        setSubmitError(true)
+        return
+      }
+
+      const created = (await response.json()) as {
+        enrollment: { id: string; seatStatus: 'reserved' | 'confirmed' | 'released' }
+        payment: { status: 'pending' | 'under_review' | 'approved' | 'rejected' }
+      }
+      const now = new Date().toISOString()
+      onCreate({
+        id: created.enrollment.id,
+        // apps/api doesn't issue a tracking code yet — same digits-from-id
+        // formula the enrollments list's mock uses (mock-data.ts,
+        // enrollmentCode), so a row created here reads consistently with the
+        // rest of the list until the backend takes over issuing it.
+        code: `OOC-${now.slice(0, 4)}-${created.enrollment.id.replace(/\D/g, '').slice(-4).padStart(4, '0')}`,
+        studentId: selectedStudent.id,
+        studentName: `${selectedStudent.firstName} ${selectedStudent.lastName}`,
+        courseName: group.courseName,
+        classGroupId: group.id,
+        classGroupName: group.schedule,
+        // No teachers bounded context yet (docs/ROADMAP.md Sessão 5 deferred
+        // it) — nothing honest to put here yet.
+        teacherName: '',
+        language: null,
+        // Always true today (CLAUDE.md §1, "toda aula é online") — not a
+        // guess, the one value the business rule allows.
+        modality: 'online',
+        academicPeriodName: group.academicPeriodName,
+        status: 'under_review',
+        seatStatus: created.enrollment.seatStatus,
+        planName: group.planName,
+        planPriceId: group.planPriceId,
+        amountCents: group.amountCents,
+        currency: 'PEN',
+        paymentStatus: created.payment.status,
+        paymentMethod: method,
+        // The rails name themselves; `other` is only ever as good as the text.
+        paymentMethodDetail: method === 'other' ? methodDetail.trim() : null,
+        operationNumber: operationNumber.trim(),
+        createdAt: now,
+        paidAt: null,
+        progressPct: null,
+      })
+    } catch {
+      setSubmitError(true)
+    } finally {
+      setPending(false)
+    }
   }
 
   return (
@@ -189,23 +257,23 @@ export function NewEnrollmentForm({
           {t('new_enrollment.step_student')}
         </p>
 
-        {student ? (
+        {selectedStudent ? (
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-sky-soft px-3 py-2.5">
             <span className="flex min-w-0 flex-col">
               <span className="truncate text-sm font-semibold text-ink">
-                {`${student.firstName} ${student.lastName}`}
+                {`${selectedStudent.firstName} ${selectedStudent.lastName}`}
               </span>
               <span className="truncate text-xs text-muted-foreground">
                 {t('students.document', {
-                  type: t(`national_id_type.${student.nationalIdType}`),
-                  number: student.nationalId,
+                  type: t(`national_id_type.${selectedStudent.nationalIdType}`),
+                  number: selectedStudent.nationalId,
                 })}
               </span>
             </span>
             <button
               type="button"
               onClick={() => {
-                setStudentId(null)
+                setSelectedStudent(null)
                 setStudentQuery('')
               }}
               className="text-xs font-semibold text-brand-blue transition hover:text-brand-blue-deep"
@@ -237,7 +305,7 @@ export function NewEnrollmentForm({
               </span>
             </label>
 
-            {studentQuery.trim() !== '' &&
+            {studentQuery.trim().length >= MIN_QUERY_LENGTH &&
               (matches.length === 0 ? (
                 /* The panel does not offer to create the person from here:
                    registering a student carries the consent record, and that is
@@ -251,7 +319,7 @@ export function NewEnrollmentForm({
                     <li key={row.id}>
                       <button
                         type="button"
-                        onClick={() => setStudentId(row.id)}
+                        onClick={() => setSelectedStudent(row)}
                         className="flex w-full flex-col items-start gap-0.5 border-b border-line/70 px-3 py-2 text-left transition last:border-b-0 hover:bg-sky-soft"
                       >
                         <span className="text-sm font-medium text-ink">
@@ -278,7 +346,7 @@ export function NewEnrollmentForm({
           {t('new_enrollment.step_class_group')}
         </p>
 
-        {openGroups.length === 0 ? (
+        {groupsLoaded && openGroups.length === 0 ? (
           <p className="text-xs text-muted-foreground">
             {t('new_enrollment.no_open_class_groups')}
           </p>
@@ -301,7 +369,7 @@ export function NewEnrollmentForm({
                 </option>
                 {openGroups.map((item) => (
                   <option key={item.id} value={item.id}>
-                    {`${item.courseName} — ${item.code}`}
+                    {`${item.courseName} — ${item.schedule}`}
                   </option>
                 ))}
               </select>
@@ -310,12 +378,8 @@ export function NewEnrollmentForm({
             {group && (
               <dl className="grid grid-cols-2 gap-x-4 gap-y-2 self-end rounded-lg border border-line bg-sky-soft px-3 py-2.5">
                 <Summary
-                  label={t('new_enrollment.field_teacher')}
-                  value={group.teacherName}
-                />
-                <Summary
                   label={t('new_enrollment.field_schedule')}
-                  value={schedule}
+                  value={group.schedule}
                 />
                 <Summary
                   label={t('new_enrollment.field_period')}
@@ -333,26 +397,14 @@ export function NewEnrollmentForm({
         {/* The price, shown and not asked for. */}
         {group && (
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            {plan ? (
-              <>
-                <StatusBadge
-                  tone="info"
-                  dot={false}
-                  label={`${plan.planName} · ${formatMoney(
-                    plan.amountCents,
-                    plan.currency,
-                    locale,
-                  )}`}
-                />
-                <span className="text-xs text-muted-foreground">
-                  {t('new_enrollment.price_locked')}
-                </span>
-              </>
-            ) : (
-              <span className="text-xs font-semibold text-red-600">
-                {t('new_enrollment.no_price')}
-              </span>
-            )}
+            <StatusBadge
+              tone="info"
+              dot={false}
+              label={`${group.planName} · ${formatMoney(group.amountCents, 'PEN', locale)}`}
+            />
+            <span className="text-xs text-muted-foreground">
+              {t('new_enrollment.price_locked')}
+            </span>
           </div>
         )}
       </section>
@@ -468,19 +520,25 @@ export function NewEnrollmentForm({
           className="inline-flex items-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-deep disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-brand-blue"
         >
           <BoIcon name="check" size={16} />
-          {t('new_enrollment.create')}
+          {pending ? t('student_file.saving') : t('new_enrollment.create')}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-lg border border-line px-3.5 py-2 text-sm font-semibold text-muted-foreground transition hover:text-ink"
+          disabled={pending}
+          className="rounded-lg border border-line px-3.5 py-2 text-sm font-semibold text-muted-foreground transition hover:text-ink disabled:opacity-60"
         >
           {t('new_enrollment.cancel')}
         </button>
         {/* A button that greys out without saying why reads as broken. */}
-        {!ready && (
+        {!ready && !pending && (
           <span className="text-xs text-muted-foreground">
             {t('new_enrollment.missing_fields')}
+          </span>
+        )}
+        {submitError && (
+          <span className="text-xs font-medium text-red-600">
+            {t('new_enrollment.submit_error')}
           </span>
         )}
       </div>

@@ -6,6 +6,11 @@ export function registerAuthRoutes(app: FastifyInstance, auth: Auth) {
   app.route({
     method: ["GET", "POST"],
     url: "/api/auth/*",
+    // better-auth is its own auth system underneath this catch-all (login,
+    // signup, session refresh...) — necessarily reachable without a session
+    // already established. Still subject to the deny-by-default onRoute
+    // check (CLAUDE.md §6), so it must declare itself explicitly public.
+    config: { auth: { public: true } },
     handler: async (request, reply) => {
       const url = new URL(request.url, `http://${request.headers.host}`);
       const headers = fromNodeHeaders(request.headers);
