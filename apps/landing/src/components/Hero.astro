@@ -25,11 +25,14 @@ const h = t.hero;
         </span>
       </h1>
       <p class="hero-sub" set:html={h.subHtml} />
+      <p class="hero-worldwide">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18"></path></svg>
+        {h.worldwide}
+      </p>
       <div class="hero-actions">
-        <a href={withLang(lang, "/enrollment")} class="btn btn-yellow">{h.ctaEnroll}</a>
-        <a href={withLang(lang, "/courses")} class="btn btn-outline">{h.ctaCourses}</a>
+        <a href={withLang(lang, "/enrollment")} class="btn btn-yellow btn-enroll">{h.ctaEnroll}</a>
+        <a href={withLang(lang, "/courses")} class="link-quiet">{h.ctaCourses}</a>
       </div>
-      <p class="price-note" set:html={h.packageNote} />
     </div>
 
     <div class="hero-media">
@@ -53,6 +56,30 @@ const h = t.hero;
 </section>
 
 <style>
+  /* A matrícula é o que a página quer que aconteça: o botão é maior que
+     qualquer outro clique, e pulsa uma vez ao carregar para puxar o olho. */
+  .btn-enroll {
+    font-size: 1.12rem;
+    letter-spacing: 0.02em;
+    padding: 18px 38px;
+  }
+  .hero-worldwide {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 14px 0 0;
+    padding: 8px 16px 8px 12px;
+    border-radius: 999px;
+    background: var(--sky);
+    color: var(--blue-deep);
+    font-weight: 600;
+    font-size: 0.92rem;
+  }
+  .hero-worldwide svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
   .hero {
     position: relative;
     overflow: hidden;
@@ -125,17 +152,6 @@ const h = t.hero;
     font-weight: 700;
     white-space: nowrap;
   }
-  .price-note {
-    margin-top: 20px;
-    max-width: 44ch;
-    font-size: 0.95rem;
-    color: var(--text-muted);
-    border-left: 3px solid var(--yellow);
-    padding-left: 14px;
-  }
-  .price-note :global(strong) {
-    color: var(--ink);
-  }
   .hero-sub {
     margin-top: 30px;
     font-size: 1.2rem;
@@ -152,7 +168,8 @@ const h = t.hero;
   .hero-actions {
     margin-top: 34px;
     display: flex;
-    gap: 14px;
+    align-items: center;
+    gap: 22px;
     flex-wrap: wrap;
   }
 

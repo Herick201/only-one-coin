@@ -1,6 +1,6 @@
 ---
 import LanguageSwitcher from "./LanguageSwitcher.astro";
-import { courseSlugs } from "../i18n/ui";
+import { languageSlugs } from "../i18n/ui";
 import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
 
 const lang = getLangFromUrl(Astro.url);
@@ -11,7 +11,7 @@ const t = useTranslations(lang);
 // needs a slot up here.
 const nav = [{ label: t.nav.about, href: withLang(lang, "/about") }];
 
-const courses = courseSlugs.map((slug) => ({
+const courses = languageSlugs.map((slug) => ({
   label: t.courses.list[slug],
   href: withLang(lang, `/courses/${slug}`),
 }));
@@ -27,6 +27,17 @@ const resources = [
   { label: t.nav.contact, href: withLang(lang, "/contact") },
 ];
 const resourcesHref = resources[0].href;
+
+// "Cursos" — o que não é idioma. Hoje só o preuniversitario, ainda sem
+// matrícula aberta: entra com selo em vez de sumir do menu, porque o "em
+// breve" é parte do que a página tem a dizer.
+const programs = [
+  {
+    label: t.nav.preuniversitario,
+    href: withLang(lang, "/preuniversitario"),
+    soon: true,
+  },
+];
 ---
 
 <header class="site-header">
@@ -56,6 +67,21 @@ const resourcesHref = resources[0].href;
 
       <details class="nav-dd">
         <summary>
+          {t.nav.programs}
+          <svg class="dd-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+        </summary>
+        <div class="dd-panel">
+          {programs.map((p) => (
+            <a href={p.href} class="dd-with-badge">
+              <span>{p.label}</span>
+              {p.soon && <span class="soon">{t.nav.soon}</span>}
+            </a>
+          ))}
+        </div>
+      </details>
+
+      <details class="nav-dd">
+        <summary>
           {t.nav.resources}
           <svg class="dd-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
         </summary>
@@ -68,7 +94,10 @@ const resourcesHref = resources[0].href;
 
     <div class="header-actions">
       <LanguageSwitcher />
-      <a href={withLang(lang, "/portal")} class="btn btn-primary login-btn">
+      <a href={withLang(lang, "/enrollment")} class="btn btn-yellow enroll-btn">
+        {t.hero.ctaEnroll}
+      </a>
+      <a href={withLang(lang, "/login")} class="btn btn-primary login-btn">
         <span>{t.nav.portal}</span>
         <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M5 12h14"></path>
@@ -101,6 +130,21 @@ const resourcesHref = resources[0].href;
 
       <details class="m-dd">
         <summary>
+          {t.nav.programs}
+          <svg class="dd-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+        </summary>
+        <div class="m-dd-panel">
+          {programs.map((p) => (
+            <a href={p.href} class="dd-with-badge">
+              <span>{p.label}</span>
+              {p.soon && <span class="soon">{t.nav.soon}</span>}
+            </a>
+          ))}
+        </div>
+      </details>
+
+      <details class="m-dd">
+        <summary>
           {t.nav.resources}
           <svg class="dd-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
         </summary>
@@ -109,7 +153,8 @@ const resourcesHref = resources[0].href;
         </div>
       </details>
 
-      <a href={withLang(lang, "/portal")} class="btn btn-primary m-portal">{t.nav.portal}</a>
+      <a href={withLang(lang, "/enrollment")} class="btn btn-yellow m-enroll">{t.hero.ctaEnroll}</a>
+      <a href={withLang(lang, "/login")} class="btn btn-primary m-portal">{t.nav.portal}</a>
     </nav>
   </div>
 </header>
@@ -174,6 +219,12 @@ const resourcesHref = resources[0].href;
     justify-content: space-between;
     gap: clamp(12px, 3vw, 24px);
     height: 80px;
+    /* O header é a única faixa que usa a largura toda: a marca encosta numa
+       ponta e as ações na outra, com a nav respirando no meio. O resto do site
+       segue no container de 1180px — é o texto que precisa de medida de
+       leitura, não a barra. */
+    max-width: none;
+    padding-inline: clamp(20px, 3vw, 44px);
   }
   .brand img {
     height: clamp(26px, 3.6vw, 34px);
@@ -289,14 +340,61 @@ const resourcesHref = resources[0].href;
     align-items: center;
     gap: clamp(8px, 1.6vw, 14px);
   }
+  /* A matrícula viaja em todas as páginas, no lugar mais quente do header.
+     Escondida abaixo de 1080px: aí o menu já colapsa e ela reaparece dentro
+     dele, em vez de espremer o logo. */
+  .dd-with-badge {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .soon {
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--cream);
+    color: var(--yellow-deep);
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .enroll-btn {
+    padding: 12px 22px;
+    font-size: 0.94rem;
+    letter-spacing: 0.02em;
+  }
+  @media (max-width: 1080px) {
+    .enroll-btn {
+      display: none;
+    }
+  }
+  .m-enroll {
+    width: 100%;
+    margin-top: 6px;
+  }
+  /* O portal é para quem já é aluno — serviço, não venda. Fica leve e menor
+     para que o amarelo da matrícula seja a única coisa gritando no header. */
   .login-btn {
     white-space: nowrap;
-    padding: 11px 20px;
-    gap: 7px;
+    padding: 9px 16px;
+    gap: 6px;
+    font-size: 0.86rem;
+    background: transparent;
+    color: var(--blue-deep);
+    border-color: var(--border);
+    box-shadow: none;
+  }
+  .login-btn:hover {
+    background: var(--sky);
+    color: var(--blue-deep);
+    box-shadow: none;
+    transform: none;
   }
   .login-btn .arrow {
-    width: 17px;
-    height: 17px;
+    width: 15px;
+    height: 15px;
     transition: transform 0.2s ease;
   }
   .login-btn:hover .arrow {

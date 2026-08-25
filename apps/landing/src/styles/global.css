@@ -167,6 +167,33 @@ img {
   color: var(--on-blue);
   transform: translateY(-2px);
 }
+/* Link secundário ao lado de um botão: mesma ação disponível, peso menor.
+   Existe porque a página só pode ter um CTA gritando por dobra — o resto
+   acompanha como link, não como segundo botão competindo pelo olho.
+   `-on-blue` é a variante para fundo escuro. */
+.link-quiet {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--blue-deep);
+  border-bottom: 2px solid rgba(47, 107, 255, 0.35);
+  padding-bottom: 2px;
+  transition: border-color 0.16s ease, color 0.16s ease, opacity 0.16s ease;
+}
+.link-quiet:hover {
+  color: var(--ink);
+  border-bottom-color: var(--yellow);
+}
+.link-quiet-on-blue {
+  color: #fff;
+  opacity: 0.85;
+  border-bottom-color: rgba(255, 255, 255, 0.45);
+}
+.link-quiet-on-blue:hover {
+  color: #fff;
+  opacity: 1;
+  border-bottom-color: var(--yellow);
+}
+
 .btn-ghost-blue {
   background: rgba(255, 255, 255, 0.16);
   color: #fff;

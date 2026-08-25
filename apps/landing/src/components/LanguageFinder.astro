@@ -1,6 +1,7 @@
 ---
-import { courseSlugs, geoSuggestion } from "../i18n/ui";
+import { languageSlugs, geoSuggestion } from "../i18n/ui";
 import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
+import { courseIdBySlug, enrollmentHref } from "../data/checkout";
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
@@ -9,16 +10,26 @@ const fd = t.finder;
 // Server-rendered default (works without JS); the client refines by geo.
 const defaultSlug = "english" as const;
 
-const courses = courseSlugs.map((slug) => ({
+const enrollPath = withLang(lang, "/enrollment");
+const courses = languageSlugs.map((slug) => ({
   slug,
   name: t.courses.list[slug],
   href: withLang(lang, `/courses/${slug}`),
+  // A sugestão por geo troca de idioma no cliente, então o link de matrícula
+  // de cada idioma viaja junto na config — o CTA nunca fica apontando para o
+  // curso anterior.
+  enrollHref: enrollmentHref(enrollPath, {
+    courseId: courseIdBySlug[slug],
+    content: "finder_suggestion",
+  }),
 }));
 
 // Config the client script reads (non-executable JSON — CSP-safe).
 const clientConfig = {
   geo: geoSuggestion,
-  courses: Object.fromEntries(courses.map((c) => [c.slug, { name: c.name, href: c.href }])),
+  courses: Object.fromEntries(
+    courses.map((c) => [c.slug, { name: c.name, href: c.href, enrollHref: c.enrollHref }]),
+  ),
   defaultSlug,
 };
 ---
@@ -35,9 +46,20 @@ const clientConfig = {
         </p>
         <p class="reco-pre">{fd.recommendPre}</p>
         <p class="reco-lang" data-finder-name>{courses.find((c) => c.slug === defaultSlug)?.name}</p>
-        <a class="btn btn-yellow reco-cta" data-finder-cta href={withLang(lang, `/courses/${defaultSlug}`)}>
-          <span>{fd.viewCourse}</span>
+        <a
+          class="btn btn-yellow reco-cta"
+          data-finder-cta
+          href={courses.find((c) => c.slug === defaultSlug)?.enrollHref}
+        >
+          <span>{t.hero.ctaEnroll}</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+        </a>
+        <a
+          class="link-quiet link-quiet-on-blue reco-secondary"
+          data-finder-course
+          href={withLang(lang, `/courses/${defaultSlug}`)}
+        >
+          {fd.viewCourse}
         </a>
       </div>
 
@@ -58,7 +80,7 @@ const clientConfig = {
     // we only read a coarse country code to pick a suggested course.
     type Cfg = {
       geo: Record<string, string>;
-      courses: Record<string, { name: string; href: string }>;
+      courses: Record<string, { name: string; href: string; enrollHref: string }>;
       defaultSlug: string;
     };
     const cfgEl = document.querySelector<HTMLElement>("[data-finder-config]");
@@ -75,8 +97,10 @@ const clientConfig = {
 
           const nameEl = root.querySelector<HTMLElement>("[data-finder-name]");
           const ctaEl = root.querySelector<HTMLAnchorElement>("[data-finder-cta]");
+          const courseEl = root.querySelector<HTMLAnchorElement>("[data-finder-course]");
           if (nameEl) nameEl.textContent = course.name;
-          if (ctaEl) ctaEl.href = course.href;
+          if (ctaEl) ctaEl.href = course.enrollHref;
+          if (courseEl) courseEl.href = course.href;
 
           const fromEl = root.querySelector<HTMLElement>("[data-finder-from]");
           const countryEl = root.querySelector<HTMLElement>("[data-finder-country]");
@@ -98,6 +122,11 @@ const clientConfig = {
 <style>
   .finder {
     background: var(--paper);
+  }
+  .reco-secondary {
+    display: inline-block;
+    margin-top: 14px;
+    font-size: 0.94rem;
   }
   .finder-lead {
     margin-top: 14px;
