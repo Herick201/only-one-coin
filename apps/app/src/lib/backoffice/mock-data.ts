@@ -1,4 +1,5 @@
 import type {
+  AccountOverview,
   AuditEntry,
   AvailabilitySlot,
   ClassGroupDetail,
@@ -10,6 +11,10 @@ import type {
   EnrollmentRow,
   DocumentDelivery,
   DocumentItem,
+  EmailDeliveryIssue,
+  EmailFlow,
+  EmailMetrics,
+  EmailSegment,
   EnrollmentHistoryItem,
   ExtractionField,
   PaymentMethod,
@@ -22,6 +27,8 @@ import type {
   ReviewQueueItem,
   SeatReservation,
   SeatWatchItem,
+  StaffMemberRow,
+  StaffRoleChange,
   StaffUser,
   StudentDetail,
   StudentRow,
@@ -62,6 +69,64 @@ export function getStaffSession(): StaffUser {
     email: 'lucia.ramirez@onlyonecoin.edu.pe',
     role: 'admin',
     teacherId: null,
+  }
+}
+
+/**
+ * The signed-in staff member's own account — access, never identity. Shaped
+ * like the rows behind it: the protected `user` row (CLAUDE.md §8), the
+ * password/second-factor state beside it, and the open sessions the auth
+ * library keeps. Swapping this for real queries should not touch a component.
+ *
+ * The sessions are deliberately more than one, and one of them is a phone in a
+ * different city: the screen only earns its place if there is something to
+ * recognise — or not recognise — on it.
+ */
+export function getAccountOverview(): AccountOverview {
+  return {
+    user: getStaffSession(),
+    security: {
+      passwordUpdatedAt: '2026-05-14T13:40:00Z',
+      mfa: {
+        enabled: true,
+        method: 'totp',
+        enrolledAt: '2026-02-03T15:12:00Z',
+        recoveryCodesLeft: 8,
+      },
+      lastSignInAt: '2026-08-21T13:02:00Z',
+    },
+    sessions: [
+      {
+        id: 'sess_01',
+        browser: 'Chrome 141',
+        os: 'Windows 11',
+        ip: '190.235.14.72',
+        city: 'Lima',
+        country: 'PE',
+        lastActiveAt: '2026-08-21T13:02:00Z',
+        current: true,
+      },
+      {
+        id: 'sess_02',
+        browser: 'Safari 18',
+        os: 'iOS 19',
+        ip: '181.65.202.9',
+        city: 'Arequipa',
+        country: 'PE',
+        lastActiveAt: '2026-08-19T22:41:00Z',
+        current: false,
+      },
+      {
+        id: 'sess_03',
+        browser: 'Firefox 132',
+        os: 'Ubuntu 24.04',
+        ip: '200.48.90.116',
+        city: 'Lima',
+        country: 'PE',
+        lastActiveAt: '2026-08-12T09:18:00Z',
+        current: false,
+      },
+    ],
   }
 }
 
@@ -1739,7 +1804,7 @@ const classGroups: ClassGroupDetail[] = [
         certificationExam: null,
         certificateIssuedAt: null,
         delivery: null,
-        procedure: null,
+        procedure: 'frozen',
       },
       {
         studentId: 'stu_0005',
@@ -1788,7 +1853,7 @@ const classGroups: ClassGroupDetail[] = [
         certificationExam: null,
         certificateIssuedAt: null,
         delivery: null,
-        procedure: null,
+        procedure: 'frozen',
       },
       {
         studentId: 'stu_0002',
@@ -1814,7 +1879,7 @@ const classGroups: ClassGroupDetail[] = [
         certificationExam: null,
         certificateIssuedAt: null,
         delivery: null,
-        procedure: null,
+        procedure: 'withdrawn',
       },
       {
         studentId: 'stu_0006',
@@ -2336,6 +2401,16 @@ export function getClassGroup(id: string): ClassGroupDetail | undefined {
   return classGroups.find((group) => group.id === id)
 }
 
+/**
+ * The class groups with their rosters attached — what `listClassGroups()`
+ * deliberately strips. Read by anything that has to count across every roster
+ * at once (grades, administrative procedures), never by a list screen: a
+ * directory has no business carrying every student of every class group.
+ */
+export function listClassGroupRosters(): ClassGroupDetail[] {
+  return classGroups
+}
+
 /* -------------------------------------------------------------------------- */
 /* Teachers                                                                    */
 /* -------------------------------------------------------------------------- */
@@ -2809,6 +2884,7 @@ export function getPaymentSettings(): PaymentSettings {
     toleranceCents: 50,
     escalationConfidence: 0.75,
     reservationDays: 5,
+    checkoutHoldMinutes: 15,
   }
 }
 
@@ -3136,6 +3212,16 @@ function classGroupOf(enrollmentId: string): ClassGroupDetail | undefined {
  * (CLAUDE.md §5), while this one only ever counts people sitting in a class
  * group, which is what coordination closes the period against.
  */
+/**
+ * The tracking code the checkout shows the student on its confirmation screen.
+ * Derived here from the enrollment id so the mock is stable; the real one is
+ * issued by `apps/api` at submit and stored on the row.
+ */
+function enrollmentCode(id: string, createdAt: string): string {
+  const digits = id.replace(/\D/g, '').slice(-4).padStart(4, '0')
+  return `OOC-${createdAt.slice(0, 4)}-${digits}`
+}
+
 export function listEnrollments(): EnrollmentRow[] {
   const rows: EnrollmentRow[] = []
 
@@ -3145,6 +3231,7 @@ export function listEnrollments(): EnrollmentRow[] {
       const group = classGroupOf(item.id)
       rows.push({
         id: item.id,
+        code: enrollmentCode(item.id, item.createdAt),
         studentId: student.id,
         studentName,
         courseName: item.courseName,
@@ -3238,4 +3325,566 @@ export function getEnrollmentMetrics(now: Date = new Date()): EnrollmentMetrics 
     ).length,
     released: rows.filter((row) => row.seatStatus === 'released').length,
   }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Team — the accounts that open the panel, and the cargo each one opens it with */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The Asociación's own people, as accounts. Small on purpose: this is staff,
+ * not students — the panel is opened by a dozen people, and every one of them
+ * can reach data that belongs to thousands.
+ *
+ * A `teacher` row points at the teacher record behind it (`teacherId`), which
+ * is what narrows the panel to their own class groups. The rest have none:
+ * administración, coordinación and tesorería are cargos, not fichas.
+ *
+ * Names are fictional, like the rest of this module.
+ */
+const staffMembers: StaffMemberRow[] = [
+  {
+    id: 'staff_01',
+    firstName: 'Lucía',
+    lastName: 'Ramírez',
+    email: 'lucia.ramirez@onlyonecoin.edu.pe',
+    role: 'admin',
+    status: 'active',
+    teacherId: null,
+    mfaEnrolled: true,
+    joinedAt: '2024-03-04',
+    lastAccessAt: '2026-08-21T13:40:00Z',
+  },
+  {
+    /* An admin without a second factor: exactly what the directory exists to
+       make visible, on the cargo where it costs the most (CLAUDE.md §8). */
+    id: 'staff_02',
+    firstName: 'Renzo',
+    lastName: 'Ballón',
+    email: 'renzo.ballon@onlyonecoin.edu.pe',
+    role: 'admin',
+    status: 'active',
+    teacherId: null,
+    mfaEnrolled: false,
+    joinedAt: '2025-01-13',
+    lastAccessAt: '2026-08-20T22:05:00Z',
+  },
+  {
+    id: 'staff_03',
+    firstName: 'Miriam',
+    lastName: 'Quispe',
+    email: 'miriam.quispe@onlyonecoin.edu.pe',
+    role: 'coordinator',
+    status: 'active',
+    teacherId: null,
+    mfaEnrolled: true,
+    joinedAt: '2024-06-10',
+    lastAccessAt: '2026-08-21T15:12:00Z',
+  },
+  {
+    id: 'staff_04',
+    firstName: 'Elena',
+    lastName: 'Vargas',
+    email: 'elena.vargas@onlyonecoin.edu.pe',
+    role: 'treasury',
+    status: 'active',
+    teacherId: null,
+    mfaEnrolled: true,
+    joinedAt: '2025-02-24',
+    lastAccessAt: '2026-08-21T11:02:00Z',
+  },
+  {
+    /* Opened for the busy season and never used since — an account nobody
+       signs into still opens the panel if somebody finds the password. */
+    id: 'staff_05',
+    firstName: 'Iván',
+    lastName: 'Cárdenas',
+    email: 'ivan.cardenas@onlyonecoin.edu.pe',
+    role: 'mass_approver',
+    status: 'active',
+    teacherId: null,
+    mfaEnrolled: false,
+    joinedAt: '2026-07-28',
+    lastAccessAt: null,
+  },
+  {
+    id: 'staff_06',
+    firstName: 'Carlos',
+    lastName: 'Meza',
+    email: 'carlos.meza@onlyonecoin.edu.pe',
+    role: 'teacher',
+    status: 'active',
+    teacherId: 'tea_01',
+    mfaEnrolled: false,
+    joinedAt: '2024-04-02',
+    lastAccessAt: '2026-08-19T23:30:00Z',
+  },
+  {
+    id: 'staff_07',
+    firstName: 'Andrea',
+    lastName: 'Solís',
+    email: 'andrea.solis@onlyonecoin.edu.pe',
+    role: 'teacher',
+    status: 'active',
+    teacherId: 'tea_02',
+    mfaEnrolled: false,
+    joinedAt: '2024-09-16',
+    lastAccessAt: '2026-08-21T02:15:00Z',
+  },
+  {
+    id: 'staff_08',
+    firstName: 'Rosa',
+    lastName: 'Ccahuana',
+    email: 'rosa.ccahuana@onlyonecoin.edu.pe',
+    role: 'teacher',
+    status: 'active',
+    teacherId: 'tea_05',
+    mfaEnrolled: false,
+    joinedAt: '2025-03-11',
+    lastAccessAt: '2026-08-18T01:44:00Z',
+  },
+  {
+    /* Left the Asociación. The account is closed, never deleted: the payments
+       she approved and the entries she signed still point at her
+       (CLAUDE.md §6). */
+    id: 'staff_09',
+    firstName: 'Hugo',
+    lastName: 'Delgado',
+    email: 'hugo.delgado@onlyonecoin.edu.pe',
+    role: 'coordinator',
+    status: 'inactive',
+    teacherId: null,
+    mfaEnrolled: true,
+    joinedAt: '2023-08-21',
+    lastAccessAt: '2026-04-30T16:20:00Z',
+  },
+]
+
+/**
+ * The cargo ledger. In the database this is `audit_log` — append-only, no grant
+ * of UPDATE or DELETE, not even for admin (CLAUDE.md §8) — so the panel reads
+ * it and never edits it. The alta of an account is a line too: `fromRole` null
+ * is "there was no cargo before this one".
+ */
+const staffRoleChanges: StaffRoleChange[] = [
+  {
+    id: 'rol_06',
+    at: '2026-07-28T14:05:00Z',
+    memberId: 'staff_05',
+    memberName: 'Iván Cárdenas',
+    fromRole: null,
+    toRole: 'mass_approver',
+    actorName: 'Lucía Ramírez',
+    actorRole: 'admin',
+  },
+  {
+    id: 'rol_05',
+    at: '2026-05-04T17:30:00Z',
+    memberId: 'staff_03',
+    memberName: 'Miriam Quispe',
+    fromRole: 'treasury',
+    toRole: 'coordinator',
+    actorName: 'Lucía Ramírez',
+    actorRole: 'admin',
+  },
+  {
+    id: 'rol_04',
+    at: '2026-03-11T15:10:00Z',
+    memberId: 'staff_08',
+    memberName: 'Rosa Ccahuana',
+    fromRole: null,
+    toRole: 'teacher',
+    actorName: 'Renzo Ballón',
+    actorRole: 'admin',
+  },
+  {
+    id: 'rol_03',
+    at: '2026-02-24T13:00:00Z',
+    memberId: 'staff_04',
+    memberName: 'Elena Vargas',
+    fromRole: null,
+    toRole: 'treasury',
+    actorName: 'Lucía Ramírez',
+    actorRole: 'admin',
+  },
+  {
+    id: 'rol_02',
+    at: '2025-01-13T16:45:00Z',
+    memberId: 'staff_02',
+    memberName: 'Renzo Ballón',
+    fromRole: 'coordinator',
+    toRole: 'admin',
+    actorName: 'Lucía Ramírez',
+    actorRole: 'admin',
+  },
+  {
+    id: 'rol_01',
+    at: '2024-06-10T14:20:00Z',
+    memberId: 'staff_03',
+    memberName: 'Miriam Quispe',
+    fromRole: null,
+    toRole: 'treasury',
+    actorName: 'Lucía Ramírez',
+    actorRole: 'admin',
+  },
+]
+
+/** The team directory, ordered the way a roster is read: by surname. */
+export function listStaff(): StaffMemberRow[] {
+  return [...staffMembers].sort(
+    (a, b) =>
+      a.lastName.localeCompare(b.lastName) || a.firstName.localeCompare(b.firstName),
+  )
+}
+
+/** The cargo ledger, newest first — it is read as "what changed lately". */
+export function listStaffRoleChanges(): StaffRoleChange[] {
+  return [...staffRoleChanges].sort((a, b) => b.at.localeCompare(a.at))
+}
+
+/* -------------------------------------------------------------------------- */
+/* E-mail                                                                      */
+/* -------------------------------------------------------------------------- */
+
+/** The window every figure on the e-mail screen is measured over. */
+const EMAIL_WINDOW_DAYS = 30
+
+/**
+ * One sample per audience, shared by every flow written to it. The preview is
+ * read by staff to check wording, so it renders over invented people — a real
+ * student's name has no business on that screen (CLAUDE.md §8).
+ */
+const studentSample = {
+  studentName: 'María Fernanda Quispe Rojas',
+  studentEmail: 'maria.quispe@gmail.com',
+  guardianName: 'Rosa Elena Rojas Sánchez',
+  guardianEmail: 'rosa.rojas@gmail.com',
+  teacherName: 'Elena Ríos Salazar',
+  teacherEmail: 'elena.rios@onlyonecoin.edu.pe',
+  staffName: 'Lucía Ramírez',
+  staffEmail: 'lucia.ramirez@onlyonecoin.edu.pe',
+  courseName: 'Inglés Básico A1',
+  classGroupName: 'A1 — Lun/Mié 18:00',
+  amountCents: 6990,
+  date: '2026-09-07T23:00:00Z',
+}
+
+/**
+ * The transactional catalog. Every entry is an e-mail that leaves on its own,
+ * as the consequence of something the domain did — there is no send button per
+ * message (`docs/DOCUMENTOS-E-CERTIFICADOS.md` §4).
+ *
+ * The counts are the last 30 days as the provider reported them back. They sit
+ * next to each other on purpose: a flow whose bounces climb is one whose
+ * addresses are wrong, and that only shows against its own volume.
+ */
+export function listEmailFlows(): EmailFlow[] {
+  return [
+    {
+      template: 'enrollment_submitted',
+      audience: 'student',
+      stage: 'submitted',
+      conditional: false,
+      enabled: true,
+      version: 4,
+      updatedAt: '2026-08-04T14:20:00Z',
+      metrics: { sent: 4128, delivered: 4061, bounced: 54, failed: 13 },
+      sample: studentSample,
+    },
+    {
+      template: 'guardian_consent_reminder',
+      audience: 'guardian',
+      stage: 'submitted',
+      conditional: true,
+      enabled: true,
+      version: 2,
+      updatedAt: '2026-07-18T13:00:00Z',
+      metrics: { sent: 486, delivered: 470, bounced: 14, failed: 2 },
+      sample: studentSample,
+    },
+    {
+      template: 'payment_under_review',
+      audience: 'student',
+      stage: 'payment_pending',
+      conditional: true,
+      enabled: true,
+      version: 2,
+      updatedAt: '2026-07-22T16:05:00Z',
+      metrics: { sent: 612, delivered: 604, bounced: 6, failed: 2 },
+      sample: studentSample,
+    },
+    {
+      template: 'seat_reservation_expiring',
+      audience: 'student',
+      stage: 'payment_pending',
+      conditional: true,
+      enabled: true,
+      version: 1,
+      updatedAt: '2026-08-16T10:05:00Z',
+      metrics: { sent: 173, delivered: 171, bounced: 2, failed: 0 },
+      sample: studentSample,
+    },
+    {
+      template: 'payment_approved',
+      audience: 'student',
+      stage: 'payment_settled',
+      conditional: false,
+      enabled: true,
+      version: 5,
+      updatedAt: '2026-08-11T11:40:00Z',
+      metrics: { sent: 3907, delivered: 3854, bounced: 41, failed: 12 },
+      sample: studentSample,
+    },
+    {
+      template: 'payment_rejected',
+      audience: 'student',
+      stage: 'payment_settled',
+      conditional: true,
+      enabled: true,
+      version: 3,
+      updatedAt: '2026-07-30T09:15:00Z',
+      metrics: { sent: 214, delivered: 209, bounced: 4, failed: 1 },
+      sample: studentSample,
+    },
+    {
+      template: 'credentials_issued',
+      audience: 'student',
+      stage: 'access',
+      conditional: false,
+      enabled: true,
+      version: 6,
+      updatedAt: '2026-08-14T18:30:00Z',
+      metrics: { sent: 3891, delivered: 3822, bounced: 57, failed: 12 },
+      sample: studentSample,
+    },
+    {
+      /* Off in the mock so the journey has to show what that costs: three days
+         before the class group starts, nobody gets the Classroom link
+         (`docs/REGRAS-NEGOCIO.md` §8). A paused flow is a silence, not a gap. */
+      template: 'class_access_ready',
+      audience: 'student',
+      stage: 'access',
+      conditional: false,
+      enabled: false,
+      version: 2,
+      updatedAt: '2026-08-02T15:45:00Z',
+      metrics: { sent: 0, delivered: 0, bounced: 0, failed: 0 },
+      sample: studentSample,
+    },
+    {
+      template: 'enrollment_certificate_issued',
+      audience: 'student',
+      stage: 'documents',
+      conditional: true,
+      enabled: true,
+      version: 3,
+      updatedAt: '2026-08-09T12:10:00Z',
+      metrics: { sent: 96, delivered: 95, bounced: 1, failed: 0 },
+      sample: studentSample,
+    },
+    {
+      template: 'certificate_issued',
+      audience: 'student',
+      stage: 'documents',
+      conditional: false,
+      enabled: true,
+      version: 4,
+      updatedAt: '2026-08-12T17:25:00Z',
+      metrics: { sent: 341, delivered: 336, bounced: 4, failed: 1 },
+      sample: studentSample,
+    },
+
+    /* Internal. Small volumes — there are two dozen teachers, not five
+       thousand students — and no stage: none of these is a step of the
+       student's journey. */
+    {
+      template: 'teacher_credentials_issued',
+      audience: 'teacher',
+      stage: null,
+      conditional: false,
+      enabled: true,
+      version: 2,
+      updatedAt: '2026-07-28T15:10:00Z',
+      metrics: { sent: 4, delivered: 4, bounced: 0, failed: 0 },
+      sample: studentSample,
+    },
+    {
+      template: 'teacher_class_group_assigned',
+      audience: 'teacher',
+      stage: null,
+      conditional: false,
+      enabled: true,
+      version: 3,
+      updatedAt: '2026-08-06T10:35:00Z',
+      metrics: { sent: 21, delivered: 21, bounced: 0, failed: 0 },
+      sample: studentSample,
+    },
+    {
+      /* 45 days out, the number the panel already watches
+         (`CONTRACT_ALERT_DAYS`, CLAUDE.md §1 — provisional). */
+      template: 'teacher_contract_expiring',
+      audience: 'teacher',
+      stage: null,
+      conditional: true,
+      enabled: true,
+      version: 1,
+      updatedAt: '2026-08-19T09:00:00Z',
+      metrics: { sent: 3, delivered: 3, bounced: 0, failed: 0 },
+      sample: studentSample,
+    },
+    {
+      template: 'teacher_grades_pending',
+      audience: 'teacher',
+      stage: null,
+      conditional: true,
+      enabled: true,
+      version: 2,
+      updatedAt: '2026-08-15T13:20:00Z',
+      metrics: { sent: 7, delivered: 7, bounced: 0, failed: 0 },
+      sample: studentSample,
+    },
+    {
+      /* The batch is never fired by a date — the list is prepared and
+         coordination confirms it (`docs/DOCUMENTOS-E-CERTIFICADOS.md`). This
+         e-mail is what tells them the list is ready. */
+      template: 'staff_certificates_ready',
+      audience: 'staff',
+      stage: null,
+      conditional: false,
+      enabled: true,
+      version: 1,
+      updatedAt: '2026-08-17T16:40:00Z',
+      metrics: { sent: 5, delivered: 5, bounced: 0, failed: 0 },
+      sample: studentSample,
+    },
+  ]
+}
+
+/** The header figures — the same window, summed over the catalog. */
+export function getEmailMetrics(): EmailMetrics {
+  const flows = listEmailFlows()
+  return {
+    windowDays: EMAIL_WINDOW_DAYS,
+    sent: flows.reduce((total, flow) => total + flow.metrics.sent, 0),
+    delivered: flows.reduce((total, flow) => total + flow.metrics.delivered, 0),
+    bounced: flows.reduce((total, flow) => total + flow.metrics.bounced, 0),
+    failed: flows.reduce((total, flow) => total + flow.metrics.failed, 0),
+    paused: flows.filter((flow) => !flow.enabled).length,
+  }
+}
+
+/** One flow, by the template it renders — the id the detail route carries. */
+export function getEmailFlow(template: string): EmailFlow | undefined {
+  return listEmailFlows().find((flow) => flow.template === template)
+}
+
+/**
+ * How many people a manual send would reach, resolved against the enrollment
+ * ledger the same way the real query will: the segment is a question answered
+ * at send time, never a list kept at the provider (`docs/ROADMAP.md` fase 5).
+ *
+ * Counted by student, not by enrollment — somebody enrolled in two courses is
+ * one person receiving one e-mail.
+ */
+export function countEmailRecipients(segment: EmailSegment): number {
+  const rows = listEnrollments().filter((row) => {
+    switch (segment.kind) {
+      case 'all':
+        return true
+      case 'course':
+        return row.courseName === segment.courseName
+      case 'class_group':
+        return row.classGroupId === segment.classGroupId
+      case 'enrollment_status':
+        return row.status === segment.status
+    }
+  })
+  return new Set(rows.map((row) => row.studentId)).size
+}
+
+/**
+ * The deliveries that did not land, newest first. Not a report: it is a list of
+ * people the institution failed to reach — the student whose credentials
+ * bounced cannot get into the portal, and nobody finds that out from a counter.
+ */
+export function listEmailDeliveryIssues(): EmailDeliveryIssue[] {
+  return [
+    {
+      id: 'del_01',
+      template: 'credentials_issued',
+      studentId: 'stu_0002',
+      studentName: 'Jhon Alexander Mamani Ccama',
+      address: 'jhon.mamani@outlook.com',
+      state: 'bounced',
+      reason: 'mailbox_full',
+      at: '2026-08-23T14:20:00Z',
+      attempts: 3,
+    },
+    {
+      id: 'del_02',
+      template: 'payment_approved',
+      studentId: 'stu_0006',
+      studentName: 'Diego Huamán Ccopa',
+      address: 'diego.huaman@gmial.com',
+      state: 'bounced',
+      reason: 'domain_invalid',
+      at: '2026-08-23T02:41:00Z',
+      attempts: 1,
+    },
+    {
+      id: 'del_03',
+      template: 'enrollment_submitted',
+      studentId: 'stu_0007',
+      studentName: 'Valentina Núñez Ibarra',
+      address: 'valentina.nunez@gmail.com',
+      state: 'failed',
+      reason: 'provider_error',
+      at: '2026-08-22T19:05:00Z',
+      attempts: 3,
+    },
+    {
+      id: 'del_04',
+      template: 'credentials_issued',
+      studentId: 'stu_0004',
+      studentName: 'Sebastián Ríos Paredes',
+      address: 'sebastian.ríos@gmail.com',
+      state: 'bounced',
+      reason: 'address_unknown',
+      at: '2026-08-22T16:30:00Z',
+      attempts: 2,
+    },
+    {
+      id: 'del_05',
+      template: 'certificate_issued',
+      studentId: 'stu_0003',
+      studentName: 'Camila Torres Vílchez',
+      address: 'camila.torres@gmail.com',
+      state: 'bounced',
+      reason: 'mailbox_full',
+      at: '2026-08-21T22:14:00Z',
+      attempts: 3,
+    },
+    {
+      id: 'del_06',
+      template: 'guardian_consent_reminder',
+      studentId: 'stu_0008',
+      studentName: 'Renzo Palacios Vega',
+      address: 'renzo.palacios@gmail.com',
+      state: 'bounced',
+      reason: 'blocked_by_server',
+      at: '2026-08-21T11:02:00Z',
+      attempts: 2,
+    },
+    {
+      id: 'del_07',
+      template: 'payment_approved',
+      studentId: 'stu_0005',
+      studentName: 'Ana Lucía Chávez Soto',
+      address: 'analucia.chavez@gmail.com',
+      state: 'failed',
+      reason: 'provider_error',
+      at: '2026-08-20T09:48:00Z',
+      attempts: 3,
+    },
+  ]
 }

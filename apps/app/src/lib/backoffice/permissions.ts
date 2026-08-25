@@ -56,16 +56,6 @@ export function canReviewPayments(role: StaffRole): boolean {
 }
 
 /**
- * Who may change the validation parameters. Admin only: the tolerance and the
- * minimum confidence decide what the platform approves with nobody looking, so
- * moving them is worth more than any single approval — including tesorería's,
- * which settles receipts one by one under exactly these numbers.
- */
-export function canConfigurePayments(role: StaffRole): boolean {
-  return role === 'admin'
-}
-
-/**
  * Who opens the teacher roster. A teacher is on it, they do not run it: hiring,
  * allocation and availability are coordination's, and treasury has no business
  * in the academic side at all.
@@ -130,6 +120,19 @@ export function canBrowseEnrollments(role: StaffRole): boolean {
 }
 
 /**
+ * Who may read the reports. Administration and coordination — the same pair
+ * that reads the enrollment ledger, because the report is that ledger summed
+ * up: it carries the courses, the class groups and the seats, which
+ * `docs/ARCHITECTURE.md` §3 puts with coordination and keeps away from
+ * tesorería ("sem acesso a dado acadêmico não financeiro"). Tesorería's own
+ * figure — what came in this ciclo — is on the payments section, next to the
+ * receipts it settles. A teacher reads their own class groups, one at a time.
+ */
+export function canBrowseReports(role: StaffRole): boolean {
+  return role === 'admin' || role === 'coordinator'
+}
+
+/**
  * Who may open an enrollment from the panel. The documented way in is the
  * student filling `/enrollment` themselves (CLAUDE.md §1); this is the exception
  * for the sale that closed on WhatsApp and never reached the form, so it stays
@@ -139,4 +142,54 @@ export function canBrowseEnrollments(role: StaffRole): boolean {
  */
 export function canCreateEnrollment(role: StaffRole): boolean {
   return role === 'admin' || role === 'coordinator'
+}
+
+/**
+ * Who opens the team directory — the panel's own accounts, their cargos and
+ * their second factor. Admin only, and for the reason the section exists at
+ * all: it is the surface where a cargo changes, and the anti-escalation rule
+ * gives that to `admin` alone (CLAUDE.md §8). Coordination runs the academic
+ * side and never promotes anybody, so it is not shown a roster whose only
+ * actions it may not take.
+ */
+export function canManageStaff(role: StaffRole): boolean {
+  return role === 'admin'
+}
+
+/**
+ * Who opens the e-mail module. Administration and coordination: the catalog
+ * decides what every student receives at the moment their enrollment moves, so
+ * it belongs to the two roles that answer for the funnel. Tesorería settles
+ * money — the payment e-mails are a consequence of that, not a lever it pulls —
+ * and a teacher runs a class group. As everywhere else, this only decides
+ * whether the screen is drawn; the enforcing check is the role declared on the
+ * route in `apps/api` (CLAUDE.md §8).
+ */
+export function canManageEmail(role: StaffRole): boolean {
+  return role === 'admin' || role === 'coordinator'
+}
+
+/**
+ * Who opens the platform settings. Admin only: that screen holds the grade that
+ * decides who is certified and the tolerance the platform approves a receipt
+ * with when nobody is looking. Coordination works inside those numbers and does
+ * not set them, and tesorería settles receipts one by one under exactly them —
+ * so neither moves them. As everywhere else, this only decides whether the
+ * screen draws the form; the enforcing check is the role on the route in
+ * `apps/api` (CLAUDE.md §8).
+ */
+export function canConfigureSettings(role: StaffRole): boolean {
+  return role === 'admin'
+}
+
+/**
+ * Whose second factor is not optional (CLAUDE.md §8). These three roles move
+ * money, approve in bulk or hand out roles, so the panel never offers them a
+ * switch to turn it off, and an account on one of them with no factor enrolled
+ * is a finding the team directory has to show — it is one password away from
+ * the whole panel. The enforcing check is the session policy in `apps/api`;
+ * this only decides whether a control is drawn.
+ */
+export function isMfaMandatory(role: StaffRole): boolean {
+  return role === 'admin' || role === 'treasury' || role === 'mass_approver'
 }

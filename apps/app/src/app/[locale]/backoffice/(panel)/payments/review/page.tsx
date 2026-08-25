@@ -4,10 +4,7 @@ import {
   listReceiptExtractions,
   listReviewQueue,
 } from '@/lib/backoffice/mock-data'
-import {
-  canConfigurePayments,
-  canReviewPayments,
-} from '@/lib/backoffice/permissions'
+import { canReviewPayments } from '@/lib/backoffice/permissions'
 import { EmptyState, MockNotice, PageHeader } from '@/components/backoffice/ui'
 import { SectionTabs } from '@/components/backoffice/section-tabs'
 import { ReviewQueueView } from './review-queue-view'
@@ -45,7 +42,7 @@ export default async function PaymentsReviewPage({
   if (!canReviewPayments(staff.role)) {
     return (
       <div className="flex flex-col gap-5">
-        <PageHeader title={t('payments.title')} subtitle={t('payments.subtitle')} />
+        <PageHeader title={t('payments.title')} />
         {/* Money is not the teacher's half of the panel — they run a class
             group. The screen says so; the role on the route in `apps/api` is
             what enforces it (CLAUDE.md §8). */}
@@ -60,7 +57,7 @@ export default async function PaymentsReviewPage({
 
   return (
     <div className="flex flex-col gap-5">
-      <PageHeader title={t('review.title')} subtitle={t('review.subtitle')} />
+      <PageHeader title={t('review.title')} />
       <SectionTabs
         tabs={[
           {
@@ -70,17 +67,6 @@ export default async function PaymentsReviewPage({
           },
           { href: '/backoffice/payments/review', label: t('payments.tab_review') },
         ]}
-        /* The parameters are not a third place to work — they are what the
-           other two run on, and only administration changes them. */
-        action={
-          canConfigurePayments(staff.role)
-            ? {
-                href: '/backoffice/payments/settings',
-                label: t('payments.settings_action'),
-                icon: 'settings',
-              }
-            : undefined
-        }
       />
       <MockNotice label={t('common.mock_notice')} />
       <ReviewQueueView

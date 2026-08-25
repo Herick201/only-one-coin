@@ -49,7 +49,6 @@ export default async function EnrollmentsPage({
       <div className="flex flex-col gap-5">
         <PageHeader
           title={t('enrollments.title')}
-          subtitle={t('enrollments.subtitle')}
         />
         <EmptyState
           icon="shield"
@@ -64,7 +63,6 @@ export default async function EnrollmentsPage({
     <div className="flex flex-col gap-5">
       <PageHeader
         title={t('enrollments.title')}
-        subtitle={t('enrollments.subtitle')}
       />
       <SectionTabs
         tabs={[

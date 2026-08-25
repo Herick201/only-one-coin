@@ -27,6 +27,38 @@ export function formatMoney(
   }).format(amountCents / 100)
 }
 
+/**
+ * The same amount without its symbol, for a file a spreadsheet opens: the
+ * currency column is money to the reader and a number to the sheet, and a
+ * "S/" in the cell makes it text. Grouping is off for the same reason; the
+ * decimal separator stays the reader's, because so is their spreadsheet.
+ */
+export function formatMoneyPlain(amountCents: number, locale: Locale): string {
+  return new Intl.NumberFormat(intlLocale[locale], {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+    useGrouping: false,
+  }).format(amountCents / 100)
+}
+
+/**
+ * The same amount short enough for a chart axis: `S/ 335` instead of
+ * `S/ 334,50`. An axis is a scale to place a mark against, not a figure to
+ * quote — the exact number lives in the tooltip and in the table.
+ */
+export function formatMoneyCompact(
+  amountCents: number,
+  currency: string,
+  locale: Locale,
+): string {
+  return new Intl.NumberFormat(intlLocale[locale], {
+    style: 'currency',
+    currency,
+    notation: 'compact',
+    maximumFractionDigits: 1,
+  }).format(amountCents / 100)
+}
+
 /** `2026-04-07` — a calendar date with no time, so no timezone to convert. */
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/
 
@@ -55,6 +87,23 @@ export function formatDateTime(iso: string, locale: Locale): string {
   }).format(new Date(iso))
 }
 
+/**
+ * A month, from a `2026-08` key: `ago 26`. Short on purpose — it labels a bar
+ * in a series, where the full month name would turn the axis into a wall of
+ * text. Read as a calendar month, so no timezone conversion applies.
+ */
+export function formatMonth(monthKey: string, locale: Locale): string {
+  return new Intl.DateTimeFormat(intlLocale[locale], {
+    timeZone: 'UTC',
+    month: 'short',
+    year: '2-digit',
+  })
+    .formatToParts(new Date(`${monthKey}-01T00:00:00Z`))
+    .filter((part) => part.type !== 'literal')
+    .map((part) => part.value.replace('.', ''))
+    .join(' ')
+}
+
 export function formatWeekdayTime(
   iso: string,
   locale: Locale,
@@ -71,6 +120,24 @@ export function formatWeekdayTime(
       minute: '2-digit',
     }).format(d),
   }
+}
+
+/**
+ * Month names in the reader's language, for a date built from three selects.
+ *
+ * Derived from the locale rather than typed into a locale file: these are the
+ * same names `formatDate` already prints, and keeping them in one place is what
+ * stops "set." and "Setembro" from disagreeing. Nothing here is a hardcoded
+ * string, so the no-UI-copy-in-.ts rule (CLAUDE.md §4) is not in play.
+ */
+export function monthNames(locale: Locale): string[] {
+  const fmt = new Intl.DateTimeFormat(intlLocale[locale], {
+    month: 'long',
+    timeZone: 'UTC',
+  })
+  return Array.from({ length: 12 }, (_, i) =>
+    fmt.format(new Date(Date.UTC(2020, i, 1))),
+  )
 }
 
 /** Initials for an avatar chip. */
@@ -129,4 +196,23 @@ export function formatDateRange(
 ): string {
   const sameYear = startIso.slice(0, 4) === endIso.slice(0, 4)
   return `${compactDate(startIso, locale, !sameYear)} → ${compactDate(endIso, locale, true)}`
+}
+
+/**
+ * A plain count, grouped for the locale. Four-digit volumes read as `4128`
+ * without it, which is a number nobody scans in a column.
+ */
+export function formatNumber(value: number, locale: Locale): string {
+  return new Intl.NumberFormat(intlLocale[locale]).format(value)
+}
+
+/**
+ * A rate, from the fraction itself — never from a number already multiplied by
+ * a hundred. The locale decides the symbol and its spacing.
+ */
+export function formatPercent(fraction: number, locale: Locale): string {
+  return new Intl.NumberFormat(intlLocale[locale], {
+    style: 'percent',
+    maximumFractionDigits: 1,
+  }).format(fraction)
 }

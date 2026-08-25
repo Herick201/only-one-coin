@@ -5,9 +5,11 @@ import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import socialPhoto from "../assets/photos/about-teaching.jpg";
 import { htmlLang, languages, org, whatsappUrl, type Lang } from "../i18n/ui";
-import { getLangFromUrl, switchLangPath, useTranslations } from "../i18n/utils";
+import { getLangFromUrl, switchLangPath, tabTitle, useTranslations } from "../i18n/utils";
 
 interface Props {
+  /** Descriptive, per-page title. Feeds the social card and the search
+      snippet — NOT the browser tab, which reads short (see `tabTitle`). */
   title?: string;
   description?: string;
   /** Thin or placeholder pages opt out of the index until they have content. */
@@ -82,7 +84,10 @@ const orgJsonLd = {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/png" href="/brand/favicon.png" />
-    <title>{title}</title>
+    {/* The tab reads short: the brand on the home page, the page name
+        elsewhere. The descriptive, keyword-rich title lives on in og:title /
+        twitter:title below, where it still has room. */}
+    <title>{tabTitle(Astro.url, lang)}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     {noindex && <meta name="robots" content="noindex, follow" />}

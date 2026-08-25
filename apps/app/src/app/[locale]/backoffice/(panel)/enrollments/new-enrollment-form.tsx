@@ -202,6 +202,11 @@ export function NewEnrollmentForm({
       const now = new Date().toISOString()
       onCreate({
         id: created.enrollment.id,
+        // apps/api doesn't issue a tracking code yet — same digits-from-id
+        // formula the enrollments list's mock uses (mock-data.ts,
+        // enrollmentCode), so a row created here reads consistently with the
+        // rest of the list until the backend takes over issuing it.
+        code: `OOC-${now.slice(0, 4)}-${created.enrollment.id.replace(/\D/g, '').slice(-4).padStart(4, '0')}`,
         studentId: selectedStudent.id,
         studentName: `${selectedStudent.firstName} ${selectedStudent.lastName}`,
         courseName: group.courseName,

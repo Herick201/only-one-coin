@@ -8,6 +8,7 @@ backoffice administrativo e módulo de e-mail.
 
 - [`CLAUDE.md`](CLAUDE.md) — contexto permanente: stack fechada, convenções, regras proibidas.
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — estrutura do monorepo, modelo de autorização (Caminho A vs. B), RBAC, custo mensal estimado e o shell/layout responsivo de `apps/app`.
+- [`docs/MATRICULA-CHECKOUT.md`](docs/MATRICULA-CHECKOUT.md) — o funil público de matrícula: wizard de 4 passos com dois modos de entrada (landing e link do vendedor), os dois relógios da vaga e a atribuição de canal.
 - [`docs/DOCUMENTOS-E-CERTIFICADOS.md`](docs/DOCUMENTOS-E-CERTIFICADOS.md) — emissão de constancia e certificado, lote por turma, e-mail pela outbox.
 - [`docs/INFRAESTRUTURA.md`](docs/INFRAESTRUTURA.md) — base de conhecimento: levantamento de mercado (preços, specs, latência) que baseou as escolhas de hospedagem.
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — plano de desenvolvimento em sessões pequenas (1 sessão = 1 PR).
@@ -42,9 +43,24 @@ Domínio e fila já existem, independentes dessa escolha:
   JSON-LD de `EducationalOrganization`, `Course` e `FAQPage`. `/blog` e `/comunidad`
   seguem `noindex` enquanto forem placeholder.
 - `apps/app` — Next.js App Router: layout, roteamento, i18n trilíngue e as telas
-  em **mockup** (sem acesso a dados). Portal do aluno (`/portal`) e backoffice
-  (`/backoffice` para login; painel em `/backoffice/home`). No backoffice já
-  existem: alunos (`/backoffice/students`, com ficha, histórico e edição),
+  em **mockup** (sem acesso a dados). Portal do aluno (`/portal`), backoffice
+  (`/backoffice` para login; painel em `/backoffice/home`) e a **matrícula
+  pública** (`/enrollment`). O checkout público é o wizard de 4 passos —
+  curso + data de início + horário (escolhas separadas, porque o mesmo curso
+  abre em várias datas), dados do aluno nos campos que a Asociación já coleta
+  hoje (nome completo num campo só, documento, celular, nascimento e Gmail
+  obrigatório) mais o bloco do apoderado com consentimento quando menor,
+  pagamento com comprovante obrigatório, e revisão/envio — com **dois
+  modos de entrada** na mesma tela: aberto da landing começa no passo 1, e
+  aberto pelo link do vendedor (`?course=&group=&src=whatsapp`) chega com o
+  passo 1 respondido e cai no passo 2. A vaga é presa no checkout com relógio
+  curto (15 min, parâmetro do backoffice) e o rascunho sobrevive a recarregar a
+  página — sair pra pagar no app do banco não perde o preenchimento. A origem
+  do canal (`whatsapp`/`web`) é resolvida no servidor, na chegada, e carregada
+  até o envio. Desenho e regras em `docs/MATRICULA-CHECKOUT.md`. **Ainda não há
+  CTA na landing apontando pra ele** — falta a variável de ambiente com a URL
+  do app.
+  No backoffice já existem: alunos (`/backoffice/students`, com ficha, histórico e edição),
   turmas (`/backoffice/class-groups`, com lista paginada, ficha da turma,
   emissão de certificados em lote e procedimentos por matrícula — mover,
   congelar, retirar), cursos (`/backoffice/courses`, catálogo com opções por
@@ -53,9 +69,8 @@ Domínio e fila já existem, independentes dessa escolha:
   e conceito, e cada linha abrindo o comprovante e os dados do pagamento num
   modal; `/backoffice/payments/review`, a fila de revisão humana com a
   ficha de decisão do comprovante — extração campo a campo com confiança,
-  segunda leitura quando os modelos divergem, aprovar/recusar com motivo; e
-  `/backoffice/payments/settings`, os parâmetros de validação — tolerância de
-  valor, confiança mínima e validade da reserva), matrículas
+  segunda leitura quando os modelos divergem, aprovar/recusar com motivo),
+  matrículas
   (`/backoffice/enrollments`: livro de todas as matrículas — aluno, curso/turma,
   estado da matrícula, da vaga e do pagamento — com métricas do ciclo, busca,
   filtros por estado, vaga, idioma e ciclo, detalhe em modal e abertura manual de
@@ -73,15 +88,83 @@ Domínio e fila já existem, independentes dessa escolha:
   grade da semana com as turmas já atribuídas sobrepostas — e as turmas do
   docente. A ficha é onde se tira alguém do quadro e se devolve: a confirmação
   avisa quantas turmas em andamento ainda apontam para ele, e o contrato deixa
-  de ser vigiado enquanto estiver inativo). O papel `teacher` já entra numa
+  de ser vigiado enquanto estiver inativo), equipe (`/backoffice/team`: as
+  contas que abrem o painel, em duas abas — **Com acesso** e **Sem acesso** —
+  com busca, filtro por cargo e filtro de segundo fator pendente; cada linha
+  mostra o cargo, se o MFA exigido pelo cargo já foi configurado e o último
+  ingresso, e a conta de docente aponta pra ficha do plantel. Abrir conta é só
+  nome, e-mail e cargo — sem senha na tela, credenciais por e-mail — e a conta
+  de docente é aberta sobre alguém que já está no plantel e ainda não tem
+  conta. Mudar cargo passa por um diálogo que pede a senha do próprio admin
+  (reautenticação fresca, `CLAUDE.md` §8) e escreve na bitácora de cargos que
+  fica abaixo da lista; o cargo `teacher` não entra nem sai por ali, porque
+  anda junto com a ficha do plantel. Tirar acesso não apaga ninguém — a conta
+  vai pra aba **Sem acesso** e volta de lá. A seção inteira é de `admin`; os
+  outros papéis veem a tela bloqueada). Também entram o correio (`/backoffice/emails`, em
+  cinco telas: **Automáticos**, o conjunto dos e-mails transacionais com
+  destinatário, estado e enviados/entregues dos últimos 30 dias, cortado entre
+  os que saem para o aluno/apoderado e os **internos** (docente e coordenação:
+  acesso ao painel, turma atribuída, contrato a vencer, notas pendentes, turma
+  pronta para certificados);
+  **Jornada** (`/backoffice/emails/journey`), o fluxo do aluno (os internos ficam
+  fora dele de propósito): a espinha são os eventos do domínio (matrícula enviada, comprovante em validação, pagamento decidido,
+  acesso liberado, documentos) e os e-mails saem deles como ramos — tracejado e
+  com a condição escrita no conector quando o caso pode nunca tomar aquele
+  caminho, e cada quadro abre o e-mail; e a página de cada e-mail
+  (`/backoffice/emails/[template]`), com a prévia renderizada do template
+  versionado do repositório (dados de exemplo, nunca de aluno real), o
+  liga/desliga do envio automático e a prova para até 5 endereços. **Não entregues**
+  (`/backoffice/emails/deliveries`) é a única tela da seção sobre pessoas: quem
+  não recebeu, por quê (caixa cheia, domínio errado, erro do provedor), com a
+  linha abrindo a ficha do aluno — e a ação decidida pelo motivo, porque
+  endereço escrito errado não se resolve reenviando. **Novo envio**
+  (`/backoffice/emails/new`) é o comunicado escrito à mão, numa trilha de
+  passos guiados, um por vez — segmento, qual (só quando o segmento pede um
+  valor), conteúdo, teste e revisão: o segmento é escolhido
+  entre o que existe e calculado no envio (nunca guardado no provedor), o
+  conteúdo é texto escrito ali ou um HTML carregado (pré-visualizado em iframe
+  sandboxed), o teste perde a validade assim que o conteúdo muda, e o envio para
+  toda a base fica parado à espera da segunda aprovação. Não existe
+  botão de enviar por aluno: e-mail transacional é consequência do que aconteceu
+  no domínio). Também entram relatórios
+  (`/backoffice/reports`: matrículas, receita e ocupação do ciclo, cortadas por
+  curso, idioma ou docente, com filtro de período, série de matrículas por mês e
+  exportação em CSV, em duas guias sobre o mesmo filtro de período e corte.
+  **Gráficos** traz os quatro números do ciclo, matrículas por mês (barras),
+  receita por mês (linha), participação nas matrículas (donut), a tendência por
+  ciclo (uma linha por curso, sempre sobre todos os ciclos) e os quatro rankings
+  por curso — matrículas, congelamentos, notas baixas e retiradas, lidos das
+  listas de turma, onde procedimento e nota fechada moram. Todo gráfico responde
+  com o número no hover, no foco e no toque; no donut a resposta aparece no
+  miolo, no lugar do total. **Tabela** é o detalhe linha a linha e o CSV. É
+  leitura pura — nada se decide dali —
+  e cada coluna diz de onde vem: matrícula e dinheiro saem do livro de
+  matrículas, a ocupação sai das vagas das turmas, e os trâmites pagos ficam de
+  fora porque são liquidados em Pagos. A seção é de `admin` e `coordinator`,
+  como o livro de matrículas). Fecha a lista a configuração
+  (`/backoffice/settings`, só `admin`), a tela única dos números que o resto do
+  painel roda em cima: as regras acadêmicas e de trâmite (nota mínima, prazo do
+  certificado, taxa da constancia, antecedência do aviso de contrato) e os
+  parâmetros de validação do comprovante (tolerância de valor, confiança mínima
+  e os dois relógios da vaga: os minutos de reserva durante o pagamento e os
+  dias de validade da reserva) — estes últimos vieram de `/backoffice/payments/settings`,
+  que deixou de existir: um número com duas telas donas é um número que diverge.
+  O papel `teacher` já entra numa
   **visão restrita**: menu reduzido,
   home própria (turmas, alunos, notas e certificados pendentes dele), só as
   próprias turmas na lista e na ficha da turma, e alunos/pagamentos bloqueados —
   tudo escopado pelo `teacherId` da sessão, nunca por dado vindo do cliente. A
   sessão do mockup é fixa em `getStaffSession()`; trocar o papel ali é o que
   mostra essa visão, de propósito não há seletor de papel na tela (`CLAUDE.md`
-  §8). Toda escrita é estado local. Os demais módulos do painel aparecem
-  listados como "pronto/em breve".
+  §8). Cada pessoa do staff, em qualquer papel, gerencia a própria conta em
+  `/backoffice/account` (aberta pelo chip do usuário no rodapé do menu): senha
+  com as exigências listadas enquanto se digita, verificação em dois passos —
+  obrigatória e sem botão de desligar para `admin`, `treasury` e
+  `mass_approver` (`CLAUDE.md` §8), opcional para os demais —, códigos de
+  recuperação, sessões abertas com o encerramento por linha, e o idioma do
+  painel. Nome, e-mail de acesso e cargo ficam de fora de propósito: são
+  identidade, e o cargo só muda pelo usecase de promoção. Toda escrita é estado
+  local. Os demais módulos do painel aparecem listados como "pronto/em breve".
   UI em shadcn/ui sobre Tailwind v4; os tokens de marca vivem em `globals.css`
   (paleta da landing, tipografia Inter). A landing segue com Fredoka/Poppins —
   público diferente.

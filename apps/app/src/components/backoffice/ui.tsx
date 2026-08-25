@@ -87,13 +87,17 @@ export function Card({
   )
 }
 
+/**
+ * The title of a screen, on its own. There used to be a line of support copy
+ * under it on every page; it said what the section was to somebody who already
+ * knew — the sidebar entry that got them here said the same thing — and it
+ * pushed the work down the page on all of them.
+ */
 export function PageHeader({
   title,
-  subtitle,
   actions,
 }: {
   title: string
-  subtitle?: string
   actions?: ReactNode
 }) {
   return (
@@ -102,7 +106,6 @@ export function PageHeader({
         <h1 className="text-xl font-semibold tracking-tight text-ink sm:text-2xl">
           {title}
         </h1>
-        {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
       </div>
       {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
     </header>
@@ -261,7 +264,7 @@ export const tdClass = 'border-b border-line/70 px-4 py-3 align-middle text-ink'
  * queue must not offer it as two different-looking controls.
  */
 export const rowActionClass =
-  'inline-flex items-center gap-1 rounded-lg border border-line px-2.5 py-1.5 text-sm font-semibold text-brand-blue transition hover:border-brand-yellow hover:bg-cream hover:text-ink focus-visible:border-brand-yellow focus-visible:bg-cream focus-visible:text-ink active:border-brand-yellow active:bg-cream active:text-ink'
+  'inline-flex items-center gap-1 whitespace-nowrap rounded-lg border border-line px-2.5 py-1.5 text-sm font-semibold text-brand-blue transition hover:border-brand-yellow hover:bg-cream hover:text-ink focus-visible:border-brand-yellow focus-visible:bg-cream focus-visible:text-ink active:border-brand-yellow active:bg-cream active:text-ink'
 
 /** Small progress meter used for seat pressure. */
 export function Meter({ value, max, tone }: { value: number; max: number; tone: Tone }) {

@@ -56,6 +56,80 @@ export interface StaffUser {
 }
 
 /**
+ * Whether the account still opens the panel. Never a delete: whoever approved a
+ * payment or signed a grade stays pointed at by those rows (CLAUDE.md §6), so
+ * somebody who leaves loses the door, not the record.
+ */
+export type StaffStatus = 'active' | 'inactive'
+
+/**
+ * One row of the team directory — an account that opens the backoffice, and the
+ * cargo it opens it with.
+ *
+ * The `role` is shown here and changed from here, but it is never a field on a
+ * form that writes the user: the only way it moves is the dedicated promotion
+ * usecase, admin-only and behind fresh re-authentication (CLAUDE.md §8). The
+ * screen is where the decision is taken, `apps/api` is where it is allowed.
+ */
+export interface StaffMemberRow {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+  role: StaffRole
+  status: StaffStatus
+  /**
+   * The teacher record behind the account, when the cargo is `teacher` — the
+   * same link `StaffUser` carries, and what scopes the panel to their own class
+   * groups. An account is given to somebody already on the roster: the person
+   * is registered in Docentes first, exactly like a manual enrollment only acts
+   * on a student who already exists (CLAUDE.md §1).
+   */
+  teacherId: string | null
+  /**
+   * Whether the second factor is already set up on the account. Required for
+   * `admin`, `treasury` and `mass_approver` (CLAUDE.md §8) — which makes a
+   * pending one on those cargos a finding, not a preference somebody skipped.
+   * Enrolling it is the account owner's own action; nobody enrolls it for them.
+   */
+  mfaEnrolled: boolean
+  /** ISO date the account was opened. */
+  joinedAt: string
+  /** Last sign-in to the panel; null while the account has never been used. */
+  lastAccessAt: string | null
+}
+
+/**
+ * What the creation form fills in. No password: the account is opened here and
+ * the credentials leave by e-mail, the same way a student's do (CLAUDE.md §8) —
+ * a panel that shows somebody else's password is a panel that has it.
+ */
+export type NewStaffMember = Pick<
+  StaffMemberRow,
+  'firstName' | 'lastName' | 'email' | 'role' | 'teacherId'
+>
+
+/**
+ * One line of the cargo ledger: every change of `role`, and the alta that gave
+ * the account its first one. Append-only in the database — no grant of UPDATE
+ * or DELETE, not even for admin (CLAUDE.md §8) — so this is read, never edited.
+ *
+ * `fromRole` is null on the alta: there was no cargo before it.
+ */
+export interface StaffRoleChange {
+  id: string
+  at: string
+  /** Whose cargo moved. */
+  memberId: string
+  memberName: string
+  fromRole: StaffRole | null
+  toRole: StaffRole
+  /** Who signed it off — always an admin, by the rule that allows it at all. */
+  actorName: string
+  actorRole: StaffRole
+}
+
+/**
  * Derived, not a stored column: `active` = has at least one active enrollment,
  * `under_review` = has an enrollment/payment waiting on review, `inactive` =
  * neither. Kept as a UI concept until the rule is confirmed.
@@ -227,11 +301,29 @@ export type StudentField =
   | 'city'
   | 'birth_date'
 
-/** Versioned e-mail templates (CLAUDE.md §5, outbox). */
+/**
+ * Versioned e-mail templates (CLAUDE.md §5, outbox). The union *is* the
+ * catalog: every transactional message the platform sends has an entry here,
+ * and the template it renders lives in the repository — never drawn only in the
+ * provider's panel, so what the e-mail screen previews is what ships.
+ */
 export type EmailTemplate =
+  | 'enrollment_submitted'
   | 'guardian_consent_reminder'
+  | 'payment_under_review'
+  | 'seat_reservation_expiring'
+  | 'payment_approved'
+  | 'payment_rejected'
+  | 'credentials_issued'
+  | 'class_access_ready'
   | 'enrollment_certificate_issued'
   | 'certificate_issued'
+  /* Internal — the people who run the courses, not the ones taking them. */
+  | 'teacher_credentials_issued'
+  | 'teacher_class_group_assigned'
+  | 'teacher_contract_expiring'
+  | 'teacher_grades_pending'
+  | 'staff_certificates_ready'
 
 /**
  * What an audit entry points at. Either real data (a course name, an operation
@@ -772,6 +864,13 @@ export interface PaymentSettings {
   escalationConfidence: number
   /** Days a reserved seat survives without an approved payment. */
   reservationDays: number
+  /**
+   * Minutes the public checkout holds a seat while the person goes off to pay
+   * (`CLAUDE.md` §5, "Dois relógios"). The short clock of the pair: it runs
+   * from the class group being chosen to the receipt arriving, and `reservationDays`
+   * takes over from there.
+   */
+  checkoutHoldMinutes: number
 }
 
 /* -------------------------------------------------------------------------- */
@@ -786,6 +885,13 @@ export interface PaymentSettings {
  */
 export interface EnrollmentRow {
   id: string
+  /**
+   * The tracking code printed on the checkout's confirmation screen — what the
+   * student quotes on the phone. Not `id`: an internal row id is not something
+   * anybody should be reading out loud, and a code that only exists on the
+   * student's side is a code nobody here can look up (`CLAUDE.md` §4).
+   */
+  code: string
   studentId: string
   studentName: string
   courseName: string
@@ -887,4 +993,244 @@ export interface NewEnrollmentInput {
   operationNumber: string
   /** Whether the staff member attached the receipt image while filling this in. */
   receiptAttached: boolean
+}
+
+/* -------------------------------------------------------------------------- */
+/* E-mail                                                                      */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The domain events the automatic e-mails hang off — the spine of the flow.
+ * Not a database column: it is what *happens*, in order, and the e-mails are
+ * what leaves because of it. Written as events rather than as chapters, because
+ * a flow drawn over chapter titles is a list with a line down the side.
+ */
+export type EmailStage =
+  | 'submitted'
+  | 'payment_pending'
+  | 'payment_settled'
+  | 'access'
+  | 'documents'
+
+/**
+ * Who the template is written to — it decides the tone, the address, and
+ * whether the message belongs to the student's journey at all. `teacher` and
+ * `staff` are internal: nobody outside the institution ever receives them.
+ */
+export type EmailAudience = 'student' | 'guardian' | 'teacher' | 'staff'
+
+/**
+ * What the provider reported back over a rolling window. Delivery, bounce and
+ * failure only: opens would mean a tracking pixel on every message, and that is
+ * a consent question (Ley 29733), not a metric to add on the way past.
+ */
+export interface EmailFlowMetrics {
+  sent: number
+  delivered: number
+  /** Address rejected by the receiving server — it syncs back to the student. */
+  bounced: number
+  /** Never left the outbox: the provider errored and the retries ran out. */
+  failed: number
+}
+
+/**
+ * The values the preview renders with. Invented on purpose: the preview exists
+ * so somebody can check the wording, and rendering it over a real student would
+ * put their name and their course on a screen that has no reason to hold either
+ * (CLAUDE.md §8).
+ */
+export interface EmailSample {
+  studentName: string
+  /** Where the preview says it is going — invented, like the name above it. */
+  studentEmail: string
+  guardianName: string
+  guardianEmail: string
+  teacherName: string
+  teacherEmail: string
+  staffName: string
+  staffEmail: string
+  courseName: string
+  classGroupName: string
+  /** Integer cents, formatted at render time (CLAUDE.md §5). */
+  amountCents: number
+  /** ISO 8601 UTC, rendered in America/Lima. */
+  date: string
+}
+
+/**
+ * One automatic e-mail, as the catalog lists it. Nothing here is a send button:
+ * a transactional message is the consequence of something that happened in the
+ * domain — a payment approved, a document issued — and the outbox carries it
+ * (`docs/DOCUMENTOS-E-CERTIFICADOS.md` §4). The screen only says whether the
+ * platform is allowed to send it, and what it looks like when it does.
+ */
+export interface EmailFlow {
+  template: EmailTemplate
+  audience: EmailAudience
+  /**
+   * The event it leaves because of — the flow branches off this. Null for the
+   * internal ones: a message to a teacher is not a step of the student's
+   * journey, and putting it on that line would be drawing a path nobody walks.
+   */
+  stage: EmailStage | null
+  /**
+   * Fires only when the case takes that turn: the receipt that needed a human,
+   * the seat nobody paid for, the student who is a minor. The journey has to
+   * say so, or a branch reads like a step everybody goes through.
+   */
+  conditional: boolean
+  /** Whether the outbox may send it at all. Off means nobody receives it. */
+  enabled: boolean
+  /** Version of the template in the repository — bumped, never edited in place. */
+  version: number
+  /** When that version landed. */
+  updatedAt: string
+  /** Rolling window, `EmailMetrics.windowDays` long. */
+  metrics: EmailFlowMetrics
+  sample: EmailSample
+}
+
+/** The section header — the same window, summed over every flow. */
+export interface EmailMetrics {
+  windowDays: number
+  sent: number
+  delivered: number
+  bounced: number
+  failed: number
+  /** Flows currently switched off — nobody is receiving those. */
+  paused: number
+}
+
+/**
+ * Who a manual send goes to. A segment is *computed* — the platform asks the
+ * database who matches, at the moment of sending, and never keeps a list at the
+ * provider (`docs/ROADMAP.md` fase 5). So this is the question, not the answer:
+ * the recipients are whatever it resolves to when somebody presses send.
+ */
+export type EmailSegment =
+  | { kind: 'all' }
+  | { kind: 'course'; courseName: string }
+  | { kind: 'class_group'; classGroupId: string; classGroupName: string }
+  | { kind: 'enrollment_status'; status: EnrollmentStatus }
+
+/** What a manual send is, while it is still being written. */
+export interface EmailDraft {
+  segment: EmailSegment
+  subject: string
+  body: string
+}
+
+/** Why one delivery did not land. */
+export type EmailDeliveryReason =
+  /** The classic: a Gmail with no space left (`docs/REGRAS-NEGOCIO.md` §7). */
+  | 'mailbox_full'
+  | 'address_unknown'
+  | 'domain_invalid'
+  | 'blocked_by_server'
+  /** Never left the outbox: the provider errored and the retries ran out. */
+  | 'provider_error'
+
+/** Refused by the receiving server, or given up on by the outbox. */
+export type EmailDeliveryState = 'bounced' | 'failed'
+
+/**
+ * One e-mail that did not reach one person. It is a person, not a statistic:
+ * the student is on the other end waiting for credentials that never arrived,
+ * so the row carries who they are and opens their file — which is where the
+ * phone number to call them on lives.
+ */
+export interface EmailDeliveryIssue {
+  id: string
+  template: EmailTemplate
+  studentId: string
+  studentName: string
+  /** The address that failed — the one on the student's file. */
+  address: string
+  state: EmailDeliveryState
+  reason: EmailDeliveryReason
+  /** Last attempt, ISO 8601 UTC. */
+  at: string
+  attempts: number
+}
+
+/* -------------------------------------------------------------------------- */
+/* Settings — the numbers and names the platform runs on                       */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The academic thresholds the rules fix and the screens already read. They are
+ * settings rather than constants for the same reason the payment tolerance is:
+ * the Asociación changing what "approved" means must not need a deploy
+ * (CLAUDE.md §5).
+ */
+export interface AcademicSettings {
+  /** Minimum final grade on the 0–20 scale (`docs/REGRAS-NEGOCIO.md` §3). */
+  passingGrade: number
+  /** Business days to issue the free certificate after a class group ends (§6). */
+  certificateDeadlineBusinessDays: number
+  /** Fee for the constancia de matrícula, in cents — a paid procedure (§5). */
+  constanciaFeeCents: number
+  /** How early a teacher's contract starts showing as expiring (CLAUDE.md §1). */
+  contractAlertDays: number
+}
+
+/**
+ * Everything the settings screen owns. Two groups because they answer for two
+ * different things — what the academic rules count as, and what the receipt
+ * pipeline approves on without a human — and one screen, because a number with
+ * two homes is a number that drifts.
+ */
+export interface GeneralSettings {
+  academic: AcademicSettings
+  receipts: PaymentSettings
+}
+
+/**
+ * The account a staff member manages for themselves — access, not identity.
+ * Name, login e-mail and role are not here as editable values on purpose: the
+ * role is written only by the dedicated promotion usecase (CLAUDE.md §8), and
+ * the rest is administration's to change.
+ */
+
+/** The only second factor the panel offers — an authenticator app. */
+export type MfaMethod = 'totp'
+
+export interface AccountMfa {
+  enabled: boolean
+  method: MfaMethod
+  /** When the current device was enrolled. Null while the factor is off. */
+  enrolledAt: string | null
+  /** Unused recovery codes left — what is between a lost phone and a lockout. */
+  recoveryCodesLeft: number
+}
+
+export interface AccountSecurity {
+  /** Null when the password is still the one the account was created with. */
+  passwordUpdatedAt: string | null
+  mfa: AccountMfa
+  lastSignInAt: string
+}
+
+/**
+ * One open session. Browser and system are proper names, so they stay as they
+ * are (CLAUDE.md §4 exception for brand names); the country is a code and gets
+ * resolved to a name on screen.
+ */
+export interface AccountSession {
+  id: string
+  browser: string
+  os: string
+  ip: string
+  city: string
+  /** ISO 3166-1 alpha-2. */
+  country: string
+  lastActiveAt: string
+  /** The session reading this screen — the one that cannot close itself. */
+  current: boolean
+}
+
+export interface AccountOverview {
+  user: StaffUser
+  security: AccountSecurity
+  sessions: AccountSession[]
 }
