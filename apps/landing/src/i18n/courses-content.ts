@@ -1,0 +1,512 @@
+import type { CourseSlug, Lang } from "./ui";
+
+/**
+ * Conteúdo real de cada curso — o que a coordenação escreveu nos documentos do
+ * programa (duração, malha, metodologia, avaliação, resultados).
+ *
+ * Fica separado de `ui.ts` porque é outra natureza de texto: `ui.ts` é a voz da
+ * marca, isto aqui é o programa acadêmico, revisado por quem dá aula. Um curso
+ * que ainda não tem documento simplesmente não aparece neste mapa, e a página
+ * cai no texto genérico com o aviso de conteúdo de exemplo — nunca inventamos
+ * malha curricular.
+ */
+export type CourseUnit = {
+  /** Nome da unidade/livro como está no programa. */
+  title: string;
+  topics: string[];
+};
+
+export type CourseContent = {
+  /** Parágrafos de abertura, no lugar do texto genérico. */
+  description: string[];
+  /**
+   * Quantas sessões tem o curso — o número que abre a página, em destaque.
+   * Uma sessão é uma hora de aula ao vivo; o curso roda uma hora por dia, de
+   * segunda a sexta. Ausente enquanto a coordenação não fechar o número.
+   */
+  sessions?: string;
+  duration: string;
+  level: string;
+  modality: string;
+  curriculum: CourseUnit[];
+  goals: string[];
+  method: string[];
+  evaluation: string[];
+  outcomes: string[];
+  /** Ressalva honesta sobre o que o curso não promete. */
+  outcomeNote?: string;
+};
+
+const englishES: CourseContent = {
+  description: [
+    "El curso de Inglés de Only One Coin desarrolla de manera progresiva tus competencias comunicativas, desde un nivel inicial hasta un nivel intermedio funcional, con práctica constante de speaking, listening, reading, writing, use of English y vocabulary.",
+    "El paquete completo del nivel Básico son cuatro libros (Papayita), estructurados para que pienses en inglés, ganes seguridad al comunicarte y puedas desenvolverte en situaciones cotidianas. El contenido está alineado a estándares internacionales y continúa en el nivel Intermedio.",
+  ],
+  sessions: "80 sesiones",
+  duration: "80 horas académicas (nivel Básico)",
+  level: "Básico (A1–A2)",
+  modality: "Virtual",
+  curriculum: [
+    {
+      title: "Libro 1 — Bright Start",
+      topics: [
+        "Expresiones básicas de aula",
+        "Alfabeto y pronunciación",
+        "Números",
+        "Saludos y presentaciones",
+        "Información personal",
+        "Verbos to be y to have",
+        "Vocabulario cotidiano",
+        "Comprensión y producción de frases simples",
+      ],
+    },
+    {
+      title: "Libro 2 — Brave Steps",
+      topics: [
+        "Nacionalidades y países",
+        "Profesiones y ocupaciones",
+        "Familia y relaciones personales",
+        "Simple Present (afirmativo, negativo e interrogativo)",
+        "Adverbios de frecuencia",
+        "Rutinas diarias",
+        "Comprensión de textos breves",
+        "Conversaciones básicas guiadas",
+      ],
+    },
+    {
+      title: "Libro 3 — Fluent Glow",
+      topics: [
+        "Lugares de la ciudad",
+        "Preposiciones de lugar",
+        "Comparativos y superlativos",
+        "Transporte y direcciones",
+        "Present Continuous",
+        "Números ordinales",
+        "Interacción en situaciones cotidianas",
+        "Desarrollo de fluidez básica",
+      ],
+    },
+    {
+      title: "Libro 4 — Golden Speech",
+      topics: [
+        "Experiencias personales",
+        "Simple Past (afirmativo, negativo e interrogativo)",
+        "Apariencia física y descripciones",
+        "Fechas y eventos pasados",
+        "Comparación de experiencias",
+        "Expresión oral más elaborada",
+        "Producción de textos cortos narrativos",
+      ],
+    },
+  ],
+  goals: [
+    "Comprensión auditiva progresiva",
+    "Expresión oral con fluidez creciente",
+    "Lectura comprensiva de textos",
+    "Escritura clara y estructurada",
+    "Uso correcto de estructuras gramaticales",
+    "Ampliación constante de vocabulario",
+  ],
+  method: [
+    "Clases virtuales interactivas",
+    "Enfoque comunicativo",
+    "Ejercicios prácticos por unidad",
+    "Role play y simulaciones reales",
+    "Evaluaciones por módulo",
+    "Pruebas de progreso",
+  ],
+  evaluation: [
+    "Participación activa",
+    "Actividades prácticas",
+    "Ejercicios escritos",
+    "Evaluaciones por libro",
+    "Evaluación final integradora",
+  ],
+  outcomes: [
+    "Comunicarte con seguridad en situaciones cotidianas",
+    "Comprender conversaciones y textos de nivel intermedio",
+    "Expresar opiniones, experiencias y planes",
+    "Mantener conversaciones fluidas",
+    "Leer y redactar textos de complejidad media",
+    "Desenvolverte en entornos laborales o académicos básicos",
+    "Contar con una base sólida para rendir exámenes internacionales tipo TOEFL",
+  ],
+  outcomeNote:
+    "Estos son los logros del programa completo de seis libros (160 horas), que alcanza un nivel intermedio funcional (A2–B1). El paquete de este nivel Básico son los libros 1 al 4 (80 horas); el nivel Intermedio (libros 5 y 6) es la continuación natural.",
+};
+
+const englishEN: CourseContent = {
+  description: [
+    "Only One Coin's English course builds your communication skills step by step, from beginner to functional intermediate, with constant practice of speaking, listening, reading, writing, use of English and vocabulary.",
+    "The full Basic-level package is four books (Papayita), structured so you think in English, gain confidence and can hold your own in everyday situations. The content follows international standards and continues into the Intermediate level.",
+  ],
+  sessions: "80 sessions",
+  duration: "80 academic hours (Basic level)",
+  level: "Beginner (A1–A2)",
+  modality: "Online",
+  curriculum: [
+    {
+      title: "Book 1 — Bright Start",
+      topics: [
+        "Basic classroom language",
+        "Alphabet and pronunciation",
+        "Numbers",
+        "Greetings and introductions",
+        "Personal information",
+        "The verbs to be and to have",
+        "Everyday vocabulary",
+        "Understanding and producing simple sentences",
+      ],
+    },
+    {
+      title: "Book 2 — Brave Steps",
+      topics: [
+        "Nationalities and countries",
+        "Jobs and occupations",
+        "Family and personal relationships",
+        "Simple Present (affirmative, negative and questions)",
+        "Adverbs of frequency",
+        "Daily routines",
+        "Reading short texts",
+        "Guided basic conversations",
+      ],
+    },
+    {
+      title: "Book 3 — Fluent Glow",
+      topics: [
+        "Places around town",
+        "Prepositions of place",
+        "Comparatives and superlatives",
+        "Transport and directions",
+        "Present Continuous",
+        "Ordinal numbers",
+        "Interacting in everyday situations",
+        "Building basic fluency",
+      ],
+    },
+    {
+      title: "Book 4 — Golden Speech",
+      topics: [
+        "Personal experiences",
+        "Simple Past (affirmative, negative and questions)",
+        "Physical appearance and descriptions",
+        "Dates and past events",
+        "Comparing experiences",
+        "More elaborate speaking",
+        "Writing short narrative texts",
+      ],
+    },
+  ],
+  goals: [
+    "Progressive listening comprehension",
+    "Speaking with growing fluency",
+    "Reading comprehension",
+    "Clear, structured writing",
+    "Correct use of grammar structures",
+    "Constantly expanding vocabulary",
+  ],
+  method: [
+    "Interactive online classes",
+    "Communicative approach",
+    "Practical exercises per unit",
+    "Role play and real-life simulations",
+    "Assessments per module",
+    "Progress tests",
+  ],
+  evaluation: [
+    "Active participation",
+    "Practical activities",
+    "Written exercises",
+    "Assessment per book",
+    "Final integrative assessment",
+  ],
+  outcomes: [
+    "Communicate confidently in everyday situations",
+    "Understand intermediate-level conversations and texts",
+    "Express opinions, experiences and plans",
+    "Hold fluent conversations",
+    "Read and write texts of medium complexity",
+    "Function in basic work or academic settings",
+    "Have a solid base for international exams such as TOEFL",
+  ],
+  outcomeNote:
+    "These are the outcomes of the full six-book program (160 hours), which reaches a functional intermediate level (A2–B1). This Basic-level package covers books 1 to 4 (80 hours); the Intermediate level (books 5 and 6) is the natural continuation.",
+};
+
+const englishPT: CourseContent = {
+  description: [
+    "O curso de Inglês da Only One Coin desenvolve suas competências comunicativas de forma progressiva, do nível inicial até um intermediário funcional, com prática constante de speaking, listening, reading, writing, use of English e vocabulary.",
+    "O pacote completo do nível Básico são quatro livros (Papayita), estruturados para você pensar em inglês, ganhar segurança ao se comunicar e se virar em situações do dia a dia. O conteúdo segue padrões internacionais e continua no nível Intermediário.",
+  ],
+  sessions: "80 sessões",
+  duration: "80 horas acadêmicas (nível Básico)",
+  level: "Básico (A1–A2)",
+  modality: "Virtual",
+  curriculum: [
+    {
+      title: "Livro 1 — Bright Start",
+      topics: [
+        "Expressões básicas de sala de aula",
+        "Alfabeto e pronúncia",
+        "Números",
+        "Cumprimentos e apresentações",
+        "Informação pessoal",
+        "Verbos to be e to have",
+        "Vocabulário do dia a dia",
+        "Compreensão e produção de frases simples",
+      ],
+    },
+    {
+      title: "Livro 2 — Brave Steps",
+      topics: [
+        "Nacionalidades e países",
+        "Profissões e ocupações",
+        "Família e relações pessoais",
+        "Simple Present (afirmativo, negativo e interrogativo)",
+        "Advérbios de frequência",
+        "Rotinas diárias",
+        "Compreensão de textos curtos",
+        "Conversas básicas guiadas",
+      ],
+    },
+    {
+      title: "Livro 3 — Fluent Glow",
+      topics: [
+        "Lugares da cidade",
+        "Preposições de lugar",
+        "Comparativos e superlativos",
+        "Transporte e direções",
+        "Present Continuous",
+        "Números ordinais",
+        "Interação em situações cotidianas",
+        "Desenvolvimento da fluência básica",
+      ],
+    },
+    {
+      title: "Livro 4 — Golden Speech",
+      topics: [
+        "Experiências pessoais",
+        "Simple Past (afirmativo, negativo e interrogativo)",
+        "Aparência física e descrições",
+        "Datas e eventos passados",
+        "Comparação de experiências",
+        "Expressão oral mais elaborada",
+        "Produção de textos narrativos curtos",
+      ],
+    },
+  ],
+  goals: [
+    "Compreensão auditiva progressiva",
+    "Expressão oral com fluência crescente",
+    "Leitura compreensiva de textos",
+    "Escrita clara e estruturada",
+    "Uso correto das estruturas gramaticais",
+    "Ampliação constante do vocabulário",
+  ],
+  method: [
+    "Aulas virtuais interativas",
+    "Enfoque comunicativo",
+    "Exercícios práticos por unidade",
+    "Role play e simulações reais",
+    "Avaliações por módulo",
+    "Provas de progresso",
+  ],
+  evaluation: [
+    "Participação ativa",
+    "Atividades práticas",
+    "Exercícios escritos",
+    "Avaliações por livro",
+    "Avaliação final integradora",
+  ],
+  outcomes: [
+    "Comunicar-se com segurança em situações cotidianas",
+    "Compreender conversas e textos de nível intermediário",
+    "Expressar opiniões, experiências e planos",
+    "Manter conversas fluidas",
+    "Ler e redigir textos de complexidade média",
+    "Atuar em ambientes de trabalho ou acadêmicos básicos",
+    "Ter base sólida para exames internacionais tipo TOEFL",
+  ],
+  outcomeNote:
+    "Estes são os resultados do programa completo de seis livros (160 horas), que chega a um nível intermediário funcional (A2–B1). O pacote deste nível Básico são os livros 1 a 4 (80 horas); o nível Intermediário (livros 5 e 6) é a continuação natural.",
+};
+
+
+/**
+ * Cambridge é a CERTIFICAÇÃO; este curso é a preparação para ela. O texto
+ * abaixo nunca diz que a Only One Coin emite o certificado — quem emite é o
+ * Cambridge, e o curso leva o aluno até a prova.
+ */
+const cambridgeES: CourseContent = {
+  description: [
+    "Cambridge es una certificación internacional de inglés. Este curso te prepara para rendirla: trabaja el nivel B1 de forma progresiva, con el tipo de tareas, audios y textos que aparecen en el examen.",
+    "Al terminar recibes asesoría gratuita para inscribirte y rendir el examen Cambridge PET.",
+  ],
+  duration: "",
+  level: "Intermedio (B1)",
+  modality: "Virtual",
+  curriculum: [
+    {
+      title: "Módulo 1 — Vida diaria y decisiones",
+      topics: [
+        "Rutinas y vida diaria",
+        "Estudios y trabajo",
+        "Expresar gustos, preferencias y decisiones",
+        "Present simple · Adverbs of frequency",
+        "Present continuous · Verb patterns (want, would like, decide)",
+        "Resultado: hablas de tu vida, tus hábitos y tus decisiones en inglés",
+      ],
+    },
+    {
+      title: "Módulo 2 — Experiencias y pasado",
+      topics: [
+        "Viajes, hobbies y tiempo libre",
+        "Experiencias personales y relato de historias",
+        "Past simple · Past continuous",
+        "“Used to” · Expresiones de tiempo",
+        "Resultado: cuentas experiencias pasadas con claridad y coherencia",
+      ],
+    },
+    {
+      title: "Módulo 3 — Planes y vida futura",
+      topics: [
+        "Planes futuros",
+        "Tecnología y vida digital",
+        "Normas, consejos y responsabilidades",
+        "Future forms (going to / will) · Modals (can, have to, should)",
+        "First conditional",
+        "Resultado: hablas del futuro, das consejos y expresas obligaciones",
+      ],
+    },
+    {
+      title: "Módulo 4 — Salud y estilo de vida",
+      topics: [
+        "Salud y bienestar",
+        "Cambios personales y estilo de vida",
+        "Present perfect vs past simple",
+        "Quantifiers · Modals for advice",
+        "Resultado: hablas de experiencias y hábitos, y das recomendaciones",
+      ],
+    },
+  ],
+  goals: [
+    "Speaking: mantener conversaciones fluidas y expresar opiniones y experiencias",
+    "Listening: comprender conversaciones cotidianas y audios tipo examen Cambridge",
+    "Reading: leer textos intermedios e identificar ideas principales y detalles",
+    "Writing: redactar correos, historias y opiniones de forma clara y coherente",
+  ],
+  method: [
+    "Clases virtuales en vivo",
+    "Práctica con tareas del formato del examen",
+    "Situaciones reales de comunicación",
+    "Participación activa desde la primera clase",
+  ],
+  evaluation: [
+    "Participación en clase",
+    "Prácticas por módulo",
+    "Simulacros con formato de examen",
+  ],
+  outcomes: [
+    "Comunicarte en viajes y situaciones cotidianas",
+    "Mantener conversaciones básicas-intermedias sin traducir mentalmente",
+    "Entender contenido en inglés (videos, audios, textos)",
+    "Expresar ideas, experiencias y planes con claridad",
+    "Alcanzar un nivel equivalente a B1 (intermedio)",
+    "Estar preparado para rendir el examen Cambridge PET",
+    "Recibir asesoría gratuita al finalizar para rendir el examen",
+  ],
+  outcomeNote:
+    "El examen y el certificado los emite Cambridge, no Only One Coin: este curso te lleva preparado hasta la prueba y te acompaña en la inscripción.",
+};
+
+const frenchAdvancedES: CourseContent = {
+  description: [
+    "La continuación natural del Francés Básico: aquí ya no se trata de aprender más vocabulario o gramática, sino de empezar a pensar, expresarte y desenvolverte en francés con fluidez.",
+    "Está diseñado para quien ya domina lo básico, entiende francés pero todavía no lo habla con soltura, y quiere avanzar hacia una comunicación completa y natural — incluida la preparación para certificarse (DELF / TCF).",
+  ],
+  duration: "",
+  level: "Intermedio / Avanzado (B1–B2 aproximado)",
+  modality: "Virtual",
+  curriculum: [
+    {
+      title: "Módulo 1 — Interacción y vida social (Unité 7)",
+      topics: [
+        "Hacer propuestas e invitaciones",
+        "Expresar opiniones y emociones",
+        "Hablar sobre trabajo, amigos y experiencias",
+        "Pronombres y estructuras conversacionales",
+        "Resultado: mantienes conversaciones naturales y te desenvuelves socialmente",
+      ],
+    },
+    {
+      title: "Módulo 2 — Experiencias y narración (Unité 8)",
+      topics: [
+        "Imparfait vs passé composé",
+        "Narración de experiencias personales",
+        "Describir recuerdos, emociones y situaciones",
+        "Hablar de hobbies y vivencias",
+        "Resultado: cuentas historias y experiencias con claridad",
+      ],
+    },
+    {
+      title: "Módulo 3 — Entorno y vida urbana (Unité 9)",
+      topics: [
+        "Describir espacios y ciudades",
+        "Buscar vivienda y entender anuncios",
+        "Dar direcciones y organizar encuentros",
+        "Expresar necesidades, preferencias y consejos",
+        "Resultado: te desenvuelves en contextos reales (viajes, mudanza, vida diaria)",
+      ],
+    },
+    {
+      title: "Módulo 4 — Vida social y cultural (Unité 10)",
+      topics: [
+        "Conversaciones entre amigos",
+        "Organización de reuniones y eventos",
+        "Comprensión de recetas y cultura gastronómica",
+        "Expresión espontánea en situaciones sociales",
+        "Resultado: te comunicas con mayor fluidez y naturalidad",
+      ],
+    },
+  ],
+  goals: [
+    "Mantener conversaciones fluidas con nativos",
+    "Expresar opiniones, emociones y argumentos",
+    "Redactar textos claros: mensajes, correos, opiniones",
+    "Entender conversaciones reales y contenido audiovisual",
+    "Usar correctamente los tiempos pasados y estructuras complejas",
+  ],
+  method: [
+    "Clases 100% prácticas y en vivo",
+    "Situaciones reales: viajes, trabajo, vida social",
+    "Método progresivo basado en conversación",
+    "Material estructurado por unidades, continuación real del nivel básico",
+    "Enfoque comunicativo: hablas desde la primera clase",
+  ],
+  evaluation: [
+    "Participación en clase",
+    "Prácticas por unidad",
+    "Producción oral y escrita evaluada por módulo",
+  ],
+  outcomes: [
+    "Alcanzar un nivel aproximado B1 / B2",
+    "Viajar y comunicarte sin depender del traductor",
+    "Entender conversaciones reales",
+    "Prepararte para exámenes internacionales (DELF / TCF)",
+    "Mejorar tus oportunidades laborales y académicas",
+  ],
+};
+
+/**
+ * Conteúdo por idioma da interface e por curso. Ausência é intencional: o curso
+ * sem documento aprovado não ganha malha inventada.
+ */
+export const courseContent: Record<Lang, Partial<Record<CourseSlug, CourseContent>>> = {
+  es: {
+    english: englishES,
+    "cambridge-b1": cambridgeES,
+    "french-advanced": frenchAdvancedES,
+  },
+  en: { english: englishEN },
+  pt: { english: englishPT },
+};

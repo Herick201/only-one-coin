@@ -11,11 +11,17 @@ export function getStaticPaths() {
 
 const { slug } = Astro.params as { slug: CourseSlug };
 const name = content[defaultLang].courses.list[slug];
-const price = formatPEN(coursePrices[slug], defaultLang);
+const rawPrice = coursePrices[slug];
+const price = rawPrice === null ? null : formatPEN(rawPrice, defaultLang);
 const m = content[defaultLang].meta.course;
 
-const title = `${m.titlePre}${name}${m.titleMid}${price}${m.titlePost}`;
-const description = `${m.descPre}${name}${m.descMid}${price}${m.descPost}`;
+// Curso sem preço: o título vira só o nome, em vez de anunciar um valor vazio.
+const title = price
+  ? `${m.titlePre}${name}${m.titleMid}${price}${m.titlePost}`
+  : `${m.titlePre}${name}${m.titlePost}`;
+const description = price
+  ? `${m.descPre}${name}${m.descMid}${price}${m.descPost}`
+  : `${m.descPre}${name}${m.descPost}`;
 ---
 
 <Base title={title} description={description}>

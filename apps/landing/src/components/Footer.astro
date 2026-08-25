@@ -1,5 +1,5 @@
 ---
-import { courseSlugs, org } from "../i18n/ui";
+import { languageSlugs, org } from "../i18n/ui";
 import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
 
 const lang = getLangFromUrl(Astro.url);
@@ -7,7 +7,7 @@ const t = useTranslations(lang);
 const f = t.footer;
 const year = new Date().getFullYear();
 
-const courseLangs = courseSlugs.map((slug) => ({
+const courseLangs = languageSlugs.map((slug) => ({
   name: t.courses.list[slug],
   href: withLang(lang, `/courses/${slug}`),
 }));
