@@ -1,0 +1,11 @@
+---
+import Base from "../layouts/Base.astro";
+import PreUni from "../components/PreUni.astro";
+import { content, defaultLang } from "../i18n/ui";
+
+const m = content[defaultLang].meta.preuni;
+---
+
+<Base title={m.title} description={m.description}>
+  <PreUni />
+</Base>

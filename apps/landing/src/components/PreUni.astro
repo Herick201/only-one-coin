@@ -1,0 +1,204 @@
+---
+import { whatsappUrl } from "../i18n/ui";
+import { getLangFromUrl, useTranslations } from "../i18n/utils";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const p = t.preuni;
+---
+
+<section class="section preuni">
+  <span class="blob preuni-blob" aria-hidden="true"></span>
+
+  <div class="container">
+    <header class="preuni-head">
+      <span class="badge">{p.badge}</span>
+      <p class="eyebrow">{p.eyebrow}</p>
+      <h1>{p.titlePre}<span class="accent">{p.titleAccent}</span>{p.titlePost}</h1>
+      <p class="lead">{p.lead}</p>
+      <p class="text-muted intro">{p.intro}</p>
+    </header>
+
+    <section class="block goal">
+      <h2 class="block-title">{p.goalTitle}</h2>
+      <p class="text-muted">{p.goal}</p>
+    </section>
+
+    <section class="block">
+      <h2 class="block-title">{p.areasTitle}</h2>
+      <div class="areas">
+        {p.areas.map((a) => (
+          <article class="area">
+            <h3>{a.title}</h3>
+            <p class="text-muted">{a.text}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <div class="two-up">
+      <section class="block">
+        <h2 class="block-title">{p.methodTitle}</h2>
+        <ul class="ticks">
+          {p.method.map((m) => (
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4 4L19 7"></path></svg>
+              {m}
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section class="block">
+        <h2 class="block-title">{p.resultsTitle}</h2>
+        <ul class="ticks">
+          {p.results.map((r) => (
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4 4L19 7"></path></svg>
+              {r}
+            </li>
+          ))}
+        </ul>
+      </section>
+    </div>
+
+    {/* Sem preço nem fecha de início: eles ainda não existem. Enquanto não
+        existirem, a única promessa que a página faz é avisar quando abrir. */}
+    <section class="preuni-cta">
+      <div>
+        <h2>{p.ctaTitle}</h2>
+        <p>{p.ctaText}</p>
+      </div>
+      <a class="btn btn-yellow" href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+        {p.ctaWhatsApp}
+      </a>
+    </section>
+  </div>
+</section>
+
+<style>
+  .preuni {
+    position: relative;
+    overflow: hidden;
+    background: var(--sky-soft);
+    padding-block: 44px 92px;
+  }
+  .preuni-blob {
+    width: 460px;
+    height: 460px;
+    top: -180px;
+    right: -140px;
+    background: var(--cream);
+  }
+  .container {
+    position: relative;
+  }
+  .preuni-head {
+    margin-top: 4px;
+    max-width: 62ch;
+  }
+  .badge {
+    display: inline-block;
+    padding: 8px 18px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--yellow-bright), var(--yellow));
+    color: var(--ink);
+    font-weight: 800;
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    box-shadow: var(--shadow-yellow);
+  }
+  .eyebrow {
+    margin: 18px 0 6px;
+    font-weight: 700;
+    color: var(--blue);
+    letter-spacing: 0.02em;
+  }
+  .preuni-head h1 {
+    font-size: clamp(2.1rem, 4.6vw, 3.2rem);
+  }
+  .preuni-head h1 .accent {
+    color: var(--blue);
+  }
+  .lead {
+    margin-top: 16px;
+    font-size: 1.1rem;
+  }
+  .intro {
+    margin-top: 12px;
+  }
+  .block {
+    margin-top: 54px;
+  }
+  .block-title {
+    font-size: clamp(1.4rem, 2.6vw, 1.8rem);
+    margin-bottom: 18px;
+  }
+  .goal p {
+    max-width: 70ch;
+  }
+  .areas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+  }
+  .area {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+  }
+  .area h3 {
+    font-size: 1.08rem;
+    margin-bottom: 8px;
+  }
+  .two-up {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px 46px;
+  }
+  .ticks {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 12px;
+  }
+  .ticks li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    color: var(--text-muted);
+  }
+  .ticks svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    margin-top: 3px;
+    color: var(--blue);
+  }
+  .preuni-cta {
+    margin-top: 62px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 34px;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, var(--blue), var(--blue-deep));
+    color: #fff;
+    box-shadow: var(--shadow-blue);
+  }
+  .preuni-cta h2 {
+    color: #fff;
+    font-size: clamp(1.4rem, 2.6vw, 1.9rem);
+  }
+  .preuni-cta p {
+    margin: 8px 0 0;
+    max-width: 52ch;
+    color: rgba(255, 255, 255, 0.86);
+  }
+</style>

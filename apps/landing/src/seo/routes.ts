@@ -6,7 +6,7 @@ import { courseSlugs } from "../i18n/ui";
 //
 // Deliberately absent: /blog and /community (placeholder "muy pronto" pages —
 // they carry `noindex` until they have real content) and the header links that
-// have no page yet (/portal, /enrollment).
+// live in `apps/app`, not here (/login, /enrollment).
 export const indexablePaths: string[] = [
   "/",
   "/about",
@@ -14,6 +14,7 @@ export const indexablePaths: string[] = [
   "/courses",
   ...courseSlugs.map((slug) => `/courses/${slug}`),
   "/faq",
+  "/preuniversitario",
   "/privacy-policy",
   "/terms-and-conditions",
 ];

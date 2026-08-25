@@ -23,6 +23,26 @@ Fly.io) · Netlify (landing + app) · Redis (Upstash) + BullMQ · Gemini (OCR) �
 Brevo (e-mail transacional/campanhas) + Zoho Mail (caixa de e-mail de
 staff) · Sentry + PostHog.
 
+## Rodar local
+
+```bash
+pnpm install
+pnpm dev:web
+```
+
+Sobe os dois de uma vez: a landing (Astro) em `localhost:4321` e o app
+(Next.js — matrícula, portal e backoffice) em `localhost:3000`. As telas do app
+são mockadas, então nada disso precisa de banco; `pnpm db:up` + `pnpm dev:api`
+só entram quando o trabalho for na API.
+
+Os CTAs da landing (`/enrollment` e `/login`, nos três idiomas) são links
+relativos de propósito — para quem lê é tudo o mesmo site. Quem os atravessa
+para o app é o Netlify em produção e o dev server no local: copie
+`apps/landing/.env.example` para `apps/landing/.env` e o `astro dev` passa a
+responder o mesmo 302 do `netlify.toml`, com a query string preservada — é o
+que faz o link do vendedor (`?course=&group=&src=whatsapp`) chegar inteiro ao
+wizard. Sem essa variável a landing sobe igual, só que os CTAs dão 404.
+
 ## Estado atual
 
 Postgres (Neon), hospedagem de `apps/api` (Fly.io), storage de comprovante
@@ -57,9 +77,12 @@ Domínio e fila já existem, independentes dessa escolha:
   curto (15 min, parâmetro do backoffice) e o rascunho sobrevive a recarregar a
   página — sair pra pagar no app do banco não perde o preenchimento. A origem
   do canal (`whatsapp`/`web`) é resolvida no servidor, na chegada, e carregada
-  até o envio. Desenho e regras em `docs/MATRICULA-CHECKOUT.md`. **Ainda não há
-  CTA na landing apontando pra ele** — falta a variável de ambiente com a URL
-  do app.
+  até o envio. Desenho e regras em `docs/MATRICULA-CHECKOUT.md`. A landing já
+  aponta pra ele: os CTAs são relativos (`/enrollment` no herói e nos cursos,
+  `/login` no botão do header — quem chega da landing não tem sessão, então a
+  porta do aluno é a tela de login, nunca o dashboard) e quem atravessa para o
+  domínio do app é o Netlify em produção (`netlify.toml`, 302 com a query
+  string preservada) e o dev server no local (ver **Rodar local**).
   No backoffice já existem: alunos (`/backoffice/students`, com ficha, histórico e edição),
   turmas (`/backoffice/class-groups`, com lista paginada, ficha da turma,
   emissão de certificados em lote e procedimentos por matrícula — mover,
@@ -166,8 +189,18 @@ Domínio e fila já existem, independentes dessa escolha:
   identidade, e o cargo só muda pelo usecase de promoção. Toda escrita é estado
   local. Os demais módulos do painel aparecem listados como "pronto/em breve".
   UI em shadcn/ui sobre Tailwind v4; os tokens de marca vivem em `globals.css`
-  (paleta da landing, tipografia Inter). A landing segue com Fredoka/Poppins —
-  público diferente.
+  (paleta da landing, tipografia Inter). A tela de login do aluno aceita duas
+  portas para a mesma conta — o e-mail que recebeu as credenciais ou o
+  documento com que se matriculou (DNI, CE ou passaporte); o método viaja como
+  união fechada até o servidor, nunca como string solta. **Exceção: as telas que o visitante
+  alcança direto da landing** — hoje a de login do aluno (`/login`) — vestem o
+  sistema visual do site: Fredoka no display, Poppins no corpo (tokens
+  `font-display`/`font-body`, carregados por `next/font` no layout), painel de
+  marca azul com blobs e grade de pontos, campos sobre lavado claro e o botão
+  pill que vai de azul a amarelo no hover, como o `.btn-primary` de lá. Trocar
+  de tipografia no meio de um clique é o que faz a pessoa duvidar se ainda está
+  no lugar certo para digitar a senha. O resto do painel (portal e backoffice)
+  segue em Inter — é ferramenta de trabalho, não peça de marca.
 - `packages/domain` — domínio DDD puro (entidades, usecases, portas de
   repositório), sem framework nem provedor de banco. Já inclui a porta de
   identidade/auth (`identity/`, ver `packages/domain/README.md`) e um
