@@ -17,22 +17,27 @@ export type CourseUnit = {
 };
 
 export type CourseContent = {
-  /** Parágrafos de abertura, no lugar do texto genérico. */
-  description: string[];
+  /**
+   * Só `level`, `sessions` e os títulos de `curriculum` chegam à página: ela
+   * vende, e o que vende é quantas sessões, em que nível e o que se vê em cada
+   * uma. O resto fica guardado — é o programa que a coordenação escreveu, e
+   * serve quando existir uma página de programa completo.
+   */
+  description?: string[];
   /**
    * Quantas sessões tem o curso — o número que abre a página, em destaque.
    * Uma sessão é uma hora de aula ao vivo; o curso roda uma hora por dia, de
    * segunda a sexta. Ausente enquanto a coordenação não fechar o número.
    */
   sessions?: string;
-  duration: string;
+  duration?: string;
   level: string;
-  modality: string;
+  modality?: string;
   curriculum: CourseUnit[];
-  goals: string[];
-  method: string[];
-  evaluation: string[];
-  outcomes: string[];
+  goals?: string[];
+  method?: string[];
+  evaluation?: string[];
+  outcomes?: string[];
   /** Ressalva honesta sobre o que o curso não promete. */
   outcomeNote?: string;
 };
@@ -498,6 +503,235 @@ const frenchAdvancedES: CourseContent = {
 };
 
 /**
+ * Os demais idiomas. Aqui só o que a página mostra — nível, sessões e as
+ * unidades — porque é o que decide a matrícula. A sessão é uma hora de aula ao
+ * vivo, e o curso roda uma hora por dia, de segunda a sexta: por isso o número
+ * de sessões acompanha a carga horária do programa (Alemán 16 h = 16 sesiones).
+ * Coreano fica sem o número enquanto a coordenação não fechar a carga horária.
+ */
+const frenchES: CourseContent = {
+  sessions: "80 sesiones",
+  level: "Básico (A1)",
+  curriculum: [
+    { title: "Unidad 0 — Introducción al francés", topics: [] },
+    { title: "Unidad 1 — Conocer y presentarse", topics: [] },
+    { title: "Unidad 2 — Ubicarse y comunicarse en la ciudad", topics: [] },
+    { title: "Unidad 3 — Relaciones y situaciones sociales", topics: [] },
+  ],
+};
+
+const frenchEN: CourseContent = {
+  sessions: "80 sessions",
+  level: "Beginner (A1)",
+  curriculum: [
+    { title: "Unit 0 — Introduction to French", topics: [] },
+    { title: "Unit 1 — Meeting people and introducing yourself", topics: [] },
+    { title: "Unit 2 — Getting around and communicating in the city", topics: [] },
+    { title: "Unit 3 — Relationships and social situations", topics: [] },
+  ],
+};
+
+const frenchPT: CourseContent = {
+  sessions: "80 sessões",
+  level: "Básico (A1)",
+  curriculum: [
+    { title: "Unidade 0 — Introdução ao francês", topics: [] },
+    { title: "Unidade 1 — Conhecer e se apresentar", topics: [] },
+    { title: "Unidade 2 — Se localizar e se comunicar na cidade", topics: [] },
+    { title: "Unidade 3 — Relações e situações sociais", topics: [] },
+  ],
+};
+
+const italianES: CourseContent = {
+  sessions: "60 sesiones",
+  level: "Básico inicial (A1)",
+  curriculum: [
+    { title: "Unidad 1 — Introducción al idioma italiano", topics: [] },
+    { title: "Unidad 2 — Información personal y entorno", topics: [] },
+    { title: "Unidad 3 — Gramática básica y descripción", topics: [] },
+    { title: "Unidad 4 — Vida cotidiana y comunicación práctica", topics: [] },
+    { title: "Unidad 5 — Interacción social básica", topics: [] },
+    { title: "Unidad 6 — Uso inicial del pasado y acciones en progreso", topics: [] },
+  ],
+};
+
+const italianEN: CourseContent = {
+  sessions: "60 sessions",
+  level: "Beginner (A1)",
+  curriculum: [
+    { title: "Unit 1 — Introduction to Italian", topics: [] },
+    { title: "Unit 2 — Personal information and surroundings", topics: [] },
+    { title: "Unit 3 — Basic grammar and description", topics: [] },
+    { title: "Unit 4 — Everyday life and practical communication", topics: [] },
+    { title: "Unit 5 — Basic social interaction", topics: [] },
+    { title: "Unit 6 — First use of the past and ongoing actions", topics: [] },
+  ],
+};
+
+const italianPT: CourseContent = {
+  sessions: "60 sessões",
+  level: "Básico inicial (A1)",
+  curriculum: [
+    { title: "Unidade 1 — Introdução ao idioma italiano", topics: [] },
+    { title: "Unidade 2 — Informação pessoal e entorno", topics: [] },
+    { title: "Unidade 3 — Gramática básica e descrição", topics: [] },
+    { title: "Unidade 4 — Vida cotidiana e comunicação prática", topics: [] },
+    { title: "Unidade 5 — Interação social básica", topics: [] },
+    { title: "Unidade 6 — Uso inicial do passado e ações em progresso", topics: [] },
+  ],
+};
+
+const portugueseES: CourseContent = {
+  sessions: "80 sesiones",
+  level: "Básico (A1–A2 inicial)",
+  curriculum: [
+    { title: "Unidad 1 — Introducción al idioma portugués", topics: [] },
+    { title: "Unidad 2 — Vida cotidiana y entorno personal", topics: [] },
+    { title: "Unidad 3 — Trabajo, estudios y actividades", topics: [] },
+    { title: "Unidad 4 — Comunicación práctica y gramática básica", topics: [] },
+  ],
+};
+
+const portugueseEN: CourseContent = {
+  sessions: "80 sessions",
+  level: "Beginner (A1–A2)",
+  curriculum: [
+    { title: "Unit 1 — Introduction to Portuguese", topics: [] },
+    { title: "Unit 2 — Everyday life and personal surroundings", topics: [] },
+    { title: "Unit 3 — Work, studies and activities", topics: [] },
+    { title: "Unit 4 — Practical communication and basic grammar", topics: [] },
+  ],
+};
+
+const portuguesePT: CourseContent = {
+  sessions: "80 sessões",
+  level: "Básico (A1–A2 inicial)",
+  curriculum: [
+    { title: "Unidade 1 — Introdução ao idioma português", topics: [] },
+    { title: "Unidade 2 — Vida cotidiana e entorno pessoal", topics: [] },
+    { title: "Unidade 3 — Trabalho, estudos e atividades", topics: [] },
+    { title: "Unidade 4 — Comunicação prática e gramática básica", topics: [] },
+  ],
+};
+
+const mandarinChineseES: CourseContent = {
+  sessions: "60 sesiones",
+  level: "Básico inicial (HSK 1 aproximado)",
+  curriculum: [
+    { title: "Unidad 1 — Introducción al idioma chino", topics: [] },
+    { title: "Unidad 2 — Pronombres y verbo «ser» (是 shì)", topics: [] },
+    { title: "Unidad 3 — Vocabulario cotidiano y estructura básica", topics: [] },
+    { title: "Unidad 4 — Números y expresiones prácticas", topics: [] },
+    { title: "Unidad 5 — Situaciones comunicativas", topics: [] },
+  ],
+};
+
+const mandarinChineseEN: CourseContent = {
+  sessions: "60 sessions",
+  level: "Beginner (around HSK 1)",
+  curriculum: [
+    { title: "Unit 1 — Introduction to Chinese", topics: [] },
+    { title: "Unit 2 — Pronouns and the verb “to be” (是 shì)", topics: [] },
+    { title: "Unit 3 — Everyday vocabulary and basic structure", topics: [] },
+    { title: "Unit 4 — Numbers and practical expressions", topics: [] },
+    { title: "Unit 5 — Communicative situations", topics: [] },
+  ],
+};
+
+const mandarinChinesePT: CourseContent = {
+  sessions: "60 sessões",
+  level: "Básico inicial (HSK 1 aproximado)",
+  curriculum: [
+    { title: "Unidade 1 — Introdução ao idioma chinês", topics: [] },
+    { title: "Unidade 2 — Pronomes e o verbo «ser» (是 shì)", topics: [] },
+    { title: "Unidade 3 — Vocabulário cotidiano e estrutura básica", topics: [] },
+    { title: "Unidade 4 — Números e expressões práticas", topics: [] },
+    { title: "Unidade 5 — Situações comunicativas", topics: [] },
+  ],
+};
+
+const germanES: CourseContent = {
+  sessions: "16 sesiones",
+  level: "Introductorio (A1 inicial)",
+  curriculum: [
+    { title: "Unidad 1 — Introducción al idioma alemán", topics: [] },
+    { title: "Unidad 2 — Información personal y entorno", topics: [] },
+    { title: "Unidad 3 — Estructura de la oración", topics: [] },
+    { title: "Unidad 4 — Comunicación práctica", topics: [] },
+  ],
+};
+
+const germanEN: CourseContent = {
+  sessions: "16 sessions",
+  level: "Introductory (early A1)",
+  curriculum: [
+    { title: "Unit 1 — Introduction to German", topics: [] },
+    { title: "Unit 2 — Personal information and surroundings", topics: [] },
+    { title: "Unit 3 — Sentence structure", topics: [] },
+    { title: "Unit 4 — Practical communication", topics: [] },
+  ],
+};
+
+const germanPT: CourseContent = {
+  sessions: "16 sessões",
+  level: "Introdutório (A1 inicial)",
+  curriculum: [
+    { title: "Unidade 1 — Introdução ao idioma alemão", topics: [] },
+    { title: "Unidade 2 — Informação pessoal e entorno", topics: [] },
+    { title: "Unidade 3 — Estrutura da oração", topics: [] },
+    { title: "Unidade 4 — Comunicação prática", topics: [] },
+  ],
+};
+
+const koreanES: CourseContent = {
+  level: "Básico a A2 (intermedio inicial)",
+  curriculum: [
+    { title: "Unidad 1 — Introducción y bases del idioma", topics: [] },
+    { title: "Unidad 2 — Objetos y entorno", topics: [] },
+    { title: "Unidad 3 — Ubicación y espacio", topics: [] },
+    { title: "Unidad 4 — Compras y alimentos", topics: [] },
+    { title: "Unidad 5 — Números y conteo", topics: [] },
+    { title: "Unidad 6 — Acciones en pasado", topics: [] },
+    { title: "Unidad 7 — Tiempo y fechas", topics: [] },
+    { title: "Unidad 8 — Clima y descripciones", topics: [] },
+    { title: "Unidad 9 — Planes y acuerdos", topics: [] },
+    { title: "Unidad 10 — Vida cotidiana y experiencias", topics: [] },
+  ],
+};
+
+const koreanEN: CourseContent = {
+  level: "Beginner to A2 (early intermediate)",
+  curriculum: [
+    { title: "Unit 1 — Introduction and foundations", topics: [] },
+    { title: "Unit 2 — Objects and surroundings", topics: [] },
+    { title: "Unit 3 — Location and space", topics: [] },
+    { title: "Unit 4 — Shopping and food", topics: [] },
+    { title: "Unit 5 — Numbers and counting", topics: [] },
+    { title: "Unit 6 — Actions in the past", topics: [] },
+    { title: "Unit 7 — Time and dates", topics: [] },
+    { title: "Unit 8 — Weather and descriptions", topics: [] },
+    { title: "Unit 9 — Plans and arrangements", topics: [] },
+    { title: "Unit 10 — Everyday life and experiences", topics: [] },
+  ],
+};
+
+const koreanPT: CourseContent = {
+  level: "Básico a A2 (intermediário inicial)",
+  curriculum: [
+    { title: "Unidade 1 — Introdução e bases do idioma", topics: [] },
+    { title: "Unidade 2 — Objetos e entorno", topics: [] },
+    { title: "Unidade 3 — Localização e espaço", topics: [] },
+    { title: "Unidade 4 — Compras e alimentos", topics: [] },
+    { title: "Unidade 5 — Números e contagem", topics: [] },
+    { title: "Unidade 6 — Ações no passado", topics: [] },
+    { title: "Unidade 7 — Tempo e datas", topics: [] },
+    { title: "Unidade 8 — Clima e descrições", topics: [] },
+    { title: "Unidade 9 — Planos e combinados", topics: [] },
+    { title: "Unidade 10 — Vida cotidiana e experiências", topics: [] },
+  ],
+};
+
+/**
  * Conteúdo por idioma da interface e por curso. Ausência é intencional: o curso
  * sem documento aprovado não ganha malha inventada.
  */
@@ -506,7 +740,29 @@ export const courseContent: Record<Lang, Partial<Record<CourseSlug, CourseConten
     english: englishES,
     "cambridge-b1": cambridgeES,
     "french-advanced": frenchAdvancedES,
+    "french": frenchES,
+    "italian": italianES,
+    "portuguese": portugueseES,
+    "mandarin-chinese": mandarinChineseES,
+    "german": germanES,
+    "korean": koreanES,
   },
-  en: { english: englishEN },
-  pt: { english: englishPT },
+  en: {
+    english: englishEN,
+    "french": frenchEN,
+    "italian": italianEN,
+    "portuguese": portugueseEN,
+    "mandarin-chinese": mandarinChineseEN,
+    "german": germanEN,
+    "korean": koreanEN,
+  },
+  pt: {
+    english: englishPT,
+    "french": frenchPT,
+    "italian": italianPT,
+    "portuguese": portuguesePT,
+    "mandarin-chinese": mandarinChinesePT,
+    "german": germanPT,
+    "korean": koreanPT,
+  },
 };

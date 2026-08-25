@@ -166,6 +166,17 @@ const courseJsonLd = {
       {!program && <p class="example-note">{d.exampleNote}</p>}
     </header>
 
+    {/* Idioma com um nível só não precisa de comparação: mostra direto o que
+        se estuda. Com dois ou mais, a comparação É a seção. */}
+    {levels.length === 0 && program && program.curriculum.length > 0 && (
+      <section class="block">
+        <h2 class="block-title">{d.curriculumTitle}</h2>
+        <ul class="level-units single-units">
+          {program.curriculum.map((unit) => <li>{unit.title}</li>)}
+        </ul>
+      </section>
+    )}
+
     {levels.length > 0 && (
       <section class="block">
         <h2 class="block-title">{d.levelsTitle}</h2>
@@ -559,6 +570,16 @@ const courseJsonLd = {
     height: 8px;
     border-radius: 50%;
     background: var(--yellow);
+  }
+  .single-units {
+    columns: 2;
+    column-gap: 46px;
+    max-width: 70ch;
+  }
+  @media (max-width: 640px) {
+    .single-units {
+      columns: 1;
+    }
   }
   .level-cta {
     margin-top: auto;
