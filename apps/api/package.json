@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "tsx watch --env-file=.env src/index.ts | pino-pretty",
     "dev:worker": "tsx watch --env-file=.env src/worker.ts | pino-pretty",
+    "seed:admin": "tsx --env-file=.env src/scripts/seed-admin.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },

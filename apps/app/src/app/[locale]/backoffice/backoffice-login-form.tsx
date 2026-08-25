@@ -24,26 +24,38 @@ function Heading({ title, subtitle }: { title: string; subtitle: string }) {
 }
 
 /**
- * Backoffice login — UI only, auth mocked. Two-step on purpose: credentials →
- * MFA. MFA in the flow is what distinguishes the backoffice from the student
- * portal (CLAUDE.md §8). No auth wiring yet; "submit" just simulates a pending
- * state, advances the step and lands on the mocked panel.
+ * Backoffice login. Credentials go straight to Better Auth's own
+ * `/api/auth/sign-in/email` — same-origin, through the proxy every other
+ * `apps/api` route goes through (`docs/ARCHITECTURE.md` §5.6) — so the
+ * session cookie it sets lands on this origin without a cross-origin hop.
+ *
+ * The MFA step below the credentials form still exists, but nothing routes
+ * to it yet: Better Auth has no `twoFactor` plugin configured, so there is
+ * no code to verify. `admin`/`treasury`/`mass_approver` land on the panel
+ * straight after a correct password for now — CLAUDE.md §8 still calls for
+ * MFA on those roles, this is a known, tracked gap, not a decision to skip it.
+ *
+ * The failure banner is deliberately the same whether the address doesn't
+ * exist or the password is wrong (CLAUDE.md §8, anti-enumeration).
  *
  * Password recovery lives here as a step instead of its own route so the
  * anti-enumeration answer is structural: the confirmation screen is identical
- * whether or not the address exists (CLAUDE.md §8).
+ * whether or not the address exists (CLAUDE.md §8). Recovery itself is still
+ * mocked — no backend route for it yet.
  */
 export function BackofficeLoginForm() {
   const t = useTranslations('backoffice')
   const router = useRouter()
   const [step, setStep] = useState<Step>('credentials')
   const [pending, setPending] = useState(false)
+  const [error, setError] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const timer = useRef<number | undefined>(undefined)
 
   useEffect(() => () => window.clearTimeout(timer.current), [])
 
-  // Mock only: fake a round-trip so the pending UI is exercisable.
+  // Mock only: fake a round-trip so the pending UI is exercisable. Recovery
+  // still uses this — sign-in below does not.
   function mockRoundTrip(next: () => void) {
     setPending(true)
     timer.current = window.setTimeout(() => {
@@ -52,10 +64,31 @@ export function BackofficeLoginForm() {
     }, 700)
   }
 
-  function onCredentials(event: React.FormEvent<HTMLFormElement>) {
+  async function onCredentials(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (pending) return
-    mockRoundTrip(() => setStep('mfa'))
+
+    setError(false)
+    setPending(true)
+
+    const formData = new FormData(event.currentTarget)
+    const response = await fetch('/api/auth/sign-in/email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: formData.get('email'),
+        password: formData.get('password'),
+      }),
+    })
+
+    setPending(false)
+
+    if (!response.ok) {
+      setError(true)
+      return
+    }
+
+    router.push('/backoffice/home')
   }
 
   function onMfa(event: React.FormEvent<HTMLFormElement>) {
@@ -186,6 +219,15 @@ export function BackofficeLoginForm() {
   return (
     <form onSubmit={onCredentials} className={cardClass} noValidate>
       <Heading title={t('title')} subtitle={t('subtitle')} />
+
+      {error && (
+        <div
+          role="alert"
+          className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+        >
+          {t('generic_error')}
+        </div>
+      )}
 
       <div className="flex flex-col gap-4">
         <label className={labelClass}>

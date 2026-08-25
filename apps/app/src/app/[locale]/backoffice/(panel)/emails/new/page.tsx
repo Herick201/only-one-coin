@@ -3,10 +3,10 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
 import {
   countEmailRecipients,
-  getStaffSession,
   listClassGroups,
   listCourses,
 } from '@/lib/backoffice/mock-data'
+import { getStaffSession } from '@/lib/backoffice/session'
 import type { EnrollmentStatus } from '@/lib/backoffice/types'
 import { canManageEmail } from '@/lib/backoffice/permissions'
 import { MockNotice, PageHeader } from '@/components/backoffice/ui'
@@ -34,7 +34,7 @@ export default async function NewEmailPage({
   setRequestLocale(locale)
   const t = await getTranslations('bo')
 
-  const staff = getStaffSession()
+  const staff = await getStaffSession()
   if (!canManageEmail(staff.role)) notFound()
 
   /* Catalog data, so the picker offers what exists rather than free text —

@@ -1,10 +1,10 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import {
-  getStaffSession,
   listClassGroupRosters,
   listClassGroups,
   listEnrollments,
 } from '@/lib/backoffice/mock-data'
+import { getStaffSession } from '@/lib/backoffice/session'
 import { canBrowseReports } from '@/lib/backoffice/permissions'
 import { EmptyState, MockNotice, PageHeader } from '@/components/backoffice/ui'
 import { ReportsView } from './reports-view'
@@ -31,7 +31,7 @@ export default async function ReportsPage({
   setRequestLocale(locale)
   const t = await getTranslations('bo')
 
-  const staff = getStaffSession()
+  const staff = await getStaffSession()
 
   /* The report is the academic ledger summed up, so it belongs to the two
      roles that answer for it. The screen says so; the role declared on the

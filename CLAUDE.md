@@ -379,7 +379,7 @@ O `role` **nunca** mora em lugar que o próprio usuário escreve. Regras duras:
 
 **Modelo de criação de staff (fechado):**
 
-1. **Bootstrap:** o primeiro `admin` nasce por **migration versionada**.
+1. **Bootstrap:** o primeiro `admin` nasce por **script versionado** (`apps/api/src/scripts/seed-admin.ts`, `pnpm --filter @ooc/api seed:admin`) — não por migration SQL de mão: a senha precisa do hash real do Better Auth, que uma migration não consegue reproduzir sem reimplementar o hasher. O script assina o cadastro pelo próprio `auth.api.signUpEmail` (hash correto) e só então promove `role` pra `admin` direto no banco — o único ponto autorizado a contornar `additionalFields.role.input:false`, porque nunca roda sobre HTTP. Local/dev apenas; nunca apontar pra staging/produção. Credencial de desenvolvimento: `admin@admin.com` / `admin1234` (Better Auth recusa senha com menos de 8 caracteres — não foi afrouxado pro seed).
 2. **Depois:** **só `admin`** cria/promove staff, pela UI, via usecase dedicado (`PromoteUserRoleUseCase`, `packages/domain/src/identity/`) que exige **re-autenticação fresca** do admin. Nenhum outro papel promove ninguém. O plugin `admin` do Better Auth não garante reautenticação fresca sozinho — é o usecase, não o provedor, que impõe essa checagem antes de escrever o `role`.
 
 ---

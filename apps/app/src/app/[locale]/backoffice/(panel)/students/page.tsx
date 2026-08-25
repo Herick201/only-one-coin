@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { getStaffSession, listStudents } from '@/lib/backoffice/mock-data'
+import { listStudents } from '@/lib/backoffice/mock-data'
+import { getStaffSession } from '@/lib/backoffice/session'
 import {
   canBrowseStudents,
   canCreateStudent,
@@ -20,7 +21,7 @@ export default async function StudentsPage({
   setRequestLocale(locale)
   const t = await getTranslations('bo')
 
-  const staff = getStaffSession()
+  const staff = await getStaffSession()
 
   /* A teacher reaches a student through their own class group, never through a
      roster of everybody in the institution. The screen says so; the check that

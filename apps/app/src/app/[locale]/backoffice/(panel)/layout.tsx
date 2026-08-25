@@ -16,8 +16,8 @@ import {
 import {
   getDashboardMetrics,
   getEnrollmentMetrics,
-  getStaffSession,
 } from '@/lib/backoffice/mock-data'
+import { getStaffSession } from '@/lib/backoffice/session'
 import { initials } from '@/lib/format'
 import { BoSidebar, type BoNavGroup } from '@/components/backoffice/bo-sidebar'
 import {
@@ -53,7 +53,7 @@ export default async function BackofficePanelLayout({
   setRequestLocale(locale)
   const t = await getTranslations('bo')
 
-  const staff = getStaffSession()
+  const staff = await getStaffSession()
   const { pendingReview } = getDashboardMetrics()
   const { expiringSoon: expiringReservations } = getEnrollmentMetrics()
   const monogram = initials(staff.firstName, staff.lastName)

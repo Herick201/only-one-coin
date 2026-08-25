@@ -32,7 +32,6 @@
     "generic_error": "We couldn't validate those details. Check them and try again.",
     "error_reference": "Reference code: {errorId}",
     "security_notice": "This access is monitored. Every attempt is logged.",
-    "mock_notice": "Preview only — not connected to the server yet.",
     "show_password": "Show password",
     "hide_password": "Hide password",
     "forgot_password": "Forgot your password?",

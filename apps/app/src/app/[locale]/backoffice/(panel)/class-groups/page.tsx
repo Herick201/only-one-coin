@@ -1,9 +1,9 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import {
-  getStaffSession,
   listClassGroupsFor,
   listCourses,
 } from '@/lib/backoffice/mock-data'
+import { getStaffSession } from '@/lib/backoffice/session'
 import {
   canCreateClassGroup,
   isRestrictedToOwnClassGroups,
@@ -28,7 +28,7 @@ export default async function ClassGroupsPage({
   setRequestLocale(locale)
   const t = await getTranslations('bo')
 
-  const staff = getStaffSession()
+  const staff = await getStaffSession()
   /* A teacher gets their own class groups and nothing else. The filter is
      built from the session, never from anything the client sent
      (CLAUDE.md §8) — and the check that enforces it is the usecase in

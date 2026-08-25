@@ -2,10 +2,10 @@ import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
 import {
-  getStaffSession,
   getTeacher,
   listCourses,
 } from '@/lib/backoffice/mock-data'
+import { getStaffSession } from '@/lib/backoffice/session'
 import {
   canManageTeachers,
   isRestrictedToOwnClassGroups,
@@ -31,7 +31,7 @@ export default async function TeacherDetailPage({
   setRequestLocale(locale)
   const t = await getTranslations('bo')
 
-  const staff = getStaffSession()
+  const staff = await getStaffSession()
   const restricted = isRestrictedToOwnClassGroups(staff.role)
 
   if (restricted && staff.teacherId !== teacherId) notFound()

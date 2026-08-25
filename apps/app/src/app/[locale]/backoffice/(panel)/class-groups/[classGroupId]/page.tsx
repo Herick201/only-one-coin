@@ -3,9 +3,9 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
 import {
   getClassGroupFor,
-  getStaffSession,
   listClassGroupsFor,
 } from '@/lib/backoffice/mock-data'
+import { getStaffSession } from '@/lib/backoffice/session'
 import { canManageEnrollment } from '@/lib/backoffice/permissions'
 import {
   addBusinessDays,
@@ -39,7 +39,7 @@ export default async function ClassGroupDetailPage({
   setRequestLocale(locale)
   const t = await getTranslations('bo')
 
-  const staff = getStaffSession()
+  const staff = await getStaffSession()
 
   /* Somebody else's class group answers exactly like one that does not exist.
      Hiding the link would stop nobody — the id in the URL is guessable

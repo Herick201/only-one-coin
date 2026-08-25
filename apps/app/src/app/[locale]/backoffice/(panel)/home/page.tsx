@@ -21,8 +21,8 @@ import {
   getDashboardMetrics,
   getReviewQueue,
   getSeatWatch,
-  getStaffSession,
 } from '@/lib/backoffice/mock-data'
+import { getStaffSession } from '@/lib/backoffice/session'
 import { isRestrictedToOwnClassGroups } from '@/lib/backoffice/permissions'
 import { formatDate, formatDateTime, formatMoney, type Locale } from '@/lib/format'
 import { reviewFlagTone, seatPressureTone } from '@/components/backoffice/status-tone'
@@ -57,7 +57,7 @@ export default async function BackofficeHomePage({
   setRequestLocale(raw)
   const t = await getTranslations('bo')
 
-  const staff = getStaffSession()
+  const staff = await getStaffSession()
 
   /* A teacher gets their own home, not this one with the money removed — see
      `TeacherHome` for why it is a separate screen. */

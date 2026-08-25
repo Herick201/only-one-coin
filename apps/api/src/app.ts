@@ -12,6 +12,7 @@ import { registerStudentRoute } from "@/http/student/RegisterStudentRoute.js";
 import { searchStudentsRoute } from "@/http/student/SearchStudentsRoute.js";
 import { createManualEnrollmentRoute } from "@/http/enrollment/CreateManualEnrollmentRoute.js";
 import { listOpenClassGroupsRoute } from "@/http/catalog/ListOpenClassGroupsRoute.js";
+import { getCurrentStaffRoute } from "@/http/identity/GetCurrentStaffRoute.js";
 import { container } from "@/container.js";
 
 export async function buildApp(): Promise<FastifyInstance> {
@@ -51,6 +52,7 @@ export async function buildApp(): Promise<FastifyInstance> {
         instance.withTypeProvider<ZodTypeProvider>().route(searchStudentsRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(createManualEnrollmentRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(listOpenClassGroupsRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(getCurrentStaffRoute);
         done();
       },
       { prefix: "/api/v1" },

@@ -1,10 +1,10 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { redirect } from '@/i18n/navigation'
 import {
-  getStaffSession,
   listCourses,
   listTeachers,
 } from '@/lib/backoffice/mock-data'
+import { getStaffSession } from '@/lib/backoffice/session'
 import {
   canCreateTeacher,
   canManageTeachers,
@@ -33,7 +33,7 @@ export default async function TeachersPage({
   setRequestLocale(locale)
   const t = await getTranslations('bo')
 
-  const staff = getStaffSession()
+  const staff = await getStaffSession()
 
   /* A teacher has no roster — they have a ficha. Sending them to their own is
      the honest answer to "Docentes" in their sidebar; the id comes from the
