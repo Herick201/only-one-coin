@@ -6,6 +6,7 @@ import { CheckoutIcon } from '@/components/enrollment/icons'
 import { WhatsAppMark } from '@/components/enrollment/whatsapp-mark'
 import { body, display } from '@/lib/enrollment/fonts'
 import { whatsappUrl } from '@/lib/org'
+import { env } from '@/env'
 
 /**
  * Shell for the public checkout.
@@ -33,6 +34,13 @@ export default async function EnrollmentLayout({
   setRequestLocale(locale)
   const t = await getTranslations('enrollment')
 
+  // De volta ao site público. O rascunho vive em `sessionStorage`
+  // (`lib/enrollment/use-checkout.ts`), então sair para conferir um preço e
+  // voltar não perde o que já foi preenchido — o medo que justificava não ter
+  // saída aqui. Não ter nenhuma é pior: quem quer sair sai pelo botão do
+  // navegador, ou fecha a aba.
+  const siteUrl = env.NEXT_PUBLIC_LANDING_URL ?? '/'
+
   return (
     <div
       className={`${body.className} flex min-h-dvh flex-col bg-sky-soft text-ink`}
@@ -52,7 +60,13 @@ export default async function EnrollmentLayout({
               sees after the landing, and the wordmark is already inside the
               image — printing "Only One Coin" beside it would say it twice.
               `priority` because it is the one image above the fold. */}
-          <span className="flex min-w-0 items-center gap-3">
+          {/* A marca leva à home, como em qualquer site — e o link ao lado diz
+              em palavras o que o logo só insinua. */}
+          <a
+            href={siteUrl}
+            aria-label={t('brand.back_to_site')}
+            className="flex min-w-0 items-center gap-3"
+          >
             <Image
               src="/brand/logo.png"
               alt="Only One Coin"
@@ -67,8 +81,18 @@ export default async function EnrollmentLayout({
             >
               {t('brand.label')}
             </span>
+          </a>
+
+          <span className="flex items-center gap-2">
+            <a
+              href={siteUrl}
+              className="hidden items-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold text-muted-foreground transition hover:bg-sky hover:text-ink sm:inline-flex"
+            >
+              <CheckoutIcon name="arrow-left" size={16} />
+              {t('brand.back_to_site')}
+            </a>
+            <LanguageSwitcher />
           </span>
-          <LanguageSwitcher />
         </div>
       </header>
 
