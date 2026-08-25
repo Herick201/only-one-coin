@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import type {
   CheckoutDraft,
@@ -8,6 +8,7 @@ import type {
   StepId,
 } from '@/lib/enrollment/types'
 import { clearCheckoutStorage, useCheckout } from '@/lib/enrollment/use-checkout'
+import { phoneNumberOf, planOfCourse } from '@/lib/enrollment/checkout'
 import { Stepper } from '@/components/enrollment/stepper'
 import { HoldTimer } from '@/components/enrollment/hold-timer'
 import { StepCourse } from './step-course'
@@ -40,6 +41,11 @@ export function Checkout({
   const t = useTranslations('enrollment')
   const [reference, setReference] = useState<string | null>(null)
 
+  // Minted once per visit to this component and resent unchanged on every
+  // retry (CLAUDE.md §5, "duplo POST de celular ruim é certeza") — a fresh
+  // key per attempt would defeat the point.
+  const idempotencyKey = useRef(crypto.randomUUID())
+
   const {
     draft,
     setDraft,
@@ -68,7 +74,57 @@ export function Checkout({
     goTo('student')
   }
 
-  function submit() {
+  async function submit() {
+    const plan = planOfCourse(catalog, draft.course.courseId)
+    if (!draft.course.classGroupId || !plan || !draft.payment.method) {
+      throw new Error('Checkout draft is missing a required field at submit')
+    }
+
+    const response = await fetch('/api/v1/enrollments/public', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        classGroupId: draft.course.classGroupId,
+        planId: plan.id,
+        student: {
+          firstName: draft.student.firstName,
+          lastName: draft.student.lastName,
+          nationalIdType: draft.student.nationalIdType,
+          nationalId: draft.student.nationalId,
+          email: draft.student.email,
+          phone: phoneNumberOf(draft.student.phone),
+          birthDate: draft.student.birthDate,
+          // Peru only — the public form has no country selector
+          // (StudentDraft doc comment, lib/enrollment/types.ts).
+          country: 'PE',
+          region: draft.student.region,
+          city: draft.student.city,
+        },
+        guardian: draft.guardian.consentAccepted
+          ? {
+              firstName: draft.guardian.firstName,
+              lastName: draft.guardian.lastName,
+              relationship: draft.guardian.relationship,
+              nationalIdType: draft.guardian.nationalIdType,
+              nationalId: draft.guardian.nationalId,
+              email: draft.guardian.email,
+              phone: phoneNumberOf(draft.guardian.phone),
+              consentAccepted: true as const,
+            }
+          : null,
+        payment: {
+          method: draft.payment.method,
+          methodDetail: null,
+          operationNumber: draft.payment.operationNumber,
+          idempotencyKey: idempotencyKey.current,
+        },
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error(`Submit failed: ${response.status}`)
+    }
+
     // Proof is in: the short clock stops and the five-day review window takes
     // over. The seat stays `reserved` — it becomes `confirmed` only when the
     // payment is approved (`CLAUDE.md` §5).

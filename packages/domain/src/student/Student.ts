@@ -58,9 +58,10 @@ export class Student extends BaseModel {
     this.city = props.city;
   }
 
-  /** Whether the student is under Student.MAJORITY_AGE as of today — drives
-   * whether a guardian is required (CLAUDE.md §1). */
-  get isMinor(): boolean {
+  /** Full years old as of today — the same "has the birthday happened yet
+   * this year" rule the public checkout uses client-side
+   * (apps/app/src/lib/enrollment/checkout.ts, ageFrom). */
+  get ageInYears(): number {
     const today = new Date();
     let age = today.getUTCFullYear() - this.birthDate.getUTCFullYear();
 
@@ -73,7 +74,13 @@ export class Student extends BaseModel {
       age -= 1;
     }
 
-    return age < Student.MAJORITY_AGE;
+    return age;
+  }
+
+  /** Whether the student is under Student.MAJORITY_AGE as of today — drives
+   * whether a guardian is required (CLAUDE.md §1). */
+  get isMinor(): boolean {
+    return this.ageInYears < Student.MAJORITY_AGE;
   }
 
   static create(dto: CreateStudentDTO): Student {

@@ -1338,31 +1338,6 @@ const students: StudentDetail[] = [
   ...pendingReceipts.map(pendingStudent),
 ]
 
-export function listStudents(): StudentRow[] {
-  return students.map(
-    ({
-      guardian,
-      enrollments,
-      documents,
-      documentRequests,
-      attachments,
-      activity,
-      ...row
-    }) => {
-      void guardian
-      void enrollments
-      void documents
-      void documentRequests
-      void attachments
-      void activity
-      return row
-    },
-  )
-}
-
-export function getStudent(id: string): StudentDetail | undefined {
-  return students.find((s) => s.id === id)
-}
 
 export function getDashboardMetrics(): DashboardMetrics {
   return {

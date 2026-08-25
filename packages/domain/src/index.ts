@@ -38,12 +38,28 @@ export { Payment, PaymentPropsSchema, PaymentMethodSchema, PaymentRailSchema, Pa
 export type { PaymentProps, PaymentMethod, PaymentStatus } from "./enrollment/Payment.js";
 export type { IEnrollmentRepository } from "./enrollment/EnrollmentRepository.js";
 export type { IPlanPriceLookup } from "./enrollment/PlanPriceLookup.js";
-export { ClassGroupFullError, PlanPriceNotFoundError } from "./enrollment/errors.js";
+export type {
+  IPublicEnrollmentRepository,
+  PublicEnrollmentContext,
+  SubmitPublicEnrollmentParams,
+  SubmitPublicEnrollmentResult,
+} from "./enrollment/PublicEnrollmentRepository.js";
+export {
+  ClassGroupFullError,
+  ClassGroupNotFoundError,
+  PlanPriceNotFoundError,
+  StudentBelowMinimumAgeError,
+} from "./enrollment/errors.js";
 export {
   CreateManualEnrollmentUseCase,
   type CreateManualEnrollmentInput,
   type CreateManualEnrollmentOutput,
 } from "./enrollment/CreateManualEnrollmentUseCase.js";
+export {
+  SubmitPublicEnrollmentUseCase,
+  type SubmitPublicEnrollmentInput,
+  type SubmitPublicEnrollmentOutput,
+} from "./enrollment/SubmitPublicEnrollmentUseCase.js";
 
 export type { Role } from "./identity/Role.js";
 export type { AuthenticatedUser } from "./identity/AuthenticatedUser.js";

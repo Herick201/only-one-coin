@@ -121,9 +121,17 @@ export function useCheckout(
 
     if (stored) {
       const course = linkChose ? incoming.course : stored.course
+      // A stored draft from before a field was added to StudentDraft/
+      // GuardianDraft (sessionStorage outlives a deploy) restores without
+      // it — merged over a fresh empty draft's shape, not the raw stored
+      // object, so a missing field lands on its default instead of
+      // `undefined`.
+      const fallback = emptyDraft(incoming.source)
       setDraftState({
         ...stored,
         course,
+        student: { ...fallback.student, ...stored.student },
+        guardian: { ...fallback.guardian, ...stored.guardian },
         // The object URL from the previous page life is dead; the file
         // description survives so the reader sees what they attached.
         payment: {

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { getPublicCatalog } from '@/lib/enrollment/mock-data'
+import { getPublicCatalog } from '@/lib/enrollment/catalog'
 import {
   emptyDraft,
   resolveCampaign,
@@ -54,7 +54,7 @@ export default async function EnrollmentPage({
     query[key] = Array.isArray(value) ? value[0] : value
   }
 
-  const catalog = getPublicCatalog()
+  const catalog = await getPublicCatalog()
   const draft = {
     ...emptyDraft(resolveSource(query[QUERY_KEYS.source])),
     course: resolvePrefill(catalog, query),

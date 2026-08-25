@@ -26,6 +26,7 @@ import {
   TextInput,
 } from '@/components/enrollment/ui'
 import { CheckoutIcon } from '@/components/enrollment/icons'
+import { citiesOf, PERU_REGIONS } from '@/lib/geo'
 import { PhoneField } from '@/components/enrollment/phone-field'
 import { BirthDateField } from '@/components/enrollment/birth-date-field'
 import { AutoGrid, fullRowClass } from '@/components/layout/auto-grid'
@@ -77,6 +78,7 @@ export function StepStudent({
 
   const course = courseById(catalog, draft.course.courseId)
   const minor = isMinor(draft.student.birthDate)
+  const cities = citiesOf(draft.student.region)
 
   const studentErrors = useMemo(
     () => validateStudent(draft.student, course),
@@ -116,25 +118,34 @@ export function StepStudent({
 
       <Card className="p-5">
         <AutoGrid min="15rem" gap="gap-4">
-          {/* One field, as the current form asks. Full width: a name with two
-              surnames does not fit a half column, and it is the one value that
-              gets printed on a certificate exactly as typed. */}
-          <div className={fullRowClass}>
-            <FieldGroup
-              label={t('field.full_name')}
-              htmlFor="full-name"
-              error={err(studentErrors.fullName)}
-              hint={t('step.student.full_name_hint')}
-            >
-              <TextInput
-                id="full-name"
-                autoComplete="name"
-                value={draft.student.fullName}
-                invalid={Boolean(err(studentErrors.fullName))}
-                onChange={(e) => patchStudent({ fullName: e.target.value })}
-              />
-            </FieldGroup>
-          </div>
+          <FieldGroup
+            label={t('field.first_name')}
+            htmlFor="first-name"
+            error={err(studentErrors.firstName)}
+          >
+            <TextInput
+              id="first-name"
+              autoComplete="given-name"
+              value={draft.student.firstName}
+              invalid={Boolean(err(studentErrors.firstName))}
+              onChange={(e) => patchStudent({ firstName: e.target.value })}
+            />
+          </FieldGroup>
+
+          <FieldGroup
+            label={t('field.last_name')}
+            htmlFor="last-name"
+            error={err(studentErrors.lastName)}
+            hint={t('step.student.full_name_hint')}
+          >
+            <TextInput
+              id="last-name"
+              autoComplete="family-name"
+              value={draft.student.lastName}
+              invalid={Boolean(err(studentErrors.lastName))}
+              onChange={(e) => patchStudent({ lastName: e.target.value })}
+            />
+          </FieldGroup>
 
           <FieldGroup label={t('field.national_id_type')} htmlFor="id-type">
             <SelectInput
@@ -213,6 +224,56 @@ export function StepStudent({
               onChange={(e) => patchStudent({ email: e.target.value })}
             />
           </FieldGroup>
+
+          {/* One pair, always in its own row: region decides what city offers,
+              and the two read as one address line — an outer auto-fit column
+              could otherwise land them apart on a width neither expects. */}
+          <div className={fullRowClass}>
+            <AutoGrid min="10rem" gap="gap-4">
+              <FieldGroup
+                label={t('field.region')}
+                htmlFor="region"
+                error={err(studentErrors.region)}
+              >
+                <SelectInput
+                  id="region"
+                  value={draft.student.region ?? ''}
+                  invalid={Boolean(err(studentErrors.region))}
+                  onChange={(e) =>
+                    patchStudent({ region: e.target.value || null, city: '' })
+                  }
+                >
+                  <option value="">{t('field.region_placeholder')}</option>
+                  {PERU_REGIONS.map((r) => (
+                    <option key={r.region} value={r.region}>
+                      {r.region}
+                    </option>
+                  ))}
+                </SelectInput>
+              </FieldGroup>
+
+              <FieldGroup label={t('field.city')} htmlFor="city" error={err(studentErrors.city)}>
+                <SelectInput
+                  id="city"
+                  value={draft.student.city}
+                  invalid={Boolean(err(studentErrors.city))}
+                  disabled={cities.length === 0}
+                  onChange={(e) => patchStudent({ city: e.target.value })}
+                >
+                  <option value="">
+                    {cities.length === 0
+                      ? t('field.city_needs_region')
+                      : t('field.region_placeholder')}
+                  </option>
+                  {cities.map((city) => (
+                    <option key={city} value={city}>
+                      {city}
+                    </option>
+                  ))}
+                </SelectInput>
+              </FieldGroup>
+            </AutoGrid>
+          </div>
         </AutoGrid>
       </Card>
 
@@ -227,20 +288,33 @@ export function StepStudent({
           </p>
 
           <AutoGrid min="15rem" gap="gap-4">
-            <div className={fullRowClass}>
-              <FieldGroup
-                label={t('field.full_name')}
-                htmlFor="guardian-full-name"
-                error={err(guardianErrors.fullName)}
-              >
-                <TextInput
-                  id="guardian-full-name"
-                  value={draft.guardian.fullName}
-                  invalid={Boolean(err(guardianErrors.fullName))}
-                  onChange={(e) => patchGuardian({ fullName: e.target.value })}
-                />
-              </FieldGroup>
-            </div>
+            <FieldGroup
+              label={t('field.first_name')}
+              htmlFor="guardian-first-name"
+              error={err(guardianErrors.firstName)}
+            >
+              <TextInput
+                id="guardian-first-name"
+                autoComplete="given-name"
+                value={draft.guardian.firstName}
+                invalid={Boolean(err(guardianErrors.firstName))}
+                onChange={(e) => patchGuardian({ firstName: e.target.value })}
+              />
+            </FieldGroup>
+
+            <FieldGroup
+              label={t('field.last_name')}
+              htmlFor="guardian-last-name"
+              error={err(guardianErrors.lastName)}
+            >
+              <TextInput
+                id="guardian-last-name"
+                autoComplete="family-name"
+                value={draft.guardian.lastName}
+                invalid={Boolean(err(guardianErrors.lastName))}
+                onChange={(e) => patchGuardian({ lastName: e.target.value })}
+              />
+            </FieldGroup>
 
             <FieldGroup label={t('field.relationship')} htmlFor="relationship">
               <SelectInput

@@ -184,18 +184,22 @@ export interface CourseDraft {
 /**
  * The student, in the shape the Asociación already collects
  * (`docs/MATRICULA-CHECKOUT.md` §2 carries the column list of the sheet this
- * replaces). Two of these are not obvious:
+ * replaces). One of these is not obvious:
  *
- * - `fullName` is ONE field, not a nombres/apellidos pair. It is what the
- *   current form asks for, and re-splitting a Peruvian name (two surnames,
- *   compound given names) after the fact is guesswork.
  * - `phone` IS asked here. The "never ask for a phone number" rule
  *   (`docs/REGRAS-NEGOCIO.md` §5) governs the WhatsApp sales conversation,
  *   where the number is already known — not the enrollment form, which has
  *   always had a CELULAR column.
+ *
+ * `firstName`/`lastName` (`docs/ROADMAP.md` Sessão 21a, resolved this way):
+ * two fields, matching `students.first_name`/`last_name` and the backoffice's
+ * own manual registration form — a single `fullName` field pushed the
+ * ambiguity of a compound Peruvian name onto the server, which has no more
+ * information to resolve it with than the form already had.
  */
 export interface StudentDraft {
-  fullName: string
+  firstName: string
+  lastName: string
   nationalIdType: NationalIdType
   nationalId: string
   /** Mobile number, as the sheet's CELULAR column. */
@@ -207,6 +211,15 @@ export interface StudentDraft {
    */
   email: string
   birthDate: string
+  /**
+   * Peru only here — the public form has no country selector, unlike the
+   * backoffice's manual registration (`lib/geo.ts` PERU_REGIONS). Null only
+   * before the first choice; `students.region`/`.city` back the "matrículas
+   * por región" reporting (`docs/ROADMAP.md` Sessão 39), so this is real
+   * data collected up front, not a value invented at submit.
+   */
+  region: string | null
+  city: string
 }
 
 /**
@@ -215,7 +228,8 @@ export interface StudentDraft {
  * consent it carries is a legal record, not a checkbox.
  */
 export interface GuardianDraft {
-  fullName: string
+  firstName: string
+  lastName: string
   nationalIdType: NationalIdType
   nationalId: string
   relationship: GuardianRelationship

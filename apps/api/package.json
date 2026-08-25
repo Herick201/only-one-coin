@@ -7,6 +7,8 @@
     "dev": "tsx watch --env-file=.env src/index.ts | pino-pretty",
     "dev:worker": "tsx watch --env-file=.env src/worker.ts | pino-pretty",
     "seed:admin": "tsx --env-file=.env src/scripts/seed-admin.ts",
+    "seed:catalog": "tsx --env-file=.env src/scripts/seed-catalog.ts",
+    "seed": "pnpm run seed:admin && pnpm run seed:catalog",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },

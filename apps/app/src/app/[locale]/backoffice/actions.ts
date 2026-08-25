@@ -4,7 +4,7 @@ import { cookies } from 'next/headers'
 import { getLocale } from 'next-intl/server'
 import { redirect } from '@/i18n/navigation'
 import { serverEnv } from '@/server-env'
-import { SESSION_COOKIE_NAME } from '@/lib/backoffice/session'
+import { SESSION_COOKIE_NAME } from '@/lib/backoffice/api-client'
 
 /**
  * Signs the session out with Better Auth itself — not just a cookie wipe —
