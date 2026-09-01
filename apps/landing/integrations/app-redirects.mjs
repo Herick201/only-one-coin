@@ -1,9 +1,9 @@
 /**
  * Costura local entre a landing (Astro) e `apps/app` (Next.js).
  *
- * Em produção quem faz isso é o Netlify (`netlify.toml`): 302 de `/enrollment*`,
+ * Em produção quem faz isso é o Vercel (`middleware.ts`): 302 de `/enrollment*`,
  * `/login*` e `/portal*` para o domínio do app. `astro dev` não lê
- * `netlify.toml`, então sem isto os CTAs da landing ("Matricúlate ahora",
+ * `middleware.ts`, então sem isto os CTAs da landing ("Matricúlate ahora",
  * "Portal del Alumno") dão 404 no local — e a matrícula e o login do aluno só
  * se testam digitando a porta do Next à mão.
  *

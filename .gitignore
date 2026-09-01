@@ -12,7 +12,7 @@ dist/
 build/
 .next/
 .astro/
-.netlify/
+.vercel/
 .turbo/
 
 # Logs
