@@ -1,0 +1,43 @@
+name: Deploy apps/api (Fly.io)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/api/**"
+      - "packages/domain/**"
+      - "packages/queue/**"
+      - "packages/db/**"
+      - "fly.toml"
+      - ".github/workflows/deploy-api.yml"
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-api-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # Só roda depois que o CI (typecheck/build/test/migration) já passou pro
+  # mesmo commit — nunca faz deploy de algo que não passou pelo portão.
+  wait-for-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.sha }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          running-workflow-name: wait-for-ci
+          check-regexp: '(secrets-scan|build|test-api|migrations)'
+          wait-interval: 10
+
+  deploy:
+    needs: wait-for-ci
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      # fly.toml fica na raiz do repo de propósito — o build context do
+      # Dockerfile depende disso (ver comentário no próprio fly.toml).
+      - run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
