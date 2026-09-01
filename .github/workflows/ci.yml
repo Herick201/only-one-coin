@@ -1,0 +1,120 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Só pra build/typecheck passarem — nenhum valor real, nenhuma rota é
+  # exercitada nesse job. Segredo de verdade nunca entra em CI (CLAUDE.md §6).
+  NODE_ENV: test
+  API_INTERNAL_URL: http://localhost:3333
+  PORT: "3333"
+  HOST: 0.0.0.0
+  REDIS_URL: redis://127.0.0.1:6379
+  DATABASE_URL: postgres://ooc:ooc@localhost:5432/ooc_dev
+  BETTER_AUTH_URL: http://localhost:3333/api/auth
+  BETTER_AUTH_SECRET: ci-placeholder-secret-at-least-32-chars
+  APP_PUBLIC_URL: http://localhost:3000
+
+jobs:
+  # Portão de CI item 1 (CLAUDE.md §6) — segredo commitado.
+  secrets-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Portão de CI item 3 (tsc --noEmit) + build de todo o monorepo.
+  # Item 4 (ESLint com no-floating-promises/no-literal-string) ainda não
+  # existe neste repo — nenhum app tem eslint.config.* configurado (só
+  # apps/app tem a dependência instalada, sem config). Adicionar aqui
+  # quebraria o CI sem checar nada de verdade; fica como pendência separada
+  # (ver apps/api/README.md "Pendências conhecidas").
+  # Item 2 (varredura de credencial no bundle do Next.js) roda como último
+  # passo, depois que apps/app/.next existe de verdade.
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Typecheck (todos os pacotes)
+        run: pnpm -r --if-present run typecheck
+
+      - name: Build (todos os pacotes e apps)
+        run: pnpm -r build
+
+      - name: Credencial de banco no bundle do cliente (CLAUDE.md §6)
+        run: |
+          if grep -rIlE "postgres(ql)?://|DATABASE_URL" apps/app/.next/static apps/landing/dist 2>/dev/null; then
+            echo "::error::Credencial/string de conexão de banco encontrada em asset servido ao cliente."
+            exit 1
+          fi
+          echo "OK — nenhuma credencial de banco no bundle do cliente."
+
+  test-api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @ooc/api test
+
+  # Portão de CI item 6 — migration precisa rodar limpo num banco vazio.
+  migrations:
+    runs-on: ubuntu-latest
+    services:
+      # Mesma versão do compose.yml local — as migrations usam uuidv7()
+      # nativo (só existe a partir do Postgres 18); 17 falha em runtime.
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: ooc
+          POSTGRES_PASSWORD: ooc
+          POSTGRES_DB: ooc_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ooc"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Migrate banco limpo
+        run: pnpm --filter @ooc/db db:migrate
+        env:
+          DATABASE_URL: postgres://ooc:ooc@localhost:5432/ooc_ci

@@ -228,6 +228,39 @@ Envelope de resposta pública (`apps/api/src/shared/http/ErrorResponseSchema.ts`
 
 Migration "vazia inicial" (Sessão 3) gerada com `drizzle-kit generate --custom` — o modo padrão (`generate`, diff de schema) não produz arquivo quando não há tabela nenhuma ainda; `--custom` existe justamente pra SQL que não vem de diff de schema (baseline vazia, extensão, seed pontual). `Drizzle ORM` como client de query em `apps/api` (substituindo `pg` cru nos repositórios) é decisão separada, ainda em aberto — este fechamento cobre só schema/migration em `packages/db`.
 
+**Migration de produção é automática no deploy, sempre atrás de backup (sessão 31/08/2026).** `.github/workflows/deploy-api.yml` roda um job `backup-and-migrate` entre o CI e o `flyctl deploy`: `pg_dump` do Neon de produção → `gzip` → upload pro bucket Tigris `only-one-coin-backups` (S3-compatible, `https://t3.storage.dev`) e só then a migration (`pnpm --filter @ooc/db db:migrate`). Se o backup falhar, a migration não roda; se a migration falhar, o deploy não roda — mecaniza o `CLAUDE.md` §7 ("migration em produção sempre depois de backup") sem depender de alguém lembrar de rodar o comando manualmente. Não substitui o backup periódico do `CLAUDE.md` §3 ("pg_dump → Tigris via Scheduled Function") — aquele ainda não existe e cobre a janela entre deploys; este é só o snapshot imediatamente antes de qualquer mudança de schema chegar em produção.
+
+Precisa de três GitHub secrets além do `FLY_API_TOKEN` já existente: `DATABASE_URL` (a mesma URL do Neon de produção, também setada como secret do Fly), `TIGRIS_ACCESS_KEY_ID` e `TIGRIS_SECRET_ACCESS_KEY` (saem de `fly storage create -a only-one-coin-api -n only-one-coin-backups`, impressas uma vez só — nunca recuperáveis depois). O nome do bucket está fixo no workflow (`only-one-coin-backups`) porque não é segredo.
+
+**Retenção — 30 dias, via lifecycle rule do próprio Tigris, não script de limpeza.** Backup roda a cada deploy (potencialmente vários por semana); sem expirar, o bucket cresce sem limite e o custo (US$0,02/GB acima dos primeiros 5GB grátis) só sobe. Tigris suporta expiração nativa por idade do objeto — configurada uma vez com `aws s3api put-bucket-lifecycle-configuration`, sem precisar de nenhum passo a mais no CI nem risco de um script de limpeza malfeito apagar backup recente por engano. Regra em `apps/api/infra/tigris-backup-lifecycle.json`, aplicada uma única vez na criação do bucket:
+
+```
+aws s3api put-bucket-lifecycle-configuration \
+  --endpoint-url https://t3.storage.dev \
+  --bucket only-one-coin-backups \
+  --lifecycle-configuration file://apps/api/infra/tigris-backup-lifecycle.json
+```
+
+30 dias cobre bastante margem pra "múltiplos deploys por semana" sem chegar perto do teto de 5GB grátis, dado o volume atual do banco. Ajustar o `Days` no JSON se o volume ou a frequência de deploy mudar muito.
+
+### 5.9 Hospedagem de `apps/landing` e `apps/app` — Vercel (deploy real feito 31/08/2026)
+
+Dois projetos Vercel separados na mesma conta/organização (`tech-1048`), um por app — cada um com **Root Directory** apontado pro seu subdiretório (`apps/landing`, `apps/app`) pra tanto o CLI quanto o Git integration acharem o app certo dentro do monorepo:
+
+| Projeto | Root Directory | Domínio hoje |
+| --- | --- | --- |
+| `only-one-coin-landing` | `apps/landing` | `only-one-coin-landing.vercel.app` |
+| `only-one-coin-app` | `apps/app` | `only-one-coin-app.vercel.app` |
+
+Domínio próprio (`onlyonecoin.edu.pe` / `aula.onlyonecoin.edu.pe`) ainda não configurado — depende de DNS, fora do escopo desta sessão.
+
+**Env vars já setadas** (`vercel env add`, sem segredo nenhum — as duas são URL pública, nunca credencial):
+
+- `only-one-coin-app`: `API_INTERNAL_URL=https://only-one-coin-api.fly.dev` (server-only, `src/server-env.ts`), `NEXT_PUBLIC_LANDING_URL=https://only-one-coin-landing.vercel.app`.
+- `only-one-coin-landing`: `PUBLIC_APP_ORIGIN=https://only-one-coin-app.vercel.app` — lido pelo `middleware.ts` pra fazer o 302 de `/enrollment`, `/login` e `/portal` pro app (não pelo `vercel.json`, que só declara os security headers).
+
+**Deploy automático por push (Git integration) ainda não está ligado.** `vercel git connect` falha com `Failed to link Herick201/only-one-coin. You need to add a Login Connection to your GitHub account first.` — é autenticação em nível de conta Vercel (OAuth com o GitHub), só dá pra resolver pelo dashboard (Account Settings → Login Connections), não por CLI/token. Até isso ser feito, o deploy dos dois apps é manual: `vercel deploy --prod --project <nome>` a partir da raiz do repo (upload do CLI só funciona a partir da raiz porque o Root Directory já está setado nos dois projetos — rodar de dentro do subdiretório do app quebra com "Root Directory ... does not exist").
+
 ---
 
 ## 6. Custo mensal estimado
@@ -242,7 +275,7 @@ Preços detalhados e fontes: `docs/INFRAESTRUTURA.md`. Três colunas — **free 
 | **Brevo** (transacional) | US$0 — até 9.000 e-mails/mês | **US$0** — ~6.000 e-mails/mês (5.000 × ~1,2/matrícula), dentro do free | **~US$29/mês** — ~24.000 e-mails/mês (20.000 × ~1,2) **estoura o free (9k) e o tier de 20k (US$18)**, precisa do tier de 40k | Só transacional por enquanto, sem campanha (confirmado) — ~1,2 e-mail/matrícula (credencial + boas-vindas) é estimativa, ajustar quando o fluxo real de notificação for desenhado |
 | **Redis (Upstash)** | US$0 — 500k comandos/mês | **US$0** | **Provavelmente US$0**, mas mais perto do limite (~300-400k comandos/mês estimado) — monitorar; se estourar, pay-as-you-go é US$0,20/100k | Fila (BullMQ) + rate limit compartilham a mesma instância |
 | **Zoho Mail** (mailbox) | US$0 — até 5 caixas | US$0-3/mês | igual | Não depende do volume de aluno. Quantidade de caixas não confirmada (usei 3 de exemplo) |
-| **Sentry / PostHog / Netlify / Turnstile** | US$0 | **US$0 (provável)** | **US$0 (provável)** | Não escalam linearmente com matrícula nesse volume — free tier de cada um (5k erros, 1M eventos, 100GB banda) tem folga |
+| **Sentry / PostHog / Vercel / Turnstile** | US$0 | **US$0 (provável)** | **US$0 (provável)** | Não escalam linearmente com matrícula nesse volume — free tier de cada um (5k erros, 1M eventos, 100GB banda) tem folga |
 | **Total produção** | — | **~US$86-88/mês** | **~US$120-125/mês** | Neon domina os dois cenários (~65-90% do total); Brevo é o item que mais varia entre normal e pico |
 
 **Leitura**: Neon é o único item praticamente **fixo** (não varia com matrícula — é o preço do compute sempre ligado). Brevo é o item mais **sensível ao volume** — passa de grátis pra ~US$29/mês só em pico, porque envio transacional escala 1:1 com matrícula. Tigris cresce devagar e nunca fica caro porque reteve a versão pequena da imagem, não a original.

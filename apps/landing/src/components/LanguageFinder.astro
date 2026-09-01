@@ -75,7 +75,7 @@ const clientConfig = {
 
   <script type="application/json" data-finder-config set:html={JSON.stringify(clientConfig)}></script>
   <script>
-    // Refine the recommendation from the visitor's country (Netlify edge geo,
+    // Refine the recommendation from the visitor's country (Vercel edge geo,
     // same-origin fetch → satisfies `connect-src 'self'`). No PII is stored;
     // we only read a coarse country code to pick a suggested course.
     type Cfg = {

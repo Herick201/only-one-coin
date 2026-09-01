@@ -8,7 +8,7 @@ export default defineConfig({
   site: "https://onlyonecoin.edu.pe",
   server: { port: 4321 },
   // Costura local com `apps/app` (matrícula + portal). Em produção quem faz
-  // isso é o Netlify (`netlify.toml`); a integration só existe no dev server.
+  // isso é o Vercel (`middleware.ts`); a integration só existe no dev server.
   integrations: [appRedirects()],
   i18n: {
     defaultLocale: "es",

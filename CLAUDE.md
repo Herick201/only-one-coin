@@ -75,7 +75,7 @@ Se algo parecer exigir um desses, **pare e pergunte**.
 | Site público | **Astro** (estático) |
 | App (portal + backoffice) | **Next.js App Router** |
 | API de domínio + workers | **Fastify** (`apps/api`), processo Node separado |
-| Hospedagem | **Netlify** (landing + app) · **Fly.io** (`apps/api`, região GRU/São Paulo — VM always-on, roda os workers de fila) |
+| Hospedagem | **Vercel** (landing + app) · **Fly.io** (`apps/api`, região GRU/São Paulo — VM always-on, workers de fila no mesmo processo da API) |
 | Banco | **Postgres** gerenciado — **Neon** (`sa-east-1`/São Paulo) |
 | Storage (comprovante + backup) | **Tigris** (nativo do Fly.io — `fly storage create`, S3-compatible, egress zero) — mesmo bucket-provider pros dois usos, sem conta separada |
 | Auth | **Better Auth** — biblioteca embutida no processo de `apps/api` (Fastify), nunca instanciada em `apps/app` |
@@ -89,7 +89,11 @@ Se algo parecer exigir um desses, **pare e pergunte**.
 | Observabilidade | **Sentry** + **PostHog** (EU Cloud) |
 | Realtime | a decidir — item de infra que segue em aberto por conta própria |
 
-Não trocar nada disso sem me perguntar. Já foram avaliadas e descartadas: Vercel, Clerk, Pinecone, Resend, Cloudflare CDN. O provedor de backend gerenciado que havia sido escolhido foi **removido**; Postgres, hospedagem de `apps/api`, storage de comprovante, caixa de e-mail e auth já foram refechados (acima, sessão 17/08/2026 para os quatro primeiros, `docs/ARCHITECTURE.md` §5; auth fechado depois — ver abaixo e `docs/ARCHITECTURE.md` §5.6).
+Não trocar nada disso sem me perguntar. Já foram avaliadas e descartadas: Clerk, Pinecone, Resend, Cloudflare CDN. O provedor de backend gerenciado que havia sido escolhido foi **removido**; Postgres, hospedagem de `apps/api`, storage de comprovante, caixa de e-mail e auth já foram refechados (acima, sessão 17/08/2026 para os quatro primeiros, `docs/ARCHITECTURE.md` §5; auth fechado depois — ver abaixo e `docs/ARCHITECTURE.md` §5.6).
+
+**Decisão revertida — hospedagem de frontend (Netlify → Vercel, sessão 31/08/2026).** Vercel havia sido avaliado e descartado antes; reaberto e refechado nesta sessão a pedido meu, pensando num terceiro frontend futuro (portal do aluno) sobre a mesma conta/organização. Hoje `apps/app` continua **um único Next.js** (portal + backoffice juntos, `CLAUDE.md` §8) — nenhum desmembramento decidido ainda; o terceiro frontend é escopo em aberto, não confundir com decisão fechada.
+
+**Decisão fechada — fila mesclada com a API (sessão 31/08/2026).** `apps/api` tinha dois entrypoints (`src/index.ts` HTTP e `src/worker.ts`) pensados pra escalar/reiniciar de forma independente — isso só se justificava se a hospedagem permitisse escalar cada um à parte. Como o Fly.io hospeda `apps/api` como uma VM always-on única, a separação parou de se justificar: um entrypoint só, HTTP + workers de fila no mesmo processo. Simplifica o deploy (uma imagem, uma máquina) sem abrir mão do requisito de always-on que os workers de BullMQ exigem.
 
 **Decisão fechada — auth.** O provedor removido cobria Postgres, auth e storage juntos; os três já foram resolvidos (Neon, Better Auth e Tigris, acima). Better Auth é uma **biblioteca embutida no processo do backend**, não um serviço hospedado externo — roda dentro do próprio `apps/api`, aceita conexão Postgres existente, e o campo `role` fica travado contra escrita client-side (`additionalFields.role`, `input:false`). Padrão de integração completo (porta em `packages/domain`, adapter em `apps/api/src/infra`, `apps/app` nunca instanciando o provedor) em `docs/ARCHITECTURE.md` §5.6.
 

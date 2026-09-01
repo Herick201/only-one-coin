@@ -13,13 +13,14 @@ backoffice administrativo e módulo de e-mail.
 - [`docs/INFRAESTRUTURA.md`](docs/INFRAESTRUTURA.md) — base de conhecimento: levantamento de mercado (preços, specs, latência) que baseou as escolhas de hospedagem.
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — plano de desenvolvimento em sessões pequenas (1 sessão = 1 PR).
 - [`docs/PROMPT-arranque-claude-code.md`](docs/PROMPT-arranque-claude-code.md) — prompt de arranque da primeira sessão.
+- [`docs/FRONTEND-CONSOLIDACAO.md`](docs/FRONTEND-CONSOLIDACAO.md) — avaliação em aberto (não decidido): unificar `landing` + `app` num projeto só.
 
 ## Stack
 
 Astro (site público) · Next.js App Router (portal + backoffice) · Fastify
 (`apps/api`, hospedado no Fly.io) · Postgres gerenciado (Neon) · Better Auth
 (embutido em `apps/api`) · Tigris (storage de comprovante, nativo do
-Fly.io) · Netlify (landing + app) · Redis (Upstash) + BullMQ · Gemini (OCR) ·
+Fly.io) · Vercel (landing + app) · Redis (Upstash) + BullMQ · Gemini (OCR) ·
 Brevo (e-mail transacional/campanhas) + Zoho Mail (caixa de e-mail de
 staff) · Sentry + PostHog.
 
@@ -37,9 +38,9 @@ só entram quando o trabalho for na API.
 
 Os CTAs da landing (`/enrollment` e `/login`, nos três idiomas) são links
 relativos de propósito — para quem lê é tudo o mesmo site. Quem os atravessa
-para o app é o Netlify em produção e o dev server no local: copie
+para o app é o Vercel em produção e o dev server no local: copie
 `apps/landing/.env.example` para `apps/landing/.env` e o `astro dev` passa a
-responder o mesmo 302 do `netlify.toml`, com a query string preservada — é o
+responder o mesmo 302 do `vercel.json`, com a query string preservada — é o
 que faz o link do vendedor (`?course=&group=&src=whatsapp`) chegar inteiro ao
 wizard. Sem essa variável a landing sobe igual, só que os CTAs dão 404.
 
@@ -47,7 +48,11 @@ wizard. Sem essa variável a landing sobe igual, só que os CTAs dão 404.
 
 Postgres (Neon), hospedagem de `apps/api` (Fly.io), storage de comprovante
 (Tigris), caixa de e-mail (Zoho Mail) e auth (Better Auth) já estão
-decididos (`docs/ARCHITECTURE.md` §5). O adapter de auth já está
+decididos (`docs/ARCHITECTURE.md` §5). `apps/api` está no ar em
+`only-one-coin-api.fly.dev`; `apps/landing` e `apps/app` estão no ar em
+projetos Vercel separados (`docs/ARCHITECTURE.md` §5.9) — falta só ligar o
+deploy automático por push (pendente de autenticação no dashboard) e o
+domínio próprio. O adapter de auth já está
 implementado (`docs/ARCHITECTURE.md` §5.6): sign-up/sign-in/sessão testados
 ponta a ponta, `role` protegido, erros do provedor traduzidos pro envelope do
 projeto (§5.7), docs interativas mescladas no Swagger. As telas de login
@@ -81,7 +86,7 @@ Domínio e fila já existem, independentes dessa escolha:
   aponta pra ele: os CTAs são relativos (`/enrollment` no herói e nos cursos,
   `/login` no botão do header — quem chega da landing não tem sessão, então a
   porta do aluno é a tela de login, nunca o dashboard) e quem atravessa para o
-  domínio do app é o Netlify em produção (`netlify.toml`, 302 com a query
+  domínio do app é o Vercel em produção (`vercel.json`, 302 com a query
   string preservada) e o dev server no local (ver **Rodar local**).
   No backoffice já existem: alunos (`/backoffice/students`, com ficha, histórico e edição),
   turmas (`/backoffice/class-groups`, com lista paginada, ficha da turma,

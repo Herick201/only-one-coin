@@ -4,9 +4,14 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./src/schema.ts"
+    ".": {
+      "types": "./dist/schema.d.ts",
+      "development": "./src/schema.ts",
+      "default": "./dist/schema.js"
+    }
   },
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "typecheck": "tsc --noEmit"

@@ -5,8 +5,9 @@ import { z } from 'zod'
  * nunca `localhost` fixo no código (CLAUDE.md §6).
  * NEXT_PUBLIC_* são inlined pelo Next; precisam ser referenciadas literalmente.
  *
- * O provedor de backend (Postgres gerenciado + auth + storage) ainda não foi
- * escolhido; nenhuma var de provedor entra aqui até a decisão.
+ * apps/app nunca fala direto com Postgres/auth/storage (CLAUDE.md §5,
+ * "client separado") — nenhuma var de provedor entra aqui, cliente ou
+ * servidor; tudo isso mora só em apps/api.
  */
 const schema = z.object({
   // Landing pública (Astro). Opcional; fallback para a raiz do próprio app.

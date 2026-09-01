@@ -43,9 +43,11 @@ const poppins = Poppins({
   display: 'swap',
 })
 
-export function generateStaticParams() {
-  return routing.locales.map((locale) => ({ locale }))
-}
+// CSP com nonce por request (middleware.ts, CLAUDE.md §8) exige rendering
+// dinâmico em toda rota — sem isso, o nonce embutido no HTML pré-renderizado
+// no build nunca bateria com o nonce (novo a cada request) do header CSP, e
+// os scripts do próprio Next seriam bloqueados no browser.
+export const dynamic = 'force-dynamic'
 
 export default async function LocaleLayout({
   children,

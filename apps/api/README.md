@@ -6,21 +6,38 @@ Processo Node separado do Next.js (`apps/app`). Expõe `@ooc/domain` via HTTP
 Esboço baseado no template `Psykka/template-ddd` — ver `packages/domain/README.md`
 para o que foi mantido e o que mudou em relação a ele.
 
-## Dois entrypoints (por enquanto)
+## Um entrypoint só
 
-- `src/index.ts` — servidor HTTP (`pnpm dev`).
-- `src/worker.ts` — processo de workers (`pnpm dev:worker`), separado do HTTP
-  para poder escalar workers e API de forma independente.
+- `src/index.ts` — servidor HTTP (Fastify) e os workers de fila (BullMQ) no
+  mesmo processo (`pnpm dev`).
 
-Essa separação só se justifica se puderem escalar/reiniciar cada um
-sozinho. Se a hospedagem definida for um único processo *always-on* de
-qualquer forma, os workers podem acabar entrando no mesmo processo da API
-(um entrypoint só) — decisão amarrada à de hospedagem (ver
-`CLAUDE.md` §5 "Domínio e fila" e pendência abaixo).
+Já existiu um `src/worker.ts` separado, pensado pra escalar/reiniciar API e
+workers de forma independente — mas isso só se justifica se a hospedagem
+permitir escalar cada um à parte. Como `apps/api` roda no Fly.io como VM
+*always-on* única, a separação não se justificava; fundido num entrypoint só
+(sessão 31/08/2026, `CLAUDE.md` §3).
 
-Só existe script de `dev` por enquanto — build de produção (bundling,
-`dist/`, etc.) fica pra quando definirmos onde e como `apps/api` é hospedado
-(ver pendência abaixo).
+## Build de produção
+
+`pnpm build` compila `@ooc/domain`, `@ooc/queue`, `@ooc/db` e `@ooc/api` via
+`tsc` (cada pacote ganhou um `tsconfig.build.json` — o `tsconfig.json` normal
+continua `noEmit` pro `typecheck`) e reescreve os imports de alias `@/*` pra
+caminho relativo com `tsc-alias`, já que `tsc` sozinho não resolve `paths` em
+tempo de execução.
+
+Os pacotes do workspace exportam sob condição: `development` aponta pro
+`.ts` cru (o que `pnpm dev`/`vitest` usam, via `tsx --conditions=development`
+e `resolve.conditions` no `vitest.config.ts` — edição ao vivo sem rebuild),
+`default` aponta pro `dist/` compilado (o que produção usa, sem TypeScript
+instalado). `pnpm deploy --filter=@ooc/api --prod --legacy` empacota só
+`@ooc/api` e as deps de produção (workspace + npm) num diretório
+autocontido — `apps/api/package.json` ganhou `"files": ["dist"]` pra esse
+empacotamento levar o `dist/` compilado (por padrão `pnpm deploy` respeita
+`.gitignore`, que exclui `dist/`).
+
+`apps/api/Dockerfile` (contexto = raiz do monorepo, ver comentário no
+arquivo) e `fly.toml` (raiz do repo, pelo mesmo motivo de contexto)
+encadeiam exatamente esses passos pro deploy no Fly.io.
 
 ## Estrutura
 
@@ -46,13 +63,19 @@ src/
 
 ## Pendências conhecidas (fora do escopo deste scaffold)
 
-- **Build/deploy**: workers BullMQ precisam de processo always-on; Netlify
-  (functions/background functions) não serve pra isso. Falta decidir onde
-  `apps/api` roda — fica pra quando chegarmos na parte de deploy, junto com
-  a definição do script de build (bundling, `dist/`, etc.).
-- **Persistência real**: `InMemoryExampleRepository` é só pra rodar local. A
-  troca por acesso real a banco depende do provedor gerenciado de Postgres,
-  que voltou a ser uma decisão em aberto (ver `CLAUDE.md` §3 — "Decisão em
-  aberto — provedor de backend").
+- **Build/deploy**: feito — app real `only-one-coin-api` no ar em
+  `only-one-coin-api.fly.dev` (GRU, 1 máquina `shared-cpu-1x`/256mb sempre
+  ligada), os 5 secrets setados, CI/CD automatizado
+  (`.github/workflows/deploy-api.yml`): a cada push em `main`, backup do Neon
+  pro Tigris → migration → `flyctl deploy`, nessa ordem, cada um só roda se
+  o anterior passar (`docs/ARCHITECTURE.md` §5.8). Precisa de
+  `FLY_API_TOKEN`, `DATABASE_URL`, `TIGRIS_ACCESS_KEY_ID` e
+  `TIGRIS_SECRET_ACCESS_KEY` como secret do repo no GitHub — nenhum setado
+  ainda, o bucket Tigris de backup (`only-one-coin-backups`) também não foi
+  criado.
+- **Persistência real**: `InMemoryExampleRepository` é só pra rodar local —
+  ainda não trocado por repositório real sobre `@ooc/db`/Drizzle. O provedor
+  de Postgres já está fechado (Neon, `docs/ARCHITECTURE.md` §5.1); o que
+  falta aqui é só a implementação do repositório, não uma decisão em aberto.
 - **Envio de e-mail real**: `send-email.worker.ts` só loga o payload — falta
   `packages/notifications` (adapter Brevo) pra completar.
