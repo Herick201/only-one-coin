@@ -6,6 +6,11 @@ export default defineConfig({
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
+    // @ooc/domain, @ooc/queue e @ooc/db exportam .ts cru sob a condição
+    // "development" (dist/ compilado é só pra produção) — sem isso o
+    // resolver do Vitest cairia no "default" (dist/) e os testes
+    // quebrariam sem um build prévio.
+    conditions: ["development"],
   },
   test: {
     // container.ts builds the app container at import time and validates

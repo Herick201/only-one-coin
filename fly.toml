@@ -1,0 +1,49 @@
+# Config do único app hospedado no Fly.io hoje: apps/api (CLAUDE.md §3).
+# Fica na raiz do monorepo de propósito — o build context do Docker é
+# sempre a raiz onde este arquivo mora (não a pasta do Dockerfile), e
+# apps/api/Dockerfile precisa alcançar packages/domain, packages/queue e
+# packages/db (docs/ARCHITECTURE.md §5.2). Deploy sempre a partir da raiz:
+#   fly deploy
+#
+# "only-one-coin-api" é placeholder — troque pelo nome real assim que
+# rodar `fly apps create` (nome de app é único em toda a Fly, não só na
+# sua org).
+app = "only-one-coin-api"
+primary_region = "gru"
+
+[build]
+  dockerfile = "apps/api/Dockerfile"
+
+# REDIS_URL, DATABASE_URL, BETTER_AUTH_URL, BETTER_AUTH_SECRET e
+# APP_PUBLIC_URL não entram aqui — são segredo/dado sensível de ambiente,
+# vão via `fly secrets set` (nunca em texto plano no fly.toml versionado).
+[env]
+  NODE_ENV = "production"
+  PORT = "3333"
+  HOST = "0.0.0.0"
+
+[http_service]
+  internal_port = 3333
+  force_https = true
+  # Nunca auto-suspender: os workers de fila (BullMQ) rodam no mesmo
+  # processo da API (CLAUDE.md §3, "fila mesclada com a API") e precisam
+  # estar sempre ligados pra consumir job, não só quando chega request
+  # HTTP. auto_stop_machines=true (o default do Fly pra http_service)
+  # pausaria a máquina — e a fila junto — no primeiro período ocioso.
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "15s"
+    method = "GET"
+    timeout = "5s"
+    path = "/health"
+
+# Ponto de partida — shared-cpu-1x/512MB fica na faixa ~US$3-6/mês
+# (docs/INFRAESTRUTURA.md). Ajustar com `fly scale vm`/`fly scale memory`
+# se o volume de pico (CLAUDE.md §1, até 20.000 matrículas/mês) pedir mais.
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
