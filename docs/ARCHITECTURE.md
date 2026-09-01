@@ -232,6 +232,17 @@ Migration "vazia inicial" (Sessão 3) gerada com `drizzle-kit generate --custom`
 
 Precisa de três GitHub secrets além do `FLY_API_TOKEN` já existente: `DATABASE_URL` (a mesma URL do Neon de produção, também setada como secret do Fly), `TIGRIS_ACCESS_KEY_ID` e `TIGRIS_SECRET_ACCESS_KEY` (saem de `fly storage create -a only-one-coin-api -n only-one-coin-backups`, impressas uma vez só — nunca recuperáveis depois). O nome do bucket está fixo no workflow (`only-one-coin-backups`) porque não é segredo.
 
+**Retenção — 30 dias, via lifecycle rule do próprio Tigris, não script de limpeza.** Backup roda a cada deploy (potencialmente vários por semana); sem expirar, o bucket cresce sem limite e o custo (US$0,02/GB acima dos primeiros 5GB grátis) só sobe. Tigris suporta expiração nativa por idade do objeto — configurada uma vez com `aws s3api put-bucket-lifecycle-configuration`, sem precisar de nenhum passo a mais no CI nem risco de um script de limpeza malfeito apagar backup recente por engano. Regra em `apps/api/infra/tigris-backup-lifecycle.json`, aplicada uma única vez na criação do bucket:
+
+```
+aws s3api put-bucket-lifecycle-configuration \
+  --endpoint-url https://t3.storage.dev \
+  --bucket only-one-coin-backups \
+  --lifecycle-configuration file://apps/api/infra/tigris-backup-lifecycle.json
+```
+
+30 dias cobre bastante margem pra "múltiplos deploys por semana" sem chegar perto do teto de 5GB grátis, dado o volume atual do banco. Ajustar o `Days` no JSON se o volume ou a frequência de deploy mudar muito.
+
 ### 5.9 Hospedagem de `apps/landing` e `apps/app` — Vercel (deploy real feito 31/08/2026)
 
 Dois projetos Vercel separados na mesma conta/organização (`tech-1048`), um por app — cada um com **Root Directory** apontado pro seu subdiretório (`apps/landing`, `apps/app`) pra tanto o CLI quanto o Git integration acharem o app certo dentro do monorepo:
