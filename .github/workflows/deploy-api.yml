@@ -48,9 +48,17 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
-      # aws-cli já vem no runner; pg_dump não é garantido (a imagem traz o
-      # pacote de servidor, não sempre o client na versão certa no PATH).
-      - run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      # aws-cli já vem no runner. postgresql-client do repo padrão do
+      # Ubuntu é pg16 — pg_dump recusa dump de servidor mais novo que ele
+      # mesmo (Neon roda Postgres 18, mesma versão do compose.yml local).
+      # Repo oficial da PGDG pra instalar o client 18 de verdade.
+      - run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+            https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-18
 
       - name: Backup do Neon de produção para o Tigris
         run: |
