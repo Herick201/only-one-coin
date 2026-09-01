@@ -1,0 +1,56 @@
+name: Deploy apps/landing + apps/app (Vercel)
+
+# Git-triggered auto-deploy on Vercel's own side isn't wired yet (`vercel git
+# connect` needs a GitHub Login Connection on the Vercel account — an
+# account-level OAuth step only the dashboard can do, docs/ARCHITECTURE.md
+# §5.9). Until that's done, this workflow is the only thing that redeploys
+# apps/app / apps/landing on merge — a PR merging without it is a silent
+# no-op in production, which is exactly what happened before this existed.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/app/**"
+      - "apps/landing/**"
+      - ".github/workflows/deploy-vercel.yml"
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-vercel-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # Só roda depois que o CI (typecheck/build/test) já passou pro mesmo commit
+  # — mesmo padrão do deploy-api.yml.
+  wait-for-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.sha }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          running-workflow-name: wait-for-ci
+          check-regexp: '(secrets-scan|build|test-api|migrations)'
+          wait-interval: 10
+
+  deploy:
+    needs: wait-for-ci
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: only-one-coin-app
+            project_id: prj_wcAm5iMKhQKgqiKmAFedcDDfSeT3
+          - name: only-one-coin-landing
+            project_id: prj_2un3ZX1k7SMG3u63D4E0BAGieqYN
+    steps:
+      - uses: actions/checkout@v4
+      # Roda da raiz do repo de propósito: os dois projetos têm Root
+      # Directory configurado no próprio projeto Vercel (apps/app,
+      # apps/landing), e `vercel deploy` a partir do subdiretório só
+      # funciona sem Root Directory setado — ver docs/ARCHITECTURE.md §5.9.
+      - run: npx --yes vercel@latest deploy --prod --yes --project "${{ matrix.name }}" --token "$VERCEL_TOKEN"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: team_7z0Q3VrHICSlv9IQXFt2p8SA
+          VERCEL_PROJECT_ID: ${{ matrix.project_id }}
