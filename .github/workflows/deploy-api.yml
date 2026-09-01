@@ -30,8 +30,49 @@ jobs:
           check-regexp: '(secrets-scan|build|test-api|migrations)'
           wait-interval: 10
 
-  deploy:
+  # CLAUDE.md §7: "Migration em produção sempre depois de backup." Este job
+  # mecaniza a regra — backup sempre roda, e só se ele terminar OK a
+  # migration roda em seguida. Não substitui o backup periódico do §3
+  # ("pg_dump → Tigris via Scheduled Function", ainda não construído) — é
+  # só o snapshot imediatamente antes de qualquer deploy que mude schema.
+  backup-and-migrate:
     needs: wait-for-ci
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # aws-cli já vem no runner; pg_dump não é garantido (a imagem traz o
+      # pacote de servidor, não sempre o client na versão certa no PATH).
+      - run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Backup do Neon de produção para o Tigris
+        run: |
+          set -euo pipefail
+          FILE="ooc-prod-$(date -u +%Y%m%dT%H%M%SZ).sql.gz"
+          pg_dump "$DATABASE_URL" | gzip > "$FILE"
+          aws s3 cp "$FILE" "s3://${TIGRIS_BUCKET_NAME}/${FILE}" --endpoint-url "$AWS_ENDPOINT_URL_S3"
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.TIGRIS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.TIGRIS_SECRET_ACCESS_KEY }}
+          AWS_ENDPOINT_URL_S3: https://t3.storage.dev
+          # Nome do bucket não é segredo — só as credenciais são.
+          TIGRIS_BUCKET_NAME: only-one-coin-backups
+
+      - name: Migration contra o Neon de produção
+        run: pnpm --filter @ooc/db db:migrate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+  deploy:
+    needs: [wait-for-ci, backup-and-migrate]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

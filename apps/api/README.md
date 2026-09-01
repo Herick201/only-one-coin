@@ -66,10 +66,13 @@ src/
 - **Build/deploy**: feito — app real `only-one-coin-api` no ar em
   `only-one-coin-api.fly.dev` (GRU, 1 máquina `shared-cpu-1x`/256mb sempre
   ligada), os 5 secrets setados, CI/CD automatizado
-  (`.github/workflows/deploy-api.yml`, precisa só do secret `FLY_API_TOKEN`
-  no repo do GitHub). Falta rodar a migration inicial contra o Neon de
-  produção — `DATABASE_URL="<url-do-neon>" pnpm --filter @ooc/db db:migrate`,
-  local, nunca colado no chat (segredo de banco).
+  (`.github/workflows/deploy-api.yml`): a cada push em `main`, backup do Neon
+  pro Tigris → migration → `flyctl deploy`, nessa ordem, cada um só roda se
+  o anterior passar (`docs/ARCHITECTURE.md` §5.8). Precisa de
+  `FLY_API_TOKEN`, `DATABASE_URL`, `TIGRIS_ACCESS_KEY_ID` e
+  `TIGRIS_SECRET_ACCESS_KEY` como secret do repo no GitHub — nenhum setado
+  ainda, o bucket Tigris de backup (`only-one-coin-backups`) também não foi
+  criado.
 - **Persistência real**: `InMemoryExampleRepository` é só pra rodar local —
   ainda não trocado por repositório real sobre `@ooc/db`/Drizzle. O provedor
   de Postgres já está fechado (Neon, `docs/ARCHITECTURE.md` §5.1); o que
