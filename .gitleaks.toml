@@ -1,0 +1,11 @@
+title = "only-one-coin gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Placeholders só de CI/test — segredo real nunca é literal em workflow (sempre secrets.*) nem em vitest.config.ts (CLAUDE.md §6)"
+regexes = [
+  '''ci-placeholder-secret-at-least-32-chars''',
+  '''test-secret-at-least-32-characters-long''',
+]

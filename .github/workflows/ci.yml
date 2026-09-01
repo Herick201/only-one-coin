@@ -88,8 +88,10 @@ jobs:
   migrations:
     runs-on: ubuntu-latest
     services:
+      # Mesma versão do compose.yml local — as migrations usam uuidv7()
+      # nativo (só existe a partir do Postgres 18); 17 falha em runtime.
       postgres:
-        image: postgres:17-alpine
+        image: postgres:18-alpine
         env:
           POSTGRES_USER: ooc
           POSTGRES_PASSWORD: ooc

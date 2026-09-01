@@ -4,6 +4,12 @@
     "lib": ["ESNext"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    // @ooc/domain, @ooc/queue e @ooc/db exportam .ts cru sob a condição
+    // "development" (README.md — dist/ compilado é só pra produção). Sem
+    // isso, `tsc --noEmit` cai na condição "default" (dist/) e falha em
+    // checkout limpo, antes do primeiro build — só "funcionava" localmente
+    // por causa de dist/ deixado por um build manual anterior.
+    "customConditions": ["development"],
     "rootDir": "src",
     "outDir": "dist",
     "paths": {
