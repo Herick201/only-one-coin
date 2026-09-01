@@ -228,6 +228,24 @@ Envelope de resposta pública (`apps/api/src/shared/http/ErrorResponseSchema.ts`
 
 Migration "vazia inicial" (Sessão 3) gerada com `drizzle-kit generate --custom` — o modo padrão (`generate`, diff de schema) não produz arquivo quando não há tabela nenhuma ainda; `--custom` existe justamente pra SQL que não vem de diff de schema (baseline vazia, extensão, seed pontual). `Drizzle ORM` como client de query em `apps/api` (substituindo `pg` cru nos repositórios) é decisão separada, ainda em aberto — este fechamento cobre só schema/migration em `packages/db`.
 
+### 5.9 Hospedagem de `apps/landing` e `apps/app` — Vercel (deploy real feito 31/08/2026)
+
+Dois projetos Vercel separados na mesma conta/organização (`tech-1048`), um por app — cada um com **Root Directory** apontado pro seu subdiretório (`apps/landing`, `apps/app`) pra tanto o CLI quanto o Git integration acharem o app certo dentro do monorepo:
+
+| Projeto | Root Directory | Domínio hoje |
+| --- | --- | --- |
+| `only-one-coin-landing` | `apps/landing` | `only-one-coin-landing.vercel.app` |
+| `only-one-coin-app` | `apps/app` | `only-one-coin-app.vercel.app` |
+
+Domínio próprio (`onlyonecoin.edu.pe` / `aula.onlyonecoin.edu.pe`) ainda não configurado — depende de DNS, fora do escopo desta sessão.
+
+**Env vars já setadas** (`vercel env add`, sem segredo nenhum — as duas são URL pública, nunca credencial):
+
+- `only-one-coin-app`: `API_INTERNAL_URL=https://only-one-coin-api.fly.dev` (server-only, `src/server-env.ts`), `NEXT_PUBLIC_LANDING_URL=https://only-one-coin-landing.vercel.app`.
+- `only-one-coin-landing`: `PUBLIC_APP_ORIGIN=https://only-one-coin-app.vercel.app` — lido pelo `middleware.ts` pra fazer o 302 de `/enrollment`, `/login` e `/portal` pro app (não pelo `vercel.json`, que só declara os security headers).
+
+**Deploy automático por push (Git integration) ainda não está ligado.** `vercel git connect` falha com `Failed to link Herick201/only-one-coin. You need to add a Login Connection to your GitHub account first.` — é autenticação em nível de conta Vercel (OAuth com o GitHub), só dá pra resolver pelo dashboard (Account Settings → Login Connections), não por CLI/token. Até isso ser feito, o deploy dos dois apps é manual: `vercel deploy --prod --project <nome>` a partir da raiz do repo (upload do CLI só funciona a partir da raiz porque o Root Directory já está setado nos dois projetos — rodar de dentro do subdiretório do app quebra com "Root Directory ... does not exist").
+
 ---
 
 ## 6. Custo mensal estimado

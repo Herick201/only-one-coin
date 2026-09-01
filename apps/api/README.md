@@ -63,14 +63,16 @@ src/
 
 ## Pendências conhecidas (fora do escopo deste scaffold)
 
-- **Build/deploy**: build de produção, `Dockerfile` e `fly.toml` prontos
-  (ver seção acima). Falta o passo que só o usuário faz — `fly apps create`
-  (nome real de app, hoje `only-one-coin-api` é placeholder), `fly secrets
-  set` com `REDIS_URL`/`DATABASE_URL`/`BETTER_AUTH_URL`/
-  `BETTER_AUTH_SECRET`/`APP_PUBLIC_URL`, e o primeiro `fly deploy`.
-- **Persistência real**: `InMemoryExampleRepository` é só pra rodar local. A
-  troca por acesso real a banco depende do provedor gerenciado de Postgres,
-  que voltou a ser uma decisão em aberto (ver `CLAUDE.md` §3 — "Decisão em
-  aberto — provedor de backend").
+- **Build/deploy**: feito — app real `only-one-coin-api` no ar em
+  `only-one-coin-api.fly.dev` (GRU, 1 máquina `shared-cpu-1x`/256mb sempre
+  ligada), os 5 secrets setados, CI/CD automatizado
+  (`.github/workflows/deploy-api.yml`, precisa só do secret `FLY_API_TOKEN`
+  no repo do GitHub). Falta rodar a migration inicial contra o Neon de
+  produção — `DATABASE_URL="<url-do-neon>" pnpm --filter @ooc/db db:migrate`,
+  local, nunca colado no chat (segredo de banco).
+- **Persistência real**: `InMemoryExampleRepository` é só pra rodar local —
+  ainda não trocado por repositório real sobre `@ooc/db`/Drizzle. O provedor
+  de Postgres já está fechado (Neon, `docs/ARCHITECTURE.md` §5.1); o que
+  falta aqui é só a implementação do repositório, não uma decisão em aberto.
 - **Envio de e-mail real**: `send-email.worker.ts` só loga o payload — falta
   `packages/notifications` (adapter Brevo) pra completar.

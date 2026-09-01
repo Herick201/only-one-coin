@@ -48,7 +48,11 @@ wizard. Sem essa variável a landing sobe igual, só que os CTAs dão 404.
 
 Postgres (Neon), hospedagem de `apps/api` (Fly.io), storage de comprovante
 (Tigris), caixa de e-mail (Zoho Mail) e auth (Better Auth) já estão
-decididos (`docs/ARCHITECTURE.md` §5). O adapter de auth já está
+decididos (`docs/ARCHITECTURE.md` §5). `apps/api` está no ar em
+`only-one-coin-api.fly.dev`; `apps/landing` e `apps/app` estão no ar em
+projetos Vercel separados (`docs/ARCHITECTURE.md` §5.9) — falta só ligar o
+deploy automático por push (pendente de autenticação no dashboard) e o
+domínio próprio. O adapter de auth já está
 implementado (`docs/ARCHITECTURE.md` §5.6): sign-up/sign-in/sessão testados
 ponta a ponta, `role` protegido, erros do provedor traduzidos pro envelope do
 projeto (§5.7), docs interativas mescladas no Swagger. As telas de login
