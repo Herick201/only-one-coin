@@ -41,9 +41,11 @@ primary_region = "gru"
     timeout = "5s"
     path = "/health"
 
-# Ponto de partida — shared-cpu-1x/512MB fica na faixa ~US$3-6/mês
-# (docs/INFRAESTRUTURA.md). Ajustar com `fly scale vm`/`fly scale memory`
-# se o volume de pico (CLAUDE.md §1, até 20.000 matrículas/mês) pedir mais.
+# Menor VM que a Fly oferece — ~US$1,94/mês sempre ligado
+# (docs/INFRAESTRUTURA.md). Volume ainda baixo (nada de fila real rodando
+# ainda, CLAUDE.md §1) não justifica mais que isso; ajustar com
+# `fly scale memory`/`fly scale vm` se o volume de pico (até 20.000
+# matrículas/mês) apertar — sem precisar tocar em código.
 [[vm]]
   size = "shared-cpu-1x"
-  memory = "512mb"
+  memory = "256mb"
