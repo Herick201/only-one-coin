@@ -6,17 +6,16 @@ Processo Node separado do Next.js (`apps/app`). Expõe `@ooc/domain` via HTTP
 Esboço baseado no template `Psykka/template-ddd` — ver `packages/domain/README.md`
 para o que foi mantido e o que mudou em relação a ele.
 
-## Dois entrypoints (por enquanto)
+## Um entrypoint só
 
-- `src/index.ts` — servidor HTTP (`pnpm dev`).
-- `src/worker.ts` — processo de workers (`pnpm dev:worker`), separado do HTTP
-  para poder escalar workers e API de forma independente.
+- `src/index.ts` — servidor HTTP (Fastify) e os workers de fila (BullMQ) no
+  mesmo processo (`pnpm dev`).
 
-Essa separação só se justifica se puderem escalar/reiniciar cada um
-sozinho. Se a hospedagem definida for um único processo *always-on* de
-qualquer forma, os workers podem acabar entrando no mesmo processo da API
-(um entrypoint só) — decisão amarrada à de hospedagem (ver
-`CLAUDE.md` §5 "Domínio e fila" e pendência abaixo).
+Já existiu um `src/worker.ts` separado, pensado pra escalar/reiniciar API e
+workers de forma independente — mas isso só se justifica se a hospedagem
+permitir escalar cada um à parte. Como `apps/api` roda no Fly.io como VM
+*always-on* única, a separação não se justificava; fundido num entrypoint só
+(sessão 31/08/2026, `CLAUDE.md` §3).
 
 Só existe script de `dev` por enquanto — build de produção (bundling,
 `dist/`, etc.) fica pra quando definirmos onde e como `apps/api` é hospedado
@@ -46,10 +45,9 @@ src/
 
 ## Pendências conhecidas (fora do escopo deste scaffold)
 
-- **Build/deploy**: workers BullMQ precisam de processo always-on; Netlify
-  (functions/background functions) não serve pra isso. Falta decidir onde
-  `apps/api` roda — fica pra quando chegarmos na parte de deploy, junto com
-  a definição do script de build (bundling, `dist/`, etc.).
+- **Build/deploy**: hospedagem decidida (Fly.io, VM always-on, `CLAUDE.md` §3),
+  falta o script de build de produção (bundling, `dist/`, Dockerfile) e o
+  `fly.toml` — parte do trabalho desta sessão de deploy.
 - **Persistência real**: `InMemoryExampleRepository` é só pra rodar local. A
   troca por acesso real a banco depende do provedor gerenciado de Postgres,
   que voltou a ser uma decisão em aberto (ver `CLAUDE.md` §3 — "Decisão em
