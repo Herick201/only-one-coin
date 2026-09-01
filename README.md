@@ -19,7 +19,7 @@ backoffice administrativo e módulo de e-mail.
 Astro (site público) · Next.js App Router (portal + backoffice) · Fastify
 (`apps/api`, hospedado no Fly.io) · Postgres gerenciado (Neon) · Better Auth
 (embutido em `apps/api`) · Tigris (storage de comprovante, nativo do
-Fly.io) · Netlify (landing + app) · Redis (Upstash) + BullMQ · Gemini (OCR) ·
+Fly.io) · Vercel (landing + app) · Redis (Upstash) + BullMQ · Gemini (OCR) ·
 Brevo (e-mail transacional/campanhas) + Zoho Mail (caixa de e-mail de
 staff) · Sentry + PostHog.
 
@@ -37,9 +37,9 @@ só entram quando o trabalho for na API.
 
 Os CTAs da landing (`/enrollment` e `/login`, nos três idiomas) são links
 relativos de propósito — para quem lê é tudo o mesmo site. Quem os atravessa
-para o app é o Netlify em produção e o dev server no local: copie
+para o app é o Vercel em produção e o dev server no local: copie
 `apps/landing/.env.example` para `apps/landing/.env` e o `astro dev` passa a
-responder o mesmo 302 do `netlify.toml`, com a query string preservada — é o
+responder o mesmo 302 do `vercel.json`, com a query string preservada — é o
 que faz o link do vendedor (`?course=&group=&src=whatsapp`) chegar inteiro ao
 wizard. Sem essa variável a landing sobe igual, só que os CTAs dão 404.
 
@@ -81,7 +81,7 @@ Domínio e fila já existem, independentes dessa escolha:
   aponta pra ele: os CTAs são relativos (`/enrollment` no herói e nos cursos,
   `/login` no botão do header — quem chega da landing não tem sessão, então a
   porta do aluno é a tela de login, nunca o dashboard) e quem atravessa para o
-  domínio do app é o Netlify em produção (`netlify.toml`, 302 com a query
+  domínio do app é o Vercel em produção (`vercel.json`, 302 com a query
   string preservada) e o dev server no local (ver **Rodar local**).
   No backoffice já existem: alunos (`/backoffice/students`, com ficha, histórico e edição),
   turmas (`/backoffice/class-groups`, com lista paginada, ficha da turma,
