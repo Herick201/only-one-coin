@@ -4,7 +4,7 @@ import { cookies } from 'next/headers'
 import { getLocale } from 'next-intl/server'
 import { redirect } from '@/i18n/navigation'
 import { serverEnv } from '@/server-env'
-import { SESSION_COOKIE_NAME } from '@/lib/backoffice/api-client'
+import { resolveSessionCookie } from '@/lib/backoffice/api-client'
 
 /**
  * Signs the session out with Better Auth itself — not just a cookie wipe —
@@ -14,18 +14,18 @@ import { SESSION_COOKIE_NAME } from '@/lib/backoffice/api-client'
  */
 export async function logoutStaff() {
   const jar = await cookies()
-  const token = jar.get(SESSION_COOKIE_NAME)?.value
+  const session = await resolveSessionCookie()
 
-  if (token) {
+  if (session) {
     await fetch(new URL('/api/auth/sign-out', serverEnv.API_INTERNAL_URL), {
       method: 'POST',
-      headers: { cookie: `${SESSION_COOKIE_NAME}=${token}` },
+      headers: { cookie: `${session.name}=${session.value}` },
     }).catch(() => {
       // Best-effort: the cookie clears below either way.
     })
   }
 
-  jar.delete(SESSION_COOKIE_NAME)
+  jar.delete(session?.name ?? 'better-auth.session_token')
 
   const locale = await getLocale()
   redirect({ href: '/backoffice', locale })

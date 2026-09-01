@@ -17,14 +17,33 @@ export const SESSION_COOKIE_NAME = 'better-auth.session_token'
  * One place for the cookie-forwarding boilerplate every backoffice data
  * fetch needs, rather than repeating it per module.
  */
+/**
+ * Better Auth names the session cookie `__Secure-{name}` whenever its
+ * baseURL is https (BETTER_AUTH_URL always is here) — its own cookie
+ * reader checks the prefixed name first, falling back to the bare one
+ * (better-auth/dist/cookies/index.mjs, `getCookie`). Every call site that
+ * reads or clears this cookie has to check both: the bare name silently
+ * matches nothing in production, with no error — the session just looks
+ * logged-out (or, for logout, never actually clears).
+ */
+export async function resolveSessionCookie(): Promise<{ name: string; value: string } | undefined> {
+  const jar = await cookies()
+  const securedName = `__Secure-${SESSION_COOKIE_NAME}`
+  const secured = jar.get(securedName)
+  if (secured) return { name: securedName, value: secured.value }
+
+  const plain = jar.get(SESSION_COOKIE_NAME)
+  return plain ? { name: SESSION_COOKIE_NAME, value: plain.value } : undefined
+}
+
 export async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
-  const token = (await cookies()).get(SESSION_COOKIE_NAME)?.value
+  const session = await resolveSessionCookie()
 
   return fetch(new URL(path, serverEnv.API_INTERNAL_URL), {
     ...init,
     headers: {
       ...init?.headers,
-      ...(token ? { cookie: `${SESSION_COOKIE_NAME}=${token}` } : {}),
+      ...(session ? { cookie: `${session.name}=${session.value}` } : {}),
     },
     cache: 'no-store',
   })
