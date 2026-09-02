@@ -235,12 +235,13 @@ const courseJsonLd = {
           {levelPanels.map((p, index) => (
             <label class="tab-square" for={`level-${p.slug}`}>
               <span class="tab-steps" aria-hidden="true">
-                {/* Altura distribuída entre 9 e 24px conforme a quantidade de
-                    níveis — família de um ganha uma barra cheia, não um ponto. */}
-                {levelPanels.map((_, step) => (
+                {/* O sinal é sempre a escadinha completa; o nível pinta as
+                    primeiras barras — Básico acende uma, cada degrau acima
+                    acende mais uma, em qualquer idioma. */}
+                {[0, 1, 2, 3].map((step) => (
                   <span
                     class={step <= index ? "step step-on" : "step"}
-                    style={`height:${levelPanels.length > 1 ? 9 + Math.round((15 * step) / (levelPanels.length - 1)) : 24}px`}
+                    style={`height:${9 + 5 * step}px`}
                   />
                 ))}
               </span>
