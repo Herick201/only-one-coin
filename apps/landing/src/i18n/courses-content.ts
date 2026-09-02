@@ -429,7 +429,6 @@ const frenchAdvancedES: CourseContent = {
     "La continuación natural del Francés Básico: aquí ya no se trata de aprender más vocabulario o gramática, sino de empezar a pensar, expresarte y desenvolverte en francés con fluidez.",
     "Está diseñado para quien ya domina lo básico, entiende francés pero todavía no lo habla con soltura, y quiere avanzar hacia una comunicación completa y natural — incluida la preparación para certificarse (DELF / TCF).",
   ],
-  duration: "",
   level: "Intermedio / Avanzado (B1–B2 aproximado)",
   modality: "Virtual",
   curriculum: [
@@ -502,6 +501,448 @@ const frenchAdvancedES: CourseContent = {
   ],
 };
 
+const frenchAdvancedEN: CourseContent = {
+  description: [
+    "The natural continuation of Basic French: at this point it is no longer about learning more vocabulary or grammar, but about starting to think, express yourself and get by in French with fluency.",
+    "It is designed for those who already master the basics, understand French but do not yet speak it with ease, and want to move towards complete, natural communication — including preparation for certification (DELF / TCF).",
+  ],
+  level: "Intermediate / Advanced (around B1–B2)",
+  modality: "Online",
+  curriculum: [
+    {
+      title: "Module 1 — Interaction and social life (Unité 7)",
+      topics: [
+        "Making proposals and invitations",
+        "Expressing opinions and emotions",
+        "Talking about work, friends and experiences",
+        "Pronouns and conversational structures",
+        "Outcome: you hold natural conversations and get along socially",
+      ],
+    },
+    {
+      title: "Module 2 — Experiences and storytelling (Unité 8)",
+      topics: [
+        "Imparfait vs passé composé",
+        "Narrating personal experiences",
+        "Describing memories, emotions and situations",
+        "Talking about hobbies and life experiences",
+        "Outcome: you tell stories and experiences clearly",
+      ],
+    },
+    {
+      title: "Module 3 — Surroundings and city life (Unité 9)",
+      topics: [
+        "Describing spaces and cities",
+        "Looking for housing and understanding listings",
+        "Giving directions and arranging to meet",
+        "Expressing needs, preferences and advice",
+        "Outcome: you handle real-life contexts (travel, moving, daily life)",
+      ],
+    },
+    {
+      title: "Module 4 — Social and cultural life (Unité 10)",
+      topics: [
+        "Conversations among friends",
+        "Organizing gatherings and events",
+        "Understanding recipes and food culture",
+        "Spontaneous expression in social situations",
+        "Outcome: you communicate with greater fluency and ease",
+      ],
+    },
+  ],
+  goals: [
+    "Hold fluent conversations with native speakers",
+    "Express opinions, emotions and arguments",
+    "Write clear texts: messages, emails, opinions",
+    "Understand real conversations and audiovisual content",
+    "Use past tenses and complex structures correctly",
+  ],
+  method: [
+    "100% practical, live classes",
+    "Real-life situations: travel, work, social life",
+    "Progressive, conversation-based method",
+    "Material structured by units, a true continuation of the basic level",
+    "Communicative approach: you speak from the very first class",
+  ],
+  evaluation: [
+    "Class participation",
+    "Practice per unit",
+    "Spoken and written production assessed per module",
+  ],
+  outcomes: [
+    "Reach an approximate B1 / B2 level",
+    "Travel and communicate without relying on a translator",
+    "Understand real conversations",
+    "Prepare for international exams (DELF / TCF)",
+    "Improve your work and academic opportunities",
+  ],
+};
+
+const frenchAdvancedPT: CourseContent = {
+  description: [
+    "A continuação natural do Francês Básico: aqui já não se trata de aprender mais vocabulário ou gramática, e sim de começar a pensar, se expressar e se virar em francês com fluência.",
+    "Foi desenhado para quem já domina o básico, entende francês mas ainda não o fala com desenvoltura, e quer avançar para uma comunicação completa e natural — incluindo a preparação para se certificar (DELF / TCF).",
+  ],
+  level: "Intermediário / Avançado (B1–B2 aproximado)",
+  modality: "Virtual",
+  curriculum: [
+    {
+      title: "Módulo 1 — Interação e vida social (Unité 7)",
+      topics: [
+        "Fazer propostas e convites",
+        "Expressar opiniões e emoções",
+        "Falar sobre trabalho, amigos e experiências",
+        "Pronomes e estruturas conversacionais",
+        "Resultado: você mantém conversas naturais e se vira socialmente",
+      ],
+    },
+    {
+      title: "Módulo 2 — Experiências e narração (Unité 8)",
+      topics: [
+        "Imparfait vs passé composé",
+        "Narração de experiências pessoais",
+        "Descrever lembranças, emoções e situações",
+        "Falar de hobbies e vivências",
+        "Resultado: você conta histórias e experiências com clareza",
+      ],
+    },
+    {
+      title: "Módulo 3 — Entorno e vida urbana (Unité 9)",
+      topics: [
+        "Descrever espaços e cidades",
+        "Procurar moradia e entender anúncios",
+        "Dar direções e organizar encontros",
+        "Expressar necessidades, preferências e conselhos",
+        "Resultado: você se vira em contextos reais (viagens, mudança, vida diária)",
+      ],
+    },
+    {
+      title: "Módulo 4 — Vida social e cultural (Unité 10)",
+      topics: [
+        "Conversas entre amigos",
+        "Organização de reuniões e eventos",
+        "Compreensão de receitas e cultura gastronômica",
+        "Expressão espontânea em situações sociais",
+        "Resultado: você se comunica com mais fluência e naturalidade",
+      ],
+    },
+  ],
+  goals: [
+    "Manter conversas fluidas com nativos",
+    "Expressar opiniões, emoções e argumentos",
+    "Redigir textos claros: mensagens, e-mails, opiniões",
+    "Entender conversas reais e conteúdo audiovisual",
+    "Usar corretamente os tempos passados e estruturas complexas",
+  ],
+  method: [
+    "Aulas 100% práticas e ao vivo",
+    "Situações reais: viagens, trabalho, vida social",
+    "Método progressivo baseado em conversação",
+    "Material estruturado por unidades, continuação real do nível básico",
+    "Enfoque comunicativo: você fala desde a primeira aula",
+  ],
+  evaluation: [
+    "Participação em aula",
+    "Práticas por unidade",
+    "Produção oral e escrita avaliada por módulo",
+  ],
+  outcomes: [
+    "Alcançar um nível aproximado B1 / B2",
+    "Viajar e se comunicar sem depender de tradutor",
+    "Entender conversas reais",
+    "Preparar-se para exames internacionais (DELF / TCF)",
+    "Melhorar suas oportunidades de trabalho e estudo",
+  ],
+};
+
+const frenchES: CourseContent = {
+  description: [
+    "El curso de Francés Básico de Only One Coin está diseñado para personas sin conocimientos previos del idioma o con nociones elementales, que desean iniciarse en el francés de manera práctica, progresiva y comunicativa. El programa prioriza la comprensión oral, la expresión oral, la lectura y la escritura, para que puedas desenvolverte en situaciones cotidianas simples.",
+    "El curso se apoya en material estructurado por unidades temáticas, con ejercicios guiados, audios, actividades prácticas y situaciones reales de comunicación, que hacen el aprendizaje accesible y gradual.",
+  ],
+  sessions: "80 sesiones",
+  duration: "80 horas académicas",
+  level: "Básico (A1)",
+  modality: "Virtual",
+  curriculum: [
+    {
+      title: "Unidad 0 — Introducción al francés",
+      topics: [
+        "Familiarización con el idioma francés",
+        "Pronunciación básica y sonidos del francés",
+        "Alfabeto y primeros saludos",
+        "Introducción cultural al mundo francófono",
+        "Vocabulario elemental",
+      ],
+    },
+    {
+      title: "Unidad 1 — Conocer y presentarse",
+      topics: [
+        "Presentarse y presentar a otras personas",
+        "Completar fichas de información personal",
+        "Verbos être y s'appeler",
+        "Nacionalidades y profesiones",
+        "Expresar gustos, intereses y actividades",
+        "Uso del masculino y femenino",
+        "Artículos definidos e indefinidos",
+        "Formular y responder preguntas simples",
+        "Negación básica",
+        "Presentación escrita personal",
+      ],
+    },
+    {
+      title: "Unidad 2 — Ubicarse y comunicarse en la ciudad",
+      topics: [
+        "Comprender y describir un itinerario",
+        "Dar y entender indicaciones",
+        "Ubicar lugares y direcciones",
+        "Expresiones de lugar (à gauche, à droite, près de, loin de)",
+        "Caracterizar personas, objetos y lugares",
+        "Iniciar una conversación",
+        "Números del 11 al 60 y del 60 al 1000",
+        "Números ordinales",
+        "Vocabulario urbano y cotidiano",
+      ],
+    },
+    {
+      title: "Unidad 3 — Relaciones y situaciones sociales",
+      topics: [
+        "Hacer una presentación formal e informal",
+        "Formular preguntas y responder adecuadamente",
+        "Expresar aceptación o rechazo",
+        "Hablar de fechas, días y meses",
+        "Eventos y celebraciones",
+        "Fijar citas y reuniones",
+        "Uso práctico del francés en situaciones sociales simples",
+        "Refuerzo de pronunciación y comprensión auditiva",
+      ],
+    },
+  ],
+  goals: [
+    "Comprensión de mensajes orales sencillos",
+    "Expresión oral básica en contextos cotidianos",
+    "Lectura y comprensión de textos breves",
+    "Escritura de frases y textos simples",
+    "Uso correcto de estructuras gramaticales básicas",
+  ],
+  method: [
+    "Clases virtuales guiadas",
+    "Ejercicios prácticos",
+    "Audios y actividades de escucha",
+    "Role play y simulación de situaciones reales",
+    "Evaluaciones formativas por unidad",
+  ],
+  evaluation: [
+    "Participación en clase",
+    "Actividades prácticas",
+    "Ejercicios escritos",
+    "Evaluación final integradora",
+  ],
+  outcomes: [
+    "Presentarte y presentar a otras personas",
+    "Comprender información básica sobre personas, lugares y actividades",
+    "Mantener conversaciones simples y cotidianas",
+    "Pedir y dar información básica",
+    "Ubicarte en una ciudad y dar direcciones sencillas",
+    "Hablar de fechas, horarios y eventos simples",
+    "Leer y escribir textos breves en francés",
+  ],
+  outcomeNote:
+    "De manera realista, el curso permite alcanzar un nivel básico completo (A1), adecuado para continuar estudios en francés, desenvolverte en contextos básicos o rendir evaluaciones introductorias internacionales del idioma francés.",
+};
+
+const frenchEN: CourseContent = {
+  description: [
+    "Only One Coin's Basic French course is designed for people with no prior knowledge of the language, or only elementary notions, who want to start learning French in a practical, progressive and communicative way. The program prioritizes listening, speaking, reading and writing, so you can handle simple everyday situations.",
+    "The course is built on material structured by thematic units, with guided exercises, audio, hands-on activities and real communication situations that make learning accessible and gradual.",
+  ],
+  sessions: "80 sessions",
+  duration: "80 academic hours",
+  level: "Beginner (A1)",
+  modality: "Online",
+  curriculum: [
+    {
+      title: "Unit 0 — Introduction to French",
+      topics: [
+        "Getting familiar with the French language",
+        "Basic pronunciation and the sounds of French",
+        "Alphabet and first greetings",
+        "Cultural introduction to the French-speaking world",
+        "Elementary vocabulary",
+      ],
+    },
+    {
+      title: "Unit 1 — Meeting people and introducing yourself",
+      topics: [
+        "Introducing yourself and other people",
+        "Filling in personal information forms",
+        "The verbs être and s'appeler",
+        "Nationalities and professions",
+        "Expressing likes, interests and activities",
+        "Masculine and feminine forms",
+        "Definite and indefinite articles",
+        "Asking and answering simple questions",
+        "Basic negation",
+        "Written personal introduction",
+      ],
+    },
+    {
+      title: "Unit 2 — Getting around and communicating in the city",
+      topics: [
+        "Understanding and describing an itinerary",
+        "Giving and understanding directions",
+        "Locating places and addresses",
+        "Expressions of place (à gauche, à droite, près de, loin de)",
+        "Describing people, objects and places",
+        "Starting a conversation",
+        "Numbers from 11 to 60 and from 60 to 1000",
+        "Ordinal numbers",
+        "Urban and everyday vocabulary",
+      ],
+    },
+    {
+      title: "Unit 3 — Relationships and social situations",
+      topics: [
+        "Making formal and informal introductions",
+        "Asking questions and answering appropriately",
+        "Expressing acceptance or refusal",
+        "Talking about dates, days and months",
+        "Events and celebrations",
+        "Arranging appointments and meetings",
+        "Practical use of French in simple social situations",
+        "Reinforcing pronunciation and listening comprehension",
+      ],
+    },
+  ],
+  goals: [
+    "Understanding simple spoken messages",
+    "Basic speaking in everyday contexts",
+    "Reading and understanding short texts",
+    "Writing simple sentences and texts",
+    "Correct use of basic grammar structures",
+  ],
+  method: [
+    "Guided online classes",
+    "Practical exercises",
+    "Audio and listening activities",
+    "Role play and real-life simulations",
+    "Formative assessments per unit",
+  ],
+  evaluation: [
+    "Class participation",
+    "Practical activities",
+    "Written exercises",
+    "Final integrative assessment",
+  ],
+  outcomes: [
+    "Introduce yourself and other people",
+    "Understand basic information about people, places and activities",
+    "Hold simple everyday conversations",
+    "Ask for and give basic information",
+    "Find your way around a city and give simple directions",
+    "Talk about dates, times and simple events",
+    "Read and write short texts in French",
+  ],
+  outcomeNote:
+    "Realistically, the course lets you reach a complete basic level (A1), suitable for continuing your French studies, handling basic contexts or taking introductory international French assessments.",
+};
+
+const frenchPT: CourseContent = {
+  description: [
+    "O curso de Francês Básico da Only One Coin foi desenhado para pessoas sem conhecimento prévio do idioma, ou com noções elementares, que querem começar no francês de forma prática, progressiva e comunicativa. O programa prioriza a compreensão oral, a expressão oral, a leitura e a escrita, para você se virar em situações cotidianas simples.",
+    "O curso se apoia em material estruturado por unidades temáticas, com exercícios guiados, áudios, atividades práticas e situações reais de comunicação, que tornam o aprendizado acessível e gradual.",
+  ],
+  sessions: "80 sessões",
+  duration: "80 horas acadêmicas",
+  level: "Básico (A1)",
+  modality: "Virtual",
+  curriculum: [
+    {
+      title: "Unidade 0 — Introdução ao francês",
+      topics: [
+        "Familiarização com o idioma francês",
+        "Pronúncia básica e sons do francês",
+        "Alfabeto e primeiros cumprimentos",
+        "Introdução cultural ao mundo francófono",
+        "Vocabulário elementar",
+      ],
+    },
+    {
+      title: "Unidade 1 — Conhecer e se apresentar",
+      topics: [
+        "Apresentar-se e apresentar outras pessoas",
+        "Preencher fichas de informação pessoal",
+        "Verbos être e s'appeler",
+        "Nacionalidades e profissões",
+        "Expressar gostos, interesses e atividades",
+        "Uso do masculino e do feminino",
+        "Artigos definidos e indefinidos",
+        "Formular e responder perguntas simples",
+        "Negação básica",
+        "Apresentação pessoal por escrito",
+      ],
+    },
+    {
+      title: "Unidade 2 — Se localizar e se comunicar na cidade",
+      topics: [
+        "Compreender e descrever um itinerário",
+        "Dar e entender indicações",
+        "Localizar lugares e endereços",
+        "Expressões de lugar (à gauche, à droite, près de, loin de)",
+        "Caracterizar pessoas, objetos e lugares",
+        "Iniciar uma conversa",
+        "Números do 11 ao 60 e do 60 ao 1000",
+        "Números ordinais",
+        "Vocabulário urbano e cotidiano",
+      ],
+    },
+    {
+      title: "Unidade 3 — Relações e situações sociais",
+      topics: [
+        "Fazer uma apresentação formal e informal",
+        "Formular perguntas e responder adequadamente",
+        "Expressar aceitação ou recusa",
+        "Falar de datas, dias e meses",
+        "Eventos e celebrações",
+        "Marcar compromissos e reuniões",
+        "Uso prático do francês em situações sociais simples",
+        "Reforço de pronúncia e compreensão auditiva",
+      ],
+    },
+  ],
+  goals: [
+    "Compreensão de mensagens orais simples",
+    "Expressão oral básica em contextos cotidianos",
+    "Leitura e compreensão de textos curtos",
+    "Escrita de frases e textos simples",
+    "Uso correto das estruturas gramaticais básicas",
+  ],
+  method: [
+    "Aulas virtuais guiadas",
+    "Exercícios práticos",
+    "Áudios e atividades de escuta",
+    "Role play e simulação de situações reais",
+    "Avaliações formativas por unidade",
+  ],
+  evaluation: [
+    "Participação em aula",
+    "Atividades práticas",
+    "Exercícios escritos",
+    "Avaliação final integradora",
+  ],
+  outcomes: [
+    "Apresentar-se e apresentar outras pessoas",
+    "Compreender informações básicas sobre pessoas, lugares e atividades",
+    "Manter conversas simples e cotidianas",
+    "Pedir e dar informações básicas",
+    "Localizar-se em uma cidade e dar direções simples",
+    "Falar de datas, horários e eventos simples",
+    "Ler e escrever textos curtos em francês",
+  ],
+  outcomeNote:
+    "De maneira realista, o curso permite alcançar um nível básico completo (A1), adequado para continuar os estudos de francês, se virar em contextos básicos ou prestar avaliações internacionais introdutórias do idioma francês.",
+};
+
 /**
  * Os demais idiomas. Aqui só o que a página mostra — nível, sessões e as
  * unidades — porque é o que decide a matrícula. A sessão é uma hora de aula ao
@@ -509,39 +950,6 @@ const frenchAdvancedES: CourseContent = {
  * de sessões acompanha a carga horária do programa (Alemán 16 h = 16 sesiones).
  * Coreano fica sem o número enquanto a coordenação não fechar a carga horária.
  */
-const frenchES: CourseContent = {
-  sessions: "80 sesiones",
-  level: "Básico (A1)",
-  curriculum: [
-    { title: "Unidad 0 — Introducción al francés", topics: [] },
-    { title: "Unidad 1 — Conocer y presentarse", topics: [] },
-    { title: "Unidad 2 — Ubicarse y comunicarse en la ciudad", topics: [] },
-    { title: "Unidad 3 — Relaciones y situaciones sociales", topics: [] },
-  ],
-};
-
-const frenchEN: CourseContent = {
-  sessions: "80 sessions",
-  level: "Beginner (A1)",
-  curriculum: [
-    { title: "Unit 0 — Introduction to French", topics: [] },
-    { title: "Unit 1 — Meeting people and introducing yourself", topics: [] },
-    { title: "Unit 2 — Getting around and communicating in the city", topics: [] },
-    { title: "Unit 3 — Relationships and social situations", topics: [] },
-  ],
-};
-
-const frenchPT: CourseContent = {
-  sessions: "80 sessões",
-  level: "Básico (A1)",
-  curriculum: [
-    { title: "Unidade 0 — Introdução ao francês", topics: [] },
-    { title: "Unidade 1 — Conhecer e se apresentar", topics: [] },
-    { title: "Unidade 2 — Se localizar e se comunicar na cidade", topics: [] },
-    { title: "Unidade 3 — Relações e situações sociais", topics: [] },
-  ],
-};
-
 const italianES: CourseContent = {
   sessions: "60 sesiones",
   level: "Básico inicial (A1)",
@@ -1589,6 +1997,7 @@ export const courseContent: Record<Lang, Partial<Record<CourseSlug, CourseConten
   },
   en: {
     english: englishEN,
+    "french-advanced": frenchAdvancedEN,
     "french": frenchEN,
     "italian": italianEN,
     "portuguese": portugueseEN,
@@ -1598,6 +2007,7 @@ export const courseContent: Record<Lang, Partial<Record<CourseSlug, CourseConten
   },
   pt: {
     english: englishPT,
+    "french-advanced": frenchAdvancedPT,
     "french": frenchPT,
     "italian": italianPT,
     "portuguese": portuguesePT,
