@@ -137,7 +137,7 @@ const englishES: CourseContent = {
     "Contar con una base sólida para rendir exámenes internacionales tipo TOEFL",
   ],
   outcomeNote:
-    "Estos son los logros del programa completo de seis libros (160 horas), que alcanza un nivel intermedio funcional (A2–B1). El paquete de este nivel Básico son los libros 1 al 4 (80 horas); el nivel Intermedio (libros 5 y 6) es la continuación natural.",
+    "Estos son los logros del programa completo de seis libros (160 horas), que alcanza un nivel intermedio funcional (A2–B1). El paquete de este nivel Básico son los libros 1 al 4 (80 horas); el programa continúa en el nivel Intermedio (libros 5 y 6), que se matricula por separado.",
 };
 
 const englishEN: CourseContent = {
@@ -235,7 +235,7 @@ const englishEN: CourseContent = {
     "Have a solid base for international exams such as TOEFL",
   ],
   outcomeNote:
-    "These are the outcomes of the full six-book program (160 hours), which reaches a functional intermediate level (A2–B1). This Basic-level package covers books 1 to 4 (80 hours); the Intermediate level (books 5 and 6) is the natural continuation.",
+    "These are the outcomes of the full six-book program (160 hours), which reaches a functional intermediate level (A2–B1). This Basic-level package covers books 1 to 4 (80 hours); the program continues in the Intermediate level (books 5 and 6), which is enrolled separately.",
 };
 
 const englishPT: CourseContent = {
@@ -333,9 +333,230 @@ const englishPT: CourseContent = {
     "Ter base sólida para exames internacionais tipo TOEFL",
   ],
   outcomeNote:
-    "Estes são os resultados do programa completo de seis livros (160 horas), que chega a um nível intermediário funcional (A2–B1). O pacote deste nível Básico são os livros 1 a 4 (80 horas); o nível Intermediário (livros 5 e 6) é a continuação natural.",
+    "Estes são os resultados do programa completo de seis livros (160 horas), que chega a um nível intermediário funcional (A2–B1). O pacote deste nível Básico são os livros 1 a 4 (80 horas); o programa continua no nível Intermediário (livros 5 e 6), que se matricula à parte.",
 };
 
+
+/**
+ * Nível Intermedio do inglês — livros 5 e 6 do mesmo programa (Papayita).
+ * `goals`, `method`, `evaluation` e `outcomes` são o syllabus do programa
+ * inteiro, como está no documento: é este nível que o completa.
+ */
+const englishIntermediateES: CourseContent = {
+  description: [
+    "La continuación del nivel Básico dentro del mismo programa de Inglés de Only One Coin: los libros 5 y 6 (Papayita) consolidan el nivel intermedio para que pienses en inglés, ganes seguridad al comunicarte y te desenvuelvas en contextos académicos, laborales y cotidianos.",
+    "Trabajas opiniones y argumentos, situaciones sociales más complejas y textos extensos, con la misma práctica constante de speaking, listening, reading, writing, use of English y vocabulary. El contenido está alineado a estándares internacionales y sirve como base para preparación de exámenes tipo TOEFL.",
+  ],
+  sessions: "80 sesiones",
+  duration: "80 horas académicas (nivel Intermedio)",
+  level: "Intermedio (A2–B1)",
+  modality: "Virtual",
+  curriculum: [
+    {
+      title: "Libro 5 — Deep Flow",
+      topics: [
+        "Present Perfect vs Simple Past",
+        "Pasado continuo",
+        "Futuro: will, going to y present continuous",
+        "Opiniones y argumentos",
+        "Situaciones sociales más complejas",
+        "Comprensión de textos extensos",
+        "Desarrollo de coherencia al hablar y escribir",
+      ],
+    },
+    {
+      title: "Libro 6 — Only One Coin",
+      topics: [
+        "Estilo de vida y salud",
+        "Imperativos",
+        "Verbos modales",
+        "Gerundios e infinitivos",
+        "Comunicación en contextos reales",
+        "Narración de experiencias",
+        "Consolidación del nivel intermedio",
+        "Preparación para evaluaciones de nivel",
+      ],
+    },
+  ],
+  goals: [
+    "Comprensión auditiva progresiva",
+    "Expresión oral con fluidez creciente",
+    "Lectura comprensiva de textos",
+    "Escritura clara y estructurada",
+    "Uso correcto de estructuras gramaticales",
+    "Ampliación constante de vocabulario",
+  ],
+  method: [
+    "Clases virtuales interactivas",
+    "Enfoque comunicativo",
+    "Ejercicios prácticos por unidad",
+    "Role play y simulaciones reales",
+    "Evaluaciones por módulo",
+    "Pruebas de progreso",
+  ],
+  evaluation: [
+    "Participación activa",
+    "Actividades prácticas",
+    "Ejercicios escritos",
+    "Evaluaciones por libro",
+    "Evaluación final integradora",
+  ],
+  outcomes: [
+    "Comunicarte con seguridad en situaciones cotidianas",
+    "Comprender conversaciones y textos de nivel intermedio",
+    "Expresar opiniones, experiencias y planes",
+    "Mantener conversaciones fluidas",
+    "Leer y redactar textos de complejidad media",
+    "Desenvolverte en entornos laborales o académicos básicos",
+    "Contar con una base sólida para rendir exámenes internacionales tipo TOEFL",
+  ],
+  outcomeNote:
+    "De forma realista, al completar el programa alcanzas un nivel intermedio funcional (A2–B1), suficiente para continuar estudios avanzados, trabajar en entornos que requieran inglés básico–intermedio o seguir perfeccionándote en el idioma. El nivel Básico (libros 1 al 4) es el punto de partida natural antes de este paquete.",
+};
+
+const englishIntermediateEN: CourseContent = {
+  description: [
+    "The continuation of the Basic level within the same Only One Coin English program: books 5 and 6 (Papayita) consolidate the intermediate level so you think in English, gain confidence and can hold your own in academic, work and everyday contexts.",
+    "You work on opinions and arguments, more complex social situations and longer texts, with the same constant practice of speaking, listening, reading, writing, use of English and vocabulary. The content follows international standards and serves as a base for TOEFL-type exam preparation.",
+  ],
+  sessions: "80 sessions",
+  duration: "80 academic hours (Intermediate level)",
+  level: "Intermediate (A2–B1)",
+  modality: "Online",
+  curriculum: [
+    {
+      title: "Book 5 — Deep Flow",
+      topics: [
+        "Present Perfect vs Simple Past",
+        "Past continuous",
+        "The future: will, going to and present continuous",
+        "Opinions and arguments",
+        "More complex social situations",
+        "Understanding longer texts",
+        "Building coherence in speaking and writing",
+      ],
+    },
+    {
+      title: "Book 6 — Only One Coin",
+      topics: [
+        "Lifestyle and health",
+        "Imperatives",
+        "Modal verbs",
+        "Gerunds and infinitives",
+        "Communication in real contexts",
+        "Narrating experiences",
+        "Consolidating the intermediate level",
+        "Preparation for level assessments",
+      ],
+    },
+  ],
+  goals: [
+    "Progressive listening comprehension",
+    "Speaking with growing fluency",
+    "Reading comprehension",
+    "Clear, structured writing",
+    "Correct use of grammar structures",
+    "Constantly expanding vocabulary",
+  ],
+  method: [
+    "Interactive online classes",
+    "Communicative approach",
+    "Practical exercises per unit",
+    "Role play and real-life simulations",
+    "Assessments per module",
+    "Progress tests",
+  ],
+  evaluation: [
+    "Active participation",
+    "Practical activities",
+    "Written exercises",
+    "Assessment per book",
+    "Final integrative assessment",
+  ],
+  outcomes: [
+    "Communicate confidently in everyday situations",
+    "Understand intermediate-level conversations and texts",
+    "Express opinions, experiences and plans",
+    "Hold fluent conversations",
+    "Read and write texts of medium complexity",
+    "Function in basic work or academic settings",
+    "Have a solid base for international exams such as TOEFL",
+  ],
+  outcomeNote:
+    "Realistically, completing the program takes you to a functional intermediate level (A2–B1) — enough to continue into advanced studies, work in settings that require basic-to-intermediate English or keep improving the language. The Basic level (books 1 to 4) is the natural starting point before this package.",
+};
+
+const englishIntermediatePT: CourseContent = {
+  description: [
+    "A continuação do nível Básico dentro do mesmo programa de Inglês da Only One Coin: os livros 5 e 6 (Papayita) consolidam o nível intermediário para você pensar em inglês, ganhar segurança ao se comunicar e se virar em contextos acadêmicos, de trabalho e do dia a dia.",
+    "Você trabalha opiniões e argumentos, situações sociais mais complexas e textos extensos, com a mesma prática constante de speaking, listening, reading, writing, use of English e vocabulary. O conteúdo segue padrões internacionais e serve de base para preparação de exames tipo TOEFL.",
+  ],
+  sessions: "80 sessões",
+  duration: "80 horas acadêmicas (nível Intermediário)",
+  level: "Intermediário (A2–B1)",
+  modality: "Virtual",
+  curriculum: [
+    {
+      title: "Livro 5 — Deep Flow",
+      topics: [
+        "Present Perfect vs Simple Past",
+        "Passado contínuo",
+        "Futuro: will, going to e present continuous",
+        "Opiniões e argumentos",
+        "Situações sociais mais complexas",
+        "Compreensão de textos extensos",
+        "Desenvolvimento de coerência ao falar e escrever",
+      ],
+    },
+    {
+      title: "Livro 6 — Only One Coin",
+      topics: [
+        "Estilo de vida e saúde",
+        "Imperativos",
+        "Verbos modais",
+        "Gerúndios e infinitivos",
+        "Comunicação em contextos reais",
+        "Narração de experiências",
+        "Consolidação do nível intermediário",
+        "Preparação para avaliações de nível",
+      ],
+    },
+  ],
+  goals: [
+    "Compreensão auditiva progressiva",
+    "Expressão oral com fluência crescente",
+    "Leitura compreensiva de textos",
+    "Escrita clara e estruturada",
+    "Uso correto das estruturas gramaticais",
+    "Ampliação constante do vocabulário",
+  ],
+  method: [
+    "Aulas virtuais interativas",
+    "Enfoque comunicativo",
+    "Exercícios práticos por unidade",
+    "Role play e simulações reais",
+    "Avaliações por módulo",
+    "Provas de progresso",
+  ],
+  evaluation: [
+    "Participação ativa",
+    "Atividades práticas",
+    "Exercícios escritos",
+    "Avaliações por livro",
+    "Avaliação final integradora",
+  ],
+  outcomes: [
+    "Comunicar-se com segurança em situações cotidianas",
+    "Compreender conversas e textos de nível intermediário",
+    "Expressar opiniões, experiências e planos",
+    "Manter conversas fluidas",
+    "Ler e redigir textos de complexidade média",
+    "Atuar em ambientes de trabalho ou acadêmicos básicos",
+    "Ter base sólida para exames internacionais tipo TOEFL",
+  ],
+  outcomeNote:
+    "De forma realista, ao completar o programa você alcança um nível intermediário funcional (A2–B1) — suficiente para seguir em estudos avançados, trabalhar em ambientes que exijam inglês básico–intermediário ou continuar se aperfeiçoando no idioma. O nível Básico (livros 1 a 4) é o ponto de partida natural antes deste pacote.",
+};
 
 /**
  * Cambridge é a CERTIFICAÇÃO; este curso é a preparação para ela. O texto
@@ -347,7 +568,8 @@ const cambridgeES: CourseContent = {
     "Cambridge es una certificación internacional de inglés. Este curso te prepara para rendirla: trabaja el nivel B1 de forma progresiva, con el tipo de tareas, audios y textos que aparecen en el examen.",
     "Al terminar recibes asesoría gratuita para inscribirte y rendir el examen Cambridge PET.",
   ],
-  duration: "",
+  // Sem `duration`: o documento do curso não fecha carga horária, e ausência é
+  // melhor que chute (mesma regra do preço em `ui.ts`).
   level: "Intermedio (B1)",
   modality: "Virtual",
   curriculum: [
@@ -422,6 +644,168 @@ const cambridgeES: CourseContent = {
   ],
   outcomeNote:
     "El examen y el certificado los emite Cambridge, no Only One Coin: este curso te lleva preparado hasta la prueba y te acompaña en la inscripción.",
+};
+
+const cambridgeEN: CourseContent = {
+  description: [
+    "Cambridge is an international English certification. This course prepares you to sit it: it works through level B1 progressively, with the kind of tasks, audio and texts that appear in the exam.",
+    "When you finish, you receive free guidance to register for and sit the Cambridge PET exam.",
+  ],
+  level: "Intermediate (B1)",
+  modality: "Online",
+  curriculum: [
+    {
+      title: "Module 1 — Daily life and decisions",
+      topics: [
+        "Routines and daily life",
+        "Studies and work",
+        "Expressing likes, preferences and decisions",
+        "Present simple · Adverbs of frequency",
+        "Present continuous · Verb patterns (want, would like, decide)",
+        "Result: you talk about your life, habits and decisions in English",
+      ],
+    },
+    {
+      title: "Module 2 — Experiences and the past",
+      topics: [
+        "Travel, hobbies and free time",
+        "Personal experiences and storytelling",
+        "Past simple · Past continuous",
+        "“Used to” · Time expressions",
+        "Result: you tell past experiences clearly and coherently",
+      ],
+    },
+    {
+      title: "Module 3 — Plans and future life",
+      topics: [
+        "Future plans",
+        "Technology and digital life",
+        "Rules, advice and responsibilities",
+        "Future forms (going to / will) · Modals (can, have to, should)",
+        "First conditional",
+        "Result: you talk about the future, give advice and express obligations",
+      ],
+    },
+    {
+      title: "Module 4 — Health and lifestyle",
+      topics: [
+        "Health and well-being",
+        "Personal changes and lifestyle",
+        "Present perfect vs past simple",
+        "Quantifiers · Modals for advice",
+        "Result: you talk about experiences and habits, and give recommendations",
+      ],
+    },
+  ],
+  goals: [
+    "Speaking: hold fluent conversations and express opinions and experiences",
+    "Listening: understand everyday conversations and Cambridge-style exam audio",
+    "Reading: read intermediate texts and identify main ideas and details",
+    "Writing: write emails, stories and opinions clearly and coherently",
+  ],
+  method: [
+    "Live online classes",
+    "Practice with exam-format tasks",
+    "Real communication situations",
+    "Active participation from the very first class",
+  ],
+  evaluation: [
+    "Class participation",
+    "Practice work per module",
+    "Mock tests in exam format",
+  ],
+  outcomes: [
+    "Communicate when travelling and in everyday situations",
+    "Hold basic-to-intermediate conversations without translating in your head",
+    "Understand content in English (videos, audio, texts)",
+    "Express ideas, experiences and plans clearly",
+    "Reach a level equivalent to B1 (intermediate)",
+    "Be ready to sit the Cambridge PET exam",
+    "Receive free guidance at the end to sit the exam",
+  ],
+  outcomeNote:
+    "The exam and the certificate are issued by Cambridge, not by Only One Coin: this course gets you prepared for the test and supports you through registration.",
+};
+
+const cambridgePT: CourseContent = {
+  description: [
+    "Cambridge é uma certificação internacional de inglês. Este curso prepara você para prestá-la: trabalha o nível B1 de forma progressiva, com o tipo de tarefas, áudios e textos que aparecem no exame.",
+    "Ao terminar, você recebe assessoria gratuita para se inscrever e prestar o exame Cambridge PET.",
+  ],
+  level: "Intermediário (B1)",
+  modality: "Virtual",
+  curriculum: [
+    {
+      title: "Módulo 1 — Vida diária e decisões",
+      topics: [
+        "Rotinas e vida diária",
+        "Estudos e trabalho",
+        "Expressar gostos, preferências e decisões",
+        "Present simple · Adverbs of frequency",
+        "Present continuous · Verb patterns (want, would like, decide)",
+        "Resultado: você fala da sua vida, dos seus hábitos e das suas decisões em inglês",
+      ],
+    },
+    {
+      title: "Módulo 2 — Experiências e passado",
+      topics: [
+        "Viagens, hobbies e tempo livre",
+        "Experiências pessoais e narração de histórias",
+        "Past simple · Past continuous",
+        "“Used to” · Expressões de tempo",
+        "Resultado: você conta experiências passadas com clareza e coerência",
+      ],
+    },
+    {
+      title: "Módulo 3 — Planos e vida futura",
+      topics: [
+        "Planos futuros",
+        "Tecnologia e vida digital",
+        "Normas, conselhos e responsabilidades",
+        "Future forms (going to / will) · Modals (can, have to, should)",
+        "First conditional",
+        "Resultado: você fala do futuro, dá conselhos e expressa obrigações",
+      ],
+    },
+    {
+      title: "Módulo 4 — Saúde e estilo de vida",
+      topics: [
+        "Saúde e bem-estar",
+        "Mudanças pessoais e estilo de vida",
+        "Present perfect vs past simple",
+        "Quantifiers · Modals for advice",
+        "Resultado: você fala de experiências e hábitos, e dá recomendações",
+      ],
+    },
+  ],
+  goals: [
+    "Speaking: manter conversas fluidas e expressar opiniões e experiências",
+    "Listening: compreender conversas cotidianas e áudios no estilo do exame Cambridge",
+    "Reading: ler textos intermediários e identificar ideias principais e detalhes",
+    "Writing: redigir e-mails, histórias e opiniões de forma clara e coerente",
+  ],
+  method: [
+    "Aulas virtuais ao vivo",
+    "Prática com tarefas no formato do exame",
+    "Situações reais de comunicação",
+    "Participação ativa desde a primeira aula",
+  ],
+  evaluation: [
+    "Participação em aula",
+    "Práticas por módulo",
+    "Simulados no formato do exame",
+  ],
+  outcomes: [
+    "Comunicar-se em viagens e situações cotidianas",
+    "Manter conversas básicas-intermediárias sem traduzir mentalmente",
+    "Entender conteúdo em inglês (vídeos, áudios, textos)",
+    "Expressar ideias, experiências e planos com clareza",
+    "Alcançar um nível equivalente ao B1 (intermediário)",
+    "Estar preparado para prestar o exame Cambridge PET",
+    "Receber assessoria gratuita ao finalizar para prestar o exame",
+  ],
+  outcomeNote:
+    "O exame e o certificado são emitidos pelo Cambridge, não pela Only One Coin: este curso leva você preparado até a prova e acompanha a inscrição.",
 };
 
 const frenchAdvancedES: CourseContent = {
@@ -738,6 +1122,7 @@ const koreanPT: CourseContent = {
 export const courseContent: Record<Lang, Partial<Record<CourseSlug, CourseContent>>> = {
   es: {
     english: englishES,
+    "english-intermediate": englishIntermediateES,
     "cambridge-b1": cambridgeES,
     "french-advanced": frenchAdvancedES,
     "french": frenchES,
@@ -749,6 +1134,8 @@ export const courseContent: Record<Lang, Partial<Record<CourseSlug, CourseConten
   },
   en: {
     english: englishEN,
+    "english-intermediate": englishIntermediateEN,
+    "cambridge-b1": cambridgeEN,
     "french": frenchEN,
     "italian": italianEN,
     "portuguese": portugueseEN,
@@ -758,6 +1145,8 @@ export const courseContent: Record<Lang, Partial<Record<CourseSlug, CourseConten
   },
   pt: {
     english: englishPT,
+    "english-intermediate": englishIntermediatePT,
+    "cambridge-b1": cambridgePT,
     "french": frenchPT,
     "italian": italianPT,
     "portuguese": portuguesePT,
