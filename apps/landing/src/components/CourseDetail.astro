@@ -66,7 +66,7 @@ const levelTabsCss = levelPanels
   background: var(--sky);
   box-shadow: var(--shadow-blue);
 }
-#level-${p.slug}:checked ~ .tab-row > [for="level-${p.slug}"] .tab-icon {
+#level-${p.slug}:checked ~ .tab-row > [for="level-${p.slug}"] .step:not(.step-on) {
   background: var(--paper);
 }
 #level-${p.slug}:focus-visible ~ .tab-row > [for="level-${p.slug}"] {
@@ -80,22 +80,6 @@ const enrollHref = enrollmentHref(withLang(lang, "/enrollment"), {
   courseId: courseIdBySlug[slug],
   content: "course_page",
 });
-
-// Icon per level square (Lucide) — decorative, not translatable content:
-// a broto pro começo do zero, a subida pro nível seguinte, medalha e troféu
-// pras certificações. Nível fora do mapa cai no livro aberto.
-const levelIcons: Partial<Record<CourseSlug, string>> = {
-  "english":
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-3.7.3-4.9 1.4-4.9 2z"/></svg>',
-  "english-intermediate":
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>',
-  "cambridge-b1":
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>',
-  "cambridge-b2":
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>',
-};
-const defaultLevelIcon =
-  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>';
 
 // Icons per feature (Lucide) — decorative, not translatable content.
 const featureIcons = [
@@ -266,9 +250,15 @@ const courseJsonLd = {
           />
         ))}
         <div class="tab-row">
-          {levelPanels.map((p) => (
+          {/* Barrinhas de progressão em vez de ícone: o quadradinho N acende
+              N barras — a posição do nível na escada, sem palavra nenhuma. */}
+          {levelPanels.map((p, index) => (
             <label class="tab-square" for={`level-${p.slug}`}>
-              <span class="tab-icon" set:html={levelIcons[p.slug] ?? defaultLevelIcon} />
+              <span class="tab-steps" aria-hidden="true">
+                {levelPanels.map((_, step) => (
+                  <span class={step <= index ? "step step-on" : "step"} />
+                ))}
+              </span>
               <span class="tab-name">{p.shortName}</span>
             </label>
           ))}
@@ -697,19 +687,28 @@ const courseJsonLd = {
     transform: translateY(-2px);
     border-color: var(--blue);
   }
-  .tab-icon {
-    display: grid;
-    place-items: center;
-    width: 46px;
-    height: 46px;
-    border-radius: 50%;
+  /* As barras sobem como sinal de celular: alinhadas pela base, cada uma um
+     pouco mais alta que a anterior (até 6 níveis num idioma). */
+  .tab-steps {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 24px;
+  }
+  .step {
+    width: 7px;
+    border-radius: 4px;
     background: var(--sky);
-    color: var(--blue-deep);
     transition: background 0.16s ease;
   }
-  .tab-icon :global(svg) {
-    width: 23px;
-    height: 23px;
+  .step:nth-child(1) { height: 9px; }
+  .step:nth-child(2) { height: 14px; }
+  .step:nth-child(3) { height: 19px; }
+  .step:nth-child(4) { height: 24px; }
+  .step:nth-child(5) { height: 29px; }
+  .step:nth-child(6) { height: 34px; }
+  .step-on {
+    background: var(--blue);
   }
   .tab-name {
     font-family: var(--font-display);
