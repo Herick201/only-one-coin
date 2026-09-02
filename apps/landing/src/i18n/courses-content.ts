@@ -1194,50 +1194,380 @@ const germanPT: CourseContent = {
 };
 
 const koreanES: CourseContent = {
+  description: [
+    "El curso de Coreano está diseñado para que desarrolles habilidades comunicativas desde el nivel básico hasta un nivel intermedio funcional, y puedas comprender, hablar, leer y escribir en situaciones reales del día a día.",
+    "Se trabaja con un enfoque práctico basado en comunicación real, comprensión progresiva y aplicación inmediata: vocabulario, gramática, práctica guiada y producción oral y escrita en cada unidad.",
+  ],
   level: "Básico a A2 (intermedio inicial)",
+  modality: "Virtual",
   curriculum: [
-    { title: "Unidad 1 — Introducción y bases del idioma", topics: [] },
-    { title: "Unidad 2 — Objetos y entorno", topics: [] },
-    { title: "Unidad 3 — Ubicación y espacio", topics: [] },
-    { title: "Unidad 4 — Compras y alimentos", topics: [] },
-    { title: "Unidad 5 — Números y conteo", topics: [] },
-    { title: "Unidad 6 — Acciones en pasado", topics: [] },
-    { title: "Unidad 7 — Tiempo y fechas", topics: [] },
-    { title: "Unidad 8 — Clima y descripciones", topics: [] },
-    { title: "Unidad 9 — Planes y acuerdos", topics: [] },
-    { title: "Unidad 10 — Vida cotidiana y experiencias", topics: [] },
+    {
+      title: "Unidad 1 — Introducción y bases del idioma",
+      topics: [
+        "Saludos y presentaciones",
+        "Estructura básica de la oración",
+        "Partículas básicas (은/는, 이/가)",
+        "Vocabulario inicial",
+        "Resultado: puedes presentarte y entender frases simples",
+      ],
+    },
+    {
+      title: "Unidad 2 — Objetos y entorno",
+      topics: [
+        "Objetos cotidianos (mesa, silla, mochila, etc.)",
+        "Uso de 이/가 (sujeto)",
+        "Descripción básica",
+        "Resultado: describes objetos y tu entorno",
+      ],
+    },
+    {
+      title: "Unidad 3 — Ubicación y espacio",
+      topics: [
+        "Posiciones: arriba, abajo, delante, dentro, etc.",
+        "Uso de 에 있다 / 없다",
+        "Preguntas de ubicación",
+        "Resultado: describes dónde están las cosas",
+      ],
+    },
+    {
+      title: "Unidad 4 — Compras y alimentos",
+      topics: [
+        "Vocabulario de comida (manzana, pan, leche, etc.)",
+        "Uso de 을/를 (objeto directo)",
+        "Pedir y comprar productos",
+        "Números sino-coreanos",
+        "Resultado: puedes comprar y pedir productos",
+      ],
+    },
+    {
+      title: "Unidad 5 — Números y conteo",
+      topics: [
+        "Números nativos coreanos",
+        "Contadores (personas, objetos, etc.)",
+        "Uso formal del lenguaje",
+        "Resultado: cuentas y expresas cantidades correctamente",
+      ],
+    },
+    {
+      title: "Unidad 6 — Acciones en pasado",
+      topics: [
+        "Verbos (comer, leer, ver, etc.)",
+        "Pasado: -았/었어요",
+        "Uso de 에서 (lugar de la acción)",
+        "Resultado: narras lo que hiciste",
+      ],
+    },
+    {
+      title: "Unidad 7 — Tiempo y fechas",
+      topics: [
+        "Días, meses y horas",
+        "Uso de 에 (tiempo)",
+        "Rutinas diarias",
+        "Resultado: hablas de horarios y fechas",
+      ],
+    },
+    {
+      title: "Unidad 8 — Clima y descripciones",
+      topics: [
+        "Estaciones (primavera, verano, etc.)",
+        "Conectores (그리고 = y)",
+        "Resultado: describes el clima y situaciones",
+      ],
+    },
+    {
+      title: "Unidad 9 — Planes y acuerdos",
+      topics: [
+        "Hacer invitaciones",
+        "-(으)ㄹ까요 (¿hacemos?)",
+        "-아요/어요 (propuesta)",
+        "Resultado: propones planes y respondes",
+      ],
+    },
+    {
+      title: "Unidad 10 — Vida cotidiana y experiencias",
+      topics: [
+        "Conversaciones completas",
+        "Uso de conectores (-고, 그런데)",
+        "Expresión de experiencias",
+        "Resultado: mantienes conversaciones más fluidas",
+      ],
+    },
+  ],
+  goals: [
+    "Comprender y usar vocabulario básico y cotidiano",
+    "Construir oraciones correctamente en presente, pasado y futuro",
+    "Describir situaciones, lugares, acciones y experiencias",
+    "Expresar gustos, planes, opiniones y propuestas",
+    "Mantener conversaciones simples y estructuradas",
+    "Hablar con fluidez básica: preguntar, responder y contar experiencias",
+    "Entender conversaciones simples e instrucciones cotidianas",
+    "Leer textos cortos identificando la información clave",
+    "Redactar oraciones y párrafos simples con ideas claras",
+  ],
+  method: [
+    "Curso 100% práctico y aplicado",
+    "Enfoque en hablar desde la primera clase",
+    "Contenidos progresivos y estructurados",
+    "Aprendizaje accesible y realista",
+  ],
+  outcomes: [
+    "Comunicarte en situaciones reales (compras, citas, rutinas)",
+    "Comprender estructuras clave del coreano",
+    "Construir oraciones correctamente",
+    "Expresar pasado, presente y planes",
+    "Tener una base sólida para continuar al nivel intermedio alto",
   ],
 };
 
 const koreanEN: CourseContent = {
+  description: [
+    "The Korean course is designed to build your communication skills from beginner level up to a functional intermediate level, so you can understand, speak, read and write in real everyday situations.",
+    "It follows a practical approach based on real communication, progressive comprehension and immediate application: vocabulary, grammar, guided practice and spoken and written production in every unit.",
+  ],
   level: "Beginner to A2 (early intermediate)",
+  modality: "Online",
   curriculum: [
-    { title: "Unit 1 — Introduction and foundations", topics: [] },
-    { title: "Unit 2 — Objects and surroundings", topics: [] },
-    { title: "Unit 3 — Location and space", topics: [] },
-    { title: "Unit 4 — Shopping and food", topics: [] },
-    { title: "Unit 5 — Numbers and counting", topics: [] },
-    { title: "Unit 6 — Actions in the past", topics: [] },
-    { title: "Unit 7 — Time and dates", topics: [] },
-    { title: "Unit 8 — Weather and descriptions", topics: [] },
-    { title: "Unit 9 — Plans and arrangements", topics: [] },
-    { title: "Unit 10 — Everyday life and experiences", topics: [] },
+    {
+      title: "Unit 1 — Introduction and foundations",
+      topics: [
+        "Greetings and introductions",
+        "Basic sentence structure",
+        "Basic particles (은/는, 이/가)",
+        "Starter vocabulary",
+        "Outcome: you can introduce yourself and understand simple sentences",
+      ],
+    },
+    {
+      title: "Unit 2 — Objects and surroundings",
+      topics: [
+        "Everyday objects (table, chair, backpack, etc.)",
+        "Using 이/가 (subject)",
+        "Basic description",
+        "Outcome: you describe objects and your surroundings",
+      ],
+    },
+    {
+      title: "Unit 3 — Location and space",
+      topics: [
+        "Positions: above, below, in front, inside, etc.",
+        "Using 에 있다 / 없다",
+        "Asking where things are",
+        "Outcome: you describe where things are",
+      ],
+    },
+    {
+      title: "Unit 4 — Shopping and food",
+      topics: [
+        "Food vocabulary (apple, bread, milk, etc.)",
+        "Using 을/를 (direct object)",
+        "Ordering and buying products",
+        "Sino-Korean numbers",
+        "Outcome: you can buy and order products",
+      ],
+    },
+    {
+      title: "Unit 5 — Numbers and counting",
+      topics: [
+        "Native Korean numbers",
+        "Counters (people, objects, etc.)",
+        "Formal language use",
+        "Outcome: you count and express quantities correctly",
+      ],
+    },
+    {
+      title: "Unit 6 — Actions in the past",
+      topics: [
+        "Verbs (eat, read, watch, etc.)",
+        "Past tense: -았/었어요",
+        "Using 에서 (place of action)",
+        "Outcome: you tell what you did",
+      ],
+    },
+    {
+      title: "Unit 7 — Time and dates",
+      topics: [
+        "Days, months and hours",
+        "Using 에 (time)",
+        "Daily routines",
+        "Outcome: you talk about schedules and dates",
+      ],
+    },
+    {
+      title: "Unit 8 — Weather and descriptions",
+      topics: [
+        "Seasons (spring, summer, etc.)",
+        "Connectors (그리고 = and)",
+        "Outcome: you describe the weather and situations",
+      ],
+    },
+    {
+      title: "Unit 9 — Plans and arrangements",
+      topics: [
+        "Making invitations",
+        "-(으)ㄹ까요 (shall we?)",
+        "-아요/어요 (suggestion)",
+        "Outcome: you suggest plans and respond",
+      ],
+    },
+    {
+      title: "Unit 10 — Everyday life and experiences",
+      topics: [
+        "Full conversations",
+        "Using connectors (-고, 그런데)",
+        "Talking about experiences",
+        "Outcome: you hold more fluent conversations",
+      ],
+    },
+  ],
+  goals: [
+    "Understand and use basic, everyday vocabulary",
+    "Build sentences correctly in the present, past and future",
+    "Describe situations, places, actions and experiences",
+    "Express likes, plans, opinions and suggestions",
+    "Hold simple, structured conversations",
+    "Speak with basic fluency: ask, answer and share experiences",
+    "Understand simple conversations and everyday instructions",
+    "Read short texts and identify the key information",
+    "Write simple sentences and paragraphs with clear ideas",
+  ],
+  method: [
+    "100% practical, applied course",
+    "Focus on speaking from the very first class",
+    "Progressive, structured content",
+    "Accessible, realistic learning",
+  ],
+  outcomes: [
+    "Communicate in real situations (shopping, appointments, routines)",
+    "Understand key structures of Korean",
+    "Build sentences correctly",
+    "Express past, present and plans",
+    "Have a solid base to continue to upper intermediate level",
   ],
 };
 
 const koreanPT: CourseContent = {
+  description: [
+    "O curso de Coreano foi desenhado para você desenvolver habilidades comunicativas do nível básico até um intermediário funcional, e conseguir compreender, falar, ler e escrever em situações reais do dia a dia.",
+    "O trabalho segue um enfoque prático baseado em comunicação real, compreensão progressiva e aplicação imediata: vocabulário, gramática, prática guiada e produção oral e escrita em cada unidade.",
+  ],
   level: "Básico a A2 (intermediário inicial)",
+  modality: "Virtual",
   curriculum: [
-    { title: "Unidade 1 — Introdução e bases do idioma", topics: [] },
-    { title: "Unidade 2 — Objetos e entorno", topics: [] },
-    { title: "Unidade 3 — Localização e espaço", topics: [] },
-    { title: "Unidade 4 — Compras e alimentos", topics: [] },
-    { title: "Unidade 5 — Números e contagem", topics: [] },
-    { title: "Unidade 6 — Ações no passado", topics: [] },
-    { title: "Unidade 7 — Tempo e datas", topics: [] },
-    { title: "Unidade 8 — Clima e descrições", topics: [] },
-    { title: "Unidade 9 — Planos e combinados", topics: [] },
-    { title: "Unidade 10 — Vida cotidiana e experiências", topics: [] },
+    {
+      title: "Unidade 1 — Introdução e bases do idioma",
+      topics: [
+        "Cumprimentos e apresentações",
+        "Estrutura básica da oração",
+        "Partículas básicas (은/는, 이/가)",
+        "Vocabulário inicial",
+        "Resultado: você se apresenta e entende frases simples",
+      ],
+    },
+    {
+      title: "Unidade 2 — Objetos e entorno",
+      topics: [
+        "Objetos do dia a dia (mesa, cadeira, mochila, etc.)",
+        "Uso de 이/가 (sujeito)",
+        "Descrição básica",
+        "Resultado: você descreve objetos e o seu entorno",
+      ],
+    },
+    {
+      title: "Unidade 3 — Localização e espaço",
+      topics: [
+        "Posições: em cima, embaixo, na frente, dentro, etc.",
+        "Uso de 에 있다 / 없다",
+        "Perguntas de localização",
+        "Resultado: você descreve onde as coisas estão",
+      ],
+    },
+    {
+      title: "Unidade 4 — Compras e alimentos",
+      topics: [
+        "Vocabulário de comida (maçã, pão, leite, etc.)",
+        "Uso de 을/를 (objeto direto)",
+        "Pedir e comprar produtos",
+        "Números sino-coreanos",
+        "Resultado: você compra e pede produtos",
+      ],
+    },
+    {
+      title: "Unidade 5 — Números e contagem",
+      topics: [
+        "Números nativos coreanos",
+        "Contadores (pessoas, objetos, etc.)",
+        "Uso formal da língua",
+        "Resultado: você conta e expressa quantidades corretamente",
+      ],
+    },
+    {
+      title: "Unidade 6 — Ações no passado",
+      topics: [
+        "Verbos (comer, ler, ver, etc.)",
+        "Passado: -았/었어요",
+        "Uso de 에서 (lugar da ação)",
+        "Resultado: você narra o que fez",
+      ],
+    },
+    {
+      title: "Unidade 7 — Tempo e datas",
+      topics: [
+        "Dias, meses e horas",
+        "Uso de 에 (tempo)",
+        "Rotinas diárias",
+        "Resultado: você fala de horários e datas",
+      ],
+    },
+    {
+      title: "Unidade 8 — Clima e descrições",
+      topics: [
+        "Estações (primavera, verão, etc.)",
+        "Conectores (그리고 = e)",
+        "Resultado: você descreve o clima e situações",
+      ],
+    },
+    {
+      title: "Unidade 9 — Planos e combinados",
+      topics: [
+        "Fazer convites",
+        "-(으)ㄹ까요 (vamos?)",
+        "-아요/어요 (proposta)",
+        "Resultado: você propõe planos e responde",
+      ],
+    },
+    {
+      title: "Unidade 10 — Vida cotidiana e experiências",
+      topics: [
+        "Conversas completas",
+        "Uso de conectores (-고, 그런데)",
+        "Expressão de experiências",
+        "Resultado: você mantém conversas mais fluidas",
+      ],
+    },
+  ],
+  goals: [
+    "Compreender e usar vocabulário básico e cotidiano",
+    "Construir orações corretamente no presente, passado e futuro",
+    "Descrever situações, lugares, ações e experiências",
+    "Expressar gostos, planos, opiniões e propostas",
+    "Manter conversas simples e estruturadas",
+    "Falar com fluência básica: perguntar, responder e contar experiências",
+    "Entender conversas simples e instruções do dia a dia",
+    "Ler textos curtos identificando a informação-chave",
+    "Redigir orações e parágrafos simples com ideias claras",
+  ],
+  method: [
+    "Curso 100% prático e aplicado",
+    "Foco em falar desde a primeira aula",
+    "Conteúdos progressivos e estruturados",
+    "Aprendizado acessível e realista",
+  ],
+  outcomes: [
+    "Comunicar-se em situações reais (compras, encontros, rotinas)",
+    "Compreender estruturas-chave do coreano",
+    "Construir orações corretamente",
+    "Expressar passado, presente e planos",
+    "Ter uma base sólida para continuar ao nível intermediário alto",
   ],
 };
 
