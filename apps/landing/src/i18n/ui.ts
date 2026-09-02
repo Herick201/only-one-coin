@@ -199,7 +199,7 @@ export const content = {
       preuni: {
         title: "Preuniversitario — Only One Coin Perú",
         description:
-          "Programa Preuniversitario de Only One Coin: preparación integral para San Marcos y las universidades más exigentes del Perú. Próximamente.",
+          "Programa Preuniversitario de Only One Coin: ciclo semestral de 6 meses, 100% virtual, con 18 cursos y temario completo para postular a San Marcos y las universidades más exigentes del Perú. Próximamente.",
       },
       about: {
         title: "Nosotros — Only One Coin Perú",
@@ -433,6 +433,12 @@ export const content = {
       titlePost: "",
       lead: "Una preparación integral para postular a San Marcos y a las universidades más exigentes del país, con el mismo principio de siempre: educación de calidad al alcance de todos.",
       intro: "El programa desarrolla, de forma progresiva, todas las áreas que se evalúan en los exámenes de admisión, con clases en vivo, ejercicios tipo examen y evaluaciones constantes para medir tu avance.",
+      facts: [
+        { label: "Duración", value: "6 meses · Ciclo Semestral" },
+        { label: "Modalidad", value: "100% virtual · clases en vivo" },
+        { label: "Plan de estudios", value: "18 cursos" },
+        { label: "Enfoque", value: "Examen de admisión San Marcos" },
+      ],
       goalTitle: "Objetivo del programa",
       goal: "Que domines los contenidos y las estrategias de resolución necesarias para afrontar con éxito un examen de admisión — no solo memorizar, sino analizar, interpretar y decidir bajo presión.",
       areasTitle: "Qué vas a estudiar",
@@ -444,6 +450,9 @@ export const content = {
         { title: "Lenguaje y Literatura", text: "Gramática, sintaxis y normativa, con análisis de textos literarios y no literarios." },
         { title: "Ciencias Sociales", text: "Historia, Geografía, Economía, Educación Cívica y Filosofía, con mirada crítica del Perú y el mundo." },
       ],
+      temarioTitle: "Temario completo del ciclo",
+      temarioLead: "El temario del Ciclo San Marcos Semestral, curso por curso, tal como lo dicta el programa. Abre cada curso y revisa exactamente qué vas a estudiar.",
+      temarioCount: "{n} temas",
       methodTitle: "Cómo se enseña",
       method: [
         "Desarrollo progresivo de contenidos",
@@ -620,7 +629,7 @@ export const content = {
       preuni: {
         title: "University Prep — Only One Coin Perú",
         description:
-          "Only One Coin's University Prep Program: full preparation for San Marcos and Peru's most demanding universities. Coming soon.",
+          "Only One Coin's University Prep Program: a 6-month, 100% online semester cycle with 18 subjects and a full syllabus to prepare for San Marcos and Peru's most demanding universities. Coming soon.",
       },
       about: {
         title: "About us — Only One Coin Perú",
@@ -854,6 +863,12 @@ export const content = {
       titlePost: "",
       lead: "Full preparation for the entrance exams of San Marcos and Peru's most demanding universities, with the same principle as always: quality education within everyone's reach.",
       intro: "The program works through every area assessed in admission exams, step by step, with live classes, exam-style exercises and constant assessments to track your progress.",
+      facts: [
+        { label: "Duration", value: "6 months · semester cycle" },
+        { label: "Modality", value: "100% online · live classes" },
+        { label: "Study plan", value: "18 subjects" },
+        { label: "Focus", value: "San Marcos admission exam" },
+      ],
       goalTitle: "Program goal",
       goal: "That you master both the content and the problem-solving strategies an entrance exam demands — not memorising, but analysing, interpreting and deciding under pressure.",
       areasTitle: "What you'll study",
@@ -865,6 +880,9 @@ export const content = {
         { title: "Language & Literature", text: "Grammar, syntax and usage, with analysis of literary and non-literary texts." },
         { title: "Social Sciences", text: "History, Geography, Economics, Civics and Philosophy, with a critical view of Peru and the world." },
       ],
+      temarioTitle: "The full syllabus",
+      temarioLead: "The San Marcos Semester Cycle syllabus, subject by subject, exactly as the program teaches it. Open each subject to see what you'll study.",
+      temarioCount: "{n} topics",
       methodTitle: "How it is taught",
       method: [
         "Content built up step by step",
@@ -1040,7 +1058,7 @@ export const content = {
       preuni: {
         title: "Pré-universitário — Only One Coin Perú",
         description:
-          "Programa Pré-universitário da Only One Coin: preparação completa para a San Marcos e as universidades mais exigentes do Peru. Em breve.",
+          "Programa Pré-universitário da Only One Coin: ciclo semestral de 6 meses, 100% virtual, com 18 matérias e conteúdo completo para o vestibular da San Marcos e das universidades mais exigentes do Peru. Em breve.",
       },
       about: {
         title: "Sobre nós — Only One Coin Peru",
@@ -1274,6 +1292,12 @@ export const content = {
       titlePost: "",
       lead: "Preparação completa para o vestibular da San Marcos e das universidades mais exigentes do Peru, com o princípio de sempre: educação de qualidade ao alcance de todos.",
       intro: "O programa percorre, de forma progressiva, todas as áreas cobradas nos exames de admissão, com aulas ao vivo, exercícios no formato da prova e avaliações constantes para medir seu avanço.",
+      facts: [
+        { label: "Duração", value: "6 meses · ciclo semestral" },
+        { label: "Modalidade", value: "100% virtual · aulas ao vivo" },
+        { label: "Plano de estudos", value: "18 matérias" },
+        { label: "Foco", value: "Vestibular da San Marcos" },
+      ],
       goalTitle: "Objetivo do programa",
       goal: "Que você domine o conteúdo e as estratégias de resolução que um exame de admissão exige — não decorar, mas analisar, interpretar e decidir sob pressão.",
       areasTitle: "O que você vai estudar",
@@ -1285,6 +1309,9 @@ export const content = {
         { title: "Linguagem e Literatura", text: "Gramática, sintaxe e normas, com análise de textos literários e não literários." },
         { title: "Ciências Sociais", text: "História, Geografia, Economia, Educação Cívica e Filosofia, com olhar crítico sobre o Peru e o mundo." },
       ],
+      temarioTitle: "Conteúdo completo do ciclo",
+      temarioLead: "O conteúdo do Ciclo San Marcos Semestral, matéria por matéria, como o programa ensina. Abra cada matéria e veja exatamente o que você vai estudar.",
+      temarioCount: "{n} temas",
       methodTitle: "Como é ensinado",
       method: [
         "Conteúdo construído de forma progressiva",

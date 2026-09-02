@@ -1,10 +1,12 @@
 ---
 import { whatsappUrl } from "../i18n/ui";
 import { getLangFromUrl, useTranslations } from "../i18n/utils";
+import { preuniContent } from "../i18n/preuni-content";
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const p = t.preuni;
+const temario = preuniContent[lang];
 ---
 
 <section class="section preuni">
@@ -18,6 +20,18 @@ const p = t.preuni;
       <p class="lead">{p.lead}</p>
       <p class="text-muted intro">{p.intro}</p>
     </header>
+
+    {/* Duración/modalidad primero: es lo que la persona vino a averiguar. El
+        precio no aparece porque aún no existe (decisión 02/09/2026) — mismo
+        criterio de coursePrices null: se omite, nunca se inventa. */}
+    <ul class="facts">
+      {p.facts.map((f) => (
+        <li class="fact">
+          <span class="fact-label">{f.label}</span>
+          <span class="fact-value">{f.value}</span>
+        </li>
+      ))}
+    </ul>
 
     <section class="block goal">
       <h2 class="block-title">{p.goalTitle}</h2>
@@ -34,6 +48,32 @@ const p = t.preuni;
           </article>
         ))}
       </div>
+    </section>
+
+    <section class="block">
+      <h2 class="block-title">{p.temarioTitle}</h2>
+      <p class="text-muted temario-lead">{p.temarioLead}</p>
+      {temario.groups.map((group) => (
+        <section class="temario-group">
+          <h3 class="temario-group-title">{group.title}</h3>
+          <div class="temario-subjects">
+            {group.subjects.map((subject) => (
+              <details class="subject">
+                <summary>
+                  <span class="subject-title">{subject.title}</span>
+                  <span class="subject-count">{p.temarioCount.replace("{n}", String(subject.topics.length))}</span>
+                  <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+                </summary>
+                <ol class="subject-topics">
+                  {subject.topics.map((topic) => (
+                    <li>{topic}</li>
+                  ))}
+                </ol>
+              </details>
+            ))}
+          </div>
+        </section>
+      ))}
     </section>
 
     <div class="two-up">
@@ -128,8 +168,106 @@ const p = t.preuni;
   .intro {
     margin-top: 12px;
   }
+  .facts {
+    list-style: none;
+    margin: 28px 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .fact {
+    display: grid;
+    gap: 2px;
+    padding: 14px 22px;
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+  }
+  .fact-label {
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .fact-value {
+    font-weight: 800;
+    color: var(--blue);
+  }
   .block {
     margin-top: 54px;
+  }
+  .temario-lead {
+    max-width: 70ch;
+    margin-bottom: 6px;
+  }
+  .temario-group {
+    margin-top: 26px;
+  }
+  .temario-group-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 12px;
+  }
+  .temario-subjects {
+    display: grid;
+    gap: 10px;
+  }
+  .subject {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+  }
+  .subject summary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    cursor: pointer;
+    list-style: none;
+    font-weight: 700;
+  }
+  .subject summary::-webkit-details-marker {
+    display: none;
+  }
+  .subject-title {
+    flex: 1;
+  }
+  .subject-count {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .chevron {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    color: var(--blue);
+    transition: transform 0.2s ease;
+  }
+  .subject[open] .chevron {
+    transform: rotate(180deg);
+  }
+  .subject-topics {
+    margin: 0;
+    padding: 0 20px 18px 40px;
+    display: grid;
+    gap: 8px;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+  @media (min-width: 720px) {
+    .subject-topics {
+      grid-template-columns: 1fr 1fr;
+      column-gap: 32px;
+    }
   }
   .block-title {
     font-size: clamp(1.4rem, 2.6vw, 1.8rem);
