@@ -199,7 +199,7 @@ const temarioTabsCss = temario.groups
   }
   .preuni-hero {
     display: grid;
-    grid-template-columns: 1.05fr 0.95fr;
+    grid-template-columns: 1.2fr 0.8fr;
     gap: 56px;
     align-items: center;
   }
@@ -213,15 +213,20 @@ const temarioTabsCss = temario.groups
   .preuni-photo {
     position: relative;
     z-index: 2;
+    max-width: 380px;
+    margin-left: auto;
     border-radius: var(--radius-lg);
     overflow: hidden;
     border: 6px solid var(--paper);
     box-shadow: var(--shadow-md);
     transform: rotate(1.5deg);
   }
+  /* Foto retrato encurtada: corta para 4/5 em vez de ocupar a altura toda. */
   .preuni-photo img {
     width: 100%;
     height: auto;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
   }
   .media-dots {
     position: absolute;
@@ -254,6 +259,7 @@ const temarioTabsCss = temario.groups
     }
     .preuni-photo {
       transform: none;
+      margin-inline: auto;
     }
     .media-star {
       right: 4px;
