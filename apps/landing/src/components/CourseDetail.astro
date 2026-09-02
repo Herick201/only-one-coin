@@ -37,18 +37,27 @@ const moduleUnits = monthly !== null ? (program?.curriculum ?? []) : [];
 const parentSlug = courseParent[slug] ?? null;
 const familyRoot = parentSlug ?? slug;
 const siblings = [familyRoot, ...levelsOf(familyRoot)];
+// O card carrega tudo que decide a escolha — nome do nível (não o do menu:
+// ao lado de "Intermedio" o idioma-raiz precisa dizer "Básico"), uma linha
+// do que ele é, e o(s) preço(s), mensual incluído onde existe. Clicar na
+// página do nível vira opcional, não obrigatório.
 const levels =
   siblings.length > 1
-    ? siblings.map((levelSlug) => ({
-        slug: levelSlug,
-        name: t.courses.list[levelSlug],
-        href: withLang(lang, `/courses/${levelSlug}`),
-        price:
-          coursePrices[levelSlug] === null
-            ? null
-            : formatPEN(coursePrices[levelSlug] as number, lang),
-        current: levelSlug === slug,
-      }))
+    ? siblings.map((levelSlug) => {
+        const rawLevelMonthly = monthlyPrices[levelSlug] ?? null;
+        return {
+          slug: levelSlug,
+          name: d.levelNames[levelSlug] ?? t.courses.list[levelSlug],
+          summary: d.levelSummaries[levelSlug] ?? null,
+          href: withLang(lang, `/courses/${levelSlug}`),
+          price:
+            coursePrices[levelSlug] === null
+              ? null
+              : formatPEN(coursePrices[levelSlug] as number, lang),
+          monthly: rawLevelMonthly === null ? null : formatPEN(rawLevelMonthly, lang),
+          current: levelSlug === slug,
+        };
+      })
     : [];
 
 const enrollHref = enrollmentHref(withLang(lang, "/enrollment"), {
@@ -204,6 +213,60 @@ const courseJsonLd = {
       {!program && <p class="example-note">{d.exampleNote}</p>}
     </header>
 
+    {/* Os níveis primeiro: quem cai na página do idioma decide aqui em qual
+        nível está — nome, uma linha do que o nível é e o(s) preço(s), tudo no
+        card. Abrir a página do nível é detalhe, não pré-requisito. */}
+    {levels.length > 0 && (
+      <section class="block block-center">
+        <h2 class="block-title">{d.levelsTitle}</h2>
+        <div class="levels">
+          {levels.map((level) =>
+            level.current ? (
+              <article class="level level-current">
+                <p class="level-chip">{d.levelCurrent}</p>
+                <h3>{level.name}</h3>
+                {level.summary && <p class="level-summary text-muted">{level.summary}</p>}
+                {level.monthly && level.price ? (
+                  <dl class="level-prices">
+                    <div>
+                      <dt>{d.paymentMonthlyName}</dt>
+                      <dd>{level.monthly} <span class="level-unit">{d.paymentMonthlyUnit}</span></dd>
+                    </div>
+                    <div>
+                      <dt>{d.paymentFullName}</dt>
+                      <dd>{level.price}</dd>
+                    </div>
+                  </dl>
+                ) : (
+                  level.price && <p class="level-price">{level.price}</p>
+                )}
+              </article>
+            ) : (
+              <a class="level" href={level.href}>
+                <h3>{level.name}</h3>
+                {level.summary && <p class="level-summary text-muted">{level.summary}</p>}
+                {level.monthly && level.price ? (
+                  <dl class="level-prices">
+                    <div>
+                      <dt>{d.paymentMonthlyName}</dt>
+                      <dd>{level.monthly} <span class="level-unit">{d.paymentMonthlyUnit}</span></dd>
+                    </div>
+                    <div>
+                      <dt>{d.paymentFullName}</dt>
+                      <dd>{level.price}</dd>
+                    </div>
+                  </dl>
+                ) : (
+                  level.price && <p class="level-price">{level.price}</p>
+                )}
+                <span class="level-cta">{d.levelView}</span>
+              </a>
+            ),
+          )}
+        </div>
+      </section>
+    )}
+
     {/* Mensual × paquete completo, lado a lado — só onde a modalidade mensal
         existe. O completo leva o destaque: é o que carrega os talleres. */}
     {monthly && price && (
@@ -235,6 +298,11 @@ const courseJsonLd = {
     {moduleUnits.length > 0 && (
       <section class="block block-center">
         <h2 class="block-title">{d.modulesTitle}</h2>
+        {/* De qual nível esses módulos são — a página do idioma também é a do
+            nível Básico, e sem esta linha a malha parecia ser do curso todo. */}
+        {program?.level && (
+          <p class="modules-level text-muted">{d.modulesLevelPre}{program.level}{d.modulesLevelPost}</p>
+        )}
         <ol class="modules">
           {moduleUnits.map((unit, index) => (
             <li class="module">
@@ -249,30 +317,6 @@ const courseJsonLd = {
           ))}
         </ol>
         <p class="modules-note text-muted">{d.modulesNote}</p>
-      </section>
-    )}
-
-    {/* Só nome e preço: o detalhe de cada nível mora na página dele, e a
-        matrícula mora na faixa amarela desta página — o card leva ao nível,
-        não ao checkout. */}
-    {levels.length > 0 && (
-      <section class="block block-center">
-        <h2 class="block-title">{d.levelsTitle}</h2>
-        <div class="levels">
-          {levels.map((level) =>
-            level.current ? (
-              <article class="level level-current">
-                <h3>{level.name}</h3>
-                {level.price && <p class="level-price">{level.price}</p>}
-              </article>
-            ) : (
-              <a class="level" href={level.href}>
-                <h3>{level.name}</h3>
-                {level.price && <p class="level-price">{level.price}</p>}
-              </a>
-            ),
-          )}
-        </div>
       </section>
     )}
 
@@ -787,11 +831,18 @@ const courseJsonLd = {
     max-width: 60ch;
     font-size: 0.92rem;
   }
+  .modules-level {
+    margin: -14px auto 26px;
+    max-width: 60ch;
+    font-size: 0.95rem;
+  }
   .levels {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 18px;
-    max-width: 860px;
+    /* Largo o bastante para os 4 níveis do inglés na mesma linha
+       (4 × 220px + 3 gaps); com menos níveis os cards só ficam mais largos. */
+    max-width: 1000px;
     margin-inline: auto;
   }
   .level {
@@ -821,12 +872,75 @@ const courseJsonLd = {
   .level h3 {
     font-size: 1.08rem;
   }
+  .level-chip {
+    margin: 0;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--blue-deep);
+    background: var(--sky);
+    padding: 5px 12px;
+    border-radius: 999px;
+  }
+  .level-summary {
+    margin: 0;
+    font-size: 0.88rem;
+    text-align: center;
+  }
   .level-price {
     margin: 0;
     font-family: var(--font-display);
     font-weight: 700;
     font-size: 1.4rem;
     color: var(--ink);
+  }
+  /* Mensual e paquete no mesmo card, rótulo à esquerda e valor à direita —
+     a comparação inteira sem sair da seção. */
+  .level-prices {
+    margin: 4px 0 0;
+    width: 100%;
+    display: grid;
+    gap: 6px;
+  }
+  .level-prices > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .level-prices dt {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+  }
+  .level-prices dd {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .level-unit {
+    font-family: var(--font);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+  }
+  /* A seta que diz "este card abre o nível" — o current não a tem. */
+  .level-cta {
+    margin-top: 2px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--blue-deep);
+  }
+  .level-cta::after {
+    content: " →";
   }
   /* O programa inteiro atrás de um único botão. `<details>` nativo — abre sem
      JavaScript, que esta página não carrega. O summary é o botão "Ver
