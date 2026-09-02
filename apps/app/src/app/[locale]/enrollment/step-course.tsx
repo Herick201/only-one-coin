@@ -157,6 +157,14 @@ export function StepCourse({
         <p className="mb-3 text-sm font-semibold text-ink">
           {t('step.course.language_label')}
         </p>
+        {/* Catálogo vazio não é erro de rede: a API respondeu, só não há
+            grupo `enrolling` aberto. Sem isto o card fica em branco — que lê
+            como página quebrada, não como matrícula fechada. */}
+        {catalog.languages.length === 0 && (
+          <p className="text-sm text-muted-foreground">
+            {t('step.course.catalog_empty')}
+          </p>
+        )}
         <div className="flex flex-wrap gap-2">
           {catalog.languages.map((language) => (
             <button
