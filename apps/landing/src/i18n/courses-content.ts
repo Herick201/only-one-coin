@@ -18,10 +18,10 @@ export type CourseUnit = {
 
 export type CourseContent = {
   /**
-   * Só `level`, `sessions` e os títulos de `curriculum` chegam à página: ela
-   * vende, e o que vende é quantas sessões, em que nível e o que se vê em cada
-   * uma. O resto fica guardado — é o programa que a coordenação escreveu, e
-   * serve quando existir uma página de programa completo.
+   * O programa inteiro chega à página: sessões e descrição no topo, duração/
+   * nível/modalidade em destaque, a malha com os temas de cada unidade,
+   * competências, método, avaliação e resultados. Campo ausente é seção que
+   * simplesmente não renderiza — nunca inventamos conteúdo para preencher.
    */
   description?: string[];
   /**
@@ -1301,37 +1301,261 @@ const italianPT: CourseContent = {
     "De forma realista, o estudante alcança um nível básico funcional (A1), que permite continuar nos níveis intermediários, viajar a países de língua italiana com mais segurança ou iniciar estudos posteriores do idioma.",
 };
 
+/**
+ * Programa oficial do Portugués Básico (documento da coordenação, 09/2026).
+ * O texto original fala do aluno em terceira pessoa; aqui vira segunda pessoa,
+ * como o resto do site — o conteúdo acadêmico é o do documento, sem invenção.
+ */
 const portugueseES: CourseContent = {
-  sessions: "80 sesiones",
-  level: "Básico (A1–A2 inicial)",
-  curriculum: [
-    { title: "Unidad 1 — Introducción al idioma portugués", topics: [] },
-    { title: "Unidad 2 — Vida cotidiana y entorno personal", topics: [] },
-    { title: "Unidad 3 — Trabajo, estudios y actividades", topics: [] },
-    { title: "Unidad 4 — Comunicación práctica y gramática básica", topics: [] },
+  description: [
+    "El curso de Portugués Básico de Only One Coin está diseñado para quienes desean iniciarse en el portugués de Brasil, desarrollando las competencias fundamentales de comprensión y comunicación oral y escrita. El enfoque es práctico y comunicativo: prioriza situaciones reales de la vida cotidiana, el trabajo y los viajes.",
+    "A lo largo del curso adquieres el vocabulario esencial, las estructuras gramaticales básicas y las herramientas de pronunciación que te permiten comprender y expresarte en contextos simples, con confianza progresiva.",
   ],
+  sessions: "80 sesiones",
+  duration: "80 horas académicas",
+  level: "Básico (A1–A2 inicial)",
+  modality: "Virtual",
+  curriculum: [
+    {
+      title: "Unidad 1 — Introducción al idioma portugués",
+      topics: [
+        "Alfabeto y pronunciación",
+        "Saludos formales e informales",
+        "Presentaciones personales",
+        "Expresiones básicas de cortesía",
+        "Días de la semana y rutinas simples",
+      ],
+    },
+    {
+      title: "Unidad 2 — Vida cotidiana y entorno personal",
+      topics: [
+        "La familia y relaciones personales",
+        "Descripción de personas",
+        "Adjetivos básicos",
+        "Colores y objetos comunes",
+        "Verbos en presente simple",
+      ],
+    },
+    {
+      title: "Unidad 3 — Trabajo, estudios y actividades",
+      topics: [
+        "Profesiones y ocupaciones",
+        "Lugares de trabajo",
+        "Rutinas diarias",
+        "Horarios y expresiones de tiempo",
+        "Preguntas frecuentes (qué, quién, dónde, cuándo)",
+      ],
+    },
+    {
+      title: "Unidad 4 — Comunicación práctica y gramática básica",
+      topics: [
+        "Números, fechas y dinero",
+        "Compras y pagos",
+        "Verbos regulares e irregulares básicos",
+        "Artículos definidos e indefinidos",
+        "Frases afirmativas, negativas e interrogativas",
+        "Introducción al pasado (uso básico)",
+      ],
+    },
+  ],
+  goals: [
+    "Comprensión oral básica",
+    "Producción oral en contextos simples",
+    "Comprensión lectora de textos cortos",
+    "Escritura básica funcional",
+    "Pronunciación y entonación inicial",
+  ],
+  method: [
+    "Clases dinámicas y participativas",
+    "Material digital propio",
+    "Ejercicios prácticos y contextualizados",
+    "Actividades de conversación guiada",
+    "Evaluaciones formativas por unidad",
+  ],
+  evaluation: [
+    "Participación en clase",
+    "Prácticas por unidad",
+    "Evaluaciones cortas",
+    "Evaluación final de nivel básico",
+  ],
+  outcomes: [
+    "Presentarte y hablar de ti y de tu entorno",
+    "Mantener conversaciones simples en portugués",
+    "Comprender instrucciones y textos básicos",
+    "Describir rutinas, personas y actividades",
+    "Desenvolverte en compras, viajes o trabajo básico",
+    "Continuar hacia los niveles intermedios con una base sólida",
+  ],
+  outcomeNote:
+    "El curso no promete fluidez avanzada: promete un dominio básico funcional del idioma, acorde a un nivel inicial realista y alcanzable.",
 };
 
 const portugueseEN: CourseContent = {
-  sessions: "80 sessions",
-  level: "Beginner (A1–A2)",
-  curriculum: [
-    { title: "Unit 1 — Introduction to Portuguese", topics: [] },
-    { title: "Unit 2 — Everyday life and personal surroundings", topics: [] },
-    { title: "Unit 3 — Work, studies and activities", topics: [] },
-    { title: "Unit 4 — Practical communication and basic grammar", topics: [] },
+  description: [
+    "Only One Coin's Basic Portuguese course is designed for anyone starting out in Brazilian Portuguese, building the core skills of understanding and communicating, spoken and written. The approach is practical and communicative: it focuses on real situations from everyday life, work and travel.",
+    "Throughout the course you pick up essential vocabulary, basic grammar structures and pronunciation tools that let you understand and express yourself in simple contexts, with growing confidence.",
   ],
+  sessions: "80 sessions",
+  duration: "80 academic hours",
+  level: "Beginner (A1–A2)",
+  modality: "Online",
+  curriculum: [
+    {
+      title: "Unit 1 — Introduction to Portuguese",
+      topics: [
+        "Alphabet and pronunciation",
+        "Formal and informal greetings",
+        "Introducing yourself",
+        "Basic polite expressions",
+        "Days of the week and simple routines",
+      ],
+    },
+    {
+      title: "Unit 2 — Everyday life and personal surroundings",
+      topics: [
+        "Family and personal relationships",
+        "Describing people",
+        "Basic adjectives",
+        "Colours and common objects",
+        "Verbs in the simple present",
+      ],
+    },
+    {
+      title: "Unit 3 — Work, studies and activities",
+      topics: [
+        "Jobs and occupations",
+        "Workplaces",
+        "Daily routines",
+        "Times and time expressions",
+        "Common questions (what, who, where, when)",
+      ],
+    },
+    {
+      title: "Unit 4 — Practical communication and basic grammar",
+      topics: [
+        "Numbers, dates and money",
+        "Shopping and payments",
+        "Basic regular and irregular verbs",
+        "Definite and indefinite articles",
+        "Affirmative, negative and interrogative sentences",
+        "Introduction to the past tense (basic use)",
+      ],
+    },
+  ],
+  goals: [
+    "Basic listening comprehension",
+    "Speaking in simple contexts",
+    "Reading short texts",
+    "Basic functional writing",
+    "Beginner pronunciation and intonation",
+  ],
+  method: [
+    "Dynamic, participative classes",
+    "Our own digital material",
+    "Practical, contextualised exercises",
+    "Guided conversation activities",
+    "Formative assessment per unit",
+  ],
+  evaluation: [
+    "Class participation",
+    "Practice work per unit",
+    "Short quizzes",
+    "Final basic-level assessment",
+  ],
+  outcomes: [
+    "Introduce yourself and talk about your life and surroundings",
+    "Hold simple conversations in Portuguese",
+    "Understand basic instructions and texts",
+    "Describe routines, people and activities",
+    "Get by when shopping, travelling or in basic work situations",
+    "Move on to intermediate levels with a solid base",
+  ],
+  outcomeNote:
+    "The course doesn't promise advanced fluency: it promises a functional basic command of the language — a realistic, achievable starting level.",
 };
 
 const portuguesePT: CourseContent = {
-  sessions: "80 sessões",
-  level: "Básico (A1–A2 inicial)",
-  curriculum: [
-    { title: "Unidade 1 — Introdução ao idioma português", topics: [] },
-    { title: "Unidade 2 — Vida cotidiana e entorno pessoal", topics: [] },
-    { title: "Unidade 3 — Trabalho, estudos e atividades", topics: [] },
-    { title: "Unidade 4 — Comunicação prática e gramática básica", topics: [] },
+  description: [
+    "O curso de Português Básico da Only One Coin foi desenhado para quem quer começar no português do Brasil, desenvolvendo as competências fundamentais de compreensão e comunicação oral e escrita. O enfoque é prático e comunicativo: prioriza situações reais da vida cotidiana, do trabalho e das viagens.",
+    "Ao longo do curso você adquire o vocabulário essencial, as estruturas gramaticais básicas e as ferramentas de pronúncia que permitem compreender e se expressar em contextos simples, com confiança progressiva.",
   ],
+  sessions: "80 sessões",
+  duration: "80 horas acadêmicas",
+  level: "Básico (A1–A2 inicial)",
+  modality: "Virtual",
+  curriculum: [
+    {
+      title: "Unidade 1 — Introdução ao idioma português",
+      topics: [
+        "Alfabeto e pronúncia",
+        "Cumprimentos formais e informais",
+        "Apresentações pessoais",
+        "Expressões básicas de cortesia",
+        "Dias da semana e rotinas simples",
+      ],
+    },
+    {
+      title: "Unidade 2 — Vida cotidiana e entorno pessoal",
+      topics: [
+        "Família e relações pessoais",
+        "Descrição de pessoas",
+        "Adjetivos básicos",
+        "Cores e objetos comuns",
+        "Verbos no presente simples",
+      ],
+    },
+    {
+      title: "Unidade 3 — Trabalho, estudos e atividades",
+      topics: [
+        "Profissões e ocupações",
+        "Lugares de trabalho",
+        "Rotinas diárias",
+        "Horários e expressões de tempo",
+        "Perguntas frequentes (o quê, quem, onde, quando)",
+      ],
+    },
+    {
+      title: "Unidade 4 — Comunicação prática e gramática básica",
+      topics: [
+        "Números, datas e dinheiro",
+        "Compras e pagamentos",
+        "Verbos regulares e irregulares básicos",
+        "Artigos definidos e indefinidos",
+        "Frases afirmativas, negativas e interrogativas",
+        "Introdução ao passado (uso básico)",
+      ],
+    },
+  ],
+  goals: [
+    "Compreensão oral básica",
+    "Produção oral em contextos simples",
+    "Leitura de textos curtos",
+    "Escrita básica funcional",
+    "Pronúncia e entonação inicial",
+  ],
+  method: [
+    "Aulas dinâmicas e participativas",
+    "Material digital próprio",
+    "Exercícios práticos e contextualizados",
+    "Atividades de conversação guiada",
+    "Avaliações formativas por unidade",
+  ],
+  evaluation: [
+    "Participação em aula",
+    "Práticas por unidade",
+    "Avaliações curtas",
+    "Avaliação final do nível básico",
+  ],
+  outcomes: [
+    "Apresentar-se e falar de si e do seu entorno",
+    "Manter conversas simples em português",
+    "Compreender instruções e textos básicos",
+    "Descrever rotinas, pessoas e atividades",
+    "Se virar em compras, viagens ou trabalho básico",
+    "Seguir para os níveis intermediários com uma base sólida",
+  ],
+  outcomeNote:
+    "O curso não promete fluência avançada: promete um domínio básico funcional do idioma, num nível inicial realista e alcançável.",
 };
 
 const mandarinChineseES: CourseContent = {
