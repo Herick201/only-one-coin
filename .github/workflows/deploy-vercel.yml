@@ -17,7 +17,14 @@ on:
 
 concurrency:
   group: deploy-vercel-${{ github.ref }}
-  cancel-in-progress: false
+  # true de propósito (diferente do deploy-api.yml): quando vários merges
+  # caem em sequência em main, o run de um commit já superado só ia travar
+  # no wait-for-ci (o CI dele foi cancelado pelo ci.yml em cascata) e sair
+  # em vermelho, ou pior — rodar depois do commit novo e sobrescrever
+  # produção com código velho. Cancelar o run antigo é seguro aqui porque
+  # é só build+upload estático, sem migration no meio (deploy-api.yml não
+  # pode cancelar: cancelaria um pg_dump/migration pela metade).
+  cancel-in-progress: true
 
 jobs:
   # Só roda depois que o CI (typecheck/build/test) já passou pro mesmo commit
