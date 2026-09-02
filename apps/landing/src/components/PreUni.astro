@@ -1,4 +1,6 @@
 ---
+import { Image } from "astro:assets";
+import studyPhoto from "../assets/photos/about-online.jpg";
 import { whatsappUrl } from "../i18n/ui";
 import { getLangFromUrl, useTranslations } from "../i18n/utils";
 import { preuniContent } from "../i18n/preuni-content";
@@ -34,12 +36,31 @@ const temarioTabsCss = temario.groups
   <span class="blob preuni-blob" aria-hidden="true"></span>
 
   <div class="container">
-    <header class="preuni-head">
-      <span class="badge">{p.badge}</span>
-      <p class="eyebrow">{p.eyebrow}</p>
-      <h1>{p.titlePre}<span class="accent">{p.titleAccent}</span>{p.titlePost}</h1>
-      <p class="lead">{p.lead}</p>
-    </header>
+    {/* Hero em duas colunas, na mesma linguagem da home: texto à esquerda,
+        foto real em card inclinado com os pontinhos e o sparkle à direita. */}
+    <div class="preuni-hero">
+      <header class="preuni-head">
+        <span class="badge">{p.badge}</span>
+        <p class="eyebrow">{p.eyebrow}</p>
+        <h1>{p.titlePre}<span class="accent">{p.titleAccent}</span>{p.titlePost}</h1>
+        <p class="lead">{p.lead}</p>
+      </header>
+      <div class="preuni-media">
+        <span class="media-dots" aria-hidden="true"></span>
+        <span class="media-star" aria-hidden="true">✦</span>
+        <div class="preuni-photo">
+          <Image
+            src={studyPhoto}
+            alt={p.imgAlt}
+            widths={[480, 768]}
+            sizes="(max-width: 900px) 92vw, 520px"
+            format="webp"
+            quality={78}
+            loading="eager"
+          />
+        </div>
+      </div>
+    </div>
 
     {/* O painel central, igual ao das páginas de curso: os fatos como checks,
         o CTA e todo o texto longo (objetivo, áreas, método, resultados) atrás
@@ -47,7 +68,7 @@ const temarioTabsCss = temario.groups
         existe (decisão 02/09/2026) — mesmo critério do coursePrices null. */}
     <section class="panel">
       {/* Marca d'água do logo: decorativa, atrás do conteúdo. */}
-      <img class="panel-watermark" src="/brand/logo-mark.png" alt="" aria-hidden="true" loading="lazy" />
+      <img class="panel-watermark" src="/brand/logo.png" alt="" aria-hidden="true" loading="lazy" />
       <ul class="ticks panel-ticks">
         {p.facts.map((f) => (
           <li>
@@ -176,9 +197,72 @@ const temarioTabsCss = temario.groups
   .container {
     position: relative;
   }
+  .preuni-hero {
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 56px;
+    align-items: center;
+  }
   .preuni-head {
     margin-top: 4px;
     max-width: 62ch;
+  }
+  .preuni-media {
+    position: relative;
+  }
+  .preuni-photo {
+    position: relative;
+    z-index: 2;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 6px solid var(--paper);
+    box-shadow: var(--shadow-md);
+    transform: rotate(1.5deg);
+  }
+  .preuni-photo img {
+    width: 100%;
+    height: auto;
+  }
+  .media-dots {
+    position: absolute;
+    z-index: 1;
+    top: -22px;
+    right: -18px;
+    width: 108px;
+    height: 108px;
+    background-image: radial-gradient(var(--blue) 2.4px, transparent 2.4px);
+    background-size: 16px 16px;
+    opacity: 0.35;
+  }
+  .media-star {
+    position: absolute;
+    z-index: 3;
+    top: 42%;
+    right: -20px;
+    color: var(--yellow-deep);
+    font-size: 2rem;
+    animation: twinkle 3s ease-in-out infinite;
+  }
+  @keyframes twinkle {
+    0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.9; }
+    50% { transform: scale(1.25) rotate(15deg); opacity: 1; }
+  }
+  @media (max-width: 900px) {
+    .preuni-hero {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+    .preuni-photo {
+      transform: none;
+    }
+    .media-star {
+      right: 4px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .media-star {
+      animation: none;
+    }
   }
   .badge {
     display: inline-block;
@@ -224,10 +308,10 @@ const temarioTabsCss = temario.groups
   }
   .panel-watermark {
     position: absolute;
-    right: -28px;
-    bottom: -8px;
-    width: 300px;
-    opacity: 0.06;
+    right: -20px;
+    bottom: 14px;
+    width: 340px;
+    opacity: 0.07;
     transform: rotate(-8deg);
     pointer-events: none;
   }

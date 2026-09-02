@@ -498,6 +498,7 @@ export const content = {
       titleAccent: "Preuniversitario",
       titlePost: "",
       lead: "Una preparación integral para postular a San Marcos y a las universidades más exigentes del país, con el mismo principio de siempre: educación de calidad al alcance de todos.",
+      imgAlt: "Alumna de Only One Coin estudiando en línea",
       intro: "El programa desarrolla, de forma progresiva, todas las áreas que se evalúan en los exámenes de admisión, con clases en vivo, ejercicios tipo examen y evaluaciones constantes para medir tu avance.",
       facts: [
         { label: "Duración", value: "6 meses · Ciclo Semestral" },
@@ -969,6 +970,7 @@ export const content = {
       titleAccent: "Program",
       titlePost: "",
       lead: "Full preparation for the entrance exams of San Marcos and Peru's most demanding universities, with the same principle as always: quality education within everyone's reach.",
+      imgAlt: "Only One Coin student studying online",
       intro: "The program works through every area assessed in admission exams, step by step, with live classes, exam-style exercises and constant assessments to track your progress.",
       facts: [
         { label: "Duration", value: "6 months · semester cycle" },
@@ -1439,6 +1441,7 @@ export const content = {
       titleAccent: "Pré-universitário",
       titlePost: "",
       lead: "Preparação completa para o vestibular da San Marcos e das universidades mais exigentes do Peru, com o princípio de sempre: educação de qualidade ao alcance de todos.",
+      imgAlt: "Aluna da Only One Coin estudando on-line",
       intro: "O programa percorre, de forma progressiva, todas as áreas cobradas nos exames de admissão, com aulas ao vivo, exercícios no formato da prova e avaliações constantes para medir seu avanço.",
       facts: [
         { label: "Duração", value: "6 meses · ciclo semestral" },

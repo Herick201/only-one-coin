@@ -253,7 +253,7 @@ const courseJsonLd = {
           {levelPanels.map((p) => (
             <article class="level-panel" id={`panel-${p.slug}`}>
               {/* Marca d'água do logo: decorativa, atrás do conteúdo. */}
-              <img class="panel-watermark" src="/brand/logo-mark.png" alt="" aria-hidden="true" loading="lazy" />
+              <img class="panel-watermark" src="/brand/logo.png" alt="" aria-hidden="true" loading="lazy" />
               {/* O nome curto basta: o idioma já está no título da página, e
                   "Inglés" sozinho aqui voltaria a ser ambíguo ao lado de
                   "Intermedio/Avanzado". */}
@@ -604,10 +604,10 @@ const courseJsonLd = {
   }
   .panel-watermark {
     position: absolute;
-    right: -28px;
-    bottom: -8px;
-    width: 300px;
-    opacity: 0.06;
+    right: -20px;
+    bottom: 14px;
+    width: 340px;
+    opacity: 0.07;
     transform: rotate(-8deg);
     pointer-events: none;
   }
