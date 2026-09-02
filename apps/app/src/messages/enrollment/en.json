@@ -19,6 +19,7 @@
         "title": "What would you like to study?",
         "subtitle": "Pick the language, the course, the start date and the schedule. The price appears once you choose a schedule.",
         "language_label": "Language",
+        "catalog_empty": "There are no groups with open enrollment right now. Message us on WhatsApp and we'll let you know as soon as seats open.",
         "course_label": "Course",
         "course_meta": "{level} · {hours} hours · {modules} modules",
         "min_age": "From age {age}",

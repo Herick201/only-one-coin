@@ -19,6 +19,7 @@
         "title": "O que você quer estudar?",
         "subtitle": "Escolha o idioma, o curso, a data de início e o horário. O preço aparece quando você escolhe o horário.",
         "language_label": "Idioma",
+        "catalog_empty": "No momento não há turmas com matrícula aberta. Fale com a gente no WhatsApp e avisamos assim que as vagas abrirem.",
         "course_label": "Curso",
         "course_meta": "{level} · {hours} horas · {modules} módulos",
         "min_age": "A partir de {age} anos",
