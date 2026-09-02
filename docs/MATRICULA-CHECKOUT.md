@@ -61,6 +61,12 @@ em que não pode.
 - O preço aparece **depois** do horário escolhido, e é o `plan_price` vigente,
   somente leitura. Não há desconto, nunca (`CLAUDE.md` §1) — campo de valor
   editável é campo de onde se subfatura.
+- **Cursos de inglês têm um sub-passo a mais: a modalidade** (decisão
+  02/09/2026, `CLAUDE.md` §1). O aluno escolhe entre **mensual** (módulo a
+  módulo) e **paquete completo** — dois `plan_price` distintos, cada um somente
+  leitura. Os demais idiomas nem veem essa escolha: só existe o paquete. Ainda
+  não implementado no wizard — registrar aqui é o que impede o passo 1 de ser
+  construído sem esse braço.
 - **Um curso por pessoa, por matrícula.** Não existe carrinho nem quantidade
   (`docs/REGRAS-NEGOCIO.md` §5).
 
