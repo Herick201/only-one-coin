@@ -24,6 +24,7 @@ export type Lang = keyof typeof languages;
 // and by the language finder). The display name is localized per dictionary.
 export const courseSlugs = [
   "english",
+  "english-intermediate",
   "cambridge-b1",
   "french",
   "french-advanced",
@@ -44,6 +45,7 @@ export type CourseSlug = (typeof courseSlugs)[number];
  * mesmo menu, como se fossem dois idiomas diferentes.
  */
 export const courseParent: Partial<Record<CourseSlug, CourseSlug>> = {
+  "english-intermediate": "english",
   "cambridge-b1": "english",
   "french-advanced": "french",
 };
@@ -70,6 +72,9 @@ export const audienceAnchors = ["kids", "teens-and-adults"] as const;
 // these package prices — never present a course as costing only S/1.
 export const coursePrices: Record<CourseSlug, number | null> = {
   "english": 69.9,
+  // "79.90 paquete completo" no documento do programa de inglês (INGLES.docx):
+  // nível Intermedio = livros 5 e 6.
+  "english-intermediate": 79.9,
   // `null` = preço ainda não definido pela coordenação. A página omite o valor
   // em vez de inventar um: preço é dado de negócio, nunca chute (CLAUDE.md §9).
   "cambridge-b1": null,
@@ -376,6 +381,7 @@ export const content = {
         "portuguese": "Portugués",
         "mandarin-chinese": "Chino Mandarín",
         "korean": "Coreano",
+        "english-intermediate": "Inglés Intermedio",
         "cambridge-b1": "Inglés B1 · Cambridge",
         "french-advanced": "Francés Intermedio",
       },
@@ -814,6 +820,7 @@ export const content = {
         "portuguese": "Portuguese",
         "mandarin-chinese": "Mandarin Chinese",
         "korean": "Korean",
+        "english-intermediate": "Intermediate English",
         "cambridge-b1": "English B1 · Cambridge",
         "french-advanced": "French Intermediate",
       },
@@ -1251,6 +1258,7 @@ export const content = {
         "portuguese": "Português",
         "mandarin-chinese": "Chinês Mandarim",
         "korean": "Coreano",
+        "english-intermediate": "Inglês Intermediário",
         "cambridge-b1": "Inglês B1 · Cambridge",
         "french-advanced": "Francês Intermediário",
       },
