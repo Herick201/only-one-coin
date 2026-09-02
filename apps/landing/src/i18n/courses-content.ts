@@ -651,36 +651,258 @@ const mandarinChinesePT: CourseContent = {
 };
 
 const germanES: CourseContent = {
-  sessions: "16 sesiones",
-  level: "Introductorio (A1 inicial)",
-  curriculum: [
-    { title: "Unidad 1 — Introducción al idioma alemán", topics: [] },
-    { title: "Unidad 2 — Información personal y entorno", topics: [] },
-    { title: "Unidad 3 — Estructura de la oración", topics: [] },
-    { title: "Unidad 4 — Comunicación práctica", topics: [] },
+  description: [
+    "El Curso de Alemán Básico (16 horas) es una introducción intensiva al idioma alemán, dirigido a estudiantes sin conocimientos previos que desean un primer acercamiento estructurado: pronunciación correcta, vocabulario esencial, construcción de oraciones simples y comunicación básica en situaciones cotidianas.",
+    "Por su duración corta, el curso tiene un enfoque práctico y funcional: al terminar podrás presentarte, comprender expresiones frecuentes y formar frases básicas en alemán.",
   ],
+  sessions: "16 sesiones",
+  duration: "16 horas académicas",
+  level: "Introductorio (A1 inicial)",
+  modality: "Virtual",
+  curriculum: [
+    {
+      title: "Unidad 1 — Introducción al idioma alemán",
+      topics: [
+        "El alfabeto alemán",
+        "Pronunciación (ä, ö, ü, ß)",
+        "Saludos formales e informales",
+        "Presentaciones personales",
+        "Pronombres personales",
+        "Verbo sein (ser/estar)",
+      ],
+    },
+    {
+      title: "Unidad 2 — Información personal y entorno",
+      topics: [
+        "Nacionalidades y países",
+        "Profesiones básicas",
+        "Números (0–100)",
+        "Edad",
+        "Verbo haben (tener)",
+        "Preguntas básicas (Wer? Was? Wo?)",
+      ],
+    },
+    {
+      title: "Unidad 3 — Estructura de la oración",
+      topics: [
+        "Orden básico: sujeto + verbo + complemento",
+        "Artículos definidos e indefinidos (der, die, das)",
+        "Formación de preguntas",
+        "Negación con nicht y kein",
+        "Verbos regulares en presente",
+      ],
+    },
+    {
+      title: "Unidad 4 — Comunicación práctica",
+      topics: [
+        "La familia",
+        "Días de la semana",
+        "Horarios y la hora",
+        "Situaciones cotidianas simples",
+        "Expresiones útiles para viajar",
+        "Diálogos básicos guiados",
+      ],
+    },
+  ],
+  goals: [
+    "Presentarte y dar información personal básica",
+    "Comprender y usar saludos cotidianos",
+    "Formular preguntas simples",
+    "Utilizar estructuras gramaticales básicas",
+    "Leer y pronunciar correctamente palabras comunes",
+    "Mantener intercambios básicos en alemán",
+  ],
+  method: [
+    "Clases virtuales dinámicas",
+    "Ejercicios de pronunciación",
+    "Prácticas orales guiadas",
+    "Actividades escritas básicas",
+    "Simulaciones de diálogo",
+  ],
+  evaluation: [
+    "Participación en clase",
+    "Ejercicios prácticos",
+    "Evaluación oral final básica",
+  ],
+  outcomes: [
+    "Una base introductoria real del idioma",
+    "Comprensión de estructuras esenciales",
+    "Capacidad de presentarte y mantener intercambios simples",
+    "Familiarización con la pronunciación alemana",
+    "Preparación para continuar a un nivel A1 completo",
+  ],
+  outcomeNote:
+    "Este curso funciona como puerta de entrada al idioma alemán, ideal para quienes desean explorar el idioma antes de continuar con un programa más extenso: en 16 horas te prepara para un nivel A1 completo, no lo reemplaza.",
 };
 
 const germanEN: CourseContent = {
-  sessions: "16 sessions",
-  level: "Introductory (early A1)",
-  curriculum: [
-    { title: "Unit 1 — Introduction to German", topics: [] },
-    { title: "Unit 2 — Personal information and surroundings", topics: [] },
-    { title: "Unit 3 — Sentence structure", topics: [] },
-    { title: "Unit 4 — Practical communication", topics: [] },
+  description: [
+    "The Basic German Course (16 hours) is an intensive introduction to German for students with no previous knowledge who want a first structured approach to the language: correct pronunciation, essential vocabulary, building simple sentences and basic communication in everyday situations.",
+    "Because of its short length, the course takes a practical, functional approach: by the end you will be able to introduce yourself, understand frequent expressions and form basic sentences in German.",
   ],
+  sessions: "16 sessions",
+  duration: "16 academic hours",
+  level: "Introductory (early A1)",
+  modality: "Online",
+  curriculum: [
+    {
+      title: "Unit 1 — Introduction to German",
+      topics: [
+        "The German alphabet",
+        "Pronunciation (ä, ö, ü, ß)",
+        "Formal and informal greetings",
+        "Introducing yourself",
+        "Personal pronouns",
+        "The verb sein (to be)",
+      ],
+    },
+    {
+      title: "Unit 2 — Personal information and surroundings",
+      topics: [
+        "Nationalities and countries",
+        "Basic professions",
+        "Numbers (0–100)",
+        "Age",
+        "The verb haben (to have)",
+        "Basic questions (Wer? Was? Wo?)",
+      ],
+    },
+    {
+      title: "Unit 3 — Sentence structure",
+      topics: [
+        "Basic word order: subject + verb + complement",
+        "Definite and indefinite articles (der, die, das)",
+        "Forming questions",
+        "Negation with nicht and kein",
+        "Regular verbs in the present tense",
+      ],
+    },
+    {
+      title: "Unit 4 — Practical communication",
+      topics: [
+        "The family",
+        "Days of the week",
+        "Schedules and telling the time",
+        "Simple everyday situations",
+        "Useful expressions for travel",
+        "Guided basic dialogues",
+      ],
+    },
+  ],
+  goals: [
+    "Introduce yourself and give basic personal information",
+    "Understand and use everyday greetings",
+    "Ask simple questions",
+    "Use basic grammatical structures",
+    "Read and pronounce common words correctly",
+    "Hold basic exchanges in German",
+  ],
+  method: [
+    "Dynamic online classes",
+    "Pronunciation exercises",
+    "Guided speaking practice",
+    "Basic written activities",
+    "Dialogue simulations",
+  ],
+  evaluation: [
+    "Class participation",
+    "Practical exercises",
+    "Basic final oral assessment",
+  ],
+  outcomes: [
+    "A real introductory foundation in the language",
+    "Understanding of essential structures",
+    "The ability to introduce yourself and hold simple exchanges",
+    "Familiarity with German pronunciation",
+    "Preparation to continue towards a full A1 level",
+  ],
+  outcomeNote:
+    "This course works as a gateway into German, ideal for those who want to explore the language before moving on to a longer program: in 16 hours it prepares you for a full A1 level — it does not replace one.",
 };
 
 const germanPT: CourseContent = {
-  sessions: "16 sessões",
-  level: "Introdutório (A1 inicial)",
-  curriculum: [
-    { title: "Unidade 1 — Introdução ao idioma alemão", topics: [] },
-    { title: "Unidade 2 — Informação pessoal e entorno", topics: [] },
-    { title: "Unidade 3 — Estrutura da oração", topics: [] },
-    { title: "Unidade 4 — Comunicação prática", topics: [] },
+  description: [
+    "O Curso de Alemão Básico (16 horas) é uma introdução intensiva ao idioma alemão, voltado a estudantes sem conhecimentos prévios que desejam um primeiro contato estruturado com o idioma: pronúncia correta, vocabulário essencial, construção de frases simples e comunicação básica em situações cotidianas.",
+    "Pela duração curta, o curso tem um enfoque prático e funcional: ao terminar você conseguirá se apresentar, compreender expressões frequentes e formar frases básicas em alemão.",
   ],
+  sessions: "16 sessões",
+  duration: "16 horas acadêmicas",
+  level: "Introdutório (A1 inicial)",
+  modality: "Virtual",
+  curriculum: [
+    {
+      title: "Unidade 1 — Introdução ao idioma alemão",
+      topics: [
+        "O alfabeto alemão",
+        "Pronúncia (ä, ö, ü, ß)",
+        "Saudações formais e informais",
+        "Apresentações pessoais",
+        "Pronomes pessoais",
+        "Verbo sein (ser/estar)",
+      ],
+    },
+    {
+      title: "Unidade 2 — Informação pessoal e entorno",
+      topics: [
+        "Nacionalidades e países",
+        "Profissões básicas",
+        "Números (0–100)",
+        "Idade",
+        "Verbo haben (ter)",
+        "Perguntas básicas (Wer? Was? Wo?)",
+      ],
+    },
+    {
+      title: "Unidade 3 — Estrutura da oração",
+      topics: [
+        "Ordem básica: sujeito + verbo + complemento",
+        "Artigos definidos e indefinidos (der, die, das)",
+        "Formação de perguntas",
+        "Negação com nicht e kein",
+        "Verbos regulares no presente",
+      ],
+    },
+    {
+      title: "Unidade 4 — Comunicação prática",
+      topics: [
+        "A família",
+        "Dias da semana",
+        "Horários e as horas",
+        "Situações cotidianas simples",
+        "Expressões úteis para viajar",
+        "Diálogos básicos guiados",
+      ],
+    },
+  ],
+  goals: [
+    "Apresentar-se e dar informações pessoais básicas",
+    "Compreender e usar saudações cotidianas",
+    "Formular perguntas simples",
+    "Utilizar estruturas gramaticais básicas",
+    "Ler e pronunciar corretamente palavras comuns",
+    "Manter interações básicas em alemão",
+  ],
+  method: [
+    "Aulas virtuais dinâmicas",
+    "Exercícios de pronúncia",
+    "Práticas orais guiadas",
+    "Atividades escritas básicas",
+    "Simulações de diálogo",
+  ],
+  evaluation: [
+    "Participação em aula",
+    "Exercícios práticos",
+    "Avaliação oral final básica",
+  ],
+  outcomes: [
+    "Uma base introdutória real do idioma",
+    "Compreensão das estruturas essenciais",
+    "Capacidade de se apresentar e manter interações simples",
+    "Familiarização com a pronúncia alemã",
+    "Preparação para continuar rumo a um nível A1 completo",
+  ],
+  outcomeNote:
+    "Este curso funciona como porta de entrada ao idioma alemão, ideal para quem deseja explorar o idioma antes de continuar com um programa mais extenso: em 16 horas ele prepara você para um nível A1 completo, não o substitui.",
 };
 
 const koreanES: CourseContent = {
