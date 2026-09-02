@@ -39,15 +39,6 @@ const levels =
         slug: levelSlug,
         name: t.courses.list[levelSlug],
         href: withLang(lang, `/courses/${levelSlug}`),
-        level: courseContent[lang][levelSlug]?.level ?? null,
-        sessions: courseContent[lang][levelSlug]?.sessions ?? null,
-        // O que se vê no nível: os títulos das unidades, que é o que a pessoa
-        // quer comparar entre um nível e outro. O detalhe fica na malha.
-        units: (courseContent[lang][levelSlug]?.curriculum ?? []).map((u) => u.title),
-        enrollHref: enrollmentHref(withLang(lang, "/enrollment"), {
-          courseId: courseIdBySlug[levelSlug],
-          content: "course_level",
-        }),
         price:
           coursePrices[levelSlug] === null
             ? null
@@ -165,12 +156,6 @@ const courseJsonLd = {
             <li>{d.perkSchedule}</li>
             <li>{d.perkIncludes}</li>
           </ul>
-          {/* Só o primeiro parágrafo abre a página; o resto do texto do
-              programa mora no accordion "Sobre el curso", mais abaixo — quem
-              decide rápido não atravessa parede de texto. */}
-          {program.description?.[0] && (
-            <p class="lead-more text-muted">{program.description[0]}</p>
-          )}
         </div>
       ) : (
         <p class="lead text-muted">{d.leadPre}{name}{d.leadPost}</p>
@@ -186,15 +171,6 @@ const courseJsonLd = {
           <span class="hook-amount">
             {t.hero.price}<span class="hook-unit">{t.hero.priceUnit}</span>
           </span>
-        </p>
-      )}
-      {/* O total do paquete, sempre à vista do gancho de S/1: o gancho vem da
-          modalidade mensual, e ninguém decide sem ver o valor cheio (ui.ts,
-          nota sobre coursePrices). */}
-      {price && (
-        <p class="price-tag">
-          <span class="price-tag-label">{d.priceLabel}</span>
-          <span class="price-tag-amount">{price}</span>
         </p>
       )}
       {/* Duração, nível e modalidade: o que a pessoa procura antes de ler
@@ -227,9 +203,8 @@ const courseJsonLd = {
     {/* Mensual × paquete completo, lado a lado — só onde a modalidade mensal
         existe. O completo leva o destaque: é o que carrega os talleres. */}
     {monthly && price && (
-      <section class="block">
+      <section class="block block-center">
         <h2 class="block-title">{d.paymentTitle}</h2>
-        <p class="block-lead text-muted">{d.paymentLead}</p>
         <div class="pay-options">
           <article class="pay-card">
             <h3>{d.paymentMonthlyName}</h3>
@@ -250,111 +225,98 @@ const courseJsonLd = {
       </section>
     )}
 
+    {/* Só nome e preço: o detalhe de cada nível mora na página dele, e a
+        matrícula mora na faixa amarela desta página — o card leva ao nível,
+        não ao checkout. */}
     {levels.length > 0 && (
-      <section class="block">
+      <section class="block block-center">
         <h2 class="block-title">{d.levelsTitle}</h2>
-        <p class="block-lead text-muted">{d.levelsLead}</p>
         <div class="levels">
-          {levels.map((level) => (
-            <article class={level.current ? "level level-current" : "level"}>
-              <header class="level-head">
+          {levels.map((level) =>
+            level.current ? (
+              <article class="level level-current">
                 <h3>{level.name}</h3>
-                <p class="level-meta text-muted">
-                  {[level.level, level.sessions].filter(Boolean).join(" · ")}
-                </p>
                 {level.price && <p class="level-price">{level.price}</p>}
-              </header>
-              {level.units.length > 0 && (
-                <ul class="level-units">
-                  {level.units.map((unit) => <li>{unit}</li>)}
-                </ul>
-              )}
-              <a class="btn btn-yellow level-cta" href={level.enrollHref}>
-                {t.hero.ctaEnroll}
+              </article>
+            ) : (
+              <a class="level" href={level.href}>
+                <h3>{level.name}</h3>
+                {level.price && <p class="level-price">{level.price}</p>}
               </a>
-            </article>
-          ))}
+            ),
+          )}
         </div>
       </section>
     )}
 
-    {/* Todo o detalhe do programa num accordion só — texto restante, malha
-        livro a livro, competências, método e avaliação. A página apresenta e
-        vende; quem quer o detalhe abre exatamente a linha que lhe interessa,
-        em vez de atravessar seções empilhadas de listas. */}
+    {/* Todo o detalhe do programa atrás de um único "Ver detalles",
+        centralizado: a página apresenta e vende; quem quer o programa inteiro
+        abre uma vez e lê tudo — texto, malha livro a livro, competências,
+        método e avaliação. */}
     {program &&
       (program.curriculum.length > 0 ||
         program.goals ||
         program.method ||
         program.evaluation ||
-        (program.description ?? []).length > 1) && (
-      <section class="block">
+        (program.description ?? []).length > 0) && (
+      <section class="block block-center">
         <h2 class="block-title">{d.programTitle}</h2>
-        <div class="program">
-          {(program.description ?? []).length > 1 && (
-            <details class="program-row">
-              <summary>{d.aboutTitle}</summary>
-              <div class="program-body">
-                {(program.description ?? []).slice(1).map((paragraph) => (
+        <details class="program-toggle">
+          <summary>{d.detailsToggle}</summary>
+          <div class="program-detail">
+            {(program.description ?? []).length > 0 && (
+              <section class="program-part">
+                <h3>{d.aboutTitle}</h3>
+                {(program.description ?? []).map((paragraph) => (
                   <p class="text-muted">{paragraph}</p>
                 ))}
-              </div>
-            </details>
-          )}
-          {hasTopics ? (
-            program.curriculum.map((unit) => (
-              <details class="program-row">
-                <summary>{unit.title}</summary>
-                <div class="program-body">
+              </section>
+            )}
+            {hasTopics ? (
+              program.curriculum.map((unit) => (
+                <section class="program-part">
+                  <h3>{unit.title}</h3>
                   <ul>
                     {unit.topics.map((topic) => <li>{topic}</li>)}
                   </ul>
-                </div>
-              </details>
-            ))
-          ) : (
-            program.curriculum.length > 0 && (
-              <details class="program-row">
-                <summary>{d.curriculumTitle}</summary>
-                <div class="program-body">
+                </section>
+              ))
+            ) : (
+              program.curriculum.length > 0 && (
+                <section class="program-part">
+                  <h3>{d.curriculumTitle}</h3>
                   <ul>
                     {program.curriculum.map((unit) => <li>{unit.title}</li>)}
                   </ul>
-                </div>
-              </details>
-            )
-          )}
-          {program.goals && (
-            <details class="program-row">
-              <summary>{d.goalsTitle}</summary>
-              <div class="program-body">
+                </section>
+              )
+            )}
+            {program.goals && (
+              <section class="program-part">
+                <h3>{d.goalsTitle}</h3>
                 <ul>
                   {program.goals.map((goal) => <li>{goal}</li>)}
                 </ul>
-              </div>
-            </details>
-          )}
-          {program.method && (
-            <details class="program-row">
-              <summary>{d.methodTitle}</summary>
-              <div class="program-body">
+              </section>
+            )}
+            {program.method && (
+              <section class="program-part">
+                <h3>{d.methodTitle}</h3>
                 <ul>
                   {program.method.map((item) => <li>{item}</li>)}
                 </ul>
-              </div>
-            </details>
-          )}
-          {program.evaluation && (
-            <details class="program-row">
-              <summary>{d.evaluationTitle}</summary>
-              <div class="program-body">
+              </section>
+            )}
+            {program.evaluation && (
+              <section class="program-part">
+                <h3>{d.evaluationTitle}</h3>
                 <ul>
                   {program.evaluation.map((item) => <li>{item}</li>)}
                 </ul>
-              </div>
-            </details>
-          )}
-        </div>
+              </section>
+            )}
+          </div>
+        </details>
       </section>
     )}
 
@@ -379,12 +341,16 @@ const courseJsonLd = {
     </section>
 
     <section class="course-cta">
-      <div>
-        <h2>{d.ctaTitle}</h2>
-        <p>{d.ctaText}</p>
-      </div>
-      <div class="course-cta-actions">
-        <a class="btn btn-ghost-blue" href={whatsappUrl} target="_blank" rel="noopener">{d.ctaWhatsApp}</a>
+      <span class="blob course-cta-blob-a" aria-hidden="true"></span>
+      <span class="blob course-cta-blob-b" aria-hidden="true"></span>
+      <div class="course-cta-inner">
+        <div>
+          <h2>{d.ctaTitlePre}<span class="accent">{d.ctaTitleAccent}</span>{d.ctaTitlePost}</h2>
+          <p>{d.ctaText}</p>
+        </div>
+        <div class="course-cta-actions">
+          <a class="btn btn-yellow" href={whatsappUrl} target="_blank" rel="noopener">{d.ctaWhatsApp}</a>
+        </div>
       </div>
     </section>
   </div>
@@ -582,27 +548,6 @@ const courseJsonLd = {
     margin-top: 18px;
     font-size: 1.15rem;
   }
-  .price-tag {
-    margin-top: 22px;
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-  .price-tag-label {
-    font-weight: 600;
-    color: var(--text-muted);
-  }
-  .price-tag-amount {
-    background: linear-gradient(135deg, var(--yellow-bright), var(--yellow-deep));
-    color: var(--ink);
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 1.6rem;
-    padding: 4px 18px;
-    border-radius: 12px;
-    box-shadow: var(--shadow-yellow);
-  }
   /* As quatro coisas que decidem a matrícula: quantas clases, que son en
      vivo, cuándo, y qué viene incluido. O resto do programa está mais abaixo
      para quem quiser — aqui em cima não cabe um texto. */
@@ -654,10 +599,6 @@ const courseJsonLd = {
     border-bottom: 3px solid var(--yellow-deep);
     transform: rotate(-45deg);
   }
-  .lead-more {
-    margin-top: 12px;
-    max-width: 72ch;
-  }
   /* Duração, nível e modalidade: os três números que a pessoa procura antes de
      ler qualquer outra coisa. Pílulas numa linha, não três cards — informação
      de apoio não pode pesar mais que a decisão. */
@@ -697,14 +638,19 @@ const courseJsonLd = {
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 10px 46px;
   }
-  .block-lead {
-    margin: -8px 0 20px;
+  /* Seções centralizadas na tela: título no centro, grade centrada, e o
+     texto interno de cada card segue à esquerda — centralizar card por
+     dentro vira sopa de linhas curtas. */
+  .block-center {
+    text-align: center;
   }
   .pay-options {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 20px;
     max-width: 760px;
+    margin-inline: auto;
+    text-align: left;
   }
   .pay-card {
     background: var(--paper);
@@ -718,23 +664,27 @@ const courseJsonLd = {
   }
   .pay-card-full {
     position: relative;
-    border-color: var(--yellow);
+    border: 2px solid var(--yellow);
+    background: linear-gradient(165deg, #fffdf4, var(--cream));
     box-shadow: var(--shadow-yellow);
   }
   /* O selo que responde "qual escolho?" antes da pergunta: o paquete leva os
-     talleres, então é ele que a página recomenda. */
+     talleres, então é ele que a página recomenda. Centrado sobre a borda,
+     cavalgando o card — etiqueta de recomendação, não um post-it no canto. */
   .pay-badge {
     position: absolute;
-    top: -13px;
-    right: 20px;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
     margin: 0;
     background: linear-gradient(135deg, var(--yellow-bright), var(--yellow));
     color: var(--ink);
     font-weight: 800;
-    font-size: 0.72rem;
+    font-size: 0.74rem;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    padding: 6px 14px;
+    white-space: nowrap;
+    padding: 7px 18px;
     border-radius: 999px;
     box-shadow: var(--shadow-yellow);
   }
@@ -762,48 +712,28 @@ const courseJsonLd = {
   }
   .levels {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px;
+    max-width: 860px;
+    margin-inline: auto;
   }
   .level {
     background: var(--paper);
-    border: 1px solid var(--border);
+    border: 1.5px solid var(--border);
     border-radius: var(--radius);
-    padding: 26px;
+    padding: 28px 22px;
     box-shadow: var(--shadow-sm);
     display: flex;
     flex-direction: column;
-    gap: 14px;
-  }
-  .level-head h3 {
-    font-size: 1.25rem;
-  }
-  .level-units {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
+    align-items: center;
+    justify-content: center;
     gap: 8px;
-    color: var(--text-muted);
+    transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
   }
-  .level-units li {
-    position: relative;
-    padding-left: 24px;
-    font-size: 0.96rem;
-  }
-  .level-units li::before {
-    content: "";
-    position: absolute;
-    left: 2px;
-    top: 0.55em;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--yellow);
-  }
-  .level-cta {
-    margin-top: auto;
-    align-self: flex-start;
+  a.level:hover {
+    transform: translateY(-3px);
+    border-color: var(--blue);
+    box-shadow: var(--shadow-blue);
   }
   /* O nível aberto fica marcado, não escondido: a pessoa precisa saber onde
      está dentro do idioma. */
@@ -812,69 +742,83 @@ const courseJsonLd = {
     box-shadow: var(--shadow-blue);
   }
   .level h3 {
-    font-size: 1.05rem;
-  }
-  .level-meta {
-    margin: 0;
-    font-size: 0.9rem;
+    font-size: 1.08rem;
   }
   .level-price {
     margin: 0;
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 1.3rem;
+    font-size: 1.4rem;
     color: var(--ink);
   }
-  /* O accordion do programa: linhas fechadas, uma por assunto. `<details>`
-     nativo — abre sem JavaScript, que esta página não carrega. */
-  .program {
-    display: grid;
-    gap: 12px;
-    max-width: 860px;
-  }
-  .program-row {
-    background: var(--paper);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-sm);
-  }
-  .program-row summary {
+  /* O programa inteiro atrás de um único botão. `<details>` nativo — abre sem
+     JavaScript, que esta página não carrega. O summary é o botão "Ver
+     detalles", centrado; o conteúdo abre num card só, com o texto à esquerda. */
+  .program-toggle > summary {
     list-style: none;
     cursor: pointer;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 14px;
-    padding: 18px 22px;
+    gap: 12px;
+    padding: 15px 36px;
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
     font-weight: 700;
     font-size: 1.02rem;
     color: var(--blue-deep);
+    box-shadow: var(--shadow-sm);
+    transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
   }
-  .program-row summary::-webkit-details-marker {
+  .program-toggle > summary:hover {
+    border-color: var(--blue);
+    box-shadow: var(--shadow-blue);
+    transform: translateY(-2px);
+  }
+  .program-toggle > summary::-webkit-details-marker {
     display: none;
   }
-  /* A seta que diz "isto abre": vira quando a linha está aberta. */
-  .program-row summary::after {
+  /* A seta que diz "isto abre": vira quando o bloco está aberto. */
+  .program-toggle > summary::after {
     content: "";
     flex: none;
     width: 9px;
     height: 9px;
+    margin-top: -4px;
     border-right: 2.5px solid var(--blue);
     border-bottom: 2.5px solid var(--blue);
     transform: rotate(45deg);
     transition: transform 0.16s ease;
   }
-  .program-row[open] summary::after {
+  .program-toggle[open] > summary::after {
     transform: rotate(225deg);
+    margin-top: 4px;
   }
-  .program-body {
-    padding: 0 22px 20px;
+  .program-detail {
+    margin: 26px auto 0;
+    max-width: 860px;
+    text-align: left;
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    padding: 30px 32px;
   }
-  .program-body p {
+  .program-part + .program-part {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  .program-part h3 {
+    font-size: 1.02rem;
+    color: var(--blue-deep);
+    margin-bottom: 10px;
+  }
+  .program-part p {
     margin: 0 0 10px;
     max-width: 72ch;
   }
-  .program-body ul {
+  .program-part ul {
     margin: 0;
     padding-left: 18px;
     display: grid;
@@ -997,25 +941,54 @@ const courseJsonLd = {
     margin-bottom: 6px;
   }
 
+  /* O mesmo cartão do "¿Tienes alguna consulta?" da home: gradiente azul,
+     bolhas decorativas e a palavra-chave em amarelo — o fim da página fala a
+     mesma língua visual do resto do site. */
   .course-cta {
+    position: relative;
+    overflow: hidden;
     margin-top: 64px;
+    background: linear-gradient(135deg, var(--blue), var(--blue-deep));
+    color: #fff;
+    border-radius: var(--radius-lg);
+    padding: 52px 48px;
+    box-shadow: var(--shadow-blue);
+  }
+  .course-cta-blob-a {
+    width: 240px;
+    height: 240px;
+    top: -110px;
+    right: 8%;
+    background: var(--yellow);
+    opacity: 0.35;
+  }
+  .course-cta-blob-b {
+    width: 180px;
+    height: 180px;
+    bottom: -100px;
+    left: -40px;
+    background: #fff;
+    opacity: 0.14;
+  }
+  .course-cta-inner {
+    position: relative;
+    z-index: 1;
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 26px;
-    background: linear-gradient(135deg, var(--blue), var(--blue-deep));
-    color: #fff;
-    border-radius: var(--radius-lg);
-    padding: 44px 40px;
-    box-shadow: var(--shadow-blue);
   }
   .course-cta h2 {
     color: #fff;
-    font-size: clamp(1.5rem, 3.4vw, 2.1rem);
+    font-size: clamp(1.9rem, 4vw, 2.6rem);
+  }
+  .course-cta h2 .accent {
+    color: var(--yellow-bright);
   }
   .course-cta p {
-    margin-top: 8px;
+    margin-top: 10px;
+    max-width: 560px;
     color: rgba(255, 255, 255, 0.85);
   }
   .course-cta-actions {
