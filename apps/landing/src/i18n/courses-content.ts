@@ -542,43 +542,361 @@ const frenchPT: CourseContent = {
   ],
 };
 
+/**
+ * Programa oficial do Italiano Básico (documento da coordenação, 09/2026),
+ * na segunda pessoa como o resto do site. Único ajuste editorial: "los pastos
+ * del día" do documento é o italiano "i pasti" — na página vira "las comidas
+ * del día", que é o que a unidade ensina.
+ */
 const italianES: CourseContent = {
-  sessions: "60 sesiones",
-  level: "Básico inicial (A1)",
-  curriculum: [
-    { title: "Unidad 1 — Introducción al idioma italiano", topics: [] },
-    { title: "Unidad 2 — Información personal y entorno", topics: [] },
-    { title: "Unidad 3 — Gramática básica y descripción", topics: [] },
-    { title: "Unidad 4 — Vida cotidiana y comunicación práctica", topics: [] },
-    { title: "Unidad 5 — Interacción social básica", topics: [] },
-    { title: "Unidad 6 — Uso inicial del pasado y acciones en progreso", topics: [] },
+  description: [
+    "El curso de Italiano Básico de Only One Coin está diseñado para quienes no tienen conocimientos previos y desean iniciarse en la lengua y la cultura italiana, desarrollando las habilidades comunicativas esenciales de la vida cotidiana.",
+    "El curso combina vocabulario práctico, estructuras gramaticales básicas y pronunciación con actividades comunicativas, para que comprendas y produzcas mensajes simples con una comunicación clara, correcta y progresiva. El enfoque es comunicativo y funcional: prioriza el uso real del idioma en presentaciones personales, compras, transporte, alimentación, orientación y conversaciones básicas.",
   ],
+  sessions: "60 sesiones",
+  duration: "60 horas académicas",
+  level: "Básico inicial (A1)",
+  modality: "Virtual",
+  curriculum: [
+    {
+      title: "Unidad 1 — Introducción al idioma italiano",
+      topics: [
+        "Alfabeto y pronunciación",
+        "Sonidos característicos del italiano (C y G suaves y fuertes)",
+        "Saludos y despedidas",
+        "Expresiones de cortesía",
+        "Presentaciones personales",
+        "Pronombres personales",
+        "Verbos essere y stare (uso básico)",
+      ],
+    },
+    {
+      title: "Unidad 2 — Información personal y entorno",
+      topics: [
+        "Nacionalidades y países",
+        "Ciudades y lugares",
+        "Números (0–100)",
+        "Edad y datos personales",
+        "Verbo avere",
+        "La familia",
+        "Profesiones y ocupaciones",
+        "Días de la semana, meses y estaciones",
+      ],
+    },
+    {
+      title: "Unidad 3 — Gramática básica y descripción",
+      topics: [
+        "Sustantivos (género y número)",
+        "Artículos determinados e indeterminados",
+        "Adjetivos calificativos",
+        "Concordancia de género y número",
+        "Verbos regulares en presente indicativo",
+        "Verbos irregulares frecuentes",
+        "Verbos reflexivos básicos",
+      ],
+    },
+    {
+      title: "Unidad 4 — Vida cotidiana y comunicación práctica",
+      topics: [
+        "La casa y los espacios",
+        "Preposiciones simples y articuladas",
+        "Verbo piacere",
+        "Expresión avere bisogno",
+        "Alimentos, frutas y verduras",
+        "El supermercado",
+        "Compras y pedidos básicos",
+      ],
+    },
+    {
+      title: "Unidad 5 — Interacción social básica",
+      topics: [
+        "Las comidas del día",
+        "Pedir y ordenar en un bar",
+        "Lugares frecuentes",
+        "Dar y pedir indicaciones",
+        "Medios de transporte",
+        "Verbos andare y venire",
+        "Adverbios de frecuencia",
+      ],
+    },
+    {
+      title: "Unidad 6 — Uso inicial del pasado y acciones en progreso",
+      topics: [
+        "Gerundio (forma y uso)",
+        "Pasado próximo (introducción)",
+        "Verbos con essere y avere",
+        "Conversaciones simples sobre experiencias",
+        "Vocabulario funcional adicional",
+        "Integración de contenidos",
+      ],
+    },
+  ],
+  goals: [
+    "Comprensión auditiva básica",
+    "Expresión oral en contextos simples",
+    "Lectura comprensiva de textos breves",
+    "Escritura básica funcional",
+    "Pronunciación y entonación inicial",
+    "Uso correcto de estructuras gramaticales básicas",
+  ],
+  method: [
+    "Clases virtuales interactivas",
+    "Material digital propio",
+    "Ejercicios prácticos y contextualizados",
+    "Role play y diálogos guiados",
+    "Evaluaciones formativas por unidad",
+  ],
+  evaluation: [
+    "Participación activa en clase",
+    "Prácticas orales y escritas",
+    "Ejercicios por unidad",
+    "Evaluación final integradora de nivel básico",
+  ],
+  outcomes: [
+    "Presentarte y hablar de ti",
+    "Comprender y usar expresiones cotidianas",
+    "Mantener conversaciones simples",
+    "Describir personas, lugares y rutinas",
+    "Realizar compras y pedidos básicos",
+    "Pedir y dar indicaciones sencillas",
+    "Comprender textos cortos en italiano",
+  ],
+  outcomeNote:
+    "De forma realista, alcanzas un nivel básico funcional (A1): suficiente para continuar a los niveles intermedios, viajar a países de habla italiana con mayor seguridad o iniciar estudios posteriores del idioma.",
 };
 
 const italianEN: CourseContent = {
-  sessions: "60 sessions",
-  level: "Beginner (A1)",
-  curriculum: [
-    { title: "Unit 1 — Introduction to Italian", topics: [] },
-    { title: "Unit 2 — Personal information and surroundings", topics: [] },
-    { title: "Unit 3 — Basic grammar and description", topics: [] },
-    { title: "Unit 4 — Everyday life and practical communication", topics: [] },
-    { title: "Unit 5 — Basic social interaction", topics: [] },
-    { title: "Unit 6 — First use of the past and ongoing actions", topics: [] },
+  description: [
+    "Only One Coin's Basic Italian course is designed for people with no prior knowledge who want a first step into the Italian language and culture, building the communication skills everyday life asks for.",
+    "The course combines practical vocabulary, basic grammar structures and pronunciation with communicative activities, so you understand and produce simple messages with clear, correct, progressive communication. The approach is communicative and functional: real use of the language in introductions, shopping, transport, food, directions and basic conversations.",
   ],
+  sessions: "60 sessions",
+  duration: "60 academic hours",
+  level: "Beginner (A1)",
+  modality: "Online",
+  curriculum: [
+    {
+      title: "Unit 1 — Introduction to Italian",
+      topics: [
+        "Alphabet and pronunciation",
+        "Characteristic Italian sounds (soft and hard C and G)",
+        "Greetings and farewells",
+        "Polite expressions",
+        "Introducing yourself",
+        "Personal pronouns",
+        "The verbs essere and stare (basic use)",
+      ],
+    },
+    {
+      title: "Unit 2 — Personal information and surroundings",
+      topics: [
+        "Nationalities and countries",
+        "Cities and places",
+        "Numbers (0–100)",
+        "Age and personal details",
+        "The verb avere",
+        "Family",
+        "Jobs and occupations",
+        "Days of the week, months and seasons",
+      ],
+    },
+    {
+      title: "Unit 3 — Basic grammar and description",
+      topics: [
+        "Nouns (gender and number)",
+        "Definite and indefinite articles",
+        "Descriptive adjectives",
+        "Gender and number agreement",
+        "Regular verbs in the present indicative",
+        "Common irregular verbs",
+        "Basic reflexive verbs",
+      ],
+    },
+    {
+      title: "Unit 4 — Everyday life and practical communication",
+      topics: [
+        "The home and its spaces",
+        "Simple and articulated prepositions",
+        "The verb piacere",
+        "The expression avere bisogno",
+        "Food, fruit and vegetables",
+        "The supermarket",
+        "Basic shopping and ordering",
+      ],
+    },
+    {
+      title: "Unit 5 — Basic social interaction",
+      topics: [
+        "Meals of the day",
+        "Ordering at a café or bar",
+        "Common places",
+        "Giving and asking for directions",
+        "Means of transport",
+        "The verbs andare and venire",
+        "Adverbs of frequency",
+      ],
+    },
+    {
+      title: "Unit 6 — First use of the past and ongoing actions",
+      topics: [
+        "The gerund (form and use)",
+        "Passato prossimo (introduction)",
+        "Verbs with essere and avere",
+        "Simple conversations about experiences",
+        "Additional functional vocabulary",
+        "Bringing the content together",
+      ],
+    },
+  ],
+  goals: [
+    "Basic listening comprehension",
+    "Speaking in simple contexts",
+    "Reading short texts",
+    "Basic functional writing",
+    "Beginner pronunciation and intonation",
+    "Correct use of basic grammar structures",
+  ],
+  method: [
+    "Interactive online classes",
+    "Our own digital material",
+    "Practical, contextualised exercises",
+    "Role play and guided dialogues",
+    "Formative assessment per unit",
+  ],
+  evaluation: [
+    "Active class participation",
+    "Spoken and written practice",
+    "Exercises per unit",
+    "Final integrative basic-level assessment",
+  ],
+  outcomes: [
+    "Introduce yourself and talk about your life",
+    "Understand and use everyday expressions",
+    "Hold simple conversations",
+    "Describe people, places and routines",
+    "Do basic shopping and place orders",
+    "Ask for and give simple directions",
+    "Understand short texts in Italian",
+  ],
+  outcomeNote:
+    "Realistically, you reach a functional basic level (A1): enough to continue into intermediate levels, travel to Italian-speaking countries with more confidence, or keep studying the language.",
 };
 
 const italianPT: CourseContent = {
-  sessions: "60 sessões",
-  level: "Básico inicial (A1)",
-  curriculum: [
-    { title: "Unidade 1 — Introdução ao idioma italiano", topics: [] },
-    { title: "Unidade 2 — Informação pessoal e entorno", topics: [] },
-    { title: "Unidade 3 — Gramática básica e descrição", topics: [] },
-    { title: "Unidade 4 — Vida cotidiana e comunicação prática", topics: [] },
-    { title: "Unidade 5 — Interação social básica", topics: [] },
-    { title: "Unidade 6 — Uso inicial do passado e ações em progresso", topics: [] },
+  description: [
+    "O curso de Italiano Básico da Only One Coin foi desenhado para quem não tem conhecimento prévio e quer dar o primeiro passo na língua e na cultura italiana, desenvolvendo as habilidades comunicativas essenciais da vida cotidiana.",
+    "O curso combina vocabulário prático, estruturas gramaticais básicas e pronúncia com atividades comunicativas, para você compreender e produzir mensagens simples com uma comunicação clara, correta e progressiva. O enfoque é comunicativo e funcional: uso real do idioma em apresentações pessoais, compras, transporte, alimentação, orientação e conversas básicas.",
   ],
+  sessions: "60 sessões",
+  duration: "60 horas acadêmicas",
+  level: "Básico inicial (A1)",
+  modality: "Virtual",
+  curriculum: [
+    {
+      title: "Unidade 1 — Introdução ao idioma italiano",
+      topics: [
+        "Alfabeto e pronúncia",
+        "Sons característicos do italiano (C e G suaves e fortes)",
+        "Cumprimentos e despedidas",
+        "Expressões de cortesia",
+        "Apresentações pessoais",
+        "Pronomes pessoais",
+        "Verbos essere e stare (uso básico)",
+      ],
+    },
+    {
+      title: "Unidade 2 — Informação pessoal e entorno",
+      topics: [
+        "Nacionalidades e países",
+        "Cidades e lugares",
+        "Números (0–100)",
+        "Idade e dados pessoais",
+        "Verbo avere",
+        "A família",
+        "Profissões e ocupações",
+        "Dias da semana, meses e estações",
+      ],
+    },
+    {
+      title: "Unidade 3 — Gramática básica e descrição",
+      topics: [
+        "Substantivos (gênero e número)",
+        "Artigos definidos e indefinidos",
+        "Adjetivos qualificativos",
+        "Concordância de gênero e número",
+        "Verbos regulares no presente do indicativo",
+        "Verbos irregulares frequentes",
+        "Verbos reflexivos básicos",
+      ],
+    },
+    {
+      title: "Unidade 4 — Vida cotidiana e comunicação prática",
+      topics: [
+        "A casa e os espaços",
+        "Preposições simples e articuladas",
+        "Verbo piacere",
+        "Expressão avere bisogno",
+        "Alimentos, frutas e verduras",
+        "O supermercado",
+        "Compras e pedidos básicos",
+      ],
+    },
+    {
+      title: "Unidade 5 — Interação social básica",
+      topics: [
+        "As refeições do dia",
+        "Pedir em um bar ou café",
+        "Lugares frequentes",
+        "Dar e pedir indicações",
+        "Meios de transporte",
+        "Verbos andare e venire",
+        "Advérbios de frequência",
+      ],
+    },
+    {
+      title: "Unidade 6 — Uso inicial do passado e ações em progresso",
+      topics: [
+        "Gerúndio (forma e uso)",
+        "Passato prossimo (introdução)",
+        "Verbos com essere e avere",
+        "Conversas simples sobre experiências",
+        "Vocabulário funcional adicional",
+        "Integração de conteúdos",
+      ],
+    },
+  ],
+  goals: [
+    "Compreensão auditiva básica",
+    "Expressão oral em contextos simples",
+    "Leitura de textos breves",
+    "Escrita básica funcional",
+    "Pronúncia e entonação inicial",
+    "Uso correto das estruturas gramaticais básicas",
+  ],
+  method: [
+    "Aulas virtuais interativas",
+    "Material digital próprio",
+    "Exercícios práticos e contextualizados",
+    "Role play e diálogos guiados",
+    "Avaliações formativas por unidade",
+  ],
+  evaluation: [
+    "Participação ativa em aula",
+    "Práticas orais e escritas",
+    "Exercícios por unidade",
+    "Avaliação final integradora do nível básico",
+  ],
+  outcomes: [
+    "Apresentar-se e falar de si",
+    "Compreender e usar expressões cotidianas",
+    "Manter conversas simples",
+    "Descrever pessoas, lugares e rotinas",
+    "Fazer compras e pedidos básicos",
+    "Pedir e dar indicações simples",
+    "Compreender textos curtos em italiano",
+  ],
+  outcomeNote:
+    "De forma realista, você alcança um nível básico funcional (A1): suficiente para continuar aos níveis intermediários, viajar a países de língua italiana com mais segurança ou seguir estudando o idioma.",
 };
 
 /**
