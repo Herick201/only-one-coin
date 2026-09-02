@@ -26,6 +26,7 @@ export const courseSlugs = [
   "english",
   "english-intermediate",
   "cambridge-b1",
+  "cambridge-b2",
   "french",
   "french-advanced",
   "italian",
@@ -47,6 +48,7 @@ export type CourseSlug = (typeof courseSlugs)[number];
 export const courseParent: Partial<Record<CourseSlug, CourseSlug>> = {
   "english-intermediate": "english",
   "cambridge-b1": "english",
+  "cambridge-b2": "english",
   "french-advanced": "french",
 };
 
@@ -75,10 +77,13 @@ export const coursePrices: Record<CourseSlug, number | null> = {
   // "79.90 paquete completo" no documento do programa de inglês (INGLES.docx):
   // nível Intermedio = livros 5 e 6.
   "english-intermediate": 79.9,
+  // Cambridge: dois cursos diferentes (B1 e B2), mesmo preço — palavra do
+  // dono, 02/09/2026.
+  "cambridge-b1": 120,
+  "cambridge-b2": 120,
+  "french": 80,
   // `null` = preço ainda não definido pela coordenação. A página omite o valor
   // em vez de inventar um: preço é dado de negócio, nunca chute (CLAUDE.md §9).
-  "cambridge-b1": null,
-  "french": 80,
   "french-advanced": null,
   "italian": 80,
   "german": 30,
@@ -383,6 +388,7 @@ export const content = {
         "korean": "Coreano",
         "english-intermediate": "Inglés Intermedio/Avanzado",
         "cambridge-b1": "Inglés B1 · Cambridge",
+        "cambridge-b2": "Inglés B2 · Cambridge",
         "french-advanced": "Francés Intermedio",
       },
       indexEyebrow: "Nuestros idiomas",
@@ -428,6 +434,9 @@ export const content = {
       paymentFullBadge: "Más popular",
       paymentFullUnit: "pago único",
       paymentFullDesc: "Los 4 módulos en un solo pago: 5 meses y medio de programa. Incluye los talleres gratuitos de Excel, Emprendimiento, Liderazgo y Quechua.",
+      modulesTitle: "Lo que aprendes en cada módulo",
+      moduleLabel: "Módulo",
+      modulesNote: "En la modalidad mensual pagas un módulo a la vez; con el paquete completo los llevas todos en un solo pago.",
       leadPre: "Un programa completo de ",
       leadPost: " para todas las edades, con enfoque conversacional y docentes comprometidos con tu aprendizaje real.",
       exampleNote: "Contenido de ejemplo — la información detallada de cada curso se completará con los datos reales del periodo.",
@@ -823,6 +832,7 @@ export const content = {
         "korean": "Korean",
         "english-intermediate": "Intermediate/Advanced English",
         "cambridge-b1": "English B1 · Cambridge",
+        "cambridge-b2": "English B2 · Cambridge",
         "french-advanced": "French Intermediate",
       },
       indexEyebrow: "Our languages",
@@ -868,6 +878,9 @@ export const content = {
       paymentFullBadge: "Most popular",
       paymentFullUnit: "one-time payment",
       paymentFullDesc: "All 4 modules in a single payment: a 5-and-a-half-month program. Includes the free Excel, Entrepreneurship, Leadership and Quechua workshops.",
+      modulesTitle: "What you learn in each module",
+      moduleLabel: "Module",
+      modulesNote: "With the monthly plan you pay for one module at a time; the full package covers them all in a single payment.",
       leadPre: "A complete ",
       leadPost: " program for all ages, with a conversational focus and teachers committed to your real learning.",
       exampleNote: "Sample content — the detailed information for each course will be completed with the real data for the term.",
@@ -1262,6 +1275,7 @@ export const content = {
         "korean": "Coreano",
         "english-intermediate": "Inglês Intermediário/Avançado",
         "cambridge-b1": "Inglês B1 · Cambridge",
+        "cambridge-b2": "Inglês B2 · Cambridge",
         "french-advanced": "Francês Intermediário",
       },
       indexEyebrow: "Nossos idiomas",
@@ -1307,6 +1321,9 @@ export const content = {
       paymentFullBadge: "Mais popular",
       paymentFullUnit: "pagamento único",
       paymentFullDesc: "Os 4 módulos em um só pagamento: 5 meses e meio de programa. Inclui as oficinas gratuitas de Excel, Empreendedorismo, Liderança e Quíchua.",
+      modulesTitle: "O que você aprende em cada módulo",
+      moduleLabel: "Módulo",
+      modulesNote: "Na modalidade mensal você paga um módulo por vez; no pacote completo, leva todos em um único pagamento.",
       leadPre: "Um programa completo de ",
       leadPost: " para todas as idades, com foco conversacional e professores comprometidos com o seu aprendizado real.",
       exampleNote: "Conteúdo de exemplo — a informação detalhada de cada curso será preenchida com os dados reais do período.",

@@ -17,6 +17,7 @@ export const courseIdBySlug: Record<CourseSlug, string> = {
   english: "crs_en_basic",
   "english-intermediate": "crs_en_intermediate",
   "cambridge-b1": "crs_en_b1",
+  "cambridge-b2": "crs_en_b2",
   french: "crs_fr_full",
   "french-advanced": "crs_fr_advanced",
   portuguese: "crs_pt_full",

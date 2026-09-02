@@ -27,6 +27,10 @@ const program = courseContent[lang][slug] ?? null;
 // Malha detalhada (temas por unidade) só existe nos cursos cujo documento
 // oficial já chegou; os demais mostram a lista simples de unidades.
 const hasTopics = (program?.curriculum ?? []).some((unit) => unit.topics.length > 0);
+// No curso com modalidade mensual o módulo é a unidade de compra: ele sai de
+// dentro do "Ver detalles" e vira seção visível. Nos demais cursos a malha
+// segue dentro do programa detalhado.
+const moduleUnits = monthly !== null ? (program?.curriculum ?? []) : [];
 
 // Idioma e seus níveis. A página de um idioma lista os níveis dela; a página
 // de um nível oferece o caminho de volta ao idioma.
@@ -225,6 +229,29 @@ const courseJsonLd = {
       </section>
     )}
 
+    {/* O que cada módulo ensina, à vista: quem paga mês a mês compra um
+        módulo por vez, e o que está à venda não pode morar atrás de um
+        "Ver detalles". */}
+    {moduleUnits.length > 0 && (
+      <section class="block block-center">
+        <h2 class="block-title">{d.modulesTitle}</h2>
+        <ol class="modules">
+          {moduleUnits.map((unit, index) => (
+            <li class="module">
+              <p class="module-chip">{d.moduleLabel} {index + 1}</p>
+              <h3>{unit.title}</h3>
+              {unit.topics.length > 0 && (
+                <ul class="module-topics">
+                  {unit.topics.map((topic) => <li>{topic}</li>)}
+                </ul>
+              )}
+            </li>
+          ))}
+        </ol>
+        <p class="modules-note text-muted">{d.modulesNote}</p>
+      </section>
+    )}
+
     {/* Só nome e preço: o detalhe de cada nível mora na página dele, e a
         matrícula mora na faixa amarela desta página — o card leva ao nível,
         não ao checkout. */}
@@ -249,12 +276,21 @@ const courseJsonLd = {
       </section>
     )}
 
+    {/* A matrícula antes do detalhe do programa: quem já viu preço, módulos
+        e níveis decide aqui. O "Ver detalles" logo abaixo é para quem ainda
+        precisa ler mais; o bloco azul do fim é dúvida, que se resolve no
+        WhatsApp. */}
+    <section class="enroll-band">
+      <a class="btn btn-yellow enroll-cta" href={enrollHref}>{t.hero.ctaEnroll}</a>
+      <p class="enroll-note text-muted">{d.urgency}</p>
+    </section>
+
     {/* Todo o detalhe do programa atrás de um único "Ver detalles",
         centralizado: a página apresenta e vende; quem quer o programa inteiro
         abre uma vez e lê tudo — texto, malha livro a livro, competências,
         método e avaliação. */}
     {program &&
-      (program.curriculum.length > 0 ||
+      ((moduleUnits.length === 0 && program.curriculum.length > 0) ||
         program.goals ||
         program.method ||
         program.evaluation ||
@@ -272,7 +308,9 @@ const courseJsonLd = {
                 ))}
               </section>
             )}
-            {hasTopics ? (
+            {/* A malha só entra aqui quando não virou a seção de módulos
+                acima — o mesmo conteúdo não aparece duas vezes na página. */}
+            {moduleUnits.length === 0 && (hasTopics ? (
               program.curriculum.map((unit) => (
                 <section class="program-part">
                   <h3>{unit.title}</h3>
@@ -290,7 +328,7 @@ const courseJsonLd = {
                   </ul>
                 </section>
               )
-            )}
+            ))}
             {program.goals && (
               <section class="program-part">
                 <h3>{d.goalsTitle}</h3>
@@ -331,14 +369,6 @@ const courseJsonLd = {
         {program.outcomeNote && <p class="outcome-note">{program.outcomeNote}</p>}
       </section>
     )}
-
-    {/* A matrícula fica na parte branca, no meio da página: é onde a pessoa
-        acabou de ler o que o curso inclui. O bloco azul do fim é para quem
-        ainda tem dúvida, e dúvida se resolve no WhatsApp. */}
-    <section class="enroll-band">
-      <a class="btn btn-yellow enroll-cta" href={enrollHref}>{t.hero.ctaEnroll}</a>
-      <p class="enroll-note text-muted">{d.urgency}</p>
-    </section>
 
     <section class="course-cta">
       <span class="blob course-cta-blob-a" aria-hidden="true"></span>
@@ -709,6 +739,53 @@ const courseJsonLd = {
   .pay-desc {
     margin: 10px 0 0;
     font-size: 0.95rem;
+  }
+  /* Um card por módulo, com os temas à esquerda: é a vitrine do que cada mês
+     de curso entrega — no desktop os quatro lado a lado, no celular empilham. */
+  .modules {
+    list-style: none;
+    margin: 0 auto;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 18px;
+    text-align: left;
+  }
+  .module {
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px 22px;
+    box-shadow: var(--shadow-sm);
+  }
+  .module-chip {
+    display: inline-block;
+    margin: 0 0 12px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--blue-deep);
+    background: var(--sky);
+    padding: 6px 12px;
+    border-radius: 999px;
+  }
+  .module h3 {
+    font-size: 1.05rem;
+    margin-bottom: 10px;
+  }
+  .module-topics {
+    margin: 0;
+    padding-left: 16px;
+    display: grid;
+    gap: 5px;
+    font-size: 0.88rem;
+    color: var(--text-muted);
+  }
+  .modules-note {
+    margin: 18px auto 0;
+    max-width: 60ch;
+    font-size: 0.92rem;
   }
   .levels {
     display: grid;
