@@ -420,6 +420,8 @@ export const content = {
         "english-intermediate": "Intermedio/Avanzado",
         "cambridge-b1": "B1 · Cambridge",
         "cambridge-b2": "B2 · Cambridge",
+        "french": "Básico",
+        "french-advanced": "Intermedio",
       } as Partial<Record<CourseSlug, string>>,
       // Os 3–4 checks que decidem a escolha do nível — o resto mora no
       // "Ver detalles" do painel.
@@ -887,6 +889,8 @@ export const content = {
         "english-intermediate": "Intermediate/Advanced",
         "cambridge-b1": "B1 · Cambridge",
         "cambridge-b2": "B2 · Cambridge",
+        "french": "Basic",
+        "french-advanced": "Intermediate",
       } as Partial<Record<CourseSlug, string>>,
       levelHighlights: {
         "english": [
@@ -1351,6 +1355,8 @@ export const content = {
         "english-intermediate": "Intermediário/Avançado",
         "cambridge-b1": "B1 · Cambridge",
         "cambridge-b2": "B2 · Cambridge",
+        "french": "Básico",
+        "french-advanced": "Intermediário",
       } as Partial<Record<CourseSlug, string>>,
       levelHighlights: {
         "english": [

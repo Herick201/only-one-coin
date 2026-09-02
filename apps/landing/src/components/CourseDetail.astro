@@ -33,30 +33,46 @@ const program = courseContent[lang][slug] ?? null;
 const parentSlug = courseParent[slug] ?? null;
 const familyRoot = parentSlug ?? slug;
 const siblings = [familyRoot, ...levelsOf(familyRoot)];
-const isFamilyPage = siblings.length > 1;
-const levelPanels = isFamilyPage
-  ? siblings.map((levelSlug) => {
-      return {
-        slug: levelSlug,
-        name: t.courses.list[levelSlug],
-        shortName: d.levelShortNames[levelSlug] ?? t.courses.list[levelSlug],
-        highlights: d.levelHighlights[levelSlug] ?? [],
-        program: courseContent[lang][levelSlug] ?? null,
-        // O hub não mostra valores (pedido do dono, 03/09/2026) — mensal aqui
-        // é só o gatilho das pílulas de modalidade no painel.
-        hasMonthly: (monthlyPrices[levelSlug] ?? null) !== null,
-        enrollHref: enrollmentHref(withLang(lang, "/enrollment"), {
-          courseId: courseIdBySlug[levelSlug],
-          content: "course_page",
-        }),
-        current: levelSlug === slug,
-      };
-    })
-  : [];
+// Um curso sem níveis é uma família de um: o mesmo painel central, só sem a
+// fileira de quadradinhos. Assim toda página de curso tem a mesma cara.
+const hasTabs = siblings.length > 1;
+
+// Checks derivados do documento do programa, para o curso que não tem
+// destaque escrito à mão em `levelHighlights` — nunca inventamos conteúdo:
+// sessões, nível, duração e modalidade já vêm da coordenação.
+const fallbackHighlights = (prog: typeof program): string[] =>
+  prog
+    ? [
+        prog.sessions ? `${prog.sessions} ${d.liveClasses}` : null,
+        prog.level ? `${d.factLevel}: ${prog.level}` : null,
+        prog.duration ? `${d.factDuration}: ${prog.duration}` : null,
+        prog.modality ? `${d.factModality}: ${prog.modality}` : null,
+      ].filter((item): item is string => item !== null)
+    : [];
+
+const levelPanels = siblings.map((levelSlug) => {
+  const levelProgram = courseContent[lang][levelSlug] ?? null;
+  return {
+    slug: levelSlug,
+    name: t.courses.list[levelSlug],
+    shortName: d.levelShortNames[levelSlug] ?? t.courses.list[levelSlug],
+    highlights: d.levelHighlights[levelSlug] ?? fallbackHighlights(levelProgram),
+    program: levelProgram,
+    // O hub não mostra valores (pedido do dono, 03/09/2026) — mensal aqui
+    // é só o gatilho das pílulas de modalidade no painel.
+    hasMonthly: (monthlyPrices[levelSlug] ?? null) !== null,
+    enrollHref: enrollmentHref(withLang(lang, "/enrollment"), {
+      courseId: courseIdBySlug[levelSlug],
+      content: "course_page",
+    }),
+    current: levelSlug === slug,
+  };
+});
 
 // A troca de painel é CSS puro (radio + irmãos) — esta página não carrega
 // JavaScript e continua assim. As regras dependem do id de cada nível, então
 // nascem aqui e entram numa <style> própria; o visual mora na <style> scoped.
+// Sem quadradinhos não há radio: o painel único abre por classe própria.
 const levelTabsCss = levelPanels
   .map(
     (p) => `
@@ -75,11 +91,6 @@ const levelTabsCss = levelPanels
 }`,
   )
   .join("\n");
-
-const enrollHref = enrollmentHref(withLang(lang, "/enrollment"), {
-  courseId: courseIdBySlug[slug],
-  content: "course_page",
-});
 
 // Icons per feature (Lucide) — decorative, not translatable content.
 const featureIcons = [
@@ -173,15 +184,10 @@ const courseJsonLd = {
         </span>
         {d.titlePost}
       </h1>
-      {/* Página de família fala do idioma inteiro: as sessões e os facts são
-          de UM nível e moram no painel dele, logo abaixo. */}
-      {program || isFamilyPage ? (
+      {/* O hero fala do curso em geral: sessões, nível e duração são dado de
+          painel — moram nos checks, logo abaixo. */}
+      {program || hasTabs ? (
         <div class="pitch">
-          {program?.sessions && !isFamilyPage && (
-            <p class="pitch-lead">
-              <strong>{program.sessions}</strong> <span>{d.liveClasses}</span>
-            </p>
-          )}
           <ul class="perks">
             <li>{d.perkTeacher}</li>
             <li>{d.perkSchedule}</li>
@@ -204,42 +210,18 @@ const courseJsonLd = {
           </span>
         </p>
       )}
-      {/* Duração, nível e modalidade: o que a pessoa procura antes de ler
-          qualquer parágrafo. Só o campo que o documento do curso já fechou —
-          e só fora do hub de família, onde isso é informação de painel. */}
-      {program && !isFamilyPage && (program.duration || program.level || program.modality) && (
-        <dl class="facts">
-          {program.duration && (
-            <div>
-              <dt>{d.factDuration}</dt>
-              <dd>{program.duration}</dd>
-            </div>
-          )}
-          {program.level && (
-            <div>
-              <dt>{d.factLevel}</dt>
-              <dd>{program.level}</dd>
-            </div>
-          )}
-          {program.modality && (
-            <div>
-              <dt>{d.factModality}</dt>
-              <dd>{program.modality}</dd>
-            </div>
-          )}
-        </dl>
-      )}
       {!program && <p class="example-note">{d.exampleNote}</p>}
     </header>
 
     {/* O hub de níveis: quadradinhos em cima, UM painel embaixo. Clicar num
         nível troca só o painel — radio + CSS, sem JavaScript e sem recarregar.
-        O painel carrega o essencial (3–4 checks, preço, matrícula) e o
-        programa inteiro fica atrás do "Ver detalles" dele. */}
-    {isFamilyPage && (
+        O painel carrega o essencial (3–4 checks, modalidades, matrícula) e o
+        programa inteiro fica atrás do "Ver detalles" dele. Curso sem níveis
+        rende o mesmo painel, sem quadradinhos. */}
+    {levelPanels.length > 0 && (
       <section class="block block-center level-tabs">
-        <h2 class="block-title">{d.levelsTitle}</h2>
-        {levelPanels.map((p) => (
+        {hasTabs && <h2 class="block-title">{d.levelsTitle}</h2>}
+        {hasTabs && levelPanels.map((p) => (
           <input
             class="level-radio"
             type="radio"
@@ -249,27 +231,33 @@ const courseJsonLd = {
             aria-label={p.name}
           />
         ))}
-        <div class="tab-row">
-          {/* Barrinhas de progressão em vez de ícone: o quadradinho N acende
-              N barras — a posição do nível na escada, sem palavra nenhuma. */}
-          {levelPanels.map((p, index) => (
-            <label class="tab-square" for={`level-${p.slug}`}>
-              <span class="tab-steps" aria-hidden="true">
-                {levelPanels.map((_, step) => (
-                  <span class={step <= index ? "step step-on" : "step"} />
-                ))}
-              </span>
-              <span class="tab-name">{p.shortName}</span>
-            </label>
-          ))}
-        </div>
+        {hasTabs && (
+          <div class="tab-row">
+            {/* Barrinhas de progressão em vez de ícone: o quadradinho N acende
+                N barras — a posição do nível na escada, sem palavra nenhuma. */}
+            {levelPanels.map((p, index) => (
+              <label class="tab-square" for={`level-${p.slug}`}>
+                <span class="tab-steps" aria-hidden="true">
+                  {levelPanels.map((_, step) => (
+                    <span class={step <= index ? "step step-on" : "step"} />
+                  ))}
+                </span>
+                <span class="tab-name">{p.shortName}</span>
+              </label>
+            ))}
+          </div>
+        )}
         <div class="level-panels">
           {levelPanels.map((p) => (
-            <article class="level-panel" id={`panel-${p.slug}`}>
+            <article
+              class={hasTabs ? "level-panel" : "level-panel level-panel-single"}
+              id={`panel-${p.slug}`}
+            >
               {/* O nome curto basta: o idioma já está no título da página, e
                   "Inglés" sozinho aqui voltaria a ser ambíguo ao lado de
-                  "Intermedio/Avanzado". */}
-              <h3 class="panel-title">{p.shortName}</h3>
+                  "Intermedio/Avanzado". Sem quadradinhos, o título do painel
+                  repetiria o da página — sai. */}
+              {hasTabs && <h3 class="panel-title">{p.shortName}</h3>}
               {p.highlights.length > 0 && (
                 <ul class="ticks panel-ticks">
                   {p.highlights.map((item) => <li>{item}</li>)}
@@ -302,48 +290,7 @@ const courseJsonLd = {
         </div>
       </section>
     )}
-    {isFamilyPage && <style set:html={levelTabsCss} is:inline />}
-
-    {/* A matrícula antes do detalhe do programa: quem já viu preço e níveis
-        decide aqui. No hub de família cada painel tem o próprio botão, então
-        a faixa duplicaria o CTA. */}
-    {!isFamilyPage && (
-      <section class="enroll-band">
-        <a class="btn btn-yellow enroll-cta" href={enrollHref}>{t.hero.ctaEnroll}</a>
-        <p class="enroll-note text-muted">{d.urgency}</p>
-      </section>
-    )}
-
-    {/* Todo o detalhe do programa atrás de um único "Ver detalles",
-        centralizado. No hub de família o toggle mora dentro de cada painel
-        de nível — aqui só a versão de curso sem níveis. */}
-    {!isFamilyPage && program &&
-      (program.curriculum.length > 0 ||
-        program.goals ||
-        program.method ||
-        program.evaluation ||
-        (program.description ?? []).length > 0) && (
-      <section class="block block-center">
-        <h2 class="block-title">{d.programTitle}</h2>
-        <details class="program-toggle">
-          <summary>{d.detailsToggle}</summary>
-          <CourseProgramDetail program={program} />
-        </details>
-      </section>
-    )}
-
-    {/* O fechamento que vende: o que a pessoa vai conseguir fazer — seguido
-        da ressalva honesta do programa, quando o documento traz uma. No hub
-        de família isso vive dentro do "Ver detalles" de cada painel. */}
-    {!isFamilyPage && program?.outcomes && (
-      <section class="block">
-        <h2 class="block-title">{d.outcomesTitle}</h2>
-        <ul class="ticks two-up">
-          {program.outcomes.map((outcome) => <li>{outcome}</li>)}
-        </ul>
-        {program.outcomeNote && <p class="outcome-note">{program.outcomeNote}</p>}
-      </section>
-    )}
+    {hasTabs && <style set:html={levelTabsCss} is:inline />}
 
     <section class="course-cta">
       <span class="blob course-cta-blob-a" aria-hidden="true"></span>
@@ -386,23 +333,6 @@ const courseJsonLd = {
   }
   .course-head {
     max-width: 720px;
-  }
-  .enroll-band {
-    margin-top: 62px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    text-align: center;
-  }
-  .enroll-cta {
-    font-size: 1.18rem;
-    padding: 20px 52px;
-  }
-  .enroll-note {
-    margin: 0;
-    font-size: 0.92rem;
-    font-weight: 600;
   }
   .badges {
     display: flex;
@@ -559,25 +489,6 @@ const courseJsonLd = {
   .pitch {
     margin-top: 20px;
   }
-  .pitch-lead {
-    margin: 0 0 16px;
-    display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: 10px;
-    font-family: var(--font-display);
-    line-height: 1.05;
-  }
-  .pitch-lead strong {
-    font-size: clamp(1.7rem, 3.6vw, 2.4rem);
-    font-weight: 700;
-    color: var(--blue);
-  }
-  .pitch-lead span {
-    font-size: clamp(1rem, 2vw, 1.3rem);
-    font-weight: 600;
-    color: var(--ink);
-  }
   .perks {
     list-style: none;
     margin: 0;
@@ -607,42 +518,8 @@ const courseJsonLd = {
   /* Duração, nível e modalidade: os três números que a pessoa procura antes de
      ler qualquer outra coisa. Pílulas numa linha, não três cards — informação
      de apoio não pode pesar mais que a decisão. */
-  .facts {
-    margin: 26px 0 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-  .facts > div {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 8px;
-    background: var(--paper);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 8px 18px;
-    box-shadow: var(--shadow-sm);
-  }
-  .facts dt {
-    font-size: 0.72rem;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--blue);
-  }
-  .facts dd {
-    margin: 0;
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: var(--ink);
-  }
   /* Competências, método, avaliação e resultados: quatro listas curtas que
      leem melhor em duas colunas do que em quatro seções empilhadas. */
-  .two-up {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 10px 46px;
-  }
   /* Seções centralizadas na tela: título no centro, grade centrada, e o
      texto interno de cada card segue à esquerda — centralizar card por
      dentro vira sopa de linhas curtas. */
@@ -728,6 +605,10 @@ const courseJsonLd = {
     border-radius: var(--radius);
     box-shadow: var(--shadow-sm);
     padding: 30px 32px;
+  }
+  /* Curso sem níveis: um painel só, sem radio — abre direto. */
+  .level-panel-single {
+    display: block;
   }
   .panel-title {
     font-size: 1.2rem;
@@ -865,15 +746,6 @@ const courseJsonLd = {
     border-left: 2.5px solid var(--blue);
     border-bottom: 2.5px solid var(--blue);
     transform: rotate(-45deg);
-  }
-  .outcome-note {
-    margin-top: 16px;
-    padding: 14px 18px;
-    border-left: 3px solid var(--yellow);
-    background: var(--cream);
-    border-radius: 0 12px 12px 0;
-    font-size: 0.94rem;
-    color: var(--text);
   }
   .example-note {
     margin-top: 16px;
