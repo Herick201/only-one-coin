@@ -82,6 +82,16 @@ export const coursePrices: Record<CourseSlug, number | null> = {
   "korean": 60,
 };
 
+// Monthly ("mensual") modality — price per module, in PEN. Only English
+// courses have it (CLAUDE.md §1, decision 2026-09-02): the student pays
+// module by module instead of the full package. Absent slug = no monthly
+// option; the course page then shows the package alone. Same caveat as
+// `coursePrices`: display copy only, the payment system is the source of
+// truth for charged amounts.
+export const monthlyPrices: Partial<Record<CourseSlug, number>> = {
+  "english": 20,
+};
+
 // Legal identity and contact channels of the Asociación. Language-agnostic
 // data — the same digits, address and handles in every locale — so it lives
 // here once instead of being retyped inside each dictionary. The legal pages
@@ -405,6 +415,14 @@ export const content = {
       titlePre: "Aprende ",
       titlePost: "",
       priceLabel: "Paquete completo · pago único",
+      paymentTitle: "Dos formas de pagar",
+      paymentLead: "El curso de inglés es el único con dos modalidades. Eliges una al matricularte.",
+      paymentMonthlyName: "Mensual",
+      paymentMonthlyUnit: "por módulo",
+      paymentMonthlyDesc: "Pagas módulo a módulo. Cada módulo dura 1 mes, con 20 horas de clases en vivo.",
+      paymentFullName: "Paquete completo",
+      paymentFullUnit: "pago único",
+      paymentFullDesc: "Los 4 módulos en un solo pago: 5 meses y medio de programa. Incluye los talleres gratuitos de Excel, Emprendimiento, Liderazgo y Quechua.",
       leadPre: "Un programa completo de ",
       leadPost: " para todas las edades, con enfoque conversacional y docentes comprometidos con tu aprendizaje real.",
       exampleNote: "Contenido de ejemplo — la información detallada de cada curso se completará con los datos reales del periodo.",
@@ -415,7 +433,7 @@ export const content = {
       ],
       featuresTitle: "Qué incluye",
       features: [
-        { title: "Pago único del paquete", text: "Un solo pago por todo el curso. Sin mensualidades ni costos ocultos." },
+        { title: "Pago único del paquete", text: "Un solo pago por todo el curso, sin costos ocultos. En inglés también puedes pagar por módulo." },
         { title: "Talleres gratuitos", text: "Excel, Emprendimiento, Liderazgo y Quechua sin costo adicional." },
         { title: "Certificado digital", text: "Al culminar el curso recibes un certificado que valida tu aprendizaje." },
         { title: "Plataforma del alumno", text: "Clases, horarios y materiales en un solo lugar." },
@@ -826,6 +844,14 @@ export const content = {
       titlePre: "Learn ",
       titlePost: "",
       priceLabel: "Full package · single payment",
+      paymentTitle: "Two ways to pay",
+      paymentLead: "The English course is the only one with two payment options. You choose one when you enroll.",
+      paymentMonthlyName: "Monthly",
+      paymentMonthlyUnit: "per module",
+      paymentMonthlyDesc: "Pay module by module. Each module runs for 1 month, with 20 hours of live classes.",
+      paymentFullName: "Full package",
+      paymentFullUnit: "one-time payment",
+      paymentFullDesc: "All 4 modules in a single payment: a 5-and-a-half-month program. Includes the free Excel, Entrepreneurship, Leadership and Quechua workshops.",
       leadPre: "A complete ",
       leadPost: " program for all ages, with a conversational focus and teachers committed to your real learning.",
       exampleNote: "Sample content — the detailed information for each course will be completed with the real data for the term.",
@@ -836,7 +862,7 @@ export const content = {
       ],
       featuresTitle: "What's included",
       features: [
-        { title: "Single package payment", text: "One payment for the whole course. No monthly fees or hidden costs." },
+        { title: "Single package payment", text: "One payment for the whole course, no hidden costs. English can also be paid per module." },
         { title: "Free workshops", text: "Excel, Entrepreneurship, Leadership and Quechua at no extra cost." },
         { title: "Digital certificate", text: "When you finish the course you get a certificate that validates your learning." },
         { title: "Student platform", text: "Classes, schedules and materials in one place." },
@@ -1246,6 +1272,14 @@ export const content = {
       titlePre: "Aprenda ",
       titlePost: "",
       priceLabel: "Pacote completo · pagamento único",
+      paymentTitle: "Duas formas de pagar",
+      paymentLead: "O curso de inglês é o único com duas modalidades. Você escolhe uma na matrícula.",
+      paymentMonthlyName: "Mensal",
+      paymentMonthlyUnit: "por módulo",
+      paymentMonthlyDesc: "Você paga módulo a módulo. Cada módulo dura 1 mês, com 20 horas de aulas ao vivo.",
+      paymentFullName: "Pacote completo",
+      paymentFullUnit: "pagamento único",
+      paymentFullDesc: "Os 4 módulos em um só pagamento: 5 meses e meio de programa. Inclui as oficinas gratuitas de Excel, Empreendedorismo, Liderança e Quíchua.",
       leadPre: "Um programa completo de ",
       leadPost: " para todas as idades, com foco conversacional e professores comprometidos com o seu aprendizado real.",
       exampleNote: "Conteúdo de exemplo — a informação detalhada de cada curso será preenchida com os dados reais do período.",
@@ -1256,7 +1290,7 @@ export const content = {
       ],
       featuresTitle: "O que inclui",
       features: [
-        { title: "Pagamento único do pacote", text: "Um único pagamento por todo o curso. Sem mensalidades nem custos ocultos." },
+        { title: "Pagamento único do pacote", text: "Um único pagamento por todo o curso, sem custos ocultos. O inglês também pode ser pago por módulo." },
         { title: "Oficinas gratuitas", text: "Excel, Empreendedorismo, Liderança e Quíchua sem custo adicional." },
         { title: "Certificado digital", text: "Ao concluir o curso você recebe um certificado que valida seu aprendizado." },
         { title: "Plataforma do aluno", text: "Aulas, horários e materiais em um só lugar." },

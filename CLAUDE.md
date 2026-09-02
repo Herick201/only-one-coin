@@ -30,7 +30,7 @@ Venda por WhatsApp (humano, fora do sistema)
 
 ### Regras de negócio confirmadas
 
-- **Pagamento único.** Não existe parcelamento, mensalidade nem inadimplência.
+- **Pagamento único é a regra; inglês é a exceção mensual (decisão 02/09/2026).** Todo curso vende o paquete com pagamento único. Só os cursos de **inglês** (qualquer nível — básico, kids, intermedio/avanzado, Cambridge) têm também a modalidade **mensual**: o aluno escolhe no formulário de matrícula entre *mensual* e *paquete completo*. Mensual **não é parcelamento** do paquete — é compra pré-paga de um módulo por vez. Não existe juros, multa nem cobrança de dívida: quem não paga o módulo seguinte simplesmente **perde o acesso à aula no portal** (ver progressão de módulo, abaixo) e recebe lembrete por e-mail + notificação no portal. O aluno sobe o comprovante mensal sozinho pelo portal (mesma escada de OCR); o backoffice tem visão dos pagamentos mensais pendentes por turma.
 - **Sem descontos.** Nunca. O preço vigente do plano é o valor esperado, sempre.
 - O aluno compra um **paquete** (ex.: conjunto de módulos) ou o **curso completo**. Nunca aula avulsa.
 - **Vários idiomas** (~10) e várias turmas por idioma. Nada específico de idioma no código.
@@ -49,6 +49,10 @@ Venda por WhatsApp (humano, fora do sistema)
 - **O celular é pedido no formulário de matrícula.** A regra "nunca pedir número de telefone" (`docs/REGRAS-NEGOCIO.md` §5) governa a **conversa de venda no WhatsApp**, onde o número já é conhecido — não o formulário, que sempre teve coluna `CELULAR`.
 - **Data de início e horário são escolhas separadas.** O mesmo curso abre em várias datas — começar esta semana ou com a turma do fim do mês — e cada data tem seus três ou quatro horários. Quem abre turma é `admin`/`coordinator` pelo backoffice; o checkout público lê o que estiver aberto.
 - Comprovante: retido por **5 anos**. Só a **versão processada/reduzida** (pós downscale/grayscale da OCR, `CLAUDE.md` §5) é retida — não o upload original bruto.
+- **Exame de clasificación é o portão do inglés intermedio/avanzado e do Cambridge (decisão 02/09/2026).** Ninguém entra nesses níveis sem aprovar o exame, que é **pago** (valor vigente na tabela de procedimentos, `docs/REGRAS-NEGOCIO.md` §3/§5). Hoje roda em Google Forms com correção manual; na plataforma vira exame online com **resultado calculado automaticamente**. Aprovado → segue pra pagar o nível alto (paquete ou mensual); reprovado → começa do básico. **Em aberto no desenho:** se o exame pode ser feito sem registro prévio (resultado → opção de matricular) ou se exige registro antes — os dois caminhos foram descritos, qual (ou se ambos) fica pra hora de desenhar o fluxo. Validade do resultado também não foi definida.
+- **Quem já é aluno não volta pelo site público (decisão 02/09/2026).** Repetir módulo, exame de rezagados (pago), próximo nível e re-matrícula saem do **portal do aluno**, puxando o cadastro existente — nunca duplicando `student`. E-mails de gatilho convidam pro próximo curso/nível. As solicitações pagas do portal seguem o mesmo padrão da constancia: solicitação com pagamento associado, comprovante + OCR + fila de revisão.
+- **Congelamento de matrícula (decisão 02/09/2026).** Procedimento pago (tabela §5 da `docs/REGRAS-NEGOCIO.md`), gerido pelo aluno no portal e pela coordenação no backoffice. O aluno volta **só no módulo em que parou**, **sem prazo máximo** — com cadência de e-mails de reengajamento em **1, 3 e 6 meses** (o de 6 é o último; depois dele, silêncio, não exclusão). Não disponível para intermedio/avanzado (regra atual, §5 da doc de regras).
+- **Progressão de módulo é em lote, com o mesmo docente (decisão 02/09/2026).** Ao fim de um módulo, os aprovados seguem juntos pro módulo seguinte com o mesmo docente — independente de serem mensual ou paquete completo. Quem reprovou ou não pagou o mês (mensual) tem o **acesso à aula bloqueado no portal do aluno** — o "cadeado" é a opção de acessar a aula no portal, **não** integração com o Google Classroom (integração está em estudo, fora do escopo por ora — §2). Mesmo padrão do certificado: o sistema prepara a lista, a coordenação confirma.
 
 ---
 
@@ -60,7 +64,8 @@ Venda por WhatsApp (humano, fora do sistema)
 - ❌ Hospedagem, upload ou streaming de vídeo (só link externo)
 - ❌ Links de matrícula tokenizados
 - ❌ Descontos, bolsas, promoções
-- ❌ Parcelamento, mensalidade, relatório de morosidad
+- ❌ Parcelamento de paquete, juros, multa, cobrança de dívida — a modalidade mensual do inglês (§1) é compra pré-paga módulo a módulo, nunca dívida: atraso bloqueia acesso, não gera cobrança
+- ❌ Integração com Google Classroom (API) — em estudo; hoje aula é link externo e o bloqueio de acesso vive no portal do aluno
 - ❌ Aula virtual / videoconferência própria
 - ❌ Faturamento eletrônico / SUNAT
 

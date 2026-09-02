@@ -1,6 +1,6 @@
 ---
 import type { CourseSlug } from "../i18n/ui";
-import { audienceAnchors, courseParent, coursePrices, htmlLang, levelsOf, whatsappUrl } from "../i18n/ui";
+import { audienceAnchors, courseParent, coursePrices, htmlLang, levelsOf, monthlyPrices, whatsappUrl } from "../i18n/ui";
 import { getLangFromUrl, useTranslations, withLang, formatPEN } from "../i18n/utils";
 import { courseIdBySlug, enrollmentHref } from "../data/checkout";
 import { courseContent } from "../i18n/courses-content";
@@ -16,6 +16,10 @@ const d = t.courseDetail;
 const name = t.courses.list[slug];
 const rawPrice = coursePrices[slug];
 const price = rawPrice === null ? null : formatPEN(rawPrice, lang);
+// Mensual só existe para inglês (CLAUDE.md §1, decisão 02/09/2026) — nos
+// demais cursos o bloco de modalidades nem aparece.
+const rawMonthly = monthlyPrices[slug] ?? null;
+const monthly = rawMonthly === null ? null : formatPEN(rawMonthly, lang);
 // Matrícula desta página já cai no checkout com ESTE curso escolhido.
 // Programa real deste curso, quando a coordenação já entregou o documento.
 // Sem ele a página segue no texto genérico, com o aviso de exemplo.
@@ -93,6 +97,17 @@ const courseJsonLd = {
       priceCurrency: "PEN",
       availability: "https://schema.org/InStock",
     },
+    ...(rawMonthly !== null
+      ? [
+          {
+            "@type": "Offer",
+            category: "Paid",
+            price: rawMonthly.toFixed(2),
+            priceCurrency: "PEN",
+            availability: "https://schema.org/InStock",
+          },
+        ]
+      : []),
   ],
 };
 ---
@@ -165,6 +180,31 @@ const courseJsonLd = {
       )}
       {!program && <p class="example-note">{d.exampleNote}</p>}
     </header>
+
+    {/* Mensual × paquete completo, lado a lado — só onde a modalidade mensal
+        existe. O completo leva o destaque: é o que carrega os talleres. */}
+    {monthly && price && (
+      <section class="block">
+        <h2 class="block-title">{d.paymentTitle}</h2>
+        <p class="block-lead text-muted">{d.paymentLead}</p>
+        <div class="pay-options">
+          <article class="pay-card">
+            <h3>{d.paymentMonthlyName}</h3>
+            <p class="pay-price">
+              {monthly} <span class="pay-unit">{d.paymentMonthlyUnit}</span>
+            </p>
+            <p class="pay-desc text-muted">{d.paymentMonthlyDesc}</p>
+          </article>
+          <article class="pay-card pay-card-full">
+            <h3>{d.paymentFullName}</h3>
+            <p class="pay-price">
+              {price} <span class="pay-unit">{d.paymentFullUnit}</span>
+            </p>
+            <p class="pay-desc text-muted">{d.paymentFullDesc}</p>
+          </article>
+        </div>
+      </section>
+    )}
 
     {/* Idioma com um nível só não precisa de comparação: mostra direto o que
         se estuda. Com dois ou mais, a comparação É a seção. */}
@@ -529,6 +569,48 @@ const courseJsonLd = {
   }
   .block-lead {
     margin: -8px 0 20px;
+  }
+  .pay-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    max-width: 760px;
+  }
+  .pay-card {
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 26px;
+    box-shadow: var(--shadow-sm);
+  }
+  .pay-card h3 {
+    font-size: 1.05rem;
+  }
+  .pay-card-full {
+    border-color: var(--yellow);
+    box-shadow: var(--shadow-yellow);
+  }
+  .pay-price {
+    margin: 10px 0 0;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.8rem;
+    color: var(--ink);
+  }
+  .pay-unit {
+    font-family: var(--font);
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .pay-desc {
+    margin: 10px 0 0;
+    font-size: 0.95rem;
   }
   .levels {
     display: grid;

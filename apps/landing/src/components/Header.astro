@@ -1,4 +1,5 @@
 ---
+import LanguageFlag from "./LanguageFlag.astro";
 import LanguageSwitcher from "./LanguageSwitcher.astro";
 import { languageSlugs } from "../i18n/ui";
 import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
@@ -12,6 +13,7 @@ const t = useTranslations(lang);
 const nav = [{ label: t.nav.about, href: withLang(lang, "/about") }];
 
 const courses = languageSlugs.map((slug) => ({
+  slug,
   label: t.courses.list[slug],
   href: withLang(lang, `/courses/${slug}`),
 }));
@@ -60,7 +62,12 @@ const programs = [
           <svg class="dd-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
         </summary>
         <div class="dd-panel">
-          {courses.map((c) => <a href={c.href}>{c.label}</a>)}
+          {courses.map((c) => (
+            <a href={c.href} class="dd-lang">
+              <LanguageFlag slug={c.slug} />
+              <span>{c.label}</span>
+            </a>
+          ))}
           <a href={coursesHref} class="dd-all">{t.nav.coursesAll}</a>
         </div>
       </details>
@@ -123,7 +130,12 @@ const programs = [
           <svg class="dd-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
         </summary>
         <div class="m-dd-panel">
-          {courses.map((c) => <a href={c.href}>{c.label}</a>)}
+          {courses.map((c) => (
+            <a href={c.href} class="dd-lang">
+              <LanguageFlag slug={c.slug} />
+              <span>{c.label}</span>
+            </a>
+          ))}
           <a href={coursesHref} class="m-dd-all">{t.nav.coursesAll}</a>
         </div>
       </details>
@@ -343,6 +355,11 @@ const programs = [
   /* A matrícula viaja em todas as páginas, no lugar mais quente do header.
      Escondida abaixo de 1080px: aí o menu já colapsa e ela reaparece dentro
      dele, em vez de espremer o logo. */
+  .dd-lang {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
   .dd-with-badge {
     display: flex;
     align-items: center;
