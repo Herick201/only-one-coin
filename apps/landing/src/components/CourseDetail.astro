@@ -54,6 +54,10 @@ const enrollHref = enrollmentHref(withLang(lang, "/enrollment"), {
   content: "course_page",
 });
 
+// Malha com tópicos ganha cards por unidade; só títulos segue na lista
+// compacta — o curso cujo documento ainda não chegou não ganha card vazio.
+const hasTopics = program?.curriculum.some((unit) => unit.topics.length > 0) ?? false;
+
 // Icons per feature (Lucide) — decorative, not translatable content.
 const featureIcons = [
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>',
@@ -151,6 +155,35 @@ const courseJsonLd = {
         <p class="lead text-muted">{d.leadPre}{name}{d.leadPost}</p>
       )}
 
+      {/* O programa que a coordenação escreveu, quando existe: a descrição
+          apresenta, e os três fatos (duração, nível, modalidade) respondem o
+          que a pessoa procura antes de ler qualquer outra coisa. */}
+      {program?.description?.map((paragraph) => (
+        <p class="lead-more text-muted">{paragraph}</p>
+      ))}
+      {program && (program.duration || program.level || program.modality) && (
+        <dl class="facts">
+          {program.duration && (
+            <div>
+              <dt>{d.factDuration}</dt>
+              <dd>{program.duration}</dd>
+            </div>
+          )}
+          {program.level && (
+            <div>
+              <dt>{d.factLevel}</dt>
+              <dd>{program.level}</dd>
+            </div>
+          )}
+          {program.modality && (
+            <div>
+              <dt>{d.factModality}</dt>
+              <dd>{program.modality}</dd>
+            </div>
+          )}
+        </dl>
+      )}
+
       {/* O que a página grita é o sol por sessão; o total do paquete continua
           logo abaixo, menor — quem decide precisa dele à vista. */}
       {/* Renderização condicional, não `hidden`: o atributo perde para o
@@ -163,19 +196,14 @@ const courseJsonLd = {
           </span>
         </p>
       )}
+      {price && (
+        <p class="price-tag">
+          <span class="price-tag-label">{d.priceLabel}</span>
+          <span class="price-tag-amount">{price}</span>
+        </p>
+      )}
       {!program && <p class="example-note">{d.exampleNote}</p>}
     </header>
-
-    {/* Idioma com um nível só não precisa de comparação: mostra direto o que
-        se estuda. Com dois ou mais, a comparação É a seção. */}
-    {levels.length === 0 && program && program.curriculum.length > 0 && (
-      <section class="block">
-        <h2 class="block-title">{d.curriculumTitle}</h2>
-        <ul class="level-units single-units">
-          {program.curriculum.map((unit) => <li>{unit.title}</li>)}
-        </ul>
-      </section>
-    )}
 
     {levels.length > 0 && (
       <section class="block">
@@ -201,6 +229,78 @@ const courseJsonLd = {
               </a>
             </article>
           ))}
+        </div>
+      </section>
+    )}
+
+    {/* A malha do curso aberto, sempre — num idioma com níveis ela vem depois
+        da comparação e detalha o nível desta página. Com tópicos, cada unidade
+        vira um card; só com títulos, segue a lista compacta de antes. */}
+    {program && program.curriculum.length > 0 && (
+      <section class="block">
+        <h2 class="block-title">{d.curriculumTitle}</h2>
+        {hasTopics ? (
+          <div class="units">
+            {program.curriculum.map((unit) => (
+              <article class="unit">
+                <h3>{unit.title}</h3>
+                {unit.topics.length > 0 && (
+                  <ul>
+                    {unit.topics.map((topic) => <li>{topic}</li>)}
+                  </ul>
+                )}
+              </article>
+            ))}
+          </div>
+        ) : (
+          <ul class="level-units single-units">
+            {program.curriculum.map((unit) => <li>{unit.title}</li>)}
+          </ul>
+        )}
+      </section>
+    )}
+
+    {/* O que o curso entrega — a seção que vende — com a ressalva honesta do
+        programa logo abaixo, quando a coordenação a escreveu. */}
+    {program && (program.outcomes?.length ?? 0) > 0 && (
+      <section class="block">
+        <h2 class="block-title">{d.outcomesTitle}</h2>
+        <ul class="ticks outcome-list">
+          {program.outcomes?.map((item) => <li>{item}</li>)}
+        </ul>
+        {program.outcomeNote && <p class="outcome-note">{program.outcomeNote}</p>}
+      </section>
+    )}
+
+    {((program?.goals?.length ?? 0) > 0 ||
+      (program?.method?.length ?? 0) > 0 ||
+      (program?.evaluation?.length ?? 0) > 0) && (
+      <section class="block">
+        <div class="two-up">
+          {(program?.goals?.length ?? 0) > 0 && (
+            <div>
+              <h3>{d.goalsTitle}</h3>
+              <ul class="ticks">
+                {program?.goals?.map((item) => <li>{item}</li>)}
+              </ul>
+            </div>
+          )}
+          {(program?.method?.length ?? 0) > 0 && (
+            <div>
+              <h3>{d.methodTitle}</h3>
+              <ul class="ticks">
+                {program?.method?.map((item) => <li>{item}</li>)}
+              </ul>
+            </div>
+          )}
+          {(program?.evaluation?.length ?? 0) > 0 && (
+            <div>
+              <h3>{d.evaluationTitle}</h3>
+              <ul class="ticks">
+                {program?.evaluation?.map((item) => <li>{item}</li>)}
+              </ul>
+            </div>
+          )}
         </div>
       </section>
     )}
@@ -520,12 +620,37 @@ const courseJsonLd = {
     font-weight: 600;
     color: var(--ink);
   }
-  /* Competências, método, avaliação e resultados: quatro listas curtas que
-     leem melhor em duas colunas do que em quatro seções empilhadas. */
+  /* Competências, método e avaliação: listas curtas que leem melhor lado a
+     lado do que em três seções empilhadas. */
   .two-up {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 10px 46px;
+    gap: 30px 46px;
+  }
+  .two-up h3 {
+    font-size: 1.12rem;
+    margin-bottom: 14px;
+    color: var(--blue-deep);
+  }
+  /* Resultados em duas colunas quando há largura: a lista tem até sete itens
+     e empilhada vira um totem. */
+  .outcome-list {
+    display: block;
+    columns: 2;
+    column-gap: 46px;
+    max-width: 100ch;
+  }
+  .outcome-list li {
+    break-inside: avoid;
+    margin-bottom: 10px;
+  }
+  @media (max-width: 700px) {
+    .outcome-list {
+      columns: 1;
+    }
+  }
+  .outcome-note {
+    max-width: 78ch;
   }
   .block-lead {
     margin: -8px 0 20px;
