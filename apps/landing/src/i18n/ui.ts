@@ -493,9 +493,9 @@ export const content = {
     },
     preuni: {
       badge: "Próximamente",
-      eyebrow: "Programa Preuniversitario",
-      titlePre: "Prepárate para ",
-      titleAccent: "ingresar",
+      eyebrow: "Prepárate para ingresar",
+      titlePre: "Programa ",
+      titleAccent: "Preuniversitario",
       titlePost: "",
       lead: "Una preparación integral para postular a San Marcos y a las universidades más exigentes del país, con el mismo principio de siempre: educación de calidad al alcance de todos.",
       intro: "El programa desarrolla, de forma progresiva, todas las áreas que se evalúan en los exámenes de admisión, con clases en vivo, ejercicios tipo examen y evaluaciones constantes para medir tu avance.",
@@ -517,7 +517,6 @@ export const content = {
         { title: "Ciencias Sociales", text: "Historia, Geografía, Economía, Educación Cívica y Filosofía, con mirada crítica del Perú y el mundo." },
       ],
       temarioTitle: "Temario completo del ciclo",
-      temarioLead: "El temario del Ciclo San Marcos Semestral, curso por curso, tal como lo dicta el programa. Abre cada curso y revisa exactamente qué vas a estudiar.",
       temarioCount: "{n} temas",
       methodTitle: "Cómo se enseña",
       method: [
@@ -965,9 +964,9 @@ export const content = {
     },
     preuni: {
       badge: "Coming soon",
-      eyebrow: "University Prep Program",
-      titlePre: "Get ready to ",
-      titleAccent: "get in",
+      eyebrow: "Get ready to get in",
+      titlePre: "University Prep ",
+      titleAccent: "Program",
       titlePost: "",
       lead: "Full preparation for the entrance exams of San Marcos and Peru's most demanding universities, with the same principle as always: quality education within everyone's reach.",
       intro: "The program works through every area assessed in admission exams, step by step, with live classes, exam-style exercises and constant assessments to track your progress.",
@@ -989,7 +988,6 @@ export const content = {
         { title: "Social Sciences", text: "History, Geography, Economics, Civics and Philosophy, with a critical view of Peru and the world." },
       ],
       temarioTitle: "The full syllabus",
-      temarioLead: "The San Marcos Semester Cycle syllabus, subject by subject, exactly as the program teaches it. Open each subject to see what you'll study.",
       temarioCount: "{n} topics",
       methodTitle: "How it is taught",
       method: [
@@ -1436,9 +1434,9 @@ export const content = {
     },
     preuni: {
       badge: "Em breve",
-      eyebrow: "Programa Pré-universitário",
-      titlePre: "Prepare-se para ",
-      titleAccent: "entrar",
+      eyebrow: "Prepare-se para entrar",
+      titlePre: "Programa ",
+      titleAccent: "Pré-universitário",
       titlePost: "",
       lead: "Preparação completa para o vestibular da San Marcos e das universidades mais exigentes do Peru, com o princípio de sempre: educação de qualidade ao alcance de todos.",
       intro: "O programa percorre, de forma progressiva, todas as áreas cobradas nos exames de admissão, com aulas ao vivo, exercícios no formato da prova e avaliações constantes para medir seu avanço.",
@@ -1460,7 +1458,6 @@ export const content = {
         { title: "Ciências Sociais", text: "História, Geografia, Economia, Educação Cívica e Filosofia, com olhar crítico sobre o Peru e o mundo." },
       ],
       temarioTitle: "Conteúdo completo do ciclo",
-      temarioLead: "O conteúdo do Ciclo San Marcos Semestral, matéria por matéria, como o programa ensina. Abra cada matéria e veja exatamente o que você vai estudar.",
       temarioCount: "{n} temas",
       methodTitle: "Como é ensinado",
       method: [
