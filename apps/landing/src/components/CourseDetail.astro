@@ -4,6 +4,7 @@ import { audienceAnchors, courseParent, coursePrices, htmlLang, levelsOf, monthl
 import { getLangFromUrl, useTranslations, withLang, formatPEN } from "../i18n/utils";
 import { courseIdBySlug, enrollmentHref } from "../data/checkout";
 import { courseContent } from "../i18n/courses-content";
+import CourseProgramDetail from "./CourseProgramDetail.astro";
 
 interface Props {
   slug: CourseSlug;
@@ -16,49 +17,62 @@ const d = t.courseDetail;
 const name = t.courses.list[slug];
 const rawPrice = coursePrices[slug];
 const price = rawPrice === null ? null : formatPEN(rawPrice, lang);
-// Mensual só existe para inglês (CLAUDE.md §1, decisão 02/09/2026) — nos
-// demais cursos o bloco de modalidades nem aparece.
+// Mensual só existe para inglês (CLAUDE.md §1, decisão 02/09/2026) — entra
+// no painel do nível e na oferta do JSON-LD; nos demais cursos nem aparece.
 const rawMonthly = monthlyPrices[slug] ?? null;
-const monthly = rawMonthly === null ? null : formatPEN(rawMonthly, lang);
 // Matrícula desta página já cai no checkout com ESTE curso escolhido.
 // Programa real deste curso, quando a coordenação já entregou o documento.
 // Sem ele a página segue no texto genérico, com o aviso de exemplo.
 const program = courseContent[lang][slug] ?? null;
-// Malha detalhada (temas por unidade) só existe nos cursos cujo documento
-// oficial já chegou; os demais mostram a lista simples de unidades.
-const hasTopics = (program?.curriculum ?? []).some((unit) => unit.topics.length > 0);
-// No curso com modalidade mensual o módulo é a unidade de compra: ele sai de
-// dentro do "Ver detalles" e vira seção visível. Nos demais cursos a malha
-// segue dentro do programa detalhado.
-const moduleUnits = monthly !== null ? (program?.curriculum ?? []) : [];
 
-// Idioma e seus níveis. A página de um idioma lista os níveis dela; a página
-// de um nível oferece o caminho de volta ao idioma.
+// Idioma e seus níveis. A página de um idioma vira o hub da família: um
+// seletor de níveis em quadradinhos, e UM painel de detalhe que troca com a
+// seleção — sem navegar, sem recarregar. A página de um nível renderiza o
+// mesmo hub com o próprio nível pré-selecionado, então o deep link continua
+// caindo no lugar certo.
 const parentSlug = courseParent[slug] ?? null;
 const familyRoot = parentSlug ?? slug;
 const siblings = [familyRoot, ...levelsOf(familyRoot)];
-// O card carrega tudo que decide a escolha — nome do nível (não o do menu:
-// ao lado de "Intermedio" o idioma-raiz precisa dizer "Básico"), uma linha
-// do que ele é, e o(s) preço(s), mensual incluído onde existe. Clicar na
-// página do nível vira opcional, não obrigatório.
-const levels =
-  siblings.length > 1
-    ? siblings.map((levelSlug) => {
-        const rawLevelMonthly = monthlyPrices[levelSlug] ?? null;
-        return {
-          slug: levelSlug,
-          name: d.levelNames[levelSlug] ?? t.courses.list[levelSlug],
-          summary: d.levelSummaries[levelSlug] ?? null,
-          href: withLang(lang, `/courses/${levelSlug}`),
-          price:
-            coursePrices[levelSlug] === null
-              ? null
-              : formatPEN(coursePrices[levelSlug] as number, lang),
-          monthly: rawLevelMonthly === null ? null : formatPEN(rawLevelMonthly, lang),
-          current: levelSlug === slug,
-        };
-      })
-    : [];
+const isFamilyPage = siblings.length > 1;
+const levelPanels = isFamilyPage
+  ? siblings.map((levelSlug) => {
+      const rawLevelMonthly = monthlyPrices[levelSlug] ?? null;
+      const rawLevelPrice = coursePrices[levelSlug];
+      return {
+        slug: levelSlug,
+        name: t.courses.list[levelSlug],
+        shortName: d.levelShortNames[levelSlug] ?? t.courses.list[levelSlug],
+        highlights: d.levelHighlights[levelSlug] ?? [],
+        program: courseContent[lang][levelSlug] ?? null,
+        price: rawLevelPrice === null ? null : formatPEN(rawLevelPrice, lang),
+        monthly: rawLevelMonthly === null ? null : formatPEN(rawLevelMonthly, lang),
+        enrollHref: enrollmentHref(withLang(lang, "/enrollment"), {
+          courseId: courseIdBySlug[levelSlug],
+          content: "course_page",
+        }),
+        current: levelSlug === slug,
+      };
+    })
+  : [];
+
+// A troca de painel é CSS puro (radio + irmãos) — esta página não carrega
+// JavaScript e continua assim. As regras dependem do id de cada nível, então
+// nascem aqui e entram numa <style> própria; o visual mora na <style> scoped.
+const levelTabsCss = levelPanels
+  .map(
+    (p) => `
+#level-${p.slug}:checked ~ .level-panels > #panel-${p.slug} { display: block; }
+#level-${p.slug}:checked ~ .tab-row > [for="level-${p.slug}"] {
+  border-color: var(--blue);
+  background: var(--sky);
+  box-shadow: var(--shadow-blue);
+}
+#level-${p.slug}:focus-visible ~ .tab-row > [for="level-${p.slug}"] {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}`,
+  )
+  .join("\n");
 
 const enrollHref = enrollmentHref(withLang(lang, "/enrollment"), {
   courseId: courseIdBySlug[slug],
@@ -157,9 +171,11 @@ const courseJsonLd = {
         </span>
         {d.titlePost}
       </h1>
-      {program ? (
+      {/* Página de família fala do idioma inteiro: as sessões e os facts são
+          de UM nível e moram no painel dele, logo abaixo. */}
+      {program || isFamilyPage ? (
         <div class="pitch">
-          {program.sessions && (
+          {program?.sessions && !isFamilyPage && (
             <p class="pitch-lead">
               <strong>{program.sessions}</strong> <span>{d.liveClasses}</span>
             </p>
@@ -187,8 +203,9 @@ const courseJsonLd = {
         </p>
       )}
       {/* Duração, nível e modalidade: o que a pessoa procura antes de ler
-          qualquer parágrafo. Só o campo que o documento do curso já fechou. */}
-      {program && (program.duration || program.level || program.modality) && (
+          qualquer parágrafo. Só o campo que o documento do curso já fechou —
+          e só fora do hub de família, onde isso é informação de painel. */}
+      {program && !isFamilyPage && (program.duration || program.level || program.modality) && (
         <dl class="facts">
           {program.duration && (
             <div>
@@ -213,128 +230,90 @@ const courseJsonLd = {
       {!program && <p class="example-note">{d.exampleNote}</p>}
     </header>
 
-    {/* Os níveis primeiro: quem cai na página do idioma decide aqui em qual
-        nível está — nome, uma linha do que o nível é e o(s) preço(s), tudo no
-        card. Abrir a página do nível é detalhe, não pré-requisito. */}
-    {levels.length > 0 && (
-      <section class="block block-center">
+    {/* O hub de níveis: quadradinhos em cima, UM painel embaixo. Clicar num
+        nível troca só o painel — radio + CSS, sem JavaScript e sem recarregar.
+        O painel carrega o essencial (3–4 checks, preço, matrícula) e o
+        programa inteiro fica atrás do "Ver detalles" dele. */}
+    {isFamilyPage && (
+      <section class="block block-center level-tabs">
         <h2 class="block-title">{d.levelsTitle}</h2>
-        <div class="levels">
-          {levels.map((level) =>
-            level.current ? (
-              <article class="level level-current">
-                <p class="level-chip">{d.levelCurrent}</p>
-                <h3>{level.name}</h3>
-                {level.summary && <p class="level-summary text-muted">{level.summary}</p>}
-                {level.monthly && level.price ? (
-                  <dl class="level-prices">
-                    <div>
-                      <dt>{d.paymentMonthlyName}</dt>
-                      <dd>{level.monthly} <span class="level-unit">{d.paymentMonthlyUnit}</span></dd>
-                    </div>
-                    <div>
-                      <dt>{d.paymentFullName}</dt>
-                      <dd>{level.price}</dd>
-                    </div>
-                  </dl>
-                ) : (
-                  level.price && <p class="level-price">{level.price}</p>
-                )}
-              </article>
-            ) : (
-              <a class="level" href={level.href}>
-                <h3>{level.name}</h3>
-                {level.summary && <p class="level-summary text-muted">{level.summary}</p>}
-                {level.monthly && level.price ? (
-                  <dl class="level-prices">
-                    <div>
-                      <dt>{d.paymentMonthlyName}</dt>
-                      <dd>{level.monthly} <span class="level-unit">{d.paymentMonthlyUnit}</span></dd>
-                    </div>
-                    <div>
-                      <dt>{d.paymentFullName}</dt>
-                      <dd>{level.price}</dd>
-                    </div>
-                  </dl>
-                ) : (
-                  level.price && <p class="level-price">{level.price}</p>
-                )}
-                <span class="level-cta">{d.levelView}</span>
-              </a>
-            ),
-          )}
+        {levelPanels.map((p) => (
+          <input
+            class="level-radio"
+            type="radio"
+            name="level-tab"
+            id={`level-${p.slug}`}
+            checked={p.current}
+            aria-label={p.name}
+          />
+        ))}
+        <div class="tab-row">
+          {levelPanels.map((p) => (
+            <label class="tab-square" for={`level-${p.slug}`}>
+              <span class="tab-name">{p.shortName}</span>
+              {p.price && <span class="tab-price">{p.price}</span>}
+            </label>
+          ))}
         </div>
-      </section>
-    )}
-
-    {/* Mensual × paquete completo, lado a lado — só onde a modalidade mensal
-        existe. O completo leva o destaque: é o que carrega os talleres. */}
-    {monthly && price && (
-      <section class="block block-center">
-        <h2 class="block-title">{d.paymentTitle}</h2>
-        <div class="pay-options">
-          <article class="pay-card">
-            <h3>{d.paymentMonthlyName}</h3>
-            <p class="pay-price">
-              {monthly} <span class="pay-unit">{d.paymentMonthlyUnit}</span>
-            </p>
-            <p class="pay-desc text-muted">{d.paymentMonthlyDesc}</p>
-          </article>
-          <article class="pay-card pay-card-full">
-            <p class="pay-badge">{d.paymentFullBadge}</p>
-            <h3>{d.paymentFullName}</h3>
-            <p class="pay-price">
-              {price} <span class="pay-unit">{d.paymentFullUnit}</span>
-            </p>
-            <p class="pay-desc text-muted">{d.paymentFullDesc}</p>
-          </article>
-        </div>
-      </section>
-    )}
-
-    {/* O que cada módulo ensina, à vista: quem paga mês a mês compra um
-        módulo por vez, e o que está à venda não pode morar atrás de um
-        "Ver detalles". */}
-    {moduleUnits.length > 0 && (
-      <section class="block block-center">
-        <h2 class="block-title">{d.modulesTitle}</h2>
-        {/* De qual nível esses módulos são — a página do idioma também é a do
-            nível Básico, e sem esta linha a malha parecia ser do curso todo. */}
-        {program?.level && (
-          <p class="modules-level text-muted">{d.modulesLevelPre}{program.level}{d.modulesLevelPost}</p>
-        )}
-        <ol class="modules">
-          {moduleUnits.map((unit, index) => (
-            <li class="module">
-              <p class="module-chip">{d.moduleLabel} {index + 1}</p>
-              <h3>{unit.title}</h3>
-              {unit.topics.length > 0 && (
-                <ul class="module-topics">
-                  {unit.topics.map((topic) => <li>{topic}</li>)}
+        <div class="level-panels">
+          {levelPanels.map((p) => (
+            <article class="level-panel" id={`panel-${p.slug}`}>
+              {/* O nome curto basta: o idioma já está no título da página, e
+                  "Inglés" sozinho aqui voltaria a ser ambíguo ao lado de
+                  "Intermedio/Avanzado". */}
+              <h3 class="panel-title">{p.shortName}</h3>
+              {p.highlights.length > 0 && (
+                <ul class="ticks panel-ticks">
+                  {p.highlights.map((item) => <li>{item}</li>)}
                 </ul>
               )}
-            </li>
+              {(p.monthly || p.price) && (
+                <div class="panel-prices">
+                  {p.monthly && (
+                    <p class="panel-price">
+                      <span class="panel-price-label">{d.paymentMonthlyName}</span>
+                      <strong>{p.monthly}</strong>
+                      <span class="panel-price-unit">{d.paymentMonthlyUnit}</span>
+                    </p>
+                  )}
+                  {p.price && (
+                    <p class="panel-price">
+                      <span class="panel-price-label">{d.paymentFullName}</span>
+                      <strong>{p.price}</strong>
+                      <span class="panel-price-unit">{d.paymentFullUnit}</span>
+                    </p>
+                  )}
+                </div>
+              )}
+              <a class="btn btn-yellow panel-enroll" href={p.enrollHref}>{t.hero.ctaEnroll}</a>
+              {p.program && (
+                <details class="program-toggle panel-toggle">
+                  <summary>{d.detailsToggle}</summary>
+                  <CourseProgramDetail program={p.program} includeOutcomes />
+                </details>
+              )}
+            </article>
           ))}
-        </ol>
-        <p class="modules-note text-muted">{d.modulesNote}</p>
+        </div>
+      </section>
+    )}
+    {isFamilyPage && <style set:html={levelTabsCss} is:inline />}
+
+    {/* A matrícula antes do detalhe do programa: quem já viu preço e níveis
+        decide aqui. No hub de família cada painel tem o próprio botão, então
+        a faixa duplicaria o CTA. */}
+    {!isFamilyPage && (
+      <section class="enroll-band">
+        <a class="btn btn-yellow enroll-cta" href={enrollHref}>{t.hero.ctaEnroll}</a>
+        <p class="enroll-note text-muted">{d.urgency}</p>
       </section>
     )}
 
-    {/* A matrícula antes do detalhe do programa: quem já viu preço, módulos
-        e níveis decide aqui. O "Ver detalles" logo abaixo é para quem ainda
-        precisa ler mais; o bloco azul do fim é dúvida, que se resolve no
-        WhatsApp. */}
-    <section class="enroll-band">
-      <a class="btn btn-yellow enroll-cta" href={enrollHref}>{t.hero.ctaEnroll}</a>
-      <p class="enroll-note text-muted">{d.urgency}</p>
-    </section>
-
     {/* Todo o detalhe do programa atrás de um único "Ver detalles",
-        centralizado: a página apresenta e vende; quem quer o programa inteiro
-        abre uma vez e lê tudo — texto, malha livro a livro, competências,
-        método e avaliação. */}
-    {program &&
-      ((moduleUnits.length === 0 && program.curriculum.length > 0) ||
+        centralizado. No hub de família o toggle mora dentro de cada painel
+        de nível — aqui só a versão de curso sem níveis. */}
+    {!isFamilyPage && program &&
+      (program.curriculum.length > 0 ||
         program.goals ||
         program.method ||
         program.evaluation ||
@@ -343,68 +322,15 @@ const courseJsonLd = {
         <h2 class="block-title">{d.programTitle}</h2>
         <details class="program-toggle">
           <summary>{d.detailsToggle}</summary>
-          <div class="program-detail">
-            {(program.description ?? []).length > 0 && (
-              <section class="program-part">
-                <h3>{d.aboutTitle}</h3>
-                {(program.description ?? []).map((paragraph) => (
-                  <p class="text-muted">{paragraph}</p>
-                ))}
-              </section>
-            )}
-            {/* A malha só entra aqui quando não virou a seção de módulos
-                acima — o mesmo conteúdo não aparece duas vezes na página. */}
-            {moduleUnits.length === 0 && (hasTopics ? (
-              program.curriculum.map((unit) => (
-                <section class="program-part">
-                  <h3>{unit.title}</h3>
-                  <ul>
-                    {unit.topics.map((topic) => <li>{topic}</li>)}
-                  </ul>
-                </section>
-              ))
-            ) : (
-              program.curriculum.length > 0 && (
-                <section class="program-part">
-                  <h3>{d.curriculumTitle}</h3>
-                  <ul>
-                    {program.curriculum.map((unit) => <li>{unit.title}</li>)}
-                  </ul>
-                </section>
-              )
-            ))}
-            {program.goals && (
-              <section class="program-part">
-                <h3>{d.goalsTitle}</h3>
-                <ul>
-                  {program.goals.map((goal) => <li>{goal}</li>)}
-                </ul>
-              </section>
-            )}
-            {program.method && (
-              <section class="program-part">
-                <h3>{d.methodTitle}</h3>
-                <ul>
-                  {program.method.map((item) => <li>{item}</li>)}
-                </ul>
-              </section>
-            )}
-            {program.evaluation && (
-              <section class="program-part">
-                <h3>{d.evaluationTitle}</h3>
-                <ul>
-                  {program.evaluation.map((item) => <li>{item}</li>)}
-                </ul>
-              </section>
-            )}
-          </div>
+          <CourseProgramDetail program={program} />
         </details>
       </section>
     )}
 
     {/* O fechamento que vende: o que a pessoa vai conseguir fazer — seguido
-        da ressalva honesta do programa, quando o documento traz uma. */}
-    {program?.outcomes && (
+        da ressalva honesta do programa, quando o documento traz uma. No hub
+        de família isso vive dentro do "Ver detalles" de cada painel. */}
+    {!isFamilyPage && program?.outcomes && (
       <section class="block">
         <h2 class="block-title">{d.outcomesTitle}</h2>
         <ul class="ticks two-up">
@@ -718,229 +644,112 @@ const courseJsonLd = {
   .block-center {
     text-align: center;
   }
-  .pay-options {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-    max-width: 760px;
-    margin-inline: auto;
-    text-align: left;
-  }
-  .pay-card {
-    background: var(--paper);
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius);
-    padding: 26px;
-    box-shadow: var(--shadow-sm);
-  }
-  .pay-card h3 {
-    font-size: 1.05rem;
-  }
-  .pay-card-full {
-    position: relative;
-    border: 2px solid var(--yellow);
-    background: linear-gradient(165deg, #fffdf4, var(--cream));
-    box-shadow: var(--shadow-yellow);
-  }
-  /* O selo que responde "qual escolho?" antes da pergunta: o paquete leva os
-     talleres, então é ele que a página recomenda. Centrado sobre a borda,
-     cavalgando o card — etiqueta de recomendação, não um post-it no canto. */
-  .pay-badge {
+  /* O hub de níveis: radios escondidos (o estado), quadradinhos como labels
+     (o controle) e um painel por nível (o conteúdo). As regras que ligam
+     radio marcado → painel visível dependem do id de cada nível e são
+     geradas no frontmatter (`levelTabsCss`); aqui fica só o visual. */
+  .level-radio {
     position: absolute;
-    top: -15px;
-    left: 50%;
-    transform: translateX(-50%);
-    margin: 0;
-    background: linear-gradient(135deg, var(--yellow-bright), var(--yellow));
-    color: var(--ink);
-    font-weight: 800;
-    font-size: 0.74rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    white-space: nowrap;
-    padding: 7px 18px;
-    border-radius: 999px;
-    box-shadow: var(--shadow-yellow);
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    clip-path: inset(50%);
+    overflow: hidden;
   }
-  .pay-price {
-    margin: 10px 0 0;
+  .tab-row {
     display: flex;
-    align-items: baseline;
-    gap: 8px;
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 1.8rem;
-    color: var(--ink);
-  }
-  .pay-unit {
-    font-family: var(--font);
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-  .pay-desc {
-    margin: 10px 0 0;
-    font-size: 0.95rem;
-  }
-  /* Um card por módulo, com os temas à esquerda: é a vitrine do que cada mês
-     de curso entrega — no desktop os quatro lado a lado, no celular empilham. */
-  .modules {
-    list-style: none;
-    margin: 0 auto;
-    padding: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 18px;
-    text-align: left;
-  }
-  .module {
-    background: var(--paper);
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius);
-    padding: 24px 22px;
-    box-shadow: var(--shadow-sm);
-  }
-  .module-chip {
-    display: inline-block;
-    margin: 0 0 12px;
-    font-size: 0.72rem;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--blue-deep);
-    background: var(--sky);
-    padding: 6px 12px;
-    border-radius: 999px;
-  }
-  .module h3 {
-    font-size: 1.05rem;
-    margin-bottom: 10px;
-  }
-  .module-topics {
-    margin: 0;
-    padding-left: 16px;
-    display: grid;
-    gap: 5px;
-    font-size: 0.88rem;
-    color: var(--text-muted);
-  }
-  .modules-note {
-    margin: 18px auto 0;
-    max-width: 60ch;
-    font-size: 0.92rem;
-  }
-  .modules-level {
-    margin: -14px auto 26px;
-    max-width: 60ch;
-    font-size: 0.95rem;
-  }
-  .levels {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 18px;
-    /* Largo o bastante para os 4 níveis do inglés na mesma linha
-       (4 × 220px + 3 gaps); com menos níveis os cards só ficam mais largos. */
-    max-width: 1000px;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    max-width: 860px;
     margin-inline: auto;
   }
-  .level {
-    background: var(--paper);
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius);
-    padding: 28px 22px;
-    box-shadow: var(--shadow-sm);
+  .tab-square {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 8px;
+    gap: 4px;
+    padding: 14px 22px;
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
     transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
   }
-  a.level:hover {
-    transform: translateY(-3px);
+  .tab-square:hover {
+    transform: translateY(-2px);
     border-color: var(--blue);
-    box-shadow: var(--shadow-blue);
   }
-  /* O nível aberto fica marcado, não escondido: a pessoa precisa saber onde
-     está dentro do idioma. */
-  .level-current {
-    border-color: var(--blue);
-    box-shadow: var(--shadow-blue);
-  }
-  .level h3 {
-    font-size: 1.08rem;
-  }
-  .level-chip {
-    margin: 0;
-    font-size: 0.7rem;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--blue-deep);
-    background: var(--sky);
-    padding: 5px 12px;
-    border-radius: 999px;
-  }
-  .level-summary {
-    margin: 0;
-    font-size: 0.88rem;
-    text-align: center;
-  }
-  .level-price {
-    margin: 0;
+  .tab-name {
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 1.4rem;
+    font-size: 1rem;
     color: var(--ink);
   }
-  /* Mensual e paquete no mesmo card, rótulo à esquerda e valor à direita —
-     a comparação inteira sem sair da seção. */
-  .level-prices {
-    margin: 4px 0 0;
-    width: 100%;
-    display: grid;
-    gap: 6px;
-  }
-  .level-prices > div {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
-  }
-  .level-prices dt {
-    font-size: 0.8rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--text-muted);
-  }
-  .level-prices dd {
-    margin: 0;
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 1.15rem;
-    color: var(--ink);
-    white-space: nowrap;
-  }
-  .level-unit {
-    font-family: var(--font);
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--text-muted);
-  }
-  /* A seta que diz "este card abre o nível" — o current não a tem. */
-  .level-cta {
-    margin-top: 2px;
+  .tab-price {
     font-size: 0.85rem;
     font-weight: 700;
-    color: var(--blue-deep);
+    color: var(--text-muted);
   }
-  .level-cta::after {
-    content: " →";
+  .level-panels {
+    max-width: 860px;
+    margin: 26px auto 0;
+  }
+  .level-panel {
+    display: none;
+    text-align: left;
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    padding: 30px 32px;
+  }
+  .panel-title {
+    font-size: 1.2rem;
+    margin-bottom: 14px;
+  }
+  .panel-ticks {
+    font-size: 0.96rem;
+  }
+  /* Preços lado a lado, grandes: é o dado que decide. */
+  .panel-prices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 36px;
+    margin-top: 18px;
+  }
+  .panel-price {
+    margin: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .panel-price strong {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.6rem;
+    color: var(--ink);
+  }
+  .panel-price-label,
+  .panel-price-unit {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+  }
+  .panel-enroll {
+    margin-top: 20px;
+  }
+  /* O toggle do programa dentro do painel: alinhado à esquerda com o resto
+     do conteúdo, separado do CTA por um respiro. */
+  .panel-toggle {
+    margin-top: 22px;
+  }
+  .panel-toggle > summary {
+    padding: 12px 26px;
+    font-size: 0.95rem;
   }
   /* O programa inteiro atrás de um único botão. `<details>` nativo — abre sem
      JavaScript, que esta página não carrega. O summary é o botão "Ver
@@ -984,38 +793,6 @@ const courseJsonLd = {
   .program-toggle[open] > summary::after {
     transform: rotate(225deg);
     margin-top: 4px;
-  }
-  .program-detail {
-    margin: 26px auto 0;
-    max-width: 860px;
-    text-align: left;
-    background: var(--paper);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-sm);
-    padding: 30px 32px;
-  }
-  .program-part + .program-part {
-    margin-top: 24px;
-    padding-top: 24px;
-    border-top: 1px solid var(--border);
-  }
-  .program-part h3 {
-    font-size: 1.02rem;
-    color: var(--blue-deep);
-    margin-bottom: 10px;
-  }
-  .program-part p {
-    margin: 0 0 10px;
-    max-width: 72ch;
-  }
-  .program-part ul {
-    margin: 0;
-    padding-left: 18px;
-    display: grid;
-    gap: 6px;
-    color: var(--text-muted);
-    font-size: 0.94rem;
   }
   .ticks {
     list-style: none;
