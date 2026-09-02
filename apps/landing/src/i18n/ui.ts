@@ -26,6 +26,7 @@ export const courseSlugs = [
   "english",
   "english-intermediate",
   "cambridge-b1",
+  "cambridge-b2",
   "french",
   "french-advanced",
   "italian",
@@ -47,6 +48,7 @@ export type CourseSlug = (typeof courseSlugs)[number];
 export const courseParent: Partial<Record<CourseSlug, CourseSlug>> = {
   "english-intermediate": "english",
   "cambridge-b1": "english",
+  "cambridge-b2": "english",
   "french-advanced": "french",
 };
 
@@ -75,10 +77,13 @@ export const coursePrices: Record<CourseSlug, number | null> = {
   // "79.90 paquete completo" no documento do programa de inglês (INGLES.docx):
   // nível Intermedio = livros 5 e 6.
   "english-intermediate": 79.9,
+  // Cambridge: dois cursos diferentes (B1 e B2), mesmo preço — palavra do
+  // dono, 02/09/2026.
+  "cambridge-b1": 120,
+  "cambridge-b2": 120,
+  "french": 80,
   // `null` = preço ainda não definido pela coordenação. A página omite o valor
   // em vez de inventar um: preço é dado de negócio, nunca chute (CLAUDE.md §9).
-  "cambridge-b1": null,
-  "french": 80,
   "french-advanced": null,
   "italian": 80,
   "german": 30,
@@ -383,6 +388,7 @@ export const content = {
         "korean": "Coreano",
         "english-intermediate": "Inglés Intermedio/Avanzado",
         "cambridge-b1": "Inglés B1 · Cambridge",
+        "cambridge-b2": "Inglés B2 · Cambridge",
         "french-advanced": "Francés Intermedio",
       },
       indexEyebrow: "Nuestros idiomas",
@@ -826,6 +832,7 @@ export const content = {
         "korean": "Korean",
         "english-intermediate": "Intermediate/Advanced English",
         "cambridge-b1": "English B1 · Cambridge",
+        "cambridge-b2": "English B2 · Cambridge",
         "french-advanced": "French Intermediate",
       },
       indexEyebrow: "Our languages",
@@ -1268,6 +1275,7 @@ export const content = {
         "korean": "Coreano",
         "english-intermediate": "Inglês Intermediário/Avançado",
         "cambridge-b1": "Inglês B1 · Cambridge",
+        "cambridge-b2": "Inglês B2 · Cambridge",
         "french-advanced": "Francês Intermediário",
       },
       indexEyebrow: "Nossos idiomas",
