@@ -1,0 +1,96 @@
+---
+// Circular flag dot for a language course. Inline SVG (no external asset, so
+// it works under `img-src 'self'` and never flashes on slow networks) and
+// decorative only — the language name next to it is the accessible label,
+// hence aria-hidden. Simplified drawings: at ~20px, detail is noise.
+import type { CourseSlug } from "../i18n/ui";
+
+interface Props {
+  slug: CourseSlug;
+}
+
+const { slug } = Astro.props;
+---
+
+{
+  slug === "english" && (
+    <svg class="lang-flag" viewBox="0 0 24 24" aria-hidden="true">
+      <rect width="24" height="24" fill="#012169" />
+      <path d="M0 0 24 24M24 0 0 24" stroke="#fff" stroke-width="5" />
+      <path d="M0 0 24 24M24 0 0 24" stroke="#C8102E" stroke-width="2.4" />
+      <path d="M12 0v24M0 12h24" stroke="#fff" stroke-width="8" />
+      <path d="M12 0v24M0 12h24" stroke="#C8102E" stroke-width="4.4" />
+    </svg>
+  )
+}
+{
+  slug === "french" && (
+    <svg class="lang-flag" viewBox="0 0 24 24" aria-hidden="true">
+      <rect width="8" height="24" fill="#0055A4" />
+      <rect x="8" width="8" height="24" fill="#fff" />
+      <rect x="16" width="8" height="24" fill="#EF4135" />
+    </svg>
+  )
+}
+{
+  slug === "italian" && (
+    <svg class="lang-flag" viewBox="0 0 24 24" aria-hidden="true">
+      <rect width="8" height="24" fill="#009246" />
+      <rect x="8" width="8" height="24" fill="#fff" />
+      <rect x="16" width="8" height="24" fill="#CE2B37" />
+    </svg>
+  )
+}
+{
+  slug === "german" && (
+    <svg class="lang-flag" viewBox="0 0 24 24" aria-hidden="true">
+      <rect width="24" height="8" fill="#000" />
+      <rect y="8" width="24" height="8" fill="#DD0000" />
+      <rect y="16" width="24" height="8" fill="#FFCE00" />
+    </svg>
+  )
+}
+{
+  slug === "portuguese" && (
+    <svg class="lang-flag" viewBox="0 0 24 24" aria-hidden="true">
+      <rect width="24" height="24" fill="#009739" />
+      <path d="M12 3.5 21 12l-9 8.5L3 12Z" fill="#FEDD00" />
+      <circle cx="12" cy="12" r="4.2" fill="#012169" />
+    </svg>
+  )
+}
+{
+  slug === "mandarin-chinese" && (
+    <svg class="lang-flag" viewBox="0 0 24 24" aria-hidden="true">
+      <rect width="24" height="24" fill="#EE1C25" />
+      <path
+        d="M9 5l1.01 3.11h3.27l-2.64 1.92 1.01 3.11L9 11.22l-2.65 1.92 1.01-3.11-2.64-1.92h3.27Z"
+        fill="#FFFF00"
+      />
+      <circle cx="15" cy="5.5" r="0.9" fill="#FFFF00" />
+      <circle cx="17" cy="8.5" r="0.9" fill="#FFFF00" />
+      <circle cx="17" cy="12" r="0.9" fill="#FFFF00" />
+    </svg>
+  )
+}
+{
+  slug === "korean" && (
+    <svg class="lang-flag" viewBox="0 0 24 24" aria-hidden="true">
+      <rect width="24" height="24" fill="#fff" />
+      <circle cx="12" cy="12" r="6" fill="#0047A0" />
+      <path d="M6 12a6 6 0 0 1 12 0 3 3 0 0 1-6 0 3 3 0 0 0-6 0Z" fill="#CD2E3A" />
+      <path d="M4 4.6l2.4 2.4M5.2 3.4l2.4 2.4M17.6 17l2.4 2.4M18.8 15.8l2.4 2.4" stroke="#000" stroke-width="0.9" />
+    </svg>
+  )
+}
+
+<style>
+  .lang-flag {
+    width: 20px;
+    height: 20px;
+    flex: none;
+    border-radius: 50%;
+    /* Thin ring so light flags (Korea) don't melt into the white panel. */
+    border: 1px solid rgba(19, 34, 75, 0.14);
+  }
+</style>

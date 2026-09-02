@@ -15,7 +15,10 @@ import type { CourseSlug } from "../i18n/ui";
  */
 export const courseIdBySlug: Record<CourseSlug, string> = {
   english: "crs_en_basic",
+  "english-intermediate": "crs_en_intermediate",
+  "cambridge-b1": "crs_en_b1",
   french: "crs_fr_full",
+  "french-advanced": "crs_fr_advanced",
   portuguese: "crs_pt_full",
   italian: "crs_it_basic",
   german: "crs_de_basic",

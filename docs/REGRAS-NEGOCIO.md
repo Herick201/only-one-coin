@@ -5,11 +5,13 @@
 > é o retrato do **processo comercial atual**, capturado para servir de base ao
 > desenho do catálogo, preços e políticas da nova plataforma (ver `REQUISITOS.md`).
 >
-> ⚠️ **Conflito conhecido com `CLAUDE.md`:** o processo atual usa pagamento
-> **mensal por módulo** e **promoções de continuação**. O `CLAUDE.md` (seção 1)
-> fecha o modelo como **pagamento único, sem parcelamento, sem desconto**. Este
-> documento preserva o dado real tal como capturado — a decisão de como (ou se)
-> isso se traduz na nova plataforma fica em aberto (ver `REQUISITOS.md` §7).
+> ⚠️ **Conflito com `CLAUDE.md` — parcialmente resolvido em 02/09/2026:** a
+> modalidade **mensal por módulo** foi confirmada como regra da nova plataforma,
+> **restrita aos cursos de inglês** (qualquer nível) — ver `CLAUDE.md` §1, que
+> agora a documenta como exceção ao pagamento único. As **promoções de
+> continuação** (S/49.90 / S/29.90, §4) seguem **em aberto**: contradizem o "sem
+> descontos" do `CLAUDE.md` e ainda não foram decididas (ver divergência #1 no
+> fim deste documento).
 >
 > Datas de início de turma (ex.: "15 de setiembre") são exemplos de um período de
 > venda específico, não uma regra fixa — cada `academic_period` tem as suas.
@@ -249,7 +251,7 @@ Nenhuma dessas foi "corrigida" nas seções acima — cada uma tem uma nota apon
 
 ## Divergências a resolver com o cliente antes de fechar o catálogo da nova plataforma
 
-1. **Parcelamento por módulo do Inglês Básico e do Inglês Kids** (S/20/mês) e as **promoções de continuação** existem hoje e contradizem a regra fechada de "pagamento único, sem desconto" do `CLAUDE.md`. Perguntar: isso deve migrar para a nova plataforma como está, virar uma exceção documentada, ou o negócio pretende descontinuar esse modelo na migração?
+1. ~~Parcelamento por módulo~~ **Resolvido em parte (02/09/2026):** a modalidade mensual **migra** para a nova plataforma como exceção documentada, valendo para **todos os cursos de inglês** (decisão do Rick: "só pra inglês, independente do nível" — mais amplo que o processo atual, que restringia a básico + kids, ver §4). Regras em `CLAUDE.md` §1. **Segue em aberto:** as **promoções de continuação** (S/49.90 módulos 2-4, S/29.90 módulos 3-4) — contradizem o "sem descontos" e não foram decididas.
 2. **Procedimentos administrativos com custo** (mudança de horário, congelamento, repetir módulo etc.) reutilizam hoje o mesmo formulário de matrícula do fluxo de aluno novo (ver §5) — confirmar se, na nova plataforma, entram no mesmo `payments`/outbox (RF18) como um sub-fluxo de "solicitação com taxa", ou se merecem um domínio próprio no backoffice.
 3. Preço de **PayPal em dólares** usa tabela de conversão própria, não câmbio de mercado — confirmar se isso continua manual/config ou vira taxa fixa por plano.
 4. Catálogo real inclui **chinês mandarim**, **italiano** e uma menção a **reforço escolar de matemática**, não citados (ou pouco detalhados) na descrição curta do negócio — confirmar quais seguem ativos no catálogo da nova plataforma.
