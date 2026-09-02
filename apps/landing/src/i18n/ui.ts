@@ -422,6 +422,11 @@ export const content = {
         "cambridge-b2": "B2 · Cambridge",
         "french": "Básico",
         "french-advanced": "Intermedio",
+        "italian": "Básico",
+        "german": "Introductorio",
+        "portuguese": "Básico",
+        "mandarin-chinese": "Básico",
+        "korean": "Básico",
       } as Partial<Record<CourseSlug, string>>,
       // Os 3–4 checks que decidem a escolha do nível — o resto mora no
       // "Ver detalles" do painel.
@@ -891,6 +896,11 @@ export const content = {
         "cambridge-b2": "B2 · Cambridge",
         "french": "Basic",
         "french-advanced": "Intermediate",
+        "italian": "Basic",
+        "german": "Introductory",
+        "portuguese": "Basic",
+        "mandarin-chinese": "Basic",
+        "korean": "Basic",
       } as Partial<Record<CourseSlug, string>>,
       levelHighlights: {
         "english": [
@@ -1357,6 +1367,11 @@ export const content = {
         "cambridge-b2": "B2 · Cambridge",
         "french": "Básico",
         "french-advanced": "Intermediário",
+        "italian": "Básico",
+        "german": "Introdutório",
+        "portuguese": "Básico",
+        "mandarin-chinese": "Básico",
+        "korean": "Básico",
       } as Partial<Record<CourseSlug, string>>,
       levelHighlights: {
         "english": [

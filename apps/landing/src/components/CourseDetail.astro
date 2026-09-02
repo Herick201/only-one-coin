@@ -33,9 +33,8 @@ const program = courseContent[lang][slug] ?? null;
 const parentSlug = courseParent[slug] ?? null;
 const familyRoot = parentSlug ?? slug;
 const siblings = [familyRoot, ...levelsOf(familyRoot)];
-// Um curso sem níveis é uma família de um: o mesmo painel central, só sem a
-// fileira de quadradinhos. Assim toda página de curso tem a mesma cara.
-const hasTabs = siblings.length > 1;
+// Um curso sem níveis é uma família de um: mesmo hub, mesma cara — um único
+// quadradinho já selecionado sobre o seu painel (pedido do dono, 03/09/2026).
 
 // Checks derivados do documento do programa, para o curso que não tem
 // destaque escrito à mão em `levelHighlights` — nunca inventamos conteúdo:
@@ -72,7 +71,6 @@ const levelPanels = siblings.map((levelSlug) => {
 // A troca de painel é CSS puro (radio + irmãos) — esta página não carrega
 // JavaScript e continua assim. As regras dependem do id de cada nível, então
 // nascem aqui e entram numa <style> própria; o visual mora na <style> scoped.
-// Sem quadradinhos não há radio: o painel único abre por classe própria.
 const levelTabsCss = levelPanels
   .map(
     (p) => `
@@ -186,7 +184,7 @@ const courseJsonLd = {
       </h1>
       {/* O hero fala do curso em geral: sessões, nível e duração são dado de
           painel — moram nos checks, logo abaixo. */}
-      {program || hasTabs ? (
+      {program || siblings.length > 1 ? (
         <div class="pitch">
           <ul class="perks">
             <li>{d.perkTeacher}</li>
@@ -220,8 +218,8 @@ const courseJsonLd = {
         rende o mesmo painel, sem quadradinhos. */}
     {levelPanels.length > 0 && (
       <section class="block block-center level-tabs">
-        {hasTabs && <h2 class="block-title">{d.levelsTitle}</h2>}
-        {hasTabs && levelPanels.map((p) => (
+        <h2 class="block-title">{d.levelsTitle}</h2>
+        {levelPanels.map((p) => (
           <input
             class="level-radio"
             type="radio"
@@ -231,33 +229,32 @@ const courseJsonLd = {
             aria-label={p.name}
           />
         ))}
-        {hasTabs && (
-          <div class="tab-row">
-            {/* Barrinhas de progressão em vez de ícone: o quadradinho N acende
-                N barras — a posição do nível na escada, sem palavra nenhuma. */}
-            {levelPanels.map((p, index) => (
-              <label class="tab-square" for={`level-${p.slug}`}>
-                <span class="tab-steps" aria-hidden="true">
-                  {levelPanels.map((_, step) => (
-                    <span class={step <= index ? "step step-on" : "step"} />
-                  ))}
-                </span>
-                <span class="tab-name">{p.shortName}</span>
-              </label>
-            ))}
-          </div>
-        )}
+        <div class="tab-row">
+          {/* Barrinhas de progressão em vez de ícone: o quadradinho N acende
+              N barras — a posição do nível na escada, sem palavra nenhuma. */}
+          {levelPanels.map((p, index) => (
+            <label class="tab-square" for={`level-${p.slug}`}>
+              <span class="tab-steps" aria-hidden="true">
+                {/* Altura distribuída entre 9 e 24px conforme a quantidade de
+                    níveis — família de um ganha uma barra cheia, não um ponto. */}
+                {levelPanels.map((_, step) => (
+                  <span
+                    class={step <= index ? "step step-on" : "step"}
+                    style={`height:${levelPanels.length > 1 ? 9 + Math.round((15 * step) / (levelPanels.length - 1)) : 24}px`}
+                  />
+                ))}
+              </span>
+              <span class="tab-name">{p.shortName}</span>
+            </label>
+          ))}
+        </div>
         <div class="level-panels">
           {levelPanels.map((p) => (
-            <article
-              class={hasTabs ? "level-panel" : "level-panel level-panel-single"}
-              id={`panel-${p.slug}`}
-            >
+            <article class="level-panel" id={`panel-${p.slug}`}>
               {/* O nome curto basta: o idioma já está no título da página, e
                   "Inglés" sozinho aqui voltaria a ser ambíguo ao lado de
-                  "Intermedio/Avanzado". Sem quadradinhos, o título do painel
-                  repetiria o da página — sai. */}
-              {hasTabs && <h3 class="panel-title">{p.shortName}</h3>}
+                  "Intermedio/Avanzado". */}
+              <h3 class="panel-title">{p.shortName}</h3>
               {p.highlights.length > 0 && (
                 <ul class="ticks panel-ticks">
                   {p.highlights.map((item) => <li>{item}</li>)}
@@ -290,7 +287,7 @@ const courseJsonLd = {
         </div>
       </section>
     )}
-    {hasTabs && <style set:html={levelTabsCss} is:inline />}
+    <style set:html={levelTabsCss} is:inline />
 
     <section class="course-cta">
       <span class="blob course-cta-blob-a" aria-hidden="true"></span>
@@ -578,12 +575,6 @@ const courseJsonLd = {
     background: var(--sky);
     transition: background 0.16s ease;
   }
-  .step:nth-child(1) { height: 9px; }
-  .step:nth-child(2) { height: 14px; }
-  .step:nth-child(3) { height: 19px; }
-  .step:nth-child(4) { height: 24px; }
-  .step:nth-child(5) { height: 29px; }
-  .step:nth-child(6) { height: 34px; }
   .step-on {
     background: var(--blue);
   }
@@ -605,10 +596,6 @@ const courseJsonLd = {
     border-radius: var(--radius);
     box-shadow: var(--shadow-sm);
     padding: 30px 32px;
-  }
-  /* Curso sem níveis: um painel só, sem radio — abre direto. */
-  .level-panel-single {
-    display: block;
   }
   .panel-title {
     font-size: 1.2rem;
