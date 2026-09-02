@@ -1,0 +1,136 @@
+---
+import type { CourseContent } from "../i18n/courses-content";
+import type { Lang } from "../i18n/ui";
+import { getLangFromUrl, useTranslations } from "../i18n/utils";
+
+/**
+ * O corpo do "Ver detalles": descrição, malha, competências, método e
+ * avaliação de UM programa. Vive fora de `CourseDetail` porque a página de
+ * um idioma com níveis mostra vários programas (um por painel de nível),
+ * cada um atrás do próprio toggle — o mesmo bloco, N vezes.
+ */
+interface Props {
+  program: CourseContent;
+  /**
+   * O fechamento ("al finalizar vas a poder") entra aqui quando o programa é
+   * um painel de nível — nas páginas sem níveis ele já é seção própria, à
+   * vista, e duplicar seria mostrar a mesma lista duas vezes.
+   */
+  includeOutcomes?: boolean;
+}
+
+const { program, includeOutcomes = false } = Astro.props;
+const lang: Lang = getLangFromUrl(Astro.url);
+const d = useTranslations(lang).courseDetail;
+
+// Malha detalhada (temas por unidade) só nos cursos cujo documento oficial já
+// chegou; os demais mostram a lista simples de unidades.
+const hasTopics = program.curriculum.some((unit) => unit.topics.length > 0);
+---
+
+<div class="program-detail">
+  {(program.description ?? []).length > 0 && (
+    <section class="program-part">
+      <h3>{d.aboutTitle}</h3>
+      {(program.description ?? []).map((paragraph) => (
+        <p class="text-muted">{paragraph}</p>
+      ))}
+    </section>
+  )}
+  {hasTopics ? (
+    program.curriculum.map((unit) => (
+      <section class="program-part">
+        <h3>{unit.title}</h3>
+        <ul>
+          {unit.topics.map((topic) => <li>{topic}</li>)}
+        </ul>
+      </section>
+    ))
+  ) : (
+    program.curriculum.length > 0 && (
+      <section class="program-part">
+        <h3>{d.curriculumTitle}</h3>
+        <ul>
+          {program.curriculum.map((unit) => <li>{unit.title}</li>)}
+        </ul>
+      </section>
+    )
+  )}
+  {program.goals && (
+    <section class="program-part">
+      <h3>{d.goalsTitle}</h3>
+      <ul>
+        {program.goals.map((goal) => <li>{goal}</li>)}
+      </ul>
+    </section>
+  )}
+  {program.method && (
+    <section class="program-part">
+      <h3>{d.methodTitle}</h3>
+      <ul>
+        {program.method.map((item) => <li>{item}</li>)}
+      </ul>
+    </section>
+  )}
+  {program.evaluation && (
+    <section class="program-part">
+      <h3>{d.evaluationTitle}</h3>
+      <ul>
+        {program.evaluation.map((item) => <li>{item}</li>)}
+      </ul>
+    </section>
+  )}
+  {includeOutcomes && program.outcomes && (
+    <section class="program-part">
+      <h3>{d.outcomesTitle}</h3>
+      <ul>
+        {program.outcomes.map((outcome) => <li>{outcome}</li>)}
+      </ul>
+      {program.outcomeNote && <p class="outcome-note">{program.outcomeNote}</p>}
+    </section>
+  )}
+</div>
+
+<style>
+  .program-detail {
+    margin: 26px auto 0;
+    max-width: 860px;
+    text-align: left;
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    padding: 30px 32px;
+  }
+  .program-part + .program-part {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  .program-part h3 {
+    font-size: 1.02rem;
+    color: var(--blue-deep);
+    margin-bottom: 10px;
+  }
+  .program-part p {
+    margin: 0 0 10px;
+    max-width: 72ch;
+  }
+  .program-part ul {
+    margin: 0;
+    padding-left: 18px;
+    display: grid;
+    gap: 6px;
+    color: var(--text-muted);
+    font-size: 0.94rem;
+  }
+  .outcome-note {
+    margin-top: 16px;
+    padding: 14px 18px;
+    border-left: 3px solid var(--yellow);
+    background: var(--cream);
+    border-radius: 0 12px 12px 0;
+    font-size: 0.94rem;
+    color: var(--text);
+  }
+</style>

@@ -4,6 +4,7 @@ import { audienceAnchors, courseParent, coursePrices, htmlLang, levelsOf, monthl
 import { getLangFromUrl, useTranslations, withLang, formatPEN } from "../i18n/utils";
 import { courseIdBySlug, enrollmentHref } from "../data/checkout";
 import { courseContent } from "../i18n/courses-content";
+import CourseProgramDetail from "./CourseProgramDetail.astro";
 
 interface Props {
   slug: CourseSlug;
@@ -16,45 +17,78 @@ const d = t.courseDetail;
 const name = t.courses.list[slug];
 const rawPrice = coursePrices[slug];
 const price = rawPrice === null ? null : formatPEN(rawPrice, lang);
-// Mensual só existe para inglês (CLAUDE.md §1, decisão 02/09/2026) — nos
-// demais cursos o bloco de modalidades nem aparece.
+// Mensual só existe para inglês (CLAUDE.md §1, decisão 02/09/2026) — entra
+// no painel do nível e na oferta do JSON-LD; nos demais cursos nem aparece.
 const rawMonthly = monthlyPrices[slug] ?? null;
-const monthly = rawMonthly === null ? null : formatPEN(rawMonthly, lang);
 // Matrícula desta página já cai no checkout com ESTE curso escolhido.
 // Programa real deste curso, quando a coordenação já entregou o documento.
 // Sem ele a página segue no texto genérico, com o aviso de exemplo.
 const program = courseContent[lang][slug] ?? null;
-// Malha detalhada (temas por unidade) só existe nos cursos cujo documento
-// oficial já chegou; os demais mostram a lista simples de unidades.
-const hasTopics = (program?.curriculum ?? []).some((unit) => unit.topics.length > 0);
-// No curso com modalidade mensual o módulo é a unidade de compra: ele sai de
-// dentro do "Ver detalles" e vira seção visível. Nos demais cursos a malha
-// segue dentro do programa detalhado.
-const moduleUnits = monthly !== null ? (program?.curriculum ?? []) : [];
 
-// Idioma e seus níveis. A página de um idioma lista os níveis dela; a página
-// de um nível oferece o caminho de volta ao idioma.
+// Idioma e seus níveis. A página de um idioma vira o hub da família: um
+// seletor de níveis em quadradinhos, e UM painel de detalhe que troca com a
+// seleção — sem navegar, sem recarregar. A página de um nível renderiza o
+// mesmo hub com o próprio nível pré-selecionado, então o deep link continua
+// caindo no lugar certo.
 const parentSlug = courseParent[slug] ?? null;
 const familyRoot = parentSlug ?? slug;
 const siblings = [familyRoot, ...levelsOf(familyRoot)];
-const levels =
-  siblings.length > 1
-    ? siblings.map((levelSlug) => ({
-        slug: levelSlug,
-        name: t.courses.list[levelSlug],
-        href: withLang(lang, `/courses/${levelSlug}`),
-        price:
-          coursePrices[levelSlug] === null
-            ? null
-            : formatPEN(coursePrices[levelSlug] as number, lang),
-        current: levelSlug === slug,
-      }))
+// Um curso sem níveis é uma família de um: mesmo hub, mesma cara — um único
+// quadradinho já selecionado sobre o seu painel (pedido do dono, 03/09/2026).
+
+// Checks derivados do documento do programa, para o curso que não tem
+// destaque escrito à mão em `levelHighlights` — nunca inventamos conteúdo:
+// sessões, nível, duração e modalidade já vêm da coordenação.
+const fallbackHighlights = (prog: typeof program): string[] =>
+  prog
+    ? [
+        prog.sessions ? `${prog.sessions} ${d.liveClasses}` : null,
+        prog.level ? `${d.factLevel}: ${prog.level}` : null,
+        prog.duration ? `${d.factDuration}: ${prog.duration}` : null,
+        prog.modality ? `${d.factModality}: ${prog.modality}` : null,
+      ].filter((item): item is string => item !== null)
     : [];
 
-const enrollHref = enrollmentHref(withLang(lang, "/enrollment"), {
-  courseId: courseIdBySlug[slug],
-  content: "course_page",
+const levelPanels = siblings.map((levelSlug) => {
+  const levelProgram = courseContent[lang][levelSlug] ?? null;
+  return {
+    slug: levelSlug,
+    name: t.courses.list[levelSlug],
+    shortName: d.levelShortNames[levelSlug] ?? t.courses.list[levelSlug],
+    highlights: d.levelHighlights[levelSlug] ?? fallbackHighlights(levelProgram),
+    program: levelProgram,
+    // O hub não mostra valores (pedido do dono, 03/09/2026) — mensal aqui
+    // é só o gatilho das pílulas de modalidade no painel.
+    hasMonthly: (monthlyPrices[levelSlug] ?? null) !== null,
+    enrollHref: enrollmentHref(withLang(lang, "/enrollment"), {
+      courseId: courseIdBySlug[levelSlug],
+      content: "course_page",
+    }),
+    current: levelSlug === slug,
+  };
 });
+
+// A troca de painel é CSS puro (radio + irmãos) — esta página não carrega
+// JavaScript e continua assim. As regras dependem do id de cada nível, então
+// nascem aqui e entram numa <style> própria; o visual mora na <style> scoped.
+const levelTabsCss = levelPanels
+  .map(
+    (p) => `
+#level-${p.slug}:checked ~ .level-panels > #panel-${p.slug} { display: block; }
+#level-${p.slug}:checked ~ .tab-row > [for="level-${p.slug}"] {
+  border-color: var(--blue);
+  background: var(--sky);
+  box-shadow: var(--shadow-blue);
+}
+#level-${p.slug}:checked ~ .tab-row > [for="level-${p.slug}"] .step:not(.step-on) {
+  background: var(--paper);
+}
+#level-${p.slug}:focus-visible ~ .tab-row > [for="level-${p.slug}"] {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}`,
+  )
+  .join("\n");
 
 // Icons per feature (Lucide) — decorative, not translatable content.
 const featureIcons = [
@@ -148,13 +182,10 @@ const courseJsonLd = {
         </span>
         {d.titlePost}
       </h1>
-      {program ? (
+      {/* O hero fala do curso em geral: sessões, nível e duração são dado de
+          painel — moram nos checks, logo abaixo. */}
+      {program || siblings.length > 1 ? (
         <div class="pitch">
-          {program.sessions && (
-            <p class="pitch-lead">
-              <strong>{program.sessions}</strong> <span>{d.liveClasses}</span>
-            </p>
-          )}
           <ul class="perks">
             <li>{d.perkTeacher}</li>
             <li>{d.perkSchedule}</li>
@@ -177,198 +208,89 @@ const courseJsonLd = {
           </span>
         </p>
       )}
-      {/* Duração, nível e modalidade: o que a pessoa procura antes de ler
-          qualquer parágrafo. Só o campo que o documento do curso já fechou. */}
-      {program && (program.duration || program.level || program.modality) && (
-        <dl class="facts">
-          {program.duration && (
-            <div>
-              <dt>{d.factDuration}</dt>
-              <dd>{program.duration}</dd>
-            </div>
-          )}
-          {program.level && (
-            <div>
-              <dt>{d.factLevel}</dt>
-              <dd>{program.level}</dd>
-            </div>
-          )}
-          {program.modality && (
-            <div>
-              <dt>{d.factModality}</dt>
-              <dd>{program.modality}</dd>
-            </div>
-          )}
-        </dl>
-      )}
       {!program && <p class="example-note">{d.exampleNote}</p>}
     </header>
 
-    {/* Mensual × paquete completo, lado a lado — só onde a modalidade mensal
-        existe. O completo leva o destaque: é o que carrega os talleres. */}
-    {monthly && price && (
-      <section class="block block-center">
-        <h2 class="block-title">{d.paymentTitle}</h2>
-        <div class="pay-options">
-          <article class="pay-card">
-            <h3>{d.paymentMonthlyName}</h3>
-            <p class="pay-price">
-              {monthly} <span class="pay-unit">{d.paymentMonthlyUnit}</span>
-            </p>
-            <p class="pay-desc text-muted">{d.paymentMonthlyDesc}</p>
-          </article>
-          <article class="pay-card pay-card-full">
-            <p class="pay-badge">{d.paymentFullBadge}</p>
-            <h3>{d.paymentFullName}</h3>
-            <p class="pay-price">
-              {price} <span class="pay-unit">{d.paymentFullUnit}</span>
-            </p>
-            <p class="pay-desc text-muted">{d.paymentFullDesc}</p>
-          </article>
+    {/* O hub de níveis: quadradinhos em cima, UM painel embaixo. Clicar num
+        nível troca só o painel — radio + CSS, sem JavaScript e sem recarregar.
+        O painel carrega o essencial (3–4 checks, modalidades, matrícula) e o
+        programa inteiro fica atrás do "Ver detalles" dele. Curso sem níveis
+        rende o mesmo painel, sem quadradinhos. */}
+    {levelPanels.length > 0 && (
+      <section class="block block-center level-tabs">
+        <h2 class="block-title">{d.levelsTitle}</h2>
+        {levelPanels.map((p) => (
+          <input
+            class="level-radio"
+            type="radio"
+            name="level-tab"
+            id={`level-${p.slug}`}
+            checked={p.current}
+            aria-label={p.name}
+          />
+        ))}
+        <div class="tab-row">
+          {/* Barrinhas de progressão em vez de ícone: o quadradinho N acende
+              N barras — a posição do nível na escada, sem palavra nenhuma. */}
+          {levelPanels.map((p, index) => (
+            <label class="tab-square" for={`level-${p.slug}`}>
+              <span class="tab-steps" aria-hidden="true">
+                {/* O sinal é sempre a escadinha completa; o nível pinta as
+                    primeiras barras — Básico acende uma, cada degrau acima
+                    acende mais uma, em qualquer idioma. */}
+                {[0, 1, 2, 3].map((step) => (
+                  <span
+                    class={step <= index ? "step step-on" : "step"}
+                    style={`height:${9 + 5 * step}px`}
+                  />
+                ))}
+              </span>
+              <span class="tab-name">{p.shortName}</span>
+            </label>
+          ))}
         </div>
-      </section>
-    )}
-
-    {/* O que cada módulo ensina, à vista: quem paga mês a mês compra um
-        módulo por vez, e o que está à venda não pode morar atrás de um
-        "Ver detalles". */}
-    {moduleUnits.length > 0 && (
-      <section class="block block-center">
-        <h2 class="block-title">{d.modulesTitle}</h2>
-        <ol class="modules">
-          {moduleUnits.map((unit, index) => (
-            <li class="module">
-              <p class="module-chip">{d.moduleLabel} {index + 1}</p>
-              <h3>{unit.title}</h3>
-              {unit.topics.length > 0 && (
-                <ul class="module-topics">
-                  {unit.topics.map((topic) => <li>{topic}</li>)}
+        <div class="level-panels">
+          {levelPanels.map((p) => (
+            <article class="level-panel" id={`panel-${p.slug}`}>
+              {/* Marca d'água do logo: decorativa, atrás do conteúdo. */}
+              <img class="panel-watermark" src="/brand/logo.png" alt="" aria-hidden="true" loading="lazy" />
+              {/* O nome curto basta: o idioma já está no título da página, e
+                  "Inglés" sozinho aqui voltaria a ser ambíguo ao lado de
+                  "Intermedio/Avanzado". */}
+              <h3 class="panel-title">{p.shortName}</h3>
+              {p.highlights.length > 0 && (
+                <ul class="ticks panel-ticks">
+                  {p.highlights.map((item) => <li>{item}</li>)}
                 </ul>
               )}
-            </li>
+              {/* As duas modalidades, sem valores — o preço já mora no
+                  quadradinho do nível. O paquete leva o selo: é o que carrega
+                  os talleres. Só aparece onde a escolha existe (mensual). */}
+              {p.hasMonthly && (
+                <div class="panel-options">
+                  <span class="panel-option">{d.paymentMonthlyName}</span>
+                  {/* A recomendação é a estrela em cima da pílula; a palavra
+                      fica só para leitor de tela. */}
+                  <span class="panel-option panel-option-full">
+                    <svg class="panel-option-star" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l2.9 6.26 6.6.72-4.9 4.55 1.34 6.47L12 16.77 6.06 20l1.34-6.47L2.5 8.98l6.6-.72L12 2z"/></svg>
+                    {d.paymentFullName}
+                    <span class="visually-hidden">{d.paymentRecommended}</span>
+                  </span>
+                </div>
+              )}
+              <a class="btn btn-yellow panel-enroll" href={p.enrollHref}>{t.hero.ctaEnroll}</a>
+              {p.program && (
+                <details class="program-toggle panel-toggle">
+                  <summary>{d.detailsToggle}</summary>
+                  <CourseProgramDetail program={p.program} includeOutcomes />
+                </details>
+              )}
+            </article>
           ))}
-        </ol>
-        <p class="modules-note text-muted">{d.modulesNote}</p>
-      </section>
-    )}
-
-    {/* Só nome e preço: o detalhe de cada nível mora na página dele, e a
-        matrícula mora na faixa amarela desta página — o card leva ao nível,
-        não ao checkout. */}
-    {levels.length > 0 && (
-      <section class="block block-center">
-        <h2 class="block-title">{d.levelsTitle}</h2>
-        <div class="levels">
-          {levels.map((level) =>
-            level.current ? (
-              <article class="level level-current">
-                <h3>{level.name}</h3>
-                {level.price && <p class="level-price">{level.price}</p>}
-              </article>
-            ) : (
-              <a class="level" href={level.href}>
-                <h3>{level.name}</h3>
-                {level.price && <p class="level-price">{level.price}</p>}
-              </a>
-            ),
-          )}
         </div>
       </section>
     )}
-
-    {/* A matrícula antes do detalhe do programa: quem já viu preço, módulos
-        e níveis decide aqui. O "Ver detalles" logo abaixo é para quem ainda
-        precisa ler mais; o bloco azul do fim é dúvida, que se resolve no
-        WhatsApp. */}
-    <section class="enroll-band">
-      <a class="btn btn-yellow enroll-cta" href={enrollHref}>{t.hero.ctaEnroll}</a>
-      <p class="enroll-note text-muted">{d.urgency}</p>
-    </section>
-
-    {/* Todo o detalhe do programa atrás de um único "Ver detalles",
-        centralizado: a página apresenta e vende; quem quer o programa inteiro
-        abre uma vez e lê tudo — texto, malha livro a livro, competências,
-        método e avaliação. */}
-    {program &&
-      ((moduleUnits.length === 0 && program.curriculum.length > 0) ||
-        program.goals ||
-        program.method ||
-        program.evaluation ||
-        (program.description ?? []).length > 0) && (
-      <section class="block block-center">
-        <h2 class="block-title">{d.programTitle}</h2>
-        <details class="program-toggle">
-          <summary>{d.detailsToggle}</summary>
-          <div class="program-detail">
-            {(program.description ?? []).length > 0 && (
-              <section class="program-part">
-                <h3>{d.aboutTitle}</h3>
-                {(program.description ?? []).map((paragraph) => (
-                  <p class="text-muted">{paragraph}</p>
-                ))}
-              </section>
-            )}
-            {/* A malha só entra aqui quando não virou a seção de módulos
-                acima — o mesmo conteúdo não aparece duas vezes na página. */}
-            {moduleUnits.length === 0 && (hasTopics ? (
-              program.curriculum.map((unit) => (
-                <section class="program-part">
-                  <h3>{unit.title}</h3>
-                  <ul>
-                    {unit.topics.map((topic) => <li>{topic}</li>)}
-                  </ul>
-                </section>
-              ))
-            ) : (
-              program.curriculum.length > 0 && (
-                <section class="program-part">
-                  <h3>{d.curriculumTitle}</h3>
-                  <ul>
-                    {program.curriculum.map((unit) => <li>{unit.title}</li>)}
-                  </ul>
-                </section>
-              )
-            ))}
-            {program.goals && (
-              <section class="program-part">
-                <h3>{d.goalsTitle}</h3>
-                <ul>
-                  {program.goals.map((goal) => <li>{goal}</li>)}
-                </ul>
-              </section>
-            )}
-            {program.method && (
-              <section class="program-part">
-                <h3>{d.methodTitle}</h3>
-                <ul>
-                  {program.method.map((item) => <li>{item}</li>)}
-                </ul>
-              </section>
-            )}
-            {program.evaluation && (
-              <section class="program-part">
-                <h3>{d.evaluationTitle}</h3>
-                <ul>
-                  {program.evaluation.map((item) => <li>{item}</li>)}
-                </ul>
-              </section>
-            )}
-          </div>
-        </details>
-      </section>
-    )}
-
-    {/* O fechamento que vende: o que a pessoa vai conseguir fazer — seguido
-        da ressalva honesta do programa, quando o documento traz uma. */}
-    {program?.outcomes && (
-      <section class="block">
-        <h2 class="block-title">{d.outcomesTitle}</h2>
-        <ul class="ticks two-up">
-          {program.outcomes.map((outcome) => <li>{outcome}</li>)}
-        </ul>
-        {program.outcomeNote && <p class="outcome-note">{program.outcomeNote}</p>}
-      </section>
-    )}
+    <style set:html={levelTabsCss} is:inline />
 
     <section class="course-cta">
       <span class="blob course-cta-blob-a" aria-hidden="true"></span>
@@ -411,23 +333,6 @@ const courseJsonLd = {
   }
   .course-head {
     max-width: 720px;
-  }
-  .enroll-band {
-    margin-top: 62px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    text-align: center;
-  }
-  .enroll-cta {
-    font-size: 1.18rem;
-    padding: 20px 52px;
-  }
-  .enroll-note {
-    margin: 0;
-    font-size: 0.92rem;
-    font-weight: 600;
   }
   .badges {
     display: flex;
@@ -584,25 +489,6 @@ const courseJsonLd = {
   .pitch {
     margin-top: 20px;
   }
-  .pitch-lead {
-    margin: 0 0 16px;
-    display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: 10px;
-    font-family: var(--font-display);
-    line-height: 1.05;
-  }
-  .pitch-lead strong {
-    font-size: clamp(1.7rem, 3.6vw, 2.4rem);
-    font-weight: 700;
-    color: var(--blue);
-  }
-  .pitch-lead span {
-    font-size: clamp(1rem, 2vw, 1.3rem);
-    font-weight: 600;
-    color: var(--ink);
-  }
   .perks {
     list-style: none;
     margin: 0;
@@ -632,201 +518,169 @@ const courseJsonLd = {
   /* Duração, nível e modalidade: os três números que a pessoa procura antes de
      ler qualquer outra coisa. Pílulas numa linha, não três cards — informação
      de apoio não pode pesar mais que a decisão. */
-  .facts {
-    margin: 26px 0 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-  .facts > div {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 8px;
-    background: var(--paper);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 8px 18px;
-    box-shadow: var(--shadow-sm);
-  }
-  .facts dt {
-    font-size: 0.72rem;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--blue);
-  }
-  .facts dd {
-    margin: 0;
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: var(--ink);
-  }
   /* Competências, método, avaliação e resultados: quatro listas curtas que
      leem melhor em duas colunas do que em quatro seções empilhadas. */
-  .two-up {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 10px 46px;
-  }
   /* Seções centralizadas na tela: título no centro, grade centrada, e o
      texto interno de cada card segue à esquerda — centralizar card por
      dentro vira sopa de linhas curtas. */
   .block-center {
     text-align: center;
   }
-  .pay-options {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-    max-width: 760px;
-    margin-inline: auto;
-    text-align: left;
-  }
-  .pay-card {
-    background: var(--paper);
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius);
-    padding: 26px;
-    box-shadow: var(--shadow-sm);
-  }
-  .pay-card h3 {
-    font-size: 1.05rem;
-  }
-  .pay-card-full {
-    position: relative;
-    border: 2px solid var(--yellow);
-    background: linear-gradient(165deg, #fffdf4, var(--cream));
-    box-shadow: var(--shadow-yellow);
-  }
-  /* O selo que responde "qual escolho?" antes da pergunta: o paquete leva os
-     talleres, então é ele que a página recomenda. Centrado sobre a borda,
-     cavalgando o card — etiqueta de recomendação, não um post-it no canto. */
-  .pay-badge {
+  /* O hub de níveis: radios escondidos (o estado), quadradinhos como labels
+     (o controle) e um painel por nível (o conteúdo). As regras que ligam
+     radio marcado → painel visível dependem do id de cada nível e são
+     geradas no frontmatter (`levelTabsCss`); aqui fica só o visual. */
+  .level-radio {
     position: absolute;
-    top: -15px;
-    left: 50%;
-    transform: translateX(-50%);
-    margin: 0;
-    background: linear-gradient(135deg, var(--yellow-bright), var(--yellow));
-    color: var(--ink);
-    font-weight: 800;
-    font-size: 0.74rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    white-space: nowrap;
-    padding: 7px 18px;
-    border-radius: 999px;
-    box-shadow: var(--shadow-yellow);
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    clip-path: inset(50%);
+    overflow: hidden;
   }
-  .pay-price {
-    margin: 10px 0 0;
+  .tab-row {
     display: flex;
-    align-items: baseline;
-    gap: 8px;
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 1.8rem;
-    color: var(--ink);
-  }
-  .pay-unit {
-    font-family: var(--font);
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-  .pay-desc {
-    margin: 10px 0 0;
-    font-size: 0.95rem;
-  }
-  /* Um card por módulo, com os temas à esquerda: é a vitrine do que cada mês
-     de curso entrega — no desktop os quatro lado a lado, no celular empilham. */
-  .modules {
-    list-style: none;
-    margin: 0 auto;
-    padding: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 18px;
-    text-align: left;
-  }
-  .module {
-    background: var(--paper);
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius);
-    padding: 24px 22px;
-    box-shadow: var(--shadow-sm);
-  }
-  .module-chip {
-    display: inline-block;
-    margin: 0 0 12px;
-    font-size: 0.72rem;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--blue-deep);
-    background: var(--sky);
-    padding: 6px 12px;
-    border-radius: 999px;
-  }
-  .module h3 {
-    font-size: 1.05rem;
-    margin-bottom: 10px;
-  }
-  .module-topics {
-    margin: 0;
-    padding-left: 16px;
-    display: grid;
-    gap: 5px;
-    font-size: 0.88rem;
-    color: var(--text-muted);
-  }
-  .modules-note {
-    margin: 18px auto 0;
-    max-width: 60ch;
-    font-size: 0.92rem;
-  }
-  .levels {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 18px;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
     max-width: 860px;
     margin-inline: auto;
   }
-  .level {
-    background: var(--paper);
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius);
-    padding: 28px 22px;
-    box-shadow: var(--shadow-sm);
+  .tab-square {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 8px;
+    gap: 10px;
+    min-width: 150px;
+    padding: 18px 24px;
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
     transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
   }
-  a.level:hover {
-    transform: translateY(-3px);
+  .tab-square:hover {
+    transform: translateY(-2px);
     border-color: var(--blue);
-    box-shadow: var(--shadow-blue);
   }
-  /* O nível aberto fica marcado, não escondido: a pessoa precisa saber onde
-     está dentro do idioma. */
-  .level-current {
-    border-color: var(--blue);
-    box-shadow: var(--shadow-blue);
+  /* As barras sobem como sinal de celular: alinhadas pela base, cada uma um
+     pouco mais alta que a anterior (até 6 níveis num idioma). */
+  .tab-steps {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 24px;
   }
-  .level h3 {
-    font-size: 1.08rem;
+  .step {
+    width: 7px;
+    border-radius: 4px;
+    background: var(--sky);
+    transition: background 0.16s ease;
   }
-  .level-price {
-    margin: 0;
+  .step-on {
+    background: var(--blue);
+  }
+  .tab-name {
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 1.4rem;
+    font-size: 1rem;
     color: var(--ink);
+  }
+  .level-panels {
+    max-width: 860px;
+    margin: 26px auto 0;
+  }
+  .level-panel {
+    display: none;
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    padding: 30px 32px;
+  }
+  .panel-watermark {
+    position: absolute;
+    right: -20px;
+    bottom: 14px;
+    width: 340px;
+    opacity: 0.07;
+    transform: rotate(-8deg);
+    pointer-events: none;
+  }
+  .panel-title {
+    font-size: 1.2rem;
+    margin-bottom: 14px;
+  }
+  /* Checks centrados como bloco, texto alinhado dentro: o conjunto fica no
+     meio do card sem cada linha começar num ponto diferente. */
+  .panel-ticks {
+    font-size: 0.96rem;
+    display: inline-grid;
+    text-align: left;
+  }
+  /* As duas modalidades como etiquetas, sem valores — pílulas informativas,
+     não botões: a escolha de verdade acontece no checkout. */
+  .panel-options {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
+  }
+  .panel-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 18px;
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: var(--text-muted);
+    background: var(--paper);
+  }
+  .panel-option-full {
+    position: relative;
+    border-color: var(--yellow);
+    background: var(--cream);
+    color: var(--ink);
+    box-shadow: var(--shadow-yellow);
+  }
+  /* A estrela cavalga a borda de cima da pílula, no centro — é o selo. */
+  .panel-option-star {
+    position: absolute;
+    top: -11px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 18px;
+    height: 18px;
+    color: var(--yellow);
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.18));
+  }
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    clip-path: inset(50%);
+    overflow: hidden;
+  }
+  .panel-enroll {
+    margin-top: 20px;
+  }
+  /* O toggle do programa dentro do painel: alinhado à esquerda com o resto
+     do conteúdo, separado do CTA por um respiro. */
+  .panel-toggle {
+    margin-top: 22px;
+  }
+  .panel-toggle > summary {
+    padding: 12px 26px;
+    font-size: 0.95rem;
   }
   /* O programa inteiro atrás de um único botão. `<details>` nativo — abre sem
      JavaScript, que esta página não carrega. O summary é o botão "Ver
@@ -871,38 +725,6 @@ const courseJsonLd = {
     transform: rotate(225deg);
     margin-top: 4px;
   }
-  .program-detail {
-    margin: 26px auto 0;
-    max-width: 860px;
-    text-align: left;
-    background: var(--paper);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-sm);
-    padding: 30px 32px;
-  }
-  .program-part + .program-part {
-    margin-top: 24px;
-    padding-top: 24px;
-    border-top: 1px solid var(--border);
-  }
-  .program-part h3 {
-    font-size: 1.02rem;
-    color: var(--blue-deep);
-    margin-bottom: 10px;
-  }
-  .program-part p {
-    margin: 0 0 10px;
-    max-width: 72ch;
-  }
-  .program-part ul {
-    margin: 0;
-    padding-left: 18px;
-    display: grid;
-    gap: 6px;
-    color: var(--text-muted);
-    font-size: 0.94rem;
-  }
   .ticks {
     list-style: none;
     margin: 0;
@@ -925,15 +747,6 @@ const courseJsonLd = {
     border-left: 2.5px solid var(--blue);
     border-bottom: 2.5px solid var(--blue);
     transform: rotate(-45deg);
-  }
-  .outcome-note {
-    margin-top: 16px;
-    padding: 14px 18px;
-    border-left: 3px solid var(--yellow);
-    background: var(--cream);
-    border-radius: 0 12px 12px 0;
-    font-size: 0.94rem;
-    color: var(--text);
   }
   .example-note {
     margin-top: 16px;

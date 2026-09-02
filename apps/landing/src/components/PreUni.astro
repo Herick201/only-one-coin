@@ -1,4 +1,6 @@
 ---
+import { Image } from "astro:assets";
+import studyPhoto from "../assets/photos/about-online.jpg";
 import { whatsappUrl } from "../i18n/ui";
 import { getLangFromUrl, useTranslations } from "../i18n/utils";
 import { preuniContent } from "../i18n/preuni-content";
@@ -7,111 +9,173 @@ const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const p = t.preuni;
 const temario = preuniContent[lang];
+
+// As categorias do temario viram guias (estilo aba de navegador): radio +
+// irmãos em CSS puro, igual ao hub de níveis das páginas de curso. As regras
+// dependem do índice de cada grupo, então nascem aqui.
+const temarioTabsCss = temario.groups
+  .map(
+    (_, i) => `
+#temario-${i}:checked ~ .temario-panels > #temario-panel-${i} { display: block; }
+#temario-${i}:checked ~ .temario-tabs > [for="temario-${i}"] {
+  background: var(--sky);
+  border-color: var(--border);
+  color: var(--ink);
+  margin-bottom: -1.5px;
+  padding-bottom: 13.5px;
+}
+#temario-${i}:focus-visible ~ .temario-tabs > [for="temario-${i}"] {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}`,
+  )
+  .join("\n");
 ---
 
 <section class="section preuni">
   <span class="blob preuni-blob" aria-hidden="true"></span>
 
   <div class="container">
-    <header class="preuni-head">
-      <span class="badge">{p.badge}</span>
-      <p class="eyebrow">{p.eyebrow}</p>
-      <h1>{p.titlePre}<span class="accent">{p.titleAccent}</span>{p.titlePost}</h1>
-      <p class="lead">{p.lead}</p>
-      <p class="text-muted intro">{p.intro}</p>
-    </header>
-
-    {/* Duración/modalidad primero: es lo que la persona vino a averiguar. El
-        precio no aparece porque aún no existe (decisión 02/09/2026) — mismo
-        criterio de coursePrices null: se omite, nunca se inventa. */}
-    <ul class="facts">
-      {p.facts.map((f) => (
-        <li class="fact">
-          <span class="fact-label">{f.label}</span>
-          <span class="fact-value">{f.value}</span>
-        </li>
-      ))}
-    </ul>
-
-    <section class="block goal">
-      <h2 class="block-title">{p.goalTitle}</h2>
-      <p class="text-muted">{p.goal}</p>
-    </section>
-
-    <section class="block">
-      <h2 class="block-title">{p.areasTitle}</h2>
-      <div class="areas">
-        {p.areas.map((a) => (
-          <article class="area">
-            <h3>{a.title}</h3>
-            <p class="text-muted">{a.text}</p>
-          </article>
-        ))}
+    {/* Hero em duas colunas, na mesma linguagem da home: texto à esquerda,
+        foto real em card inclinado com os pontinhos e o sparkle à direita. */}
+    <div class="preuni-hero">
+      <header class="preuni-head">
+        <span class="badge">{p.badge}</span>
+        <p class="eyebrow">{p.eyebrow}</p>
+        <h1>{p.titlePre}<span class="accent">{p.titleAccent}</span>{p.titlePost}</h1>
+        <p class="lead">{p.lead}</p>
+      </header>
+      <div class="preuni-media">
+        <span class="media-dots" aria-hidden="true"></span>
+        <span class="media-star" aria-hidden="true">✦</span>
+        <div class="preuni-photo">
+          <Image
+            src={studyPhoto}
+            alt={p.imgAlt}
+            widths={[480, 768]}
+            sizes="(max-width: 900px) 92vw, 520px"
+            format="webp"
+            quality={78}
+            loading="eager"
+          />
+        </div>
       </div>
+    </div>
+
+    {/* O painel central, igual ao das páginas de curso: os fatos como checks,
+        o CTA e todo o texto longo (objetivo, áreas, método, resultados) atrás
+        de um único "Ver detalles". O preço não aparece porque ainda não
+        existe (decisão 02/09/2026) — mesmo critério do coursePrices null. */}
+    <section class="panel">
+      {/* Marca d'água do logo: decorativa, atrás do conteúdo. */}
+      <img class="panel-watermark" src="/brand/logo.png" alt="" aria-hidden="true" loading="lazy" />
+      <ul class="ticks panel-ticks">
+        {p.facts.map((f) => (
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4 4L19 7"></path></svg>
+            {f.label}: {f.value}
+          </li>
+        ))}
+      </ul>
+      <a class="btn btn-yellow panel-cta" href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+        {p.ctaWhatsApp}
+      </a>
+      <details class="panel-toggle">
+        <summary>{t.courseDetail.detailsToggle}</summary>
+        <div class="panel-detail">
+          <section class="part">
+            <h3>{p.goalTitle}</h3>
+            <p class="text-muted">{p.intro}</p>
+            <p class="text-muted">{p.goal}</p>
+          </section>
+          <section class="part">
+            <h3>{p.areasTitle}</h3>
+            <ul class="part-list">
+              {p.areas.map((a) => (
+                <li><strong>{a.title}</strong> — {a.text}</li>
+              ))}
+            </ul>
+          </section>
+          <section class="part">
+            <h3>{p.methodTitle}</h3>
+            <ul class="part-list">
+              {p.method.map((m) => <li>{m}</li>)}
+            </ul>
+          </section>
+          <section class="part">
+            <h3>{p.resultsTitle}</h3>
+            <ul class="part-list">
+              {p.results.map((r) => <li>{r}</li>)}
+            </ul>
+          </section>
+        </div>
+      </details>
     </section>
 
     <section class="block">
       <h2 class="block-title">{p.temarioTitle}</h2>
-      <p class="text-muted temario-lead">{p.temarioLead}</p>
-      {temario.groups.map((group) => (
-        <section class="temario-group">
-          <h3 class="temario-group-title">{group.title}</h3>
-          <div class="temario-subjects">
-            {group.subjects.map((subject) => (
-              <details class="subject">
-                <summary>
-                  <span class="subject-title">{subject.title}</span>
-                  <span class="subject-count">{p.temarioCount.replace("{n}", String(subject.topics.length))}</span>
-                  <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
-                </summary>
-                <ol class="subject-topics">
-                  {subject.topics.map((topic) => (
-                    <li>{topic}</li>
-                  ))}
-                </ol>
-              </details>
-            ))}
-          </div>
-        </section>
+      {/* As categorias como guias de navegador: clicar troca só a lista de
+          matérias embaixo — radio + CSS, sem JavaScript. */}
+      {temario.groups.map((group, i) => (
+        <input
+          class="temario-radio"
+          type="radio"
+          name="temario-tab"
+          id={`temario-${i}`}
+          checked={i === 0}
+          aria-label={group.title}
+        />
       ))}
+      <div class="temario-tabs">
+        {temario.groups.map((group, i) => (
+          <label class="temario-tab" for={`temario-${i}`}>{group.title}</label>
+        ))}
+      </div>
+      <div class="temario-panels">
+        {temario.groups.map((group, i) => (
+          <div class="temario-panel" id={`temario-panel-${i}`}>
+            <div class="temario-subjects">
+              {/* `name` compartilhado = acordeão exclusivo nativo: abrir uma
+                  matéria fecha a que estava aberta. Sem JavaScript. */}
+              {group.subjects.map((subject) => (
+                <details class="subject" name={`temario-subject-${i}`}>
+                  <summary>
+                    <span class="subject-title">{subject.title}</span>
+                    <span class="subject-count">{p.temarioCount.replace("{n}", String(subject.topics.length))}</span>
+                    <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+                  </summary>
+                  <ol class="subject-topics">
+                    {subject.topics.map((topic) => (
+                      <li>{topic}</li>
+                    ))}
+                  </ol>
+                </details>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      <style set:html={temarioTabsCss} is:inline />
     </section>
-
-    <div class="two-up">
-      <section class="block">
-        <h2 class="block-title">{p.methodTitle}</h2>
-        <ul class="ticks">
-          {p.method.map((m) => (
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4 4L19 7"></path></svg>
-              {m}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section class="block">
-        <h2 class="block-title">{p.resultsTitle}</h2>
-        <ul class="ticks">
-          {p.results.map((r) => (
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4 4L19 7"></path></svg>
-              {r}
-            </li>
-          ))}
-        </ul>
-      </section>
-    </div>
 
     {/* Sem preço nem fecha de início: eles ainda não existem. Enquanto não
         existirem, a única promessa que a página faz é avisar quando abrir. */}
+    {/* O fechamento no mesmo modelo das páginas de curso: gradiente azul,
+        blobs decorativos, texto à esquerda e o botão à direita. */}
     <section class="preuni-cta">
-      <div>
-        <h2>{p.ctaTitle}</h2>
-        <p>{p.ctaText}</p>
+      <span class="blob preuni-cta-blob-a" aria-hidden="true"></span>
+      <span class="blob preuni-cta-blob-b" aria-hidden="true"></span>
+      <div class="preuni-cta-inner">
+        <div>
+          <h2>{p.ctaTitle}</h2>
+          <p>{p.ctaText}</p>
+        </div>
+        <div class="preuni-cta-actions">
+          <a class="btn btn-yellow" href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+            {p.ctaWhatsApp}
+          </a>
+        </div>
       </div>
-      <a class="btn btn-yellow" href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-        {p.ctaWhatsApp}
-      </a>
     </section>
   </div>
 </section>
@@ -133,9 +197,78 @@ const temario = preuniContent[lang];
   .container {
     position: relative;
   }
+  .preuni-hero {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 56px;
+    align-items: center;
+  }
   .preuni-head {
     margin-top: 4px;
     max-width: 62ch;
+  }
+  .preuni-media {
+    position: relative;
+  }
+  .preuni-photo {
+    position: relative;
+    z-index: 2;
+    max-width: 380px;
+    margin-left: auto;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 6px solid var(--paper);
+    box-shadow: var(--shadow-md);
+    transform: rotate(1.5deg);
+  }
+  /* Foto retrato encurtada: corta para 4/5 em vez de ocupar a altura toda. */
+  .preuni-photo img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+  }
+  .media-dots {
+    position: absolute;
+    z-index: 1;
+    top: -22px;
+    right: -18px;
+    width: 108px;
+    height: 108px;
+    background-image: radial-gradient(var(--blue) 2.4px, transparent 2.4px);
+    background-size: 16px 16px;
+    opacity: 0.35;
+  }
+  .media-star {
+    position: absolute;
+    z-index: 3;
+    top: 42%;
+    right: -20px;
+    color: var(--yellow-deep);
+    font-size: 2rem;
+    animation: twinkle 3s ease-in-out infinite;
+  }
+  @keyframes twinkle {
+    0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.9; }
+    50% { transform: scale(1.25) rotate(15deg); opacity: 1; }
+  }
+  @media (max-width: 900px) {
+    .preuni-hero {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+    .preuni-photo {
+      transform: none;
+      margin-inline: auto;
+    }
+    .media-star {
+      right: 4px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .media-star {
+      animation: none;
+    }
   }
   .badge {
     display: inline-block;
@@ -165,54 +298,146 @@ const temario = preuniContent[lang];
     margin-top: 16px;
     font-size: 1.1rem;
   }
-  .intro {
-    margin-top: 12px;
-  }
-  .facts {
-    list-style: none;
-    margin: 28px 0 0;
-    padding: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px;
-  }
-  .fact {
-    display: grid;
-    gap: 2px;
-    padding: 14px 22px;
+  /* O painel central, mesma cara do painel de nível das páginas de curso:
+     card centrado, checks alinhados como bloco, CTA e o toggle do detalhe. */
+  .panel {
+    position: relative;
+    overflow: hidden;
+    margin: 34px auto 0;
+    max-width: 860px;
+    text-align: center;
     background: var(--paper);
-    border: 1px solid var(--border);
+    border: 1.5px solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow-sm);
+    padding: 30px 32px;
   }
-  .fact-label {
-    font-size: 0.74rem;
+  .panel-watermark {
+    position: absolute;
+    right: -20px;
+    bottom: 14px;
+    width: 340px;
+    opacity: 0.07;
+    transform: rotate(-8deg);
+    pointer-events: none;
+  }
+  .panel-ticks {
+    display: inline-grid;
+    text-align: left;
+    font-size: 0.96rem;
+  }
+  .panel-cta {
+    display: inline-flex;
+    margin-top: 20px;
+  }
+  .panel-toggle {
+    margin-top: 22px;
+  }
+  .panel-toggle > summary {
+    list-style: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 26px;
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
     font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--text-muted);
+    font-size: 0.95rem;
+    color: var(--blue-deep);
+    box-shadow: var(--shadow-sm);
+    transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
   }
-  .fact-value {
-    font-weight: 800;
-    color: var(--blue);
+  .panel-toggle > summary:hover {
+    border-color: var(--blue);
+    box-shadow: var(--shadow-blue);
+    transform: translateY(-2px);
+  }
+  .panel-toggle > summary::-webkit-details-marker {
+    display: none;
+  }
+  .panel-toggle > summary::after {
+    content: "";
+    flex: none;
+    width: 9px;
+    height: 9px;
+    margin-top: -4px;
+    border-right: 2.5px solid var(--blue);
+    border-bottom: 2.5px solid var(--blue);
+    transform: rotate(45deg);
+    transition: transform 0.16s ease;
+  }
+  .panel-toggle[open] > summary::after {
+    transform: rotate(225deg);
+    margin-top: 4px;
+  }
+  .panel-detail {
+    margin-top: 26px;
+    text-align: left;
+  }
+  .part + .part {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  .part h3 {
+    font-size: 1.02rem;
+    color: var(--blue-deep);
+    margin-bottom: 10px;
+  }
+  .part p {
+    margin: 0 0 10px;
+    max-width: 72ch;
+  }
+  .part-list {
+    margin: 0;
+    padding-left: 18px;
+    display: grid;
+    gap: 6px;
+    color: var(--text-muted);
+    font-size: 0.94rem;
   }
   .block {
     margin-top: 54px;
   }
-  .temario-lead {
-    max-width: 70ch;
-    margin-bottom: 6px;
+  .temario-radio {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    clip-path: inset(50%);
+    overflow: hidden;
   }
-  .temario-group {
-    margin-top: 26px;
+  /* Guias estilo navegador: abas coladas no painel, a ativa funde com ele. */
+  .temario-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 18px;
   }
-  .temario-group-title {
-    font-size: 1.05rem;
-    font-weight: 800;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--blue);
-    margin-bottom: 12px;
+  .temario-tab {
+    padding: 12px 20px 13.5px;
+    border: 1.5px solid transparent;
+    border-bottom: none;
+    border-radius: 14px 14px 0 0;
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
+    transition: color 0.16s ease, background 0.16s ease;
+  }
+  .temario-tab:hover {
+    color: var(--blue-deep);
+  }
+  .temario-panel {
+    display: none;
+    background: var(--sky);
+    border: 1.5px solid var(--border);
+    border-radius: 0 var(--radius) var(--radius) var(--radius);
+    padding: 18px;
   }
   .temario-subjects {
     display: grid;
@@ -223,6 +448,11 @@ const temario = preuniContent[lang];
     border: 1px solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow-sm);
+    transition: border-color 0.16s ease;
+  }
+  .subject:hover,
+  .subject[open] {
+    border-color: var(--blue);
   }
   .subject summary {
     display: flex;
@@ -240,9 +470,12 @@ const temario = preuniContent[lang];
     flex: 1;
   }
   .subject-count {
-    font-size: 0.8rem;
+    font-size: 0.76rem;
     font-weight: 700;
-    color: var(--text-muted);
+    color: var(--blue-deep);
+    background: var(--sky);
+    padding: 4px 12px;
+    border-radius: 999px;
     white-space: nowrap;
   }
   .chevron {
@@ -273,30 +506,6 @@ const temario = preuniContent[lang];
     font-size: clamp(1.4rem, 2.6vw, 1.8rem);
     margin-bottom: 18px;
   }
-  .goal p {
-    max-width: 70ch;
-  }
-  .areas {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 20px;
-  }
-  .area {
-    background: var(--paper);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 24px;
-    box-shadow: var(--shadow-sm);
-  }
-  .area h3 {
-    font-size: 1.08rem;
-    margin-bottom: 8px;
-  }
-  .two-up {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px 46px;
-  }
   .ticks {
     list-style: none;
     margin: 0;
@@ -318,21 +527,43 @@ const temario = preuniContent[lang];
     color: var(--blue);
   }
   .preuni-cta {
-    margin-top: 62px;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 24px;
-    padding: 34px;
-    border-radius: var(--radius-lg);
+    position: relative;
+    overflow: hidden;
+    margin-top: 64px;
     background: linear-gradient(135deg, var(--blue), var(--blue-deep));
     color: #fff;
+    border-radius: var(--radius-lg);
+    padding: 52px 48px;
     box-shadow: var(--shadow-blue);
+  }
+  .preuni-cta-blob-a {
+    width: 240px;
+    height: 240px;
+    top: -110px;
+    right: 8%;
+    background: var(--yellow);
+    opacity: 0.35;
+  }
+  .preuni-cta-blob-b {
+    width: 180px;
+    height: 180px;
+    bottom: -100px;
+    left: -40px;
+    background: #fff;
+    opacity: 0.14;
+  }
+  .preuni-cta-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 26px;
   }
   .preuni-cta h2 {
     color: #fff;
-    font-size: clamp(1.4rem, 2.6vw, 1.9rem);
+    font-size: clamp(1.9rem, 4vw, 2.6rem);
   }
   .preuni-cta p {
     margin: 8px 0 0;
