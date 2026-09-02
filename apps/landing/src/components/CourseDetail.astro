@@ -267,22 +267,16 @@ const courseJsonLd = {
                   {p.highlights.map((item) => <li>{item}</li>)}
                 </ul>
               )}
-              {(p.monthly || p.price) && (
-                <div class="panel-prices">
-                  {p.monthly && (
-                    <p class="panel-price">
-                      <span class="panel-price-label">{d.paymentMonthlyName}</span>
-                      <strong>{p.monthly}</strong>
-                      <span class="panel-price-unit">{d.paymentMonthlyUnit}</span>
-                    </p>
-                  )}
-                  {p.price && (
-                    <p class="panel-price">
-                      <span class="panel-price-label">{d.paymentFullName}</span>
-                      <strong>{p.price}</strong>
-                      <span class="panel-price-unit">{d.paymentFullUnit}</span>
-                    </p>
-                  )}
+              {/* As duas modalidades, sem valores — o preço já mora no
+                  quadradinho do nível. O paquete leva o selo: é o que carrega
+                  os talleres. Só aparece onde a escolha existe (mensual). */}
+              {p.monthly && (
+                <div class="panel-options">
+                  <span class="panel-option">{d.paymentMonthlyName}</span>
+                  <span class="panel-option panel-option-full">
+                    {d.paymentFullName}
+                    <span class="panel-option-badge">{d.paymentRecommended}</span>
+                  </span>
                 </div>
               )}
               <a class="btn btn-yellow panel-enroll" href={p.enrollHref}>{t.hero.ctaEnroll}</a>
@@ -698,7 +692,7 @@ const courseJsonLd = {
   }
   .level-panel {
     display: none;
-    text-align: left;
+    text-align: center;
     background: var(--paper);
     border: 1.5px solid var(--border);
     border-radius: var(--radius);
@@ -709,35 +703,50 @@ const courseJsonLd = {
     font-size: 1.2rem;
     margin-bottom: 14px;
   }
+  /* Checks centrados como bloco, texto alinhado dentro: o conjunto fica no
+     meio do card sem cada linha começar num ponto diferente. */
   .panel-ticks {
     font-size: 0.96rem;
+    display: inline-grid;
+    text-align: left;
   }
-  /* Preços lado a lado, grandes: é o dado que decide. */
-  .panel-prices {
+  /* As duas modalidades como etiquetas, sem valores — pílulas informativas,
+     não botões: a escolha de verdade acontece no checkout. */
+  .panel-options {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px 36px;
-    margin-top: 18px;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
   }
-  .panel-price {
-    margin: 0;
-    display: flex;
-    align-items: baseline;
+  .panel-option {
+    display: inline-flex;
+    align-items: center;
     gap: 8px;
-  }
-  .panel-price strong {
-    font-family: var(--font-display);
+    padding: 9px 18px;
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
     font-weight: 700;
-    font-size: 1.6rem;
-    color: var(--ink);
-  }
-  .panel-price-label,
-  .panel-price-unit {
-    font-size: 0.78rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    font-size: 0.92rem;
     color: var(--text-muted);
+    background: var(--paper);
+  }
+  .panel-option-full {
+    border-color: var(--yellow);
+    background: var(--cream);
+    color: var(--ink);
+    box-shadow: var(--shadow-yellow);
+  }
+  .panel-option-badge {
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, var(--yellow-bright), var(--yellow));
+    color: var(--ink);
+    padding: 4px 10px;
+    border-radius: 999px;
   }
   .panel-enroll {
     margin-top: 20px;
