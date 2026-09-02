@@ -165,9 +165,12 @@ const courseJsonLd = {
             <li>{d.perkSchedule}</li>
             <li>{d.perkIncludes}</li>
           </ul>
-          {(program.description ?? []).map((paragraph) => (
-            <p class="lead-more text-muted">{paragraph}</p>
-          ))}
+          {/* Só o primeiro parágrafo abre a página; o resto do texto do
+              programa mora no accordion "Sobre el curso", mais abaixo — quem
+              decide rápido não atravessa parede de texto. */}
+          {program.description?.[0] && (
+            <p class="lead-more text-muted">{program.description[0]}</p>
+          )}
         </div>
       ) : (
         <p class="lead text-muted">{d.leadPre}{name}{d.leadPost}</p>
@@ -236,6 +239,7 @@ const courseJsonLd = {
             <p class="pay-desc text-muted">{d.paymentMonthlyDesc}</p>
           </article>
           <article class="pay-card pay-card-full">
+            <p class="pay-badge">{d.paymentFullBadge}</p>
             <h3>{d.paymentFullName}</h3>
             <p class="pay-price">
               {price} <span class="pay-unit">{d.paymentFullUnit}</span>
@@ -243,32 +247,6 @@ const courseJsonLd = {
             <p class="pay-desc text-muted">{d.paymentFullDesc}</p>
           </article>
         </div>
-      </section>
-    )}
-
-    {/* Idioma com um nível só não precisa de comparação: mostra direto o que
-        se estuda. Com dois ou mais, a comparação É a seção. */}
-    {/* Com o documento oficial em mãos, a malha vira cards de unidade com os
-        temas; sem ele, segue a lista simples de títulos. */}
-    {levels.length === 0 && program && program.curriculum.length > 0 && (
-      <section class="block">
-        <h2 class="block-title">{d.curriculumTitle}</h2>
-        {hasTopics ? (
-          <div class="units">
-            {program.curriculum.map((unit) => (
-              <div class="unit">
-                <h3>{unit.title}</h3>
-                <ul>
-                  {unit.topics.map((topic) => <li>{topic}</li>)}
-                </ul>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <ul class="level-units single-units">
-            {program.curriculum.map((unit) => <li>{unit.title}</li>)}
-          </ul>
-        )}
       </section>
     )}
 
@@ -300,52 +278,81 @@ const courseJsonLd = {
       </section>
     )}
 
-    {/* Num idioma com vários níveis, a comparação acima decide ONDE entrar; a
-        malha abaixo detalha O QUE se estuda no nível desta página. */}
-    {levels.length > 0 && program && hasTopics && (
+    {/* Todo o detalhe do programa num accordion só — texto restante, malha
+        livro a livro, competências, método e avaliação. A página apresenta e
+        vende; quem quer o detalhe abre exatamente a linha que lhe interessa,
+        em vez de atravessar seções empilhadas de listas. */}
+    {program &&
+      (program.curriculum.length > 0 ||
+        program.goals ||
+        program.method ||
+        program.evaluation ||
+        (program.description ?? []).length > 1) && (
       <section class="block">
-        <h2 class="block-title">{d.curriculumTitle}</h2>
-        <div class="units">
-          {program.curriculum.map((unit) => (
-            <div class="unit">
-              <h3>{unit.title}</h3>
-              <ul>
-                {unit.topics.map((topic) => <li>{topic}</li>)}
-              </ul>
-            </div>
-          ))}
-        </div>
-      </section>
-    )}
-
-    {/* O syllabus em três cards curtos — competências, método e avaliação —
-        em vez de três seções empilhadas que ninguém rola até o fim. */}
-    {program && (program.goals || program.method || program.evaluation) && (
-      <section class="block">
-        <div class="units">
+        <h2 class="block-title">{d.programTitle}</h2>
+        <div class="program">
+          {(program.description ?? []).length > 1 && (
+            <details class="program-row">
+              <summary>{d.aboutTitle}</summary>
+              <div class="program-body">
+                {(program.description ?? []).slice(1).map((paragraph) => (
+                  <p class="text-muted">{paragraph}</p>
+                ))}
+              </div>
+            </details>
+          )}
+          {hasTopics ? (
+            program.curriculum.map((unit) => (
+              <details class="program-row">
+                <summary>{unit.title}</summary>
+                <div class="program-body">
+                  <ul>
+                    {unit.topics.map((topic) => <li>{topic}</li>)}
+                  </ul>
+                </div>
+              </details>
+            ))
+          ) : (
+            program.curriculum.length > 0 && (
+              <details class="program-row">
+                <summary>{d.curriculumTitle}</summary>
+                <div class="program-body">
+                  <ul>
+                    {program.curriculum.map((unit) => <li>{unit.title}</li>)}
+                  </ul>
+                </div>
+              </details>
+            )
+          )}
           {program.goals && (
-            <div class="unit">
-              <h3>{d.goalsTitle}</h3>
-              <ul>
-                {program.goals.map((goal) => <li>{goal}</li>)}
-              </ul>
-            </div>
+            <details class="program-row">
+              <summary>{d.goalsTitle}</summary>
+              <div class="program-body">
+                <ul>
+                  {program.goals.map((goal) => <li>{goal}</li>)}
+                </ul>
+              </div>
+            </details>
           )}
           {program.method && (
-            <div class="unit">
-              <h3>{d.methodTitle}</h3>
-              <ul>
-                {program.method.map((item) => <li>{item}</li>)}
-              </ul>
-            </div>
+            <details class="program-row">
+              <summary>{d.methodTitle}</summary>
+              <div class="program-body">
+                <ul>
+                  {program.method.map((item) => <li>{item}</li>)}
+                </ul>
+              </div>
+            </details>
           )}
           {program.evaluation && (
-            <div class="unit">
-              <h3>{d.evaluationTitle}</h3>
-              <ul>
-                {program.evaluation.map((item) => <li>{item}</li>)}
-              </ul>
-            </div>
+            <details class="program-row">
+              <summary>{d.evaluationTitle}</summary>
+              <div class="program-body">
+                <ul>
+                  {program.evaluation.map((item) => <li>{item}</li>)}
+                </ul>
+              </div>
+            </details>
           )}
         </div>
       </section>
@@ -652,30 +659,35 @@ const courseJsonLd = {
     max-width: 72ch;
   }
   /* Duração, nível e modalidade: os três números que a pessoa procura antes de
-     ler qualquer outra coisa. */
+     ler qualquer outra coisa. Pílulas numa linha, não três cards — informação
+     de apoio não pode pesar mais que a decisão. */
   .facts {
     margin: 26px 0 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-    gap: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
   }
   .facts > div {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
     background: var(--paper);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px 20px;
+    border-radius: 999px;
+    padding: 8px 18px;
     box-shadow: var(--shadow-sm);
   }
   .facts dt {
-    font-size: 0.76rem;
+    font-size: 0.72rem;
     font-weight: 800;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--blue);
   }
   .facts dd {
-    margin: 6px 0 0;
+    margin: 0;
     font-weight: 600;
+    font-size: 0.95rem;
     color: var(--ink);
   }
   /* Competências, método, avaliação e resultados: quatro listas curtas que
@@ -705,7 +717,25 @@ const courseJsonLd = {
     font-size: 1.05rem;
   }
   .pay-card-full {
+    position: relative;
     border-color: var(--yellow);
+    box-shadow: var(--shadow-yellow);
+  }
+  /* O selo que responde "qual escolho?" antes da pergunta: o paquete leva os
+     talleres, então é ele que a página recomenda. */
+  .pay-badge {
+    position: absolute;
+    top: -13px;
+    right: 20px;
+    margin: 0;
+    background: linear-gradient(135deg, var(--yellow-bright), var(--yellow));
+    color: var(--ink);
+    font-weight: 800;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 999px;
     box-shadow: var(--shadow-yellow);
   }
   .pay-price {
@@ -771,16 +801,6 @@ const courseJsonLd = {
     border-radius: 50%;
     background: var(--yellow);
   }
-  .single-units {
-    columns: 2;
-    column-gap: 46px;
-    max-width: 70ch;
-  }
-  @media (max-width: 640px) {
-    .single-units {
-      columns: 1;
-    }
-  }
   .level-cta {
     margin-top: auto;
     align-self: flex-start;
@@ -805,24 +825,56 @@ const courseJsonLd = {
     font-size: 1.3rem;
     color: var(--ink);
   }
-  .units {
+  /* O accordion do programa: linhas fechadas, uma por assunto. `<details>`
+     nativo — abre sem JavaScript, que esta página não carrega. */
+  .program {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
+    gap: 12px;
+    max-width: 860px;
   }
-  .unit {
+  .program-row {
     background: var(--paper);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 24px;
     box-shadow: var(--shadow-sm);
   }
-  .unit h3 {
-    font-size: 1.05rem;
-    margin-bottom: 12px;
+  .program-row summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 18px 22px;
+    font-weight: 700;
+    font-size: 1.02rem;
     color: var(--blue-deep);
   }
-  .unit ul {
+  .program-row summary::-webkit-details-marker {
+    display: none;
+  }
+  /* A seta que diz "isto abre": vira quando a linha está aberta. */
+  .program-row summary::after {
+    content: "";
+    flex: none;
+    width: 9px;
+    height: 9px;
+    border-right: 2.5px solid var(--blue);
+    border-bottom: 2.5px solid var(--blue);
+    transform: rotate(45deg);
+    transition: transform 0.16s ease;
+  }
+  .program-row[open] summary::after {
+    transform: rotate(225deg);
+  }
+  .program-body {
+    padding: 0 22px 20px;
+  }
+  .program-body p {
+    margin: 0 0 10px;
+    max-width: 72ch;
+  }
+  .program-body ul {
     margin: 0;
     padding-left: 18px;
     display: grid;
