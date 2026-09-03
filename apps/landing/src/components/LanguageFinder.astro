@@ -50,7 +50,16 @@ const clientConfig = {
           <span>{fd.fromLabel}</span> <strong data-finder-country></strong>
         </p>
         <p class="reco-pre">{fd.recommendPre}</p>
-        <p class="reco-lang" data-finder-name>{courses.find((c) => c.slug === defaultSlug)?.name}</p>
+        <span class="reco-id">
+          {
+            courses.map((c) => (
+              <span class="reco-flag" data-flag-for={c.slug} hidden={c.slug !== defaultSlug}>
+                <LanguageFlag slug={c.slug} />
+              </span>
+            ))
+          }
+          <p class="reco-lang" data-finder-name>{courses.find((c) => c.slug === defaultSlug)?.name}</p>
+        </span>
         <a
           class="btn btn-yellow reco-cta"
           data-finder-cta
@@ -110,6 +119,8 @@ const clientConfig = {
     if (cfgEl && root) {
       const cfg: Cfg = JSON.parse(cfgEl.textContent || "{}");
       const nameEl = root.querySelector<HTMLElement>("[data-finder-name]");
+      const idEl = root.querySelector<HTMLElement>(".reco-id");
+      const flagEls = root.querySelectorAll<HTMLElement>("[data-flag-for]");
       const ctaEl = root.querySelector<HTMLAnchorElement>("[data-finder-cta]");
       const courseEl = root.querySelector<HTMLAnchorElement>("[data-finder-course]");
       const chips = root.querySelectorAll<HTMLAnchorElement>(".chip");
@@ -117,14 +128,15 @@ const clientConfig = {
       const apply = (slug: string, pop: boolean) => {
         const course = cfg.courses[slug];
         if (!course) return;
-        if (nameEl) {
-          nameEl.textContent = course.name;
-          if (pop) {
-            nameEl.classList.remove("name-pop");
-            // Reflow between remove/add so a re-click replays the animation.
-            void nameEl.offsetWidth;
-            nameEl.classList.add("name-pop");
-          }
+        if (nameEl) nameEl.textContent = course.name;
+        flagEls.forEach((flag) => {
+          flag.hidden = flag.dataset.flagFor !== slug;
+        });
+        if (idEl && pop) {
+          idEl.classList.remove("name-pop");
+          // Reflow between remove/add so a re-click replays the animation.
+          void idEl.offsetWidth;
+          idEl.classList.add("name-pop");
         }
         if (ctaEl) ctaEl.href = course.enrollHref;
         if (courseEl) courseEl.href = course.href;
@@ -230,18 +242,59 @@ const clientConfig = {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: min(52%, 350px);
-    background: linear-gradient(135deg, var(--blue), var(--blue-deep));
+    /* O sol do universo: círculo com brilho vindo de cima, halo em anéis
+       e a textura de bolinhas do hero — nada de caixa no meio da órbita. */
+    width: min(58%, 392px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.18), transparent 58%),
+      linear-gradient(135deg, var(--blue), var(--blue-deep));
     color: #fff;
-    border-radius: var(--radius-lg);
-    padding: 32px 30px;
-    box-shadow: var(--shadow-blue);
+    padding: 40px;
+    box-shadow:
+      var(--shadow-blue),
+      0 0 0 12px rgba(47, 107, 255, 0.07),
+      0 0 0 26px rgba(47, 107, 255, 0.035);
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 6px;
     /* O centro respira: flutua devagar, como tudo que orbita algo. */
     animation: card-bob 6s ease-in-out infinite;
+  }
+  .finder-reco::after {
+    content: "";
+    position: absolute;
+    top: 30px;
+    right: 52px;
+    width: 84px;
+    height: 84px;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.55) 2px, transparent 2px);
+    background-size: 14px 14px;
+    opacity: 0.3;
+    border-radius: 50%;
+  }
+  .reco-id {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .reco-flag {
+    display: inline-flex;
+  }
+  /* `display` de autor vence o [hidden] do UA stylesheet — reafirmar. */
+  .reco-flag[hidden] {
+    display: none;
+  }
+  .reco-flag :global(.lang-flag) {
+    width: 46px;
+    height: 46px;
+    border: 2.5px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
   }
   .orbit {
     position: absolute;
@@ -309,8 +362,8 @@ const clientConfig = {
       transform: translate(-50%, calc(-50% - 9px));
     }
   }
-  /* O nome dá um pulinho quando um planeta é escolhido. */
-  .reco-lang.name-pop {
+  /* Bandeira + nome dão um pulinho quando um planeta é escolhido. */
+  .reco-id.name-pop {
     animation: name-pop 0.4s ease;
   }
   @keyframes name-pop {
@@ -345,15 +398,15 @@ const clientConfig = {
     color: rgba(255, 255, 255, 0.85);
   }
   .reco-lang {
-    margin: 0 0 8px;
+    margin: 0;
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: clamp(2.2rem, 5vw, 3rem);
-    line-height: 1.05;
+    font-size: clamp(1.9rem, 4vw, 2.5rem);
+    line-height: 1.1;
     color: var(--yellow-bright);
   }
   .reco-cta {
-    margin-top: auto;
+    margin-top: 14px;
   }
   .reco-cta svg {
     width: 18px;
@@ -394,8 +447,19 @@ const clientConfig = {
       position: static;
       transform: none;
       width: auto;
+      aspect-ratio: auto;
+      border-radius: var(--radius-lg);
       padding: 38px 34px;
       animation: none;
+      align-items: flex-start;
+      text-align: left;
+    }
+    .finder-reco::after {
+      display: none;
+    }
+    .reco-id {
+      flex-direction: row;
+      align-items: center;
     }
     .orbit {
       position: static;
@@ -427,7 +491,7 @@ const clientConfig = {
     }
     .universe,
     .finder-reco,
-    .reco-lang {
+    .reco-id {
       animation: none;
     }
   }
