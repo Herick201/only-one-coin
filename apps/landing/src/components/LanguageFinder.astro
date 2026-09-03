@@ -72,7 +72,7 @@ const clientConfig = {
         {
           courses.map((c, i) => (
             <a
-              class="chip sat"
+              class:list={["chip", "sat", { active: c.slug === defaultSlug }]}
               style={`--a: ${Math.round((i * 360) / courses.length) - 90}deg`}
               data-slug={c.slug}
               href={c.href}
@@ -109,20 +109,49 @@ const clientConfig = {
     const root = document.querySelector<HTMLElement>("#finder");
     if (cfgEl && root) {
       const cfg: Cfg = JSON.parse(cfgEl.textContent || "{}");
+      const nameEl = root.querySelector<HTMLElement>("[data-finder-name]");
+      const ctaEl = root.querySelector<HTMLAnchorElement>("[data-finder-cta]");
+      const courseEl = root.querySelector<HTMLAnchorElement>("[data-finder-course]");
+      const chips = root.querySelectorAll<HTMLAnchorElement>(".chip");
+
+      const apply = (slug: string, pop: boolean) => {
+        const course = cfg.courses[slug];
+        if (!course) return;
+        if (nameEl) {
+          nameEl.textContent = course.name;
+          if (pop) {
+            nameEl.classList.remove("name-pop");
+            // Reflow between remove/add so a re-click replays the animation.
+            void nameEl.offsetWidth;
+            nameEl.classList.add("name-pop");
+          }
+        }
+        if (ctaEl) ctaEl.href = course.enrollHref;
+        if (courseEl) courseEl.href = course.href;
+        chips.forEach((chip) => {
+          chip.classList.toggle("active", chip.dataset.slug === slug);
+        });
+      };
+
+      // In the orbit layout a satellite click selects the language in the
+      // center card instead of leaving the page; clicking the already-active
+      // one follows the link to its course page. Under 760px the chips keep
+      // navigating (the card sits above them, off-screen).
+      const orbitLayout = window.matchMedia("(min-width: 761px)");
+      chips.forEach((chip) => {
+        chip.addEventListener("click", (ev) => {
+          if (!orbitLayout.matches || chip.classList.contains("active")) return;
+          ev.preventDefault();
+          if (chip.dataset.slug) apply(chip.dataset.slug, true);
+        });
+      });
+
       fetch("/api/geo", { headers: { accept: "application/json" } })
         .then((r) => (r.ok ? r.json() : null))
         .then((data: { country?: string; countryName?: string } | null) => {
           const code = data?.country?.toUpperCase();
           const slug = (code && cfg.geo[code]) || cfg.defaultSlug;
-          const course = cfg.courses[slug];
-          if (!course) return;
-
-          const nameEl = root.querySelector<HTMLElement>("[data-finder-name]");
-          const ctaEl = root.querySelector<HTMLAnchorElement>("[data-finder-cta]");
-          const courseEl = root.querySelector<HTMLAnchorElement>("[data-finder-course]");
-          if (nameEl) nameEl.textContent = course.name;
-          if (ctaEl) ctaEl.href = course.enrollHref;
-          if (courseEl) courseEl.href = course.href;
+          apply(slug, false);
 
           const fromEl = root.querySelector<HTMLElement>("[data-finder-from]");
           const countryEl = root.querySelector<HTMLElement>("[data-finder-country]");
@@ -130,9 +159,6 @@ const clientConfig = {
             countryEl.textContent = data.countryName;
             fromEl.hidden = false;
           }
-          root.querySelectorAll<HTMLElement>(".chip").forEach((chip) => {
-            chip.classList.toggle("active", chip.dataset.slug === slug);
-          });
         })
         .catch(() => {
           /* offline / local dev: keep the server-rendered default */
@@ -156,9 +182,18 @@ const clientConfig = {
     font-size: 1.08rem;
   }
   /* ——— Universo: o card recomendado é o sol, os idiomas orbitam. ———
-     A órbita inteira gira devagar; cada satélite contra-gira na mesma
-     velocidade para o rótulo ficar sempre de pé. Hover/focus pausa tudo
-     (ninguém clica em alvo que foge). */
+     Um único ângulo animado (--orbit) posiciona E contra-gira cada
+     satélite no mesmo transform: com uma só animação não existe como o
+     giro e o contra-giro saírem de fase (duas animações separadas
+     dessincronizavam a cada restart — HMR, aba oculta — e deixavam o
+     rótulo torto). Hover/focus pausa tudo: ninguém clica em alvo que
+     foge. Browser sem @property não interpola o ângulo: órbita parada,
+     nunca quebrada. */
+  @property --orbit {
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: true;
+  }
   .universe {
     /* Tamanho num só lugar: o raio da órbita deriva dele. */
     --u: min(680px, 92vw);
@@ -167,6 +202,7 @@ const clientConfig = {
     width: var(--u);
     aspect-ratio: 1;
     margin: 44px auto 0;
+    animation: orbit-revolve 60s linear infinite;
   }
   .orbit-ring {
     position: absolute;
@@ -204,11 +240,12 @@ const clientConfig = {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
+    /* O centro respira: flutua devagar, como tudo que orbita algo. */
+    animation: card-bob 6s ease-in-out infinite;
   }
   .orbit {
     position: absolute;
     inset: 0;
-    animation: orbit-spin 60s linear infinite;
   }
   .sat {
     position: absolute;
@@ -217,7 +254,8 @@ const clientConfig = {
     /* Ponto sem tamanho sobre o círculo da órbita. */
     width: 0;
     height: 0;
-    transform: rotate(var(--a)) translateX(var(--r)) rotate(calc(-1 * var(--a)));
+    transform: rotate(calc(var(--a) + var(--orbit))) translateX(var(--r))
+      rotate(calc(-1 * (var(--a) + var(--orbit))));
   }
   .sat-center {
     /* Centra o pill no ponto, qualquer que seja a largura do rótulo. */
@@ -236,7 +274,7 @@ const clientConfig = {
     font-weight: 600;
     color: var(--ink);
     white-space: nowrap;
-    animation: orbit-spin 60s linear infinite reverse;
+    cursor: pointer;
     transition: border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
   }
   .sat :global(.lang-flag) {
@@ -253,15 +291,39 @@ const clientConfig = {
     border-color: var(--yellow);
     color: var(--ink);
   }
-  .orbit:hover,
-  .orbit:hover .sat-inner,
-  .orbit:focus-within,
-  .orbit:focus-within .sat-inner {
+  .universe:hover,
+  .universe:focus-within {
     animation-play-state: paused;
   }
-  @keyframes orbit-spin {
+  @keyframes orbit-revolve {
     to {
-      transform: rotate(360deg);
+      --orbit: 360deg;
+    }
+  }
+  @keyframes card-bob {
+    0%,
+    100% {
+      transform: translate(-50%, -50%);
+    }
+    50% {
+      transform: translate(-50%, calc(-50% - 9px));
+    }
+  }
+  /* O nome dá um pulinho quando um planeta é escolhido. */
+  .reco-lang.name-pop {
+    animation: name-pop 0.4s ease;
+  }
+  @keyframes name-pop {
+    0% {
+      transform: scale(0.6);
+      opacity: 0;
+    }
+    60% {
+      transform: scale(1.08);
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
     }
   }
 
@@ -322,6 +384,7 @@ const clientConfig = {
       width: auto;
       aspect-ratio: auto;
       margin-top: 32px;
+      animation: none;
     }
     .orbit-ring,
     .spark {
@@ -332,6 +395,7 @@ const clientConfig = {
       transform: none;
       width: auto;
       padding: 38px 34px;
+      animation: none;
     }
     .orbit {
       position: static;
@@ -339,7 +403,6 @@ const clientConfig = {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      animation: none;
     }
     .sat {
       position: static;
@@ -351,7 +414,6 @@ const clientConfig = {
       transform: none;
     }
     .sat-inner {
-      animation: none;
       box-shadow: none;
     }
     .finder-footer {
@@ -363,8 +425,9 @@ const clientConfig = {
     .reco-cta:hover svg {
       transform: none;
     }
-    .orbit,
-    .sat-inner {
+    .universe,
+    .finder-reco,
+    .reco-lang {
       animation: none;
     }
   }
