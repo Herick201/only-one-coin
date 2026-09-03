@@ -1002,7 +1002,13 @@
       "empty_roster_title": "No students",
       "empty_roster_body": "Nobody is enrolled in this class group yet.",
       "col_manage": "Manage",
-      "manage": "Manage"
+      "manage": "Manage",
+      "grades_hint": "Record the final grade from 0 to 20; {min} passes. If the student missed the final exam, mark them as “No-show”.",
+      "grades_da": "No-show",
+      "grades_input_label": "Final grade for {name}",
+      "grades_save": "{count, plural, =0 {Save grades} one {Save # grade} other {Save # grades}}",
+      "grades_saved_local_only": "Grades saved on screen only ({time}). No server connected yet.",
+      "grades_invalid": "Some grades are out of range: 0 to 20, whole numbers only."
     },
     "class_group_status": {
       "enrolling": "Enrolling",
@@ -1280,7 +1286,9 @@
       "owing_subtitle": "They finished and still owe a certificate.",
       "class_groups_subtitle": "Everything you run, current and closed.",
       "no_class_groups_title": "No class groups",
-      "no_class_groups_body": "You have no class groups allocated this period."
+      "no_class_groups_body": "You have no class groups allocated this period.",
+      "grades_owing_title": "Class groups with pending grades",
+      "grades_owing_subtitle": "A certificate cannot go out while a final grade is missing."
     },
     "team": {
       "title": "Team",

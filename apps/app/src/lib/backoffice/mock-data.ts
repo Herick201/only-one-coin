@@ -1532,7 +1532,14 @@ const LANGUAGES = {
  * which certifies only after the student sits the certification exam
  * (`docs/REGRAS-NEGOCIO.md` §6), so it never goes out in a blind batch.
  */
-const classGroups: ClassGroupDetail[] = [
+/**
+ * The seed rows carry everything but `pendingGrades`, which is derived from the
+ * roster by `pendingGradesOf` — a stored copy of a count the students already
+ * answer would be a number that drifts.
+ */
+type ClassGroupSeed = Omit<ClassGroupDetail, 'pendingGrades'>
+
+const classGroups: ClassGroupSeed[] = [
   {
     id: 'cg_05',
     courseName: 'Italiano Inicial',
@@ -2353,15 +2360,32 @@ export function listCourses(): CourseRow[] {
     )
 }
 
+/**
+ * Final grades still open on a roster — what the teacher owes the class group.
+ * Only while there is something to owe: an enrolling group has not taught
+ * anything yet and a closed one is history, so both count zero. A student
+ * moved out by a procedure (frozen, transferred, withdrawn) is not counted
+ * either: they left the roster, not a grade behind.
+ */
+function pendingGradesOf(group: ClassGroupSeed): number {
+  if (group.status !== 'in_progress' && group.status !== 'finished') return 0
+  return group.students.filter(
+    (student) => student.gradeStatus === 'pending' && student.procedure === null,
+  ).length
+}
+
 export function listClassGroups(): ClassGroupRow[] {
-  return classGroups.map(({ students, ...row }) => {
+  return classGroups.map((group) => {
+    const { students, ...row } = group
     void students
-    return row
+    return { ...row, pendingGrades: pendingGradesOf(group) }
   })
 }
 
 export function getClassGroup(id: string): ClassGroupDetail | undefined {
-  return classGroups.find((group) => group.id === id)
+  const group = classGroups.find((item) => item.id === id)
+  if (!group) return undefined
+  return { ...group, pendingGrades: pendingGradesOf(group) }
 }
 
 /**
@@ -2371,7 +2395,10 @@ export function getClassGroup(id: string): ClassGroupDetail | undefined {
  * directory has no business carrying every student of every class group.
  */
 export function listClassGroupRosters(): ClassGroupDetail[] {
-  return classGroups
+  return classGroups.map((group) => ({
+    ...group,
+    pendingGrades: pendingGradesOf(group),
+  }))
 }
 
 /* -------------------------------------------------------------------------- */
@@ -2736,11 +2763,7 @@ function teacherLoad(teacherId: string) {
   return {
     activeClassGroups: running.length,
     studentCount: running.reduce((sum, group) => sum + group.seatsTaken, 0),
-    pendingGrades: own.reduce(
-      (sum, group) =>
-        sum + group.students.filter((student) => student.gradeStatus === 'pending').length,
-      0,
-    ),
+    pendingGrades: own.reduce((sum, group) => sum + pendingGradesOf(group), 0),
     pendingCertificates: own.reduce((sum, group) => sum + group.pendingCertificates, 0),
   }
 }
@@ -2790,9 +2813,10 @@ export function getTeacher(
        the last one. */
     classGroups: classGroups
       .filter((group) => group.teacherId === id)
-      .map(({ students, ...row }) => {
+      .map((group) => {
+        const { students, ...row } = group
         void students
-        return row
+        return { ...row, pendingGrades: pendingGradesOf(group) }
       })
       .sort(
         (a, b) =>
@@ -3162,7 +3186,7 @@ function languageOf(courseName: string): CourseLanguage | null {
  * because two class groups of the same course share a course name and would
  * otherwise be told apart by a label.
  */
-function classGroupOf(enrollmentId: string): ClassGroupDetail | undefined {
+function classGroupOf(enrollmentId: string): ClassGroupSeed | undefined {
   return classGroups.find((group) =>
     group.students.some((student) => student.enrollmentId === enrollmentId),
   )

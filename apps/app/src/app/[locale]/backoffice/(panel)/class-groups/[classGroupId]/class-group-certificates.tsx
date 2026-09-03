@@ -7,6 +7,7 @@ import type {
   ClassGroupDetail,
   ClassGroupRow,
   ClassGroupStudent,
+  GradeStatus,
   ProcedureAction,
 } from '@/lib/backoffice/types'
 import { PASSING_GRADE } from '@/lib/backoffice/mock-data'
@@ -41,16 +42,37 @@ import { ManageEnrollmentSheet } from './manage-enrollment-sheet'
  * §3 puts the bar at grade 14 and §6 requires a certification exam for Inglés
  * Básico. The system gets the list ready; a human presses the button.
  */
+/**
+ * One grade as it sits on the screen before being saved. The value stays a
+ * string while it is being typed — clamping or coercing under the person's
+ * fingers is how a 1 becomes a 12 — and DA is a mark, not a number: the
+ * student did not sit the final exam (`docs/REGRAS-NEGOCIO.md` §3), so there
+ * is no grade to write.
+ */
+interface GradeDraft {
+  grade: string
+  da: boolean
+}
+
+/** Integer on the 0–20 Peruvian scale, or null for anything else typed. */
+function parseGrade(raw: string): number | null {
+  if (!/^\d{1,2}$/.test(raw)) return null
+  const value = Number(raw)
+  return value <= 20 ? value : null
+}
+
 export function ClassGroupCertificates({
   group,
   classGroups,
   canManage,
+  canGrade,
   deadlineIso,
   businessDaysLeft,
 }: {
   group: ClassGroupDetail
   classGroups: ClassGroupRow[]
   canManage: boolean
+  canGrade: boolean
   deadlineIso: string
   businessDaysLeft: number
 }) {
@@ -60,6 +82,8 @@ export function ClassGroupCertificates({
   const [students, setStudents] = useState<ClassGroupStudent[]>(group.students)
   const [issuedAt, setIssuedAt] = useState<string | null>(null)
   const [managing, setManaging] = useState<ClassGroupStudent | null>(null)
+  const [drafts, setDrafts] = useState<Record<string, GradeDraft>>({})
+  const [gradesSavedAt, setGradesSavedAt] = useState<string | null>(null)
 
   /**
    * Recording a procedure is screen-local, like the batch above it. The real
@@ -107,6 +131,86 @@ export function ClassGroupCertificates({
 
   const finished = group.status === 'finished'
   const overdue = businessDaysLeft < 0
+
+  /**
+   * Grade entry — the teacher's own action over their own roster
+   * (`docs/ARCHITECTURE.md` §3). Only while the class group is running or
+   * freshly finished: before that there is nothing to grade, and a closed one
+   * is history. Recording here is screen-local like the batch above; the real
+   * write is a usecase in `apps/api` that compares the authenticated
+   * `teacher_id` against the class group and leaves an audit entry
+   * (CLAUDE.md §8).
+   */
+  const grading =
+    canGrade && (group.status === 'in_progress' || group.status === 'finished')
+
+  /* A certificate already issued closes the grade under it, and a student a
+     procedure moved out left the roster, not a grade behind. The rezagados
+     exam (its grade becomes the module's final grade,
+     `docs/REGRAS-NEGOCIO.md` §5) is why a recorded grade stays editable. */
+  function isGradable(student: ClassGroupStudent): boolean {
+    return (
+      grading && student.certificateIssuedAt === null && student.procedure === null
+    )
+  }
+
+  function draftFor(student: ClassGroupStudent): GradeDraft {
+    return (
+      drafts[student.studentId] ?? {
+        grade: student.finalGrade === null ? '' : String(student.finalGrade),
+        da: student.gradeStatus === 'auto_failed',
+      }
+    )
+  }
+
+  /** What the draft would be recorded as — shown live beside the input. */
+  function draftStatus(draft: GradeDraft): GradeStatus {
+    if (draft.da) return 'auto_failed'
+    const grade = parseGrade(draft.grade)
+    if (grade === null) return 'pending'
+    return grade >= PASSING_GRADE ? 'approved' : 'failed'
+  }
+
+  function draftChanged(student: ClassGroupStudent, draft: GradeDraft): boolean {
+    return draftStatus(draft) !== student.gradeStatus ||
+      (draft.da ? null : parseGrade(draft.grade)) !== student.finalGrade
+  }
+
+  function setDraft(studentId: string, draft: GradeDraft) {
+    setDrafts((current) => ({ ...current, [studentId]: draft }))
+  }
+
+  const gradableRows = students.filter(isGradable)
+  const invalidDrafts = gradableRows.some((student) => {
+    const draft = draftFor(student)
+    return !draft.da && draft.grade !== '' && parseGrade(draft.grade) === null
+  })
+  const changedCount = gradableRows.filter((student) => {
+    const draft = draftFor(student)
+    if (!draft.da && draft.grade !== '' && parseGrade(draft.grade) === null)
+      return false
+    return draftChanged(student, draft)
+  }).length
+
+  function saveGrades() {
+    const now = new Date().toISOString()
+    setStudents((current) =>
+      current.map((student) => {
+        if (!isGradable(student)) return student
+        const draft = drafts[student.studentId]
+        if (!draft || !draftChanged(student, draft)) return student
+        if (!draft.da && draft.grade !== '' && parseGrade(draft.grade) === null)
+          return student
+        return {
+          ...student,
+          finalGrade: draft.da ? null : parseGrade(draft.grade),
+          gradeStatus: draftStatus(draft),
+        }
+      }),
+    )
+    setDrafts({})
+    setGradesSavedAt(now)
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -195,9 +299,40 @@ export function ClassGroupCertificates({
 
       <Card>
         <div className="border-b border-line px-5 py-4">
-          <SectionTitle icon="students">
-            {t('class_group.roster_title')}
-          </SectionTitle>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <SectionTitle icon="students">
+              {t('class_group.roster_title')}
+            </SectionTitle>
+            {grading && (
+              <button
+                type="button"
+                onClick={saveGrades}
+                disabled={changedCount === 0 || invalidDrafts}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-deep disabled:cursor-default disabled:opacity-50"
+              >
+                <BoIcon name="check" size={16} />
+                {t('class_group.grades_save', { count: changedCount })}
+              </button>
+            )}
+          </div>
+          {grading && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              {t('class_group.grades_hint', { min: PASSING_GRADE })}
+            </p>
+          )}
+          {invalidDrafts && (
+            <p className="mt-2 text-xs font-semibold text-red-600">
+              {t('class_group.grades_invalid')}
+            </p>
+          )}
+          {gradesSavedAt && (
+            <p className="mt-2 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              <BoIcon name="alert" size={14} className="mt-0.5 shrink-0" />
+              {t('class_group.grades_saved_local_only', {
+                time: formatDateTime(gradesSavedAt, locale),
+              })}
+            </p>
+          )}
         </div>
 
         {rows.length === 0 ? (
@@ -245,19 +380,76 @@ export function ClassGroupCertificates({
                     </span>
                   </td>
                   <td className={tdClass}>
-                    <span className="flex flex-wrap items-center gap-2">
-                      <StatusBadge
-                        tone={gradeTone[student.gradeStatus]}
-                        label={t(`grade_status.${student.gradeStatus}`)}
-                      />
-                      <span className="text-xs tabular-nums text-muted-foreground">
-                        {student.finalGrade === null
-                          ? t('class_group.no_grade')
-                          : t('class_group.grade_value', {
-                              grade: student.finalGrade,
-                            })}
+                    {isGradable(student) ? (
+                      (() => {
+                        const draft = draftFor(student)
+                        const status = draftStatus(draft)
+                        const invalid =
+                          !draft.da &&
+                          draft.grade !== '' &&
+                          parseGrade(draft.grade) === null
+                        return (
+                          <span className="flex flex-wrap items-center gap-2">
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              maxLength={2}
+                              aria-label={t('class_group.grades_input_label', {
+                                name: student.fullName,
+                              })}
+                              value={draft.grade}
+                              disabled={draft.da}
+                              onChange={(event) =>
+                                setDraft(student.studentId, {
+                                  ...draft,
+                                  grade: event.target.value.trim(),
+                                })
+                              }
+                              className={`w-14 rounded-lg border bg-white px-2.5 py-1.5 text-center text-sm tabular-nums text-ink outline-none transition focus:ring-2 disabled:bg-slate-50 disabled:text-muted-foreground ${
+                                invalid
+                                  ? 'border-red-400 focus:border-red-500 focus:ring-red-500/15'
+                                  : 'border-line focus:border-brand-blue focus:ring-brand-blue/15'
+                              }`}
+                            />
+                            <button
+                              type="button"
+                              aria-pressed={draft.da}
+                              onClick={() =>
+                                setDraft(student.studentId, {
+                                  ...draft,
+                                  da: !draft.da,
+                                })
+                              }
+                              className={`rounded-full border px-2.5 py-1 text-xs font-semibold transition ${
+                                draft.da
+                                  ? 'border-red-200 bg-red-50 text-red-700'
+                                  : 'border-line bg-white text-muted-foreground hover:text-ink'
+                              }`}
+                            >
+                              {t('class_group.grades_da')}
+                            </button>
+                            <StatusBadge
+                              tone={gradeTone[status]}
+                              label={t(`grade_status.${status}`)}
+                            />
+                          </span>
+                        )
+                      })()
+                    ) : (
+                      <span className="flex flex-wrap items-center gap-2">
+                        <StatusBadge
+                          tone={gradeTone[student.gradeStatus]}
+                          label={t(`grade_status.${student.gradeStatus}`)}
+                        />
+                        <span className="text-xs tabular-nums text-muted-foreground">
+                          {student.finalGrade === null
+                            ? t('class_group.no_grade')
+                            : t('class_group.grade_value', {
+                                grade: student.finalGrade,
+                              })}
+                        </span>
                       </span>
-                    </span>
+                    )}
                   </td>
                   {group.certificateRule === 'exam_required' && (
                     <td className={tdClass}>

@@ -6,7 +6,10 @@ import {
   listClassGroupsFor,
 } from '@/lib/backoffice/mock-data'
 import { getStaffSession } from '@/lib/backoffice/session'
-import { canManageEnrollment } from '@/lib/backoffice/permissions'
+import {
+  canManageEnrollment,
+  canRecordGrades,
+} from '@/lib/backoffice/permissions'
 import {
   addBusinessDays,
   businessDaysUntil,
@@ -123,6 +126,7 @@ export default async function ClassGroupDetailPage({
         group={group}
         classGroups={listClassGroupsFor(staff)}
         canManage={canManageEnrollment(staff.role)}
+        canGrade={canRecordGrades(staff, group)}
         // Date only: the deadline is a calendar day, not an instant.
         deadlineIso={deadline.toISOString().slice(0, 10)}
         businessDaysLeft={businessDaysLeft}

@@ -485,6 +485,12 @@ export interface ClassGroupRow {
   allowsTransfer: boolean
   /** Students who finished and are still waiting for their certificate. */
   pendingCertificates: number
+  /**
+   * Final grades still open on the roster — what the teacher owes this class
+   * group. A student moved out by a procedure (frozen, transferred, withdrawn)
+   * is not counted: they left the roster, not a grade behind.
+   */
+  pendingGrades: number
 }
 
 /**

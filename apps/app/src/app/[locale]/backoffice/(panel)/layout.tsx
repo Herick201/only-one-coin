@@ -16,6 +16,7 @@ import {
 import {
   getDashboardMetrics,
   getEnrollmentMetrics,
+  getTeacher,
 } from '@/lib/backoffice/mock-data'
 import { getStaffSession } from '@/lib/backoffice/session'
 import { initials } from '@/lib/format'
@@ -74,6 +75,14 @@ export default async function BackofficePanelLayout({
    */
   const restricted = isRestrictedToOwnClassGroups(staff.role)
 
+  /* The teacher's badge is their own queue — the final grades still open
+     across their class groups. Same role as the review-queue badge below:
+     it is what the panel gets opened for. */
+  const pendingGrades =
+    restricted && staff.teacherId
+      ? (getTeacher(staff.teacherId)?.pendingGrades ?? 0)
+      : 0
+
   const groups: BoNavGroup[] = restricted
     ? [
         {
@@ -90,6 +99,7 @@ export default async function BackofficePanelLayout({
               key: 'class_groups',
               href: '/backoffice/class-groups',
               label: t('nav.my_class_groups'),
+              badge: pendingGrades,
             },
             {
               key: 'teachers',

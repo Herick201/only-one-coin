@@ -1002,7 +1002,13 @@
       "empty_roster_title": "Sin alumnos",
       "empty_roster_body": "Todavía nadie está matriculado en esta aula.",
       "col_manage": "Gestionar",
-      "manage": "Gestionar"
+      "manage": "Gestionar",
+      "grades_hint": "Registra la nota final de 0 a 20; aprueba desde {min}. Si el alumno no rindió el examen final, márcalo con «No rindió».",
+      "grades_da": "No rindió",
+      "grades_input_label": "Nota final de {name}",
+      "grades_save": "{count, plural, =0 {Guardar notas} one {Guardar # nota} other {Guardar # notas}}",
+      "grades_saved_local_only": "Notas guardadas solo en pantalla ({time}). Aún no hay servidor conectado.",
+      "grades_invalid": "Hay notas fuera de rango: van de 0 a 20, sin decimales."
     },
     "class_group_status": {
       "enrolling": "Matriculando",
@@ -1280,7 +1286,9 @@
       "owing_subtitle": "Terminaron y todavía deben certificado.",
       "class_groups_subtitle": "Todo lo que dictas, en curso y cerrado.",
       "no_class_groups_title": "Sin aulas",
-      "no_class_groups_body": "Todavía no tienes aulas asignadas en este período."
+      "no_class_groups_body": "Todavía no tienes aulas asignadas en este período.",
+      "grades_owing_title": "Aulas con notas pendientes",
+      "grades_owing_subtitle": "El certificado no sale mientras falte una nota final."
     },
     "team": {
       "title": "Equipo",

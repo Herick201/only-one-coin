@@ -705,6 +705,8 @@ function NewClassGroupForm({
       allowsFreeze: course.allowsFreeze,
       allowsTransfer: course.allowsTransfer,
       pendingCertificates: 0,
+      // A class group that has not started has no roster to owe a grade to.
+      pendingGrades: 0,
     })
   }
 

@@ -178,13 +178,21 @@ Domínio e fila já existem, independentes dessa escolha:
   dias de validade da reserva) — estes últimos vieram de `/backoffice/payments/settings`,
   que deixou de existir: um número com duas telas donas é um número que diverge.
   O papel `teacher` já entra numa
-  **visão restrita**: menu reduzido,
-  home própria (turmas, alunos, notas e certificados pendentes dele), só as
-  próprias turmas na lista e na ficha da turma, e alunos/pagamentos bloqueados —
-  tudo escopado pelo `teacherId` da sessão, nunca por dado vindo do cliente. A
-  sessão do mockup é fixa em `getStaffSession()`; trocar o papel ali é o que
-  mostra essa visão, de propósito não há seletor de papel na tela (`CLAUDE.md`
-  §8). Cada pessoa do staff, em qualquer papel, gerencia a própria conta em
+  **visão restrita**: menu reduzido com o contador de notas abertas,
+  home própria (turmas, alunos, notas e certificados pendentes dele, com a fila
+  de notas antes da de certificados — certificado não sai sobre nota aberta),
+  só as próprias turmas na lista e na ficha da turma, e alunos/pagamentos
+  bloqueados — tudo escopado pelo `teacherId` da sessão, nunca por dado vindo
+  do cliente. Na ficha da própria turma o docente **registra as notas finais**
+  (0–20, aprova a partir da nota mínima configurada) e marca quem não rendeu o
+  exame final (DA, `docs/REGRAS-NEGOCIO.md` §3) — edição inline no roster,
+  estado local como todo o resto, e só para o docente da turma: admin e
+  coordenação seguem lendo (se a coordenação pode corrigir nota é questão em
+  aberto, não construída). Como `/me` ainda responde `teacherId: null` (não há
+  tabela de docentes), uma conta com cargo `teacher` é apontada pela ponte de
+  demonstração em `getStaffSession()` para a ficha `tea_01` do mock — a ponte
+  morre com a camada de mock. De propósito não há seletor de papel na tela
+  (`CLAUDE.md` §8). Cada pessoa do staff, em qualquer papel, gerencia a própria conta em
   `/backoffice/account` (aberta pelo chip do usuário no rodapé do menu): senha
   com as exigências listadas enquanto se digita, verificação em dois passos —
   obrigatória e sem botão de desligar para `admin`, `treasury` e
