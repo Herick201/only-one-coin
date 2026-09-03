@@ -61,35 +61,41 @@ const icons = [
   .perk {
     flex: 1 1 230px;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 14px;
-    background: var(--sky-soft);
+    background: var(--paper);
     border: 1.5px solid var(--border);
     border-radius: var(--radius);
-    padding: 20px;
+    padding: 22px 20px;
+    box-shadow: var(--shadow-sm);
     transition: transform 0.18s ease, box-shadow 0.18s ease;
   }
   .perk:hover {
     transform: translateY(-5px);
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--shadow-md);
   }
+  /* Ícones na cor da própria marca de cada oficina, sem tile — mockup web. */
   .perk-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
-    background: var(--paper);
-    color: var(--blue);
     display: grid;
     place-items: center;
     flex-shrink: 0;
-    box-shadow: var(--shadow-sm);
+    margin-top: 2px;
   }
-  .perk:nth-child(even) .perk-icon {
-    color: var(--yellow-deep);
+  .perk:nth-child(1) .perk-icon {
+    color: #1d6f42;
+  }
+  .perk:nth-child(2) .perk-icon {
+    color: var(--blue);
+  }
+  .perk:nth-child(3) .perk-icon {
+    color: #8e44ad;
+  }
+  .perk:nth-child(4) .perk-icon {
+    color: #c1272d;
   }
   .perk-icon :global(svg) {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
   }
   .perk-txt h3 {
     font-size: 1.05rem;

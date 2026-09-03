@@ -9,13 +9,13 @@ const p = t.purpose;
 ---
 
 <section class="purpose">
-  <div class="container purpose-grid">
+  <div class="purpose-grid">
     <div class="purpose-photo">
       <Image
         src={purposePhoto}
         alt={p.imgAlt}
-        widths={[480, 768]}
-        sizes="(max-width: 900px) 92vw, 380px"
+        widths={[480, 768, 1024]}
+        sizes="(max-width: 900px) 100vw, 33vw"
         format="webp"
         quality={74}
       />
@@ -23,7 +23,7 @@ const p = t.purpose;
 
     <div class="purpose-copy">
       <p class="eyebrow">{p.eyebrow}</p>
-      <h2 set:html={p.title} />
+      <h2>{p.title}</h2>
       <p class="text">{p.text}</p>
       <a class="purpose-cta" href={withLang(lang, "/about")}>
         {p.cta}
@@ -53,22 +53,32 @@ const p = t.purpose;
 </section>
 
 <style>
+  /* Formato web do mockup: a foto sangra até a borda esquerda da janela,
+     o conteúdo vive no creme, e os fatos formam colunas com divisórias. */
   .purpose {
     background: var(--cream);
-    padding-block: 64px;
   }
   .purpose-grid {
     display: grid;
-    grid-template-columns: minmax(240px, 0.9fr) 1.4fr minmax(180px, 0.7fr);
-    gap: 44px;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.25fr) minmax(0, 1fr);
     align-items: center;
   }
-  .purpose-photo img {
+  .purpose-photo {
+    position: relative;
+    align-self: stretch;
+    min-height: 300px;
+  }
+  /* :global porque o <img> sai do componente <Image> — o escopo do Astro
+     não alcança elemento renderizado por componente filho. */
+  .purpose-photo :global(img) {
+    position: absolute;
+    inset: 0;
     width: 100%;
-    height: auto;
-    display: block;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-md);
+    height: 100%;
+    object-fit: cover;
+  }
+  .purpose-copy {
+    padding: 56px 44px;
   }
   .eyebrow {
     margin: 0 0 10px;
@@ -76,14 +86,11 @@ const p = t.purpose;
     font-size: 0.8rem;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--yellow-deep);
+    color: var(--blue);
   }
   .purpose-copy h2 {
-    font-size: clamp(1.7rem, 3.4vw, 2.3rem);
+    font-size: clamp(1.6rem, 3vw, 2.1rem);
     line-height: 1.2;
-  }
-  .purpose-copy h2 :global(.accent) {
-    color: var(--blue);
   }
   .text {
     margin-top: 14px;
@@ -108,53 +115,60 @@ const p = t.purpose;
   }
   .facts {
     margin: 0;
-    padding: 0;
+    padding: 24px 0;
+    padding-right: max(24px, calc((100% - var(--maxw)) / 8));
     list-style: none;
     display: flex;
-    flex-direction: column;
-    gap: 22px;
+    align-items: center;
   }
   .fact {
+    flex: 1 1 0;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 14px;
+    text-align: center;
+    gap: 8px;
+    padding-inline: 16px;
+  }
+  .fact + .fact {
+    border-left: 1.5px solid rgba(19, 34, 75, 0.12);
   }
   .fact-value {
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 2.2rem;
+    font-size: 2.1rem;
     line-height: 1;
     color: var(--ink);
   }
   .fact-icon {
-    width: 46px;
-    height: 46px;
-    border-radius: 14px;
-    background: var(--paper);
-    color: var(--blue);
+    color: var(--blue-deep);
     display: grid;
     place-items: center;
-    flex-shrink: 0;
-    box-shadow: var(--shadow-sm);
   }
   .fact-icon :global(svg) {
-    width: 24px;
-    height: 24px;
+    width: 30px;
+    height: 30px;
   }
   .fact-label {
     font-weight: 600;
+    font-size: 0.92rem;
     color: var(--ink);
     line-height: 1.3;
   }
   @media (max-width: 900px) {
     .purpose-grid {
       grid-template-columns: 1fr;
-      gap: 32px;
+    }
+    .purpose-photo {
+      min-height: 240px;
+    }
+    .purpose-copy {
+      padding: 36px 24px 8px;
     }
     .facts {
-      flex-direction: row;
+      padding: 24px;
       flex-wrap: wrap;
-      gap: 18px 32px;
+      gap: 18px 0;
     }
   }
   @media (prefers-reduced-motion: reduce) {

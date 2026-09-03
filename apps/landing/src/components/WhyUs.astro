@@ -72,47 +72,52 @@ const icons = [
     width: 17px;
     height: 17px;
   }
+  /* Formato web do mockup: pilares lado a lado com divisórias finas, ícones
+     coloridos sem fundo, e uma divisória entre a introdução e os pilares. */
   .pillars {
     margin: 0;
-    padding: 0;
+    padding: 0 0 0 40px;
+    border-left: 1.5px solid var(--border);
     list-style: none;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
-    gap: 26px 20px;
+    display: flex;
+    align-items: stretch;
   }
   .pillar {
+    flex: 1 1 0;
     text-align: center;
+    padding-inline: 14px;
+  }
+  .pillar + .pillar {
+    border-left: 1.5px solid var(--border);
   }
   .pillar-icon {
-    width: 62px;
-    height: 62px;
-    margin-inline: auto;
-    border-radius: 50%;
-    background: var(--sky);
-    color: var(--blue);
     display: grid;
     place-items: center;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
+    color: var(--blue);
     transition: transform 0.18s ease;
   }
-  .pillar:first-child .pillar-icon {
-    background: var(--cream);
+  .pillar:first-child .pillar-icon,
+  .pillar:last-child .pillar-icon {
     color: var(--yellow-deep);
   }
+  .pillar:nth-child(3) .pillar-icon {
+    color: var(--blue-deep);
+  }
   .pillar:hover .pillar-icon {
-    transform: rotate(-6deg) scale(1.06);
+    transform: rotate(-6deg) scale(1.08);
   }
   .pillar-icon :global(svg) {
-    width: 28px;
-    height: 28px;
+    width: 34px;
+    height: 34px;
   }
   .pillar h3 {
-    font-size: 1.02rem;
+    font-size: 0.98rem;
     margin-bottom: 6px;
   }
   .pillar p {
     margin: 0;
-    font-size: 0.88rem;
+    font-size: 0.85rem;
     line-height: 1.45;
   }
   @media (max-width: 900px) {
@@ -122,6 +127,16 @@ const icons = [
     }
     .why-intro p {
       max-width: none;
+    }
+    .pillars {
+      padding-left: 0;
+      border-left: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 26px 12px;
+    }
+    .pillar + .pillar {
+      border-left: 0;
     }
   }
 </style>

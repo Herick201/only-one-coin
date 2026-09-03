@@ -9,106 +9,95 @@ const c = t.cta;
 ---
 
 <section class="cta">
-  <div class="container">
-    <div class="cta-card">
-      <span class="blob cta-blob-a" aria-hidden="true"></span>
-      <span class="blob cta-blob-b" aria-hidden="true"></span>
-      <div class="cta-inner">
-        <div class="cta-photo">
-          <Image
-            src={ctaPhoto}
-            alt={c.imgAlt}
-            widths={[240, 480]}
-            sizes="120px"
-            format="webp"
-            quality={72}
-          />
-        </div>
-        <div class="cta-copy">
-          <h2 class="cta-title">{c.title}</h2>
-          <p>{c.sub}</p>
-        </div>
-        <p class="cta-price">
-          {c.pricePre} <strong>{c.price}</strong> {c.priceUnit}
-        </p>
-        <a href={withLang(lang, "/enrollment")} class="btn btn-yellow cta-btn">
-          <span>{t.hero.ctaEnroll}</span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-        </a>
-      </div>
+  <div class="cta-photo">
+    <Image
+      src={ctaPhoto}
+      alt={c.imgAlt}
+      widths={[480, 768]}
+      sizes="(max-width: 700px) 100vw, 320px"
+      format="webp"
+      quality={72}
+    />
+  </div>
+  <div class="cta-inner">
+    <div class="cta-copy">
+      <h2 class="cta-title">{c.title}</h2>
+      <p>{c.sub}</p>
     </div>
+    <p class="cta-price">
+      {c.pricePre} <strong>{c.price}</strong> {c.priceUnit}
+    </p>
+    <a href={withLang(lang, "/enrollment")} class="btn btn-yellow cta-btn">
+      <span>{t.hero.ctaEnroll}</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+    </a>
   </div>
 </section>
 
 <style>
+  /* Formato web do mockup: faixa azul de borda a borda, colada no footer,
+     com a foto sangrando na esquerda. */
   .cta {
-    padding-block: 20px 92px;
-  }
-  .cta-card {
     position: relative;
     overflow: hidden;
-    background: linear-gradient(135deg, var(--blue), var(--blue-deep));
-    border-radius: var(--radius-lg);
-    padding: 40px 48px;
-    box-shadow: var(--shadow-blue);
+    background: linear-gradient(105deg, var(--blue-deep), var(--blue) 55%, var(--blue-deep));
+    margin-top: 24px;
   }
-  .cta-blob-a {
-    width: 240px;
-    height: 240px;
-    top: -110px;
-    right: 8%;
-    background: var(--yellow);
-    opacity: 0.35;
+  .cta-photo {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: min(24%, 320px);
   }
-  .cta-blob-b {
-    width: 180px;
-    height: 180px;
-    bottom: -100px;
-    left: -40px;
-    background: #fff;
-    opacity: 0.14;
+  /* :global porque o <img> sai do componente <Image> — o escopo do Astro
+     não alcança elemento renderizado por componente filho. */
+  .cta-photo :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .cta-photo::after {
+    /* Funde a borda da foto no azul da faixa. */
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 55%, rgba(27, 70, 201, 0.85));
   }
   .cta-inner {
     position: relative;
     z-index: 1;
     display: flex;
     align-items: center;
-    gap: 32px;
+    gap: 36px;
     flex-wrap: wrap;
-  }
-  .cta-photo {
-    flex-shrink: 0;
-  }
-  .cta-photo img {
-    width: 120px;
-    height: 120px;
-    object-fit: cover;
-    border-radius: 18px;
-    border: 3px solid rgba(255, 255, 255, 0.35);
-    display: block;
+    padding-block: 34px;
+    padding-left: max(calc(min(24%, 320px) + 44px), calc((100% - var(--maxw)) / 2 + 24px));
+    padding-right: max(24px, calc((100% - var(--maxw)) / 2 + 24px));
   }
   .cta-copy {
     flex: 1 1 300px;
   }
   .cta-title {
-    font-size: clamp(1.6rem, 3.4vw, 2.3rem);
+    font-size: clamp(1.5rem, 2.8vw, 2.1rem);
     color: #fff;
   }
   .cta-copy p {
-    margin-top: 8px;
+    margin-top: 6px;
     color: rgba(255, 255, 255, 0.85);
   }
   .cta-price {
     margin: 0;
     color: #fff;
     font-weight: 600;
+    text-align: center;
     white-space: nowrap;
   }
   .cta-price strong {
-    display: block;
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 2.2rem;
+    font-size: 2rem;
     line-height: 1.05;
     color: var(--yellow-bright);
   }
@@ -121,5 +110,13 @@ const c = t.cta;
   .cta-btn svg {
     width: 17px;
     height: 17px;
+  }
+  @media (max-width: 700px) {
+    .cta-photo {
+      display: none;
+    }
+    .cta-inner {
+      padding: 30px 24px;
+    }
   }
 </style>

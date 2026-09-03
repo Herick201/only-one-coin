@@ -91,7 +91,8 @@ const icons = [
   .aud-photo {
     position: relative;
   }
-  .aud-photo img {
+  /* :global porque o <img> sai do componente <Image>. */
+  .aud-photo :global(img) {
     width: 100%;
     height: 170px;
     object-fit: cover;
