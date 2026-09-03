@@ -249,6 +249,18 @@ const featureIcons = [
     position: relative;
     min-height: 460px;
   }
+  /* Funde a borda da foto com o fundo do hero — sem corte seco. */
+  .hero-media::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 140px;
+    background: linear-gradient(90deg, var(--sky-soft), transparent);
+    z-index: 1;
+    pointer-events: none;
+  }
   /* :global porque o <img> sai do componente <Image> — o escopo do Astro
      não alcança elemento renderizado por componente filho. */
   .hero-media :global(img) {
@@ -296,6 +308,15 @@ const featureIcons = [
     }
     .hero-media {
       min-height: 300px;
+    }
+    /* Em coluna única a emenda é horizontal: o degradê desce do topo. */
+    .hero-media::before {
+      left: 0;
+      right: 0;
+      bottom: auto;
+      width: auto;
+      height: 90px;
+      background: linear-gradient(180deg, var(--sky-soft), transparent);
     }
     .photo-caption {
       top: 24px;
