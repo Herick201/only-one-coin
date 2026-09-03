@@ -12,6 +12,7 @@ const ts = t.testimonials;
       <h2 class="section-title">
         {ts.titlePre}<span class="accent">{ts.titleAccent}</span>{ts.titlePost}
       </h2>
+      <p class="testi-lead text-muted">{ts.lead}</p>
     </div>
 
     <div class="testi-carousel" data-testi-carousel>
@@ -147,6 +148,10 @@ const ts = t.testimonials;
   }
   .testi-head > .section-title {
     max-width: 640px;
+  }
+  .testi-lead {
+    margin-top: 10px;
+    font-size: 1.06rem;
   }
 
   .testi-carousel {

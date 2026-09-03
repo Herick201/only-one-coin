@@ -38,6 +38,7 @@
 
   --font: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-display: "Fredoka", "Poppins", system-ui, sans-serif;
+  --font-script: "Caveat", "Segoe Script", cursive;
 }
 
 *,

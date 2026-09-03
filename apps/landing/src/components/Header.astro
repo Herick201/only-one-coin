@@ -87,6 +87,8 @@ const programs = [
         </div>
       </details>
 
+      <a href={withLang(lang, "/#benefits")}>{t.nav.benefits}</a>
+
       <details class="nav-dd">
         <summary>
           {t.nav.resources}
@@ -105,7 +107,10 @@ const programs = [
         {t.hero.ctaEnroll}
       </a>
       <a href={withLang(lang, "/login")} class="btn btn-primary login-btn">
-        <span>{t.nav.portal}</span>
+        <span class="login-txt">
+          <span class="login-hint">{t.nav.portalHint}</span>
+          <span>{t.nav.portal}</span>
+        </span>
         <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M5 12h14"></path>
           <path d="m12 5 7 7-7 7"></path>
@@ -164,6 +169,8 @@ const programs = [
           {resources.map((r) => <a href={r.href}>{r.label}</a>)}
         </div>
       </details>
+
+      <a href={withLang(lang, "/#benefits")}>{t.nav.benefits}</a>
 
       <a href={withLang(lang, "/enrollment")} class="btn btn-yellow m-enroll">{t.hero.ctaEnroll}</a>
       <a href={withLang(lang, "/login")} class="btn btn-primary m-portal">{t.nav.portal}</a>
@@ -381,6 +388,7 @@ const programs = [
     padding: 12px 22px;
     font-size: 0.94rem;
     letter-spacing: 0.02em;
+    white-space: nowrap;
   }
   @media (max-width: 1080px) {
     .enroll-btn {
@@ -408,6 +416,17 @@ const programs = [
     color: var(--blue-deep);
     box-shadow: none;
     transform: none;
+  }
+  .login-txt {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.15;
+  }
+  .login-hint {
+    font-size: 0.68rem;
+    font-weight: 500;
+    color: var(--text-muted);
   }
   .login-btn .arrow {
     width: 15px;

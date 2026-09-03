@@ -22,20 +22,23 @@ const featureIcons = [
 
   <div class="container hero-grid">
     <div class="hero-copy">
+      <span class="hero-badge">{h.badge}</span>
       <h1>
         <span class="line">{h.w1}</span>
         <span class="line accent">{h.w2}</span>
-        <span class="line-price">
-          <span class="w3">{h.w3}</span>
-          <span class="price">
-            {h.price}<span class="price-unit">{h.priceUnit}</span>
-          </span>
-        </span>
       </h1>
-      <p class="hero-sub" set:html={h.subHtml} />
+      <p class="hero-price-line">
+        {h.subPre}
+        <span class="price-pill">{h.price}</span>
+        {h.priceUnit}.
+      </p>
+      <p class="hero-sub" set:html={h.sub2Html} />
       <div class="hero-actions">
-        <a href={withLang(lang, "/enrollment")} class="btn btn-yellow btn-enroll">{h.ctaEnroll}</a>
-        <a href={withLang(lang, "/courses")} class="link-quiet">{h.ctaCourses}</a>
+        <a href={withLang(lang, "/enrollment")} class="btn btn-yellow btn-enroll">
+          <span>{h.ctaEnroll}</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+        </a>
+        <a href={withLang(lang, "/courses")} class="btn btn-ghost">{h.ctaCourses}</a>
       </div>
       <ul class="hero-features">
         {
@@ -54,7 +57,6 @@ const featureIcons = [
 
     <div class="hero-media">
       <span class="dots" aria-hidden="true"></span>
-      <span class="star star-1" aria-hidden="true">✦</span>
       <div class="hero-photo">
         <Image
           src={heroPhoto}
@@ -66,6 +68,7 @@ const featureIcons = [
           loading="eager"
           fetchpriority="high"
         />
+        <span class="photo-caption" aria-hidden="true">{h.photoCaption}</span>
       </div>
     </div>
   </div>
@@ -73,16 +76,36 @@ const featureIcons = [
 
 <style>
   /* A matrícula é o que a página quer que aconteça: o botão é maior que
-     qualquer outro clique, e pulsa uma vez ao carregar para puxar o olho. */
+     qualquer outro clique. */
   .btn-enroll {
-    font-size: 1.12rem;
+    font-size: 1.08rem;
     letter-spacing: 0.02em;
-    padding: 18px 38px;
+    padding: 16px 32px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .btn-enroll svg {
+    width: 18px;
+    height: 18px;
+    transition: transform 0.2s ease;
+  }
+  .btn-enroll:hover svg {
+    transform: translateX(5px);
+  }
+  .btn-ghost {
+    background: var(--paper);
+    color: var(--blue);
+    border: 1.5px solid var(--blue);
+    box-shadow: none;
+  }
+  .btn-ghost:hover {
+    background: var(--sky);
   }
   .hero {
     position: relative;
     overflow: hidden;
-    padding-block: 64px 104px;
+    padding-block: 56px 96px;
     background:
       radial-gradient(60% 70% at 88% 12%, rgba(255, 201, 60, 0.18), transparent 60%),
       radial-gradient(55% 60% at 8% 90%, rgba(47, 107, 255, 0.1), transparent 60%),
@@ -101,8 +124,8 @@ const featureIcons = [
     height: 260px;
     bottom: -90px;
     left: -70px;
-    background: var(--blue);
-    opacity: 0.16;
+    background: var(--yellow);
+    opacity: 0.22;
   }
   .hero-grid {
     position: relative;
@@ -113,8 +136,22 @@ const featureIcons = [
     align-items: center;
   }
 
+  .hero-badge {
+    display: inline-block;
+    background: var(--cream);
+    color: var(--yellow-deep);
+    border: 1.5px solid rgba(245, 166, 35, 0.35);
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 7px 16px;
+    border-radius: 999px;
+    margin-bottom: 18px;
+  }
   h1 {
-    font-size: clamp(2.6rem, 7vw, 5rem);
+    font-size: clamp(2.5rem, 6vw, 4.2rem);
+    line-height: 1.06;
   }
   .line {
     display: block;
@@ -122,53 +159,41 @@ const featureIcons = [
   .accent {
     color: var(--blue);
   }
-  .line-price {
-    display: inline-flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: 14px;
-    margin-top: 4px;
-  }
-  .w3 {
-    font-size: clamp(1.6rem, 3.4vw, 2.4rem);
+  .hero-price-line {
+    margin-top: 22px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(1.15rem, 2.4vw, 1.5rem);
     color: var(--ink);
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
   }
-  .price {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 8px;
+  .price-pill {
     background: linear-gradient(135deg, var(--yellow-bright), var(--yellow-deep));
     color: var(--ink);
-    padding: 4px 20px 8px;
-    border-radius: 16px;
+    font-weight: 700;
+    padding: 2px 14px;
+    border-radius: 12px;
     transform: rotate(-2deg);
     box-shadow: var(--shadow-yellow);
-    font-size: clamp(2.4rem, 5.4vw, 3.6rem);
-  }
-  .price-unit {
-    font-family: var(--font);
-    font-size: 0.95rem;
-    font-weight: 700;
-    white-space: nowrap;
   }
   .hero-sub {
-    margin-top: 30px;
-    font-size: 1.2rem;
+    margin-top: 14px;
+    font-size: 1.08rem;
     color: var(--text-muted);
-    max-width: 30ch;
-  }
-  .hero-sub :global(strong) {
-    color: var(--ink);
+    max-width: 40ch;
   }
   .hero-sub :global(.accent) {
     color: var(--blue);
     font-weight: 700;
   }
   .hero-actions {
-    margin-top: 34px;
+    margin-top: 30px;
     display: flex;
     align-items: center;
-    gap: 22px;
+    gap: 16px;
     flex-wrap: wrap;
   }
   .hero-features {
@@ -226,13 +251,27 @@ const featureIcons = [
     overflow: hidden;
     border: 6px solid var(--paper);
     box-shadow: var(--shadow-md);
-    transform: rotate(1.5deg);
   }
   .hero-photo img {
     width: 100%;
     height: auto;
+    display: block;
   }
-  /* Playful decorations */
+  /* O lettering do mockup: manuscrito amarelo sobre a foto. */
+  .photo-caption {
+    position: absolute;
+    top: 18px;
+    right: 20px;
+    max-width: 8ch;
+    font-family: var(--font-script);
+    font-weight: 700;
+    font-size: clamp(1.5rem, 2.6vw, 2rem);
+    line-height: 1;
+    color: var(--yellow-bright);
+    text-align: right;
+    transform: rotate(-6deg);
+    text-shadow: 0 2px 10px rgba(19, 34, 75, 0.55);
+  }
   .dots {
     position: absolute;
     z-index: 1;
@@ -244,21 +283,6 @@ const featureIcons = [
     background-size: 16px 16px;
     opacity: 0.35;
   }
-  .star {
-    position: absolute;
-    z-index: 3;
-    color: var(--yellow-deep);
-    font-size: 2rem;
-  }
-  .star-1 {
-    top: 40%;
-    right: -20px;
-    animation: twinkle 3s ease-in-out infinite;
-  }
-  @keyframes twinkle {
-    0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.9; }
-    50% { transform: scale(1.25) rotate(15deg); opacity: 1; }
-  }
 
   @media (max-width: 900px) {
     .hero-grid {
@@ -267,17 +291,6 @@ const featureIcons = [
     }
     .hero-sub {
       max-width: none;
-    }
-    .hero-photo {
-      transform: none;
-    }
-    .star-1 {
-      right: 4px;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .star-1 {
-      animation: none;
     }
   }
 </style>

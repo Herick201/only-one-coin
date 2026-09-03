@@ -1,0 +1,165 @@
+---
+import { Image } from "astro:assets";
+import purposePhoto from "../assets/photos/about-team.jpg";
+import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const p = t.purpose;
+---
+
+<section class="purpose">
+  <div class="container purpose-grid">
+    <div class="purpose-photo">
+      <Image
+        src={purposePhoto}
+        alt={p.imgAlt}
+        widths={[480, 768]}
+        sizes="(max-width: 900px) 92vw, 380px"
+        format="webp"
+        quality={74}
+      />
+    </div>
+
+    <div class="purpose-copy">
+      <p class="eyebrow">{p.eyebrow}</p>
+      <h2 set:html={p.title} />
+      <p class="text">{p.text}</p>
+      <a class="purpose-cta" href={withLang(lang, "/about")}>
+        {p.cta}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+      </a>
+    </div>
+
+    <ul class="facts">
+      <li class="fact">
+        <span class="fact-value">{p.priceValue}</span>
+        <span class="fact-label">{p.priceLabel}</span>
+      </li>
+      <li class="fact">
+        <span class="fact-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18"></path></svg>
+        </span>
+        <span class="fact-label">{p.fact2}</span>
+      </li>
+      <li class="fact">
+        <span class="fact-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M12 21s-7.5-4.7-9.7-9.2C.8 8.6 2.7 5 6.2 5c2 0 3.4 1.1 4.3 2.4h3c.9-1.3 2.3-2.4 4.3-2.4 3.5 0 5.4 3.6 3.9 6.8C19.5 16.3 12 21 12 21Z"/></svg>
+        </span>
+        <span class="fact-label">{p.fact3}</span>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<style>
+  .purpose {
+    background: var(--cream);
+    padding-block: 64px;
+  }
+  .purpose-grid {
+    display: grid;
+    grid-template-columns: minmax(240px, 0.9fr) 1.4fr minmax(180px, 0.7fr);
+    gap: 44px;
+    align-items: center;
+  }
+  .purpose-photo img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+  }
+  .eyebrow {
+    margin: 0 0 10px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--yellow-deep);
+  }
+  .purpose-copy h2 {
+    font-size: clamp(1.7rem, 3.4vw, 2.3rem);
+    line-height: 1.2;
+  }
+  .purpose-copy h2 :global(.accent) {
+    color: var(--blue);
+  }
+  .text {
+    margin-top: 14px;
+    color: var(--text-muted);
+    max-width: 46ch;
+  }
+  .purpose-cta {
+    margin-top: 18px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    color: var(--blue);
+  }
+  .purpose-cta svg {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.2s ease;
+  }
+  .purpose-cta:hover svg {
+    transform: translateX(4px);
+  }
+  .facts {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  .fact {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .fact-value {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 2.2rem;
+    line-height: 1;
+    color: var(--ink);
+  }
+  .fact-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    background: var(--paper);
+    color: var(--blue);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
+  }
+  .fact-icon :global(svg) {
+    width: 24px;
+    height: 24px;
+  }
+  .fact-label {
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+  @media (max-width: 900px) {
+    .purpose-grid {
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+    .facts {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 18px 32px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .purpose-cta:hover svg {
+      transform: none;
+    }
+  }
+</style>

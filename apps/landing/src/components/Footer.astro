@@ -1,5 +1,5 @@
 ---
-import { languageSlugs, org } from "../i18n/ui";
+import { languageSlugs, org, whatsappUrl } from "../i18n/ui";
 import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
 
 const lang = getLangFromUrl(Astro.url);
@@ -53,10 +53,11 @@ const socials = [
     </div>
 
     <div class="col">
-      <h3>{f.col1Title}</h3>
+      <h3>{f.colAbout}</h3>
       <ul>
-        <li><a href={withLang(lang, "/about")}>{f.about}</a></li>
-        <li><a href={withLang(lang, "/courses")}>{f.courses}</a></li>
+        <li><a href={withLang(lang, "/about")}>{f.aboutHistory}</a></li>
+        <li><a href={withLang(lang, "/about")}>{f.aboutMission}</a></li>
+        <li><a href={withLang(lang, "/about")}>{f.aboutImpact}</a></li>
       </ul>
     </div>
 
@@ -68,17 +69,32 @@ const socials = [
     </div>
 
     <div class="col">
-      <h3>{f.col2Title}</h3>
+      <h3>{f.colStudents}</h3>
       <ul>
-        <li><a href={withLang(lang, "/contact")}>{f.contact}</a></li>
+        <li><a href={withLang(lang, "/login")}>{f.studentsPortal}</a></li>
+        <li><a href={withLang(lang, "/courses")}>{f.studentsCourses}</a></li>
+        <li><a href={withLang(lang, "/faq")}>{f.studentsCertificates}</a></li>
+        <li><a href={withLang(lang, "/faq")}>{f.studentsFaq}</a></li>
+      </ul>
+      <h3 class="legal-title">{f.colResources}</h3>
+      <ul>
+        <li><a href={withLang(lang, "/blog")}>{f.resBlog}</a></li>
+        <li><a href={withLang(lang, "/#benefits")}>{f.resWorkshops}</a></li>
+        <li><a href={withLang(lang, "/community")}>{f.resCommunity}</a></li>
+      </ul>
+    </div>
+
+    <div class="col">
+      <h3>{f.colHelp}</h3>
+      <ul>
+        <li><a href={withLang(lang, "/contact")}>{f.helpContact}</a></li>
+        <li><a href={whatsappUrl} target="_blank" rel="noopener">{f.helpWhatsapp}</a></li>
+        <li><a href={withLang(lang, "/terms-and-conditions")}>{f.terms}</a></li>
+        <li><a href={withLang(lang, "/privacy-policy")}>{f.privacy}</a></li>
         <li class="muted">{f.hoursLabel}</li>
         <li class="muted">{f.hours}</li>
       </ul>
-      <h3 class="legal-title">{f.legalTitle}</h3>
-      <ul>
-        <li><a href={withLang(lang, "/privacy-policy")}>{f.privacy}</a></li>
-        <li><a href={withLang(lang, "/terms-and-conditions")}>{f.terms}</a></li>
-      </ul>
+      <p class="footer-script" aria-hidden="true">{f.script}</p>
     </div>
   </div>
 
@@ -124,8 +140,17 @@ const socials = [
     position: relative;
     z-index: 1;
     display: grid;
-    grid-template-columns: 1.6fr 1fr 1fr 1.2fr;
-    gap: 40px;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr 1.1fr;
+    gap: 36px;
+  }
+  .footer-script {
+    margin: 26px 0 0;
+    font-family: var(--font-script);
+    font-weight: 700;
+    font-size: 1.6rem;
+    line-height: 1.1;
+    color: var(--yellow-bright);
+    transform: rotate(-4deg);
   }
   .footer-logo {
     height: 38px;
