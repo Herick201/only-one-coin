@@ -302,18 +302,18 @@ const featureIcons = [
     z-index: 1;
     pointer-events: none;
     backdrop-filter: blur(6px);
-    -webkit-mask-image: radial-gradient(85% 95% at 44% 58%, transparent 48%, #000 82%);
-    mask-image: radial-gradient(85% 95% at 44% 58%, transparent 48%, #000 82%);
+    /* Centro deslocado à direita: o desfoque fica no topo e na esquerda,
+       e o lado direito da foto permanece limpo. */
+    -webkit-mask-image: radial-gradient(115% 105% at 62% 55%, transparent 55%, #000 88%);
+    mask-image: radial-gradient(115% 105% at 62% 55%, transparent 55%, #000 88%);
   }
-  /* Véus brancos do mockup: descem do topo (apagam o teto) e entram pela
-     direita, atrás do lettering. */
+  /* Véu branco do mockup: só desce do topo, apagando o teto. O véu da
+     direita saiu a pedido — deixava o lado direito da foto esfumaçado. */
   .hero-media::after {
     content: "";
     position: absolute;
     inset: 0;
-    background:
-      linear-gradient(195deg, rgba(255, 255, 255, 0.65), transparent 42%),
-      linear-gradient(270deg, rgba(255, 255, 255, 0.7), transparent 42%);
+    background: linear-gradient(195deg, rgba(255, 255, 255, 0.65), transparent 42%);
     z-index: 1;
     pointer-events: none;
   }
