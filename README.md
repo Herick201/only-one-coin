@@ -70,7 +70,15 @@ Domínio e fila já existem, independentes dessa escolha:
 - `apps/app` — Next.js App Router: layout, roteamento, i18n trilíngue e as telas
   em **mockup** (sem acesso a dados). Portal do aluno (`/portal`), backoffice
   (`/backoffice` para login; painel em `/backoffice/home`) e a **matrícula
-  pública** (`/enrollment`). O checkout público é o wizard de 4 passos —
+  pública** (`/enrollment`). O portal cobre as decisões de 02/09/2026: avisos
+  no início, módulos por curso com o **cadeado de acesso à aula** (a opção de
+  entrar na aula, não integração com Classroom), **Pagos** (mensualidade do
+  inglês com upload de comprovante — mesma escada de OCR — e histórico
+  completo), **Trámites** pagos (constancia S/25, exame de certificación,
+  rezagados e congelamento, todos como solicitação com pagamento associado),
+  **Continuar estudando** (próximo nível/re-matrícula sem voltar pelo site
+  público, escolhendo só data de início + horário) e as regras do certificado
+  (nota ≥ 14, DA, exame do inglés básico) na tela de documentos. O checkout público é o wizard de 4 passos —
   curso + data de início + horário (escolhas separadas, porque o mesmo curso
   abre em várias datas), dados do aluno nos campos que a Asociación já coleta
   hoje (nome completo num campo só, documento, celular, nascimento e Gmail

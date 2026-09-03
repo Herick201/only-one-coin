@@ -31,6 +31,7 @@ export const teacherTone: Record<TeacherStatus, Tone> = {
 export const enrollmentTone: Record<EnrollmentStatus, Tone> = {
   under_review: 'warning',
   active: 'success',
+  frozen: 'info',
   completed: 'neutral',
   rejected: 'danger',
 }

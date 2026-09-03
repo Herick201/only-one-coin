@@ -2,11 +2,33 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
 import { getPortalSession } from '@/lib/portal/mock-data'
 import { formatDateTime } from '@/lib/portal/format'
-import type { Locale } from '@/lib/portal/types'
+import type { Locale, NotificationKind } from '@/lib/portal/types'
 import { Card, ProgressBar, SectionTitle, StatusBadge } from '@/components/portal/ui'
 import { enrollmentTone } from '@/components/portal/status-tone'
 import { Icon, type IconName } from '@/components/portal/icons'
 import { AutoGrid } from '@/components/layout/auto-grid'
+
+/** Where each kind of notice sends the reader, and how it looks on the way. */
+const noticeMeta: Record<
+  NotificationKind,
+  { icon: IconName; href: string; tone: 'warning' | 'info' | 'success' }
+> = {
+  monthly_payment_due: { icon: 'lock', href: '/portal/payments', tone: 'warning' },
+  next_level_invite: { icon: 'star', href: '/portal/continue', tone: 'info' },
+  document_ready: { icon: 'documents', href: '/portal/documents', tone: 'success' },
+}
+
+const noticeStyles = {
+  warning: 'border-brand-yellow-deep/25 bg-brand-yellow/10',
+  info: 'border-brand-blue/20 bg-sky',
+  success: 'border-emerald-600/20 bg-emerald-50',
+} as const
+
+const noticeIconStyles = {
+  warning: 'text-brand-yellow-deep',
+  info: 'text-brand-blue',
+  success: 'text-emerald-700',
+} as const
 
 export default async function DashboardPage({
   params,
@@ -18,13 +40,14 @@ export default async function DashboardPage({
   setRequestLocale(raw)
   const t = await getTranslations('portal')
 
-  const { student, enrollments, nextClass } = getPortalSession()
+  const { student, enrollments, nextClass, notifications } = getPortalSession()
   const current = enrollments.filter((e) => e.status !== 'completed')
   const hasUnderReview = enrollments.some((e) => e.status === 'under_review')
 
   const quickActions: { href: string; label: string; icon: IconName }[] = [
+    { href: '/portal/payments', label: t('dashboard.action_payments'), icon: 'card' },
+    { href: '/portal/requests', label: t('dashboard.action_requests'), icon: 'clipboard' },
     { href: '/portal/documents', label: t('dashboard.action_documents'), icon: 'documents' },
-    { href: '/portal/enrollment', label: t('dashboard.action_enrollments'), icon: 'enrollment' },
     { href: '/portal/profile', label: t('dashboard.action_profile'), icon: 'profile' },
   ]
 
@@ -39,8 +62,35 @@ export default async function DashboardPage({
         </p>
       </header>
 
+      {/* Notices — the portal side of the reminder e-mails (CLAUDE.md §1). */}
+      {notifications.length > 0 && (
+        <section className="flex flex-col gap-3">
+          {notifications.map((n) => {
+            const meta = noticeMeta[n.kind]
+            return (
+              <Link
+                key={n.id}
+                href={meta.href}
+                className={`group flex items-center gap-3 rounded-2xl border px-4 py-3.5 text-sm text-ink transition hover:brightness-[0.98] ${noticeStyles[meta.tone]}`}
+              >
+                <span className={`shrink-0 ${noticeIconStyles[meta.tone]}`}>
+                  <Icon name={meta.icon} size={18} />
+                </span>
+                <span className="flex-1">
+                  {t(`notice.${n.kind}`, { course: n.courseName ?? '' })}
+                </span>
+                <span className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-brand-blue">
+                  {t(`notice_cta.${n.kind}`)}
+                  <Icon name="chevron-right" size={14} />
+                </span>
+              </Link>
+            )
+          })}
+        </section>
+      )}
+
       {hasUnderReview && (
-        <div className="flex items-start gap-3 rounded-2xl border border-brand-yellow-deep/25 bg-brand-yellow/10 px-4 py-3.5 text-sm text-ink">
+        <div className="-mt-4 flex items-start gap-3 rounded-2xl border border-brand-yellow-deep/25 bg-brand-yellow/10 px-4 py-3.5 text-sm text-ink">
           <span className="mt-0.5 text-brand-yellow-deep">
             <Icon name="clock" size={18} />
           </span>
@@ -71,7 +121,15 @@ export default async function DashboardPage({
                   {t('next_class.with_teacher', { teacher: nextClass.teacherName })}
                 </span>
               </div>
-              {nextClass.meetingUrl ? (
+              {nextClass.classAccessLock !== null ? (
+                <Link
+                  href="/portal/payments"
+                  className="inline-flex shrink-0 items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/25"
+                >
+                  <Icon name="lock" size={16} />
+                  {t('next_class.locked')}
+                </Link>
+              ) : nextClass.meetingUrl ? (
                 <a
                   href={nextClass.meetingUrl}
                   target="_blank"
@@ -128,6 +186,12 @@ export default async function DashboardPage({
                   label={t(`enrollment_status.${e.status}`)}
                 />
               </div>
+              {e.classAccessLock !== null && (
+                <p className="inline-flex items-center gap-1.5 self-start rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 ring-1 ring-inset ring-red-600/15">
+                  <Icon name="lock" size={13} />
+                  {t(`access_lock.${e.classAccessLock}`)}
+                </p>
+              )}
               {e.progressPct !== null && (
                 <ProgressBar
                   value={e.progressPct}

@@ -7,6 +7,8 @@
     "nav": {
       "dashboard": "Home",
       "courses": "My courses",
+      "payments": "Payments",
+      "requests": "Requests",
       "enrollments": "My enrollment",
       "documents": "Documents",
       "profile": "My profile",
@@ -16,7 +18,7 @@
     },
     "greeting": {
       "hello": "Hi, {name}",
-      "subtitle": "This is your space at Only One Coin. Here you can see your classes, your enrollment and your documents."
+      "subtitle": "This is your space at Only One Coin. Here you can see your classes, your payments, your requests and your documents."
     },
     "common": {
       "view_detail": "View details",
@@ -28,7 +30,8 @@
       "teacher": "Teacher",
       "schedule": "Schedule",
       "starts": "Starts",
-      "back": "Back"
+      "back": "Back",
+      "online_label": "100% online"
     },
     "next_class": {
       "title": "Your next class",
@@ -36,11 +39,13 @@
       "none_body": "Once your enrollment is active, your next session will show up here.",
       "with_teacher": "with {teacher}",
       "join": "Join the class",
-      "no_link_yet": "The link will be posted before class"
+      "no_link_yet": "The link will be posted before class",
+      "locked": "Access paused — settle payment"
     },
     "enrollment_status": {
       "under_review": "Under review",
       "active": "Active",
+      "frozen": "Frozen",
       "completed": "Completed",
       "rejected": "Rejected"
     },
@@ -64,10 +69,40 @@
       "enrollment_certificate": "Enrollment certificate",
       "certificate": "Completion certificate"
     },
-    "modality": {
-      "online": "Online",
-      "in_person": "In person",
-      "hybrid": "Hybrid"
+    "billing_mode": {
+      "package": "Full package",
+      "monthly": "Monthly (per module)"
+    },
+    "module_status": {
+      "completed": "Completed",
+      "current": "In progress",
+      "upcoming": "Upcoming"
+    },
+    "access_lock": {
+      "monthly_payment_due": "Class access paused: the module payment is missing",
+      "module_failed": "Class access paused: you didn't pass the previous module"
+    },
+    "request_type": {
+      "enrollment_certificate": "Enrollment certificate",
+      "certification_exam": "Certification exam",
+      "makeup_exam": "Make-up exam",
+      "enrollment_freeze": "Enrollment freeze"
+    },
+    "request_status": {
+      "under_review": "Payment under review",
+      "in_progress": "In progress",
+      "completed": "Completed",
+      "rejected": "Rejected"
+    },
+    "notice": {
+      "monthly_payment_due": "Your {course} module payment is due. Upload your receipt to get back to class.",
+      "next_level_invite": "Congratulations! You can now enroll in {course} from the portal.",
+      "document_ready": "Your {course} certificate is ready to download."
+    },
+    "notice_cta": {
+      "monthly_payment_due": "Go to Payments",
+      "next_level_invite": "See offer",
+      "document_ready": "View document"
     },
     "relationship": {
       "mother": "Mother",
@@ -91,8 +126,9 @@
       "my_courses_title": "My courses",
       "my_courses_sub": "The courses you're enrolled in.",
       "quick_actions_title": "Quick actions",
+      "action_payments": "View my payments",
+      "action_requests": "Start a request",
       "action_documents": "View my documents",
-      "action_enrollments": "View my enrollment",
       "action_profile": "Edit my profile",
       "review_note": "You have an enrollment under review. We'll email you once it's approved.",
       "progress_label": "Course progress"
@@ -112,14 +148,27 @@
       "level_label": "Level",
       "min_age_label": "Minimum age",
       "min_age_value": "{age} years",
-      "schedule_title": "Schedule and format",
+      "schedule_title": "Schedule and class access",
       "teacher_title": "Teacher",
       "join_class": "Join the class",
       "meeting_pending": "The class link will be posted before it starts.",
+      "locked": {
+        "monthly_payment_due": "Your class access is paused because the current module has no approved payment yet. Upload your receipt and we'll restore it as soon as it's validated. It's not a debt: no interest, no late fees.",
+        "module_failed": "Your class access is paused because you didn't pass the previous module. Message us on WhatsApp to see your options."
+      },
+      "locked_cta": "Settle payment",
+      "modules_title": "Modules",
+      "month_unpaid": "Payment due",
       "materials_title": "Materials",
       "materials_empty": "No materials have been posted for this course yet.",
       "plan_title": "Your plan",
       "plan_price": "Plan price",
+      "module_price": "Price per module",
+      "monthly_note": "Monthly mode: you pay each module in advance. Without an approved payment, class access is paused — it never becomes a debt.",
+      "result_title": "Your result",
+      "result_pass_note": "Passing grade (minimum 14): your free certificate is issued within 25 business days.",
+      "result_fail_note": "The certificate requires a minimum grade of 14.",
+      "result_did_not_attempt": "You didn't take the final exam (DA), so no certificate applies. You can request the make-up exam under Requests.",
       "enrolled_on": "Enrolled on {date}",
       "period_dates": "From {start} to {end}"
     },
@@ -130,14 +179,94 @@
       "empty_body": "Once you enroll, you'll see the status of each course here.",
       "code_label": "Enrollment code",
       "plan_label": "Plan",
+      "billing_label": "Payment mode",
       "price_label": "Amount",
       "payment_title": "Payment receipt",
       "operation_number": "Operation no.",
       "paid_on": "Paid on {date}",
       "seat_label": "Seat",
+      "monthly_title": "Monthly payments per module",
+      "month_due": "due {date}",
+      "month_pay_cta": "Upload receipt",
       "review_note": "We're verifying your receipt. This step can take a few hours.",
       "rejected_note": "We couldn't validate this payment. Message us on WhatsApp to sort it out.",
       "approved_note": "Payment approved. Your seat is confirmed."
+    },
+    "receipt_form": {
+      "amount_label": "Amount to pay",
+      "amount_hint": "Transfer the exact amount. No discounts apply.",
+      "method_label": "How did you pay?",
+      "error_method": "Choose the payment method.",
+      "operation_label": "Operation no.",
+      "operation_hint": "It shows on your app's voucher.",
+      "error_operation": "Enter the operation number.",
+      "file_label": "Receipt",
+      "attach": "Attach receipt",
+      "remove": "Remove file",
+      "file_hint": "Photo or PDF, max {size}.",
+      "error_type": "Invalid format. Upload a photo (JPG, PNG, HEIC) or a PDF.",
+      "error_size": "The file exceeds the maximum size.",
+      "error_file": "Attach your receipt."
+    },
+    "payments": {
+      "title": "Payments",
+      "subtitle": "Your module payments, your receipts and your full history.",
+      "due_title": "Module payment",
+      "due_label": "Payment date",
+      "due_note": "Pay before {date} to keep your class access.",
+      "locked_note": "Your class access for {course} is paused until this module's payment is validated. It's not a debt: no interest, no late fees.",
+      "open_form": "Upload receipt",
+      "submit": "Send receipt",
+      "submitted_title": "Receipt sent",
+      "submitted_body": "We're validating your payment. This step can take a few hours; your class access is restored as soon as it's approved.",
+      "monthly_explainer": "Monthly mode is a per-module purchase, paid in advance. It creates no debt, interest or late fees: without a payment, class access is simply paused until you settle it.",
+      "history_title": "Payment history",
+      "history_empty": "You have no payments on record yet.",
+      "concept_package": "{course} — Full package",
+      "concept_module": "{course} — {module}",
+      "concept_procedure": "{procedure} — {course}"
+    },
+    "requests": {
+      "title": "Requests",
+      "subtitle": "Request certificates, exams or an enrollment freeze. Each request is paid when you submit it.",
+      "catalog_title": "Available requests",
+      "request_cta": "Request",
+      "not_eligible": "You have no eligible courses for this request.",
+      "new_title": "Request: {procedure}",
+      "cancel": "Cancel",
+      "freeze_note": "When you freeze, you come back exactly at the module where you stopped, with no time limit. Not available for intermediate and advanced levels.",
+      "choose_enrollment": "For which course?",
+      "submit": "Send request",
+      "submitted_body": "We received your request. We'll validate the payment and email you; you can follow its status here.",
+      "my_title": "My requests",
+      "empty_title": "You don't have any requests yet",
+      "empty_body": "Once you start a request, you'll see its status here.",
+      "requested_on": "requested on {date}",
+      "desc": {
+        "enrollment_certificate": "Official document proving your current enrollment.",
+        "certification_exam": "Exam required for the Basic English certificate.",
+        "makeup_exam": "If you missed the final exam, you can take it on an extra date.",
+        "enrollment_freeze": "Pause your enrollment and come back later at the same module."
+      }
+    },
+    "continue_page": {
+      "title": "Keep studying",
+      "subtitle": "Since you're already a student, you enroll from here with your existing details — no forms to fill in again.",
+      "empty_title": "No offers for you yet",
+      "empty_body": "Once you finish a course, your next step will show up here.",
+      "kind": {
+        "next_level": "Next level",
+        "repeat_module": "Repeat module",
+        "re_enroll": "Re-enrollment"
+      },
+      "based_on": "Because you completed {course}",
+      "price_label": "Price",
+      "choose_group": "Choose a start date and schedule",
+      "starts": "Starts {date}",
+      "seats_left": "{count} seats",
+      "reserve_cta": "Reserve my seat",
+      "submitted_title": "Seat reserved in {course}!",
+      "submitted_body": "We're validating your payment. You'll get a confirmation email and your new enrollment will appear in the portal."
     },
     "documents": {
       "title": "Documents",
@@ -146,7 +275,12 @@
       "empty_body": "Your certificates and records will appear here once they're ready.",
       "issued_on": "Issued on {date}",
       "pending_note": "It will be generated automatically. Check back soon.",
-      "locked_note": "It will be available once you complete the course."
+      "locked_note": "It will be available once you complete the course.",
+      "locked_cert_note": "Issued when you complete the course with a minimum grade of 14.",
+      "locked_cert_exam_note": "Requires completing the course with a minimum grade of 14 and passing the certification exam (requested under Requests).",
+      "rules_note": "The completion certificate is free and issued within 25 business days of the course ending. It requires a minimum grade of 14; whoever skips the final exam (DA) doesn't receive it.",
+      "constancia_note": "Need an enrollment certificate? It's a paid request.",
+      "constancia_cta": "Request it under Requests"
     },
     "profile": {
       "title": "My profile",

@@ -64,6 +64,8 @@ export default async function PortalLayout({
   const navItems: NavItem[] = [
     { href: '/portal', label: t('nav.dashboard'), icon: 'home' },
     { href: '/portal/courses', label: t('nav.courses'), icon: 'courses' },
+    { href: '/portal/payments', label: t('nav.payments'), icon: 'card' },
+    { href: '/portal/requests', label: t('nav.requests'), icon: 'clipboard' },
     { href: '/portal/enrollment', label: t('nav.enrollments'), icon: 'enrollment' },
     { href: '/portal/documents', label: t('nav.documents'), icon: 'documents' },
     { href: '/portal/profile', label: t('nav.profile'), icon: 'profile' },

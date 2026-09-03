@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { Link } from '@/i18n/navigation'
 import { getPortalSession } from '@/lib/portal/mock-data'
 import { formatDate, formatMoney } from '@/lib/portal/format'
 import type { Locale, PaymentStatus } from '@/lib/portal/types'
@@ -78,6 +79,9 @@ export default async function EnrollmentPage({
                     <span className="font-mono text-xs">{e.code}</span>
                   </Field>
                   <Field label={t('enrollments.plan_label')}>{e.plan.name}</Field>
+                  <Field label={t('enrollments.billing_label')}>
+                    {t(`billing_mode.${e.billingMode}`)}
+                  </Field>
                   <Field label={t('enrollments.price_label')}>
                     {formatMoney(e.payment.amountCents, e.payment.currency, locale)}
                   </Field>
@@ -126,6 +130,54 @@ export default async function EnrollmentPage({
                     </p>
                   )}
                 </div>
+
+                {/* Monthly months — prepaid module by module, never a debt
+                    (CLAUDE.md §1). The unpaid row links to the payments page. */}
+                {e.monthly !== null && (
+                  <div className="mt-4 rounded-xl border border-line p-4">
+                    <p className="text-sm font-semibold text-ink">
+                      {t('enrollments.monthly_title')}
+                    </p>
+                    <ul className="mt-3 flex flex-col gap-2">
+                      {e.monthly.payments.map((mp) => {
+                        const moduleName =
+                          e.modules.find((m) => m.id === mp.moduleId)?.name ?? ''
+                        return (
+                          <li
+                            key={mp.moduleId}
+                            className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 text-sm"
+                          >
+                            <span className="min-w-0">
+                              <span className="font-medium text-ink">
+                                {moduleName}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {' · '}
+                                {t('enrollments.month_due', {
+                                  date: formatDate(mp.dueDate, locale),
+                                })}
+                              </span>
+                            </span>
+                            {mp.payment === null ? (
+                              <Link
+                                href="/portal/payments"
+                                className="inline-flex items-center gap-1.5 text-sm font-semibold text-red-600 transition hover:text-red-700"
+                              >
+                                <Icon name="alert" size={14} />
+                                {t('enrollments.month_pay_cta')}
+                              </Link>
+                            ) : (
+                              <StatusBadge
+                                tone={paymentTone[mp.payment.status]}
+                                label={t(`payment_status.${mp.payment.status}`)}
+                              />
+                            )}
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  </div>
+                )}
 
                 {note && (
                   <p
