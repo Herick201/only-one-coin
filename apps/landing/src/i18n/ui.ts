@@ -254,14 +254,16 @@ export const content = {
       w3: "desde",
       price: "S/1.00",
       priceUnit: "por sesión",
-      worldwide: "Estudia desde cualquier parte del mundo",
       subHtml:
         '¡Abierto para <strong>TODAS LAS EDADES</strong><br />desde los <span class="accent">6 años</span> en adelante!',
       ctaEnroll: "MATRICÚLATE YA",
       ctaCourses: "Ver cursos",
       imgAlt: "Estudiantes de Only One Coin",
-      badgeHtml:
-        "Matricúlate hoy y accede <strong>GRATIS</strong> a nuestros talleres de Excel, Emprendimiento, Liderazgo y Quechua.",
+      features: [
+        { title: "S/1", text: "Por sesión" },
+        { title: "+ Idiomas", text: "Para elegir" },
+        { title: "100% online", text: "Desde cualquier lugar" },
+      ],
     },
     why: {
       eyebrow: "Only One Coin",
@@ -324,6 +326,8 @@ export const content = {
       viewCourse: "Ver este curso",
       orChoose: "O elige el idioma que quieres aprender:",
       allCourses: "Ver todos los cursos",
+      prev: "Idioma anterior",
+      next: "Siguiente idioma",
     },
     cta: {
       titlePre: "¿Tienes alguna ",
@@ -729,14 +733,16 @@ export const content = {
       w3: "from",
       price: "S/1.00",
       priceUnit: "per session",
-      worldwide: "Study from anywhere in the world",
       subHtml:
         'Open to <strong>ALL AGES</strong><br />from <span class="accent">6 years old</span> and up!',
       ctaEnroll: "ENROLL NOW",
       ctaCourses: "View courses",
       imgAlt: "Only One Coin students",
-      badgeHtml:
-        "Enroll today and get <strong>FREE</strong> access to our Excel, Entrepreneurship, Leadership and Quechua workshops.",
+      features: [
+        { title: "S/1", text: "Per session" },
+        { title: "+ Languages", text: "To choose from" },
+        { title: "100% online", text: "From anywhere" },
+      ],
     },
     why: {
       eyebrow: "Only One Coin",
@@ -799,6 +805,8 @@ export const content = {
       viewCourse: "View this course",
       orChoose: "Or choose the language you want to learn:",
       allCourses: "See all courses",
+      prev: "Previous language",
+      next: "Next language",
     },
     cta: {
       titlePre: "Have a ",
@@ -1199,14 +1207,16 @@ export const content = {
       w3: "a partir de",
       price: "S/1,00",
       priceUnit: "por sessão",
-      worldwide: "Estude de qualquer lugar do mundo",
       subHtml:
         'Aberto para <strong>TODAS AS IDADES</strong><br />a partir dos <span class="accent">6 anos</span>!',
       ctaEnroll: "MATRICULE-SE JÁ",
       ctaCourses: "Ver cursos",
       imgAlt: "Estudantes da Only One Coin",
-      badgeHtml:
-        "Matricule-se hoje e tenha acesso <strong>GRÁTIS</strong> às nossas oficinas de Excel, Empreendedorismo, Liderança e Quíchua.",
+      features: [
+        { title: "S/1", text: "Por sessão" },
+        { title: "+ Idiomas", text: "Para escolher" },
+        { title: "100% online", text: "De qualquer lugar" },
+      ],
     },
     why: {
       eyebrow: "Only One Coin",
@@ -1269,6 +1279,8 @@ export const content = {
       viewCourse: "Ver este curso",
       orChoose: "Ou escolha o idioma que quer aprender:",
       allCourses: "Ver todos os cursos",
+      prev: "Idioma anterior",
+      next: "Próximo idioma",
     },
     cta: {
       titlePre: "Tem alguma ",
