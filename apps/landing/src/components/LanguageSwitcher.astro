@@ -129,4 +129,37 @@ const entries = Object.entries(languages) as [Lang, string][];
   .lang-link .label {
     font-size: 0.9rem;
   }
+
+  /* Celular: o seletor acompanha a redução do header. */
+  @media (max-width: 620px) {
+    summary {
+      gap: 4px;
+      padding: 5px 8px;
+      font-size: 0.6rem;
+      border-width: 1.2px;
+    }
+    .globe {
+      width: 12px;
+      height: 12px;
+    }
+    .chevron {
+      width: 10px;
+      height: 10px;
+    }
+    .lang-menu {
+      min-width: 132px;
+      border-radius: 10px;
+    }
+    .lang-link {
+      padding: 7px 9px;
+      gap: 7px;
+    }
+    .lang-link .code {
+      width: 20px;
+      font-size: 0.6rem;
+    }
+    .lang-link .label {
+      font-size: 0.72rem;
+    }
+  }
 </style>

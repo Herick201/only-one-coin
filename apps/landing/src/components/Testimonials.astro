@@ -271,22 +271,73 @@ const ts = t.testimonials;
       flex-basis: 100%;
     }
   }
-  @media (max-width: 620px) {
-    .testi-card {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-    .avatar {
-      width: 100%;
-      min-height: 90px;
-      align-self: auto;
+  @media (max-width: 900px) {
+    .testi-lead {
+      margin-top: 6px;
+      font-size: 0.9rem;
     }
     .testi-carousel {
-      gap: 8px;
+      margin-top: 22px;
+      gap: 10px;
     }
     .t-arrow {
-      width: 44px;
-      height: 44px;
+      width: 34px;
+      height: 34px;
+    }
+    .t-arrow svg {
+      width: 15px;
+      height: 15px;
+    }
+  }
+
+  /* Celular: o card segue horizontal — retrato à esquerda, citação à direita,
+     setas dos dois lados. Empilhar virava um bloco alto demais. */
+  @media (max-width: 620px) {
+    .testi-lead {
+      margin-top: 4px;
+      font-size: 0.62rem;
+    }
+    .testi-carousel {
+      margin-top: 12px;
+      gap: 6px;
+    }
+    .t-arrow {
+      width: 22px;
+      height: 22px;
+      border-width: 1.2px;
+    }
+    .t-arrow svg {
+      width: 10px;
+      height: 10px;
+    }
+    .testi-card {
+      padding: 10px;
+      gap: 9px;
+      border-radius: 10px;
+      border-width: 1px;
+    }
+    .avatar {
+      width: 62px;
+      min-height: 54px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+    }
+    .testi-body {
+      gap: 6px;
+    }
+    blockquote {
+      font-size: 0.56rem;
+      line-height: 1.5;
+    }
+    .name {
+      font-size: 0.56rem;
+    }
+    .role {
+      font-size: 0.46rem;
+    }
+    .note {
+      margin-top: 10px;
+      font-size: 0.5rem;
     }
   }
 </style>

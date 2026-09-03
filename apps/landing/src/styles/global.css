@@ -224,8 +224,61 @@ img {
   transform: scale(1.08) rotate(-6deg);
 }
 
-@media (max-width: 720px) {
+/* Mobile = a mesma vista web, reduzida.
+   Decisão 03/09: no celular a landing não re-empilha em coluna única — cada
+   seção mantém a composição em colunas do desktop e só encolhe tipografia,
+   espaçamento e raio. Os dois degraus abaixo são o "zoom" dessa redução;
+   cada componente ajusta o que é seu dentro dos mesmos dois breakpoints. */
+@media (max-width: 900px) {
+  .container {
+    padding-inline: 18px;
+  }
   .section {
-    padding-block: 60px;
+    padding-block: 52px;
+  }
+  .section-title {
+    font-size: 1.5rem;
+  }
+  .btn {
+    padding: 10px 18px;
+    font-size: 0.82rem;
+    gap: 7px;
+  }
+  .link-quiet {
+    font-size: 0.82rem;
+  }
+}
+
+@media (max-width: 620px) {
+  .container {
+    padding-inline: 12px;
+  }
+  .section {
+    padding-block: 30px;
+  }
+  .section-title {
+    font-size: 1.05rem;
+  }
+  .btn {
+    padding: 7px 13px;
+    font-size: 0.62rem;
+    gap: 5px;
+    border-width: 1.5px;
+  }
+  .link-quiet {
+    font-size: 0.62rem;
+    border-bottom-width: 1.5px;
+    padding-bottom: 1px;
+  }
+  .wa-float {
+    width: 40px;
+    height: 40px;
+    right: 12px;
+    bottom: 12px;
+  }
+  .wa-float :global(svg),
+  .wa-float svg {
+    width: 22px;
+    height: 22px;
   }
 }

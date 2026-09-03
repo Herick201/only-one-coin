@@ -390,7 +390,10 @@ const programs = [
     letter-spacing: 0.02em;
     white-space: nowrap;
   }
-  @media (max-width: 1080px) {
+  /* Some só na faixa em que a nav ainda está aberta e o espaço aperta.
+     Abaixo de 900px a nav vira hambúrguer e a matrícula volta ao header,
+     compacta — é o desenho da vista mobile (hambúrguer + botão amarelo). */
+  @media (max-width: 1080px) and (min-width: 901px) {
     .enroll-btn {
       display: none;
     }
@@ -545,6 +548,60 @@ const programs = [
     }
     .menu-toggle:checked ~ .header-inner .burger span:nth-child(3) {
       transform: translateY(-7.4px) rotate(-45deg);
+    }
+    .header-inner {
+      height: 64px;
+    }
+    .enroll-btn {
+      padding: 9px 15px;
+      font-size: 0.74rem;
+    }
+  }
+
+  /* Celular: a barra encolhe junto com o resto da página. */
+  @media (max-width: 620px) {
+    .header-inner {
+      height: 46px;
+      padding-inline: 12px;
+      gap: 8px;
+    }
+    .brand img {
+      height: 19px;
+    }
+    .enroll-btn {
+      padding: 6px 10px;
+      font-size: 0.56rem;
+      border-radius: 999px;
+      border-width: 1.5px;
+    }
+    .burger {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      gap: 3.4px;
+      border-width: 1.2px;
+    }
+    .burger span {
+      width: 13px;
+      height: 1.7px;
+    }
+    .menu-toggle:checked ~ .header-inner .burger span:nth-child(1) {
+      transform: translateY(5.1px) rotate(45deg);
+    }
+    .menu-toggle:checked ~ .header-inner .burger span:nth-child(3) {
+      transform: translateY(-5.1px) rotate(-45deg);
+    }
+    .mobile-nav {
+      padding: 10px 14px 16px;
+    }
+    .mobile-nav > a,
+    .m-dd > summary {
+      padding: 9px 4px;
+      font-size: 0.82rem;
+    }
+    .m-dd-panel a {
+      padding: 6px 4px;
+      font-size: 0.74rem;
     }
   }
 </style>

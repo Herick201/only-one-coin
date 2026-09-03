@@ -114,9 +114,90 @@ const courses = languageSlugs.map((slug) => ({
   .ci-card:hover .ci-link svg {
     transform: translateX(5px);
   }
-  @media (max-width: 480px) {
+  /* Mobile: a grade de idiomas mantém as quatro colunas da vista web. Na
+     largura de um cartão de celular a bandeira sobe para cima do nome — em
+     linha, o par não caberia. */
+  @media (max-width: 900px) {
+    .ci-lead {
+      margin-top: 8px;
+      font-size: 0.9rem;
+      max-width: none;
+    }
     .ci-grid {
-      grid-template-columns: 1fr;
+      margin-top: 24px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .ci-card {
+      padding: 16px 12px;
+      gap: 9px;
+      border-radius: 14px;
+      text-align: center;
+    }
+    .ci-badge {
+      align-self: center;
+      font-size: 0.58rem;
+      padding: 4px 8px;
+    }
+    .ci-card h2 {
+      font-size: 1rem;
+    }
+    .ci-name {
+      flex-direction: column;
+      gap: 7px;
+    }
+    .ci-name :global(.lang-flag) {
+      width: 26px;
+      height: 26px;
+    }
+    .ci-link {
+      justify-content: center;
+      font-size: 0.74rem;
+    }
+    .ci-link svg {
+      width: 12px;
+      height: 12px;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .ci-lead {
+      margin-top: 4px;
+      font-size: 0.62rem;
+    }
+    .ci-grid {
+      margin-top: 13px;
+      gap: 7px;
+    }
+    .ci-card {
+      padding: 9px 5px;
+      gap: 5px;
+      border-radius: 9px;
+      border-width: 1px;
+    }
+    .ci-badge {
+      font-size: 0.4rem;
+      padding: 2px 5px;
+      line-height: 1.3;
+    }
+    .ci-card h2 {
+      font-size: 0.62rem;
+    }
+    .ci-name {
+      gap: 4px;
+    }
+    .ci-name :global(.lang-flag) {
+      width: 17px;
+      height: 17px;
+      border-width: 1px;
+    }
+    .ci-link {
+      gap: 3px;
+      font-size: 0.46rem;
+    }
+    .ci-link svg {
+      width: 8px;
+      height: 8px;
     }
   }
 </style>

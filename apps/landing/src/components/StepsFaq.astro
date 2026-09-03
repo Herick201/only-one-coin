@@ -200,20 +200,104 @@ const faqPreview = t.faq.items.slice(0, 4);
   .faq-all:hover svg {
     transform: translateX(4px);
   }
+  /* Mobile: os passos e o FAQ empilham (é assim na vista mobile), mas os três
+     passos continuam lado a lado, com o botão de matrícula fechando a linha —
+     nunca uma lista vertical de passos. */
   @media (max-width: 900px) {
     .sf-grid {
       grid-template-columns: 1fr;
-      gap: 44px;
+      gap: 28px;
     }
-  }
-  @media (max-width: 620px) {
+    .sf-lead {
+      font-size: 0.9rem;
+    }
+    .steps-row {
+      margin-top: 18px;
+      flex-wrap: nowrap;
+      gap: 14px;
+    }
     .steps-list {
-      flex-direction: column;
+      flex: 1 1 0;
+      min-width: 0;
+      gap: 12px;
     }
     .step {
       flex-direction: row;
       align-items: center;
+      gap: 9px;
+    }
+    .step-num {
+      width: 34px;
+      height: 34px;
+      font-size: 0.82rem;
+    }
+    .step-txt strong {
+      font-size: 0.8rem;
+    }
+    .step-txt span {
+      font-size: 0.7rem;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .sf-grid {
       gap: 16px;
+    }
+    .sf-lead {
+      margin-top: 5px;
+      font-size: 0.62rem;
+    }
+    .steps-row {
+      margin-top: 11px;
+      gap: 8px;
+    }
+    .steps-list {
+      gap: 7px;
+    }
+    .step {
+      gap: 5px;
+    }
+    .step-num {
+      width: 21px;
+      height: 21px;
+      font-size: 0.52rem;
+    }
+    .step-txt {
+      min-width: 0;
+    }
+    .step-txt strong {
+      font-size: 0.5rem;
+    }
+    .step-txt span {
+      font-size: 0.44rem;
+    }
+    .sf-cta {
+      gap: 5px;
+    }
+    .sf-cta svg {
+      width: 10px;
+      height: 10px;
+    }
+    .sf-faq-title {
+      font-size: 0.88rem;
+      margin-bottom: 8px;
+    }
+    .faq-list {
+      gap: 5px;
+    }
+    .faq-item {
+      border-radius: 8px;
+      border-width: 1px;
+      padding: 0 9px;
+    }
+    .faq-item summary {
+      padding: 7px 0;
+      gap: 7px;
+      font-size: 0.56rem;
+    }
+    .faq-item summary svg {
+      width: 11px;
+      height: 11px;
     }
   }
   @media (prefers-reduced-motion: reduce) {

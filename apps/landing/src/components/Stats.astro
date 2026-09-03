@@ -111,17 +111,37 @@ const s = t.stats;
     font-size: 0.95rem;
     color: rgba(255, 255, 255, 0.9);
   }
-  @media (max-width: 640px) {
+  /* Mobile: a mesma faixa da vista web — os números continuam lado a lado,
+     só com o mínimo de coluna menor para caberem todos numa linha. */
+  @media (max-width: 900px) {
     .stats-inner {
-      grid-template-columns: 1fr;
-      gap: 26px;
+      grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+      gap: 12px;
+      padding: 20px 16px;
+    }
+    .stat-label {
+      margin-top: 5px;
+      font-size: 0.72rem;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .stats-inner {
+      grid-template-columns: repeat(auto-fit, minmax(62px, 1fr));
+      gap: 7px;
+      padding: 13px 10px;
+      border-radius: 14px;
     }
     .stat:not(:last-child)::after {
-      display: none;
+      right: -4px;
     }
-    .stat:not(:last-child) {
-      padding-bottom: 26px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+    .stat-value {
+      font-size: 1.15rem;
+    }
+    .stat-label {
+      margin-top: 3px;
+      font-size: 0.46rem;
+      line-height: 1.25;
     }
   }
 </style>

@@ -172,4 +172,87 @@ const faqJsonLd = {
       transition: none;
     }
   }
+
+  /* Mobile: mesma página web, reduzida. */
+  @media (max-width: 900px) {
+    .faq-lead {
+      margin-top: 8px;
+      font-size: 0.9rem;
+    }
+    .faq-list {
+      margin-top: 22px;
+      gap: 9px;
+    }
+    .faq-item summary {
+      padding: 13px 15px;
+      gap: 10px;
+    }
+    .faq-answer {
+      padding: 0 15px 14px;
+      font-size: 0.82rem;
+    }
+    .faq-cta {
+      margin-top: 28px;
+      padding: 22px 20px;
+    }
+    .faq-cta-inner {
+      flex-wrap: nowrap;
+      gap: 14px;
+    }
+    .faq-cta-copy {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+    .faq-cta p {
+      font-size: 0.8rem;
+      max-width: none;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .faq-lead {
+      margin-top: 5px;
+      font-size: 0.62rem;
+    }
+    .faq-list {
+      margin-top: 13px;
+      gap: 5px;
+    }
+    .faq-item {
+      border-radius: 9px;
+      border-width: 1px;
+    }
+    /* Prosa não encolhe como um bloco de cards: a página de perguntas é uma
+       coluna só no desktop também, então aqui a redução para no tamanho em
+       que a resposta ainda se lê corrido. */
+    .faq-item summary {
+      padding: 10px 12px;
+      gap: 8px;
+      font-size: 0.74rem;
+    }
+    .faq-plus {
+      width: 14px;
+      height: 14px;
+    }
+    .faq-answer {
+      padding: 0 12px 11px;
+      font-size: 0.68rem;
+      line-height: 1.55;
+    }
+    .faq-cta {
+      margin-top: 17px;
+      padding: 13px 12px;
+      border-radius: 14px;
+    }
+    .faq-cta-inner {
+      gap: 9px;
+    }
+    .faq-cta h2 {
+      font-size: 0.78rem;
+      margin-bottom: 3px;
+    }
+    .faq-cta p {
+      font-size: 0.5rem;
+    }
+  }
 </style>

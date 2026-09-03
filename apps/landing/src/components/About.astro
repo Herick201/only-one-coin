@@ -567,15 +567,127 @@ const valueIcons = [
     margin-top: 24px;
   }
 
+  /* Mobile: as grades da vista web ficam — foto ao lado do texto, missão e
+     visão lado a lado, os quatro valores numa fileira, o parceiro ao lado da
+     sua cópia. As `auto-fit` viravam uma coluna só abaixo de ~700px, então
+     aqui o número de colunas é declarado. */
+  @media (max-width: 900px) {
+    .intro-grid,
+    .why-grid,
+    .mv-grid,
+    .partner-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+    }
+    .value-cards {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-top: 22px;
+      gap: 12px;
+    }
+    .lead {
+      font-size: 0.9rem;
+    }
+    .why-copy h2 {
+      font-size: 1.4rem;
+    }
+    .mv-card {
+      padding: 20px 16px;
+    }
+    .mv-card h2 {
+      font-size: 1rem;
+    }
+    .value-card {
+      padding: 16px 12px;
+    }
+    .value-card h3 {
+      font-size: 0.9rem;
+    }
+    .partner-grid {
+      padding: 22px;
+    }
+    .partner-logo {
+      padding: 18px;
+    }
+  }
+
   @media (max-width: 620px) {
     .photo-inset {
       display: none;
     }
     .values-banner {
-      aspect-ratio: 4 / 3;
+      aspect-ratio: 21 / 8;
+    }
+    .intro-grid,
+    .why-grid,
+    .mv-grid,
+    .partner-grid {
+      gap: 12px;
+    }
+    .eyebrow {
+      margin-bottom: 7px;
+      padding: 3px 8px;
+      font-size: 0.46rem;
+    }
+    .lead {
+      font-size: 0.62rem;
+    }
+    .intro-copy p,
+    .why-copy p,
+    .values-head p,
+    .partner-copy p {
+      font-size: 0.56rem;
+      line-height: 1.5;
+    }
+    .why-copy h2 {
+      font-size: 0.9rem;
+    }
+    .mv-card {
+      padding: 11px 9px;
+      border-radius: 12px;
+    }
+    .mv-icon {
+      width: 26px;
+      height: 26px;
+    }
+    .mv-icon :global(svg) {
+      width: 14px;
+      height: 14px;
+    }
+    .mv-card h2 {
+      font-size: 0.68rem;
+    }
+    .mv-card p {
+      font-size: 0.5rem;
+      line-height: 1.45;
+    }
+    .value-cards {
+      margin-top: 13px;
+      gap: 7px;
+    }
+    .value-card {
+      padding: 9px 7px;
+      border-radius: 10px;
+    }
+    .value-icon {
+      width: 22px;
+      height: 22px;
+    }
+    .value-icon :global(svg) {
+      width: 12px;
+      height: 12px;
+    }
+    .value-card h3 {
+      font-size: 0.58rem;
+    }
+    .value-card p {
+      font-size: 0.44rem;
+      line-height: 1.35;
     }
     .partner-grid {
-      padding: 24px;
+      padding: 12px;
+    }
+    .partner-logo {
+      padding: 10px;
     }
   }
 </style>

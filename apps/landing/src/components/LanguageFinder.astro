@@ -480,59 +480,111 @@ const clientConfig = {
     text-decoration: underline;
   }
 
-  /* Sem espaço pra órbita: o universo colapsa em card + chips com bandeira,
-     o layout que a tela estreita já conhecia. */
-  @media (max-width: 760px) {
-    .universe {
-      width: auto;
-      aspect-ratio: auto;
-      margin-top: 32px;
-      animation: none;
+  /* Mobile: o universo orbital fica (decisão de 03/09) — no celular ele não
+     se desmonta em lista, só encolhe: mesma órbita, satélites e cartão
+     central da vista web, em escala menor. */
+  @media (max-width: 900px) {
+    .finder-lead {
+      margin-top: 8px;
+      font-size: 0.9rem;
     }
-    .orbit-ring,
-    .spark {
-      display: none;
+    .universe {
+      --u: min(560px, 92vw);
+      --r: calc(var(--u) / 2 - 38px);
+      margin-top: 26px;
     }
     .finder-reco {
-      position: static;
-      transform: none;
-      width: auto;
-      aspect-ratio: auto;
-      border-radius: var(--radius-lg);
-      padding: 38px 34px;
-      animation: none;
-      align-items: flex-start;
-      text-align: left;
+      padding: 26px;
     }
-    .finder-reco::after {
-      display: none;
-    }
-    .reco-id {
-      flex-direction: row;
-      align-items: center;
-    }
-    .orbit {
-      position: static;
-      margin-top: 22px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .sat {
-      position: static;
-      width: auto;
-      height: auto;
-      transform: none;
-    }
-    .sat-center {
-      transform: none;
+    .reco-flag :global(.lang-flag) {
+      width: 34px;
+      height: 34px;
     }
     .sat-inner {
-      box-shadow: none;
+      padding: 5px 11px 5px 6px;
+      font-size: 0.8rem;
+    }
+    .sat :global(.lang-flag) {
+      width: 20px;
+      height: 20px;
     }
     .finder-footer {
-      margin-top: 24px;
-      text-align: left;
+      margin-top: 22px;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .finder-lead {
+      margin-top: 4px;
+      font-size: 0.62rem;
+      max-width: none;
+    }
+    .universe {
+      --u: min(560px, 90vw);
+      --r: calc(var(--u) / 2 - 42px);
+      margin-top: 14px;
+    }
+    .spark-a {
+      font-size: 0.8rem;
+    }
+    .spark-b {
+      font-size: 0.6rem;
+    }
+    .finder-reco {
+      width: min(58%, 392px);
+      padding: 14px;
+    }
+    .finder-reco::after {
+      width: 44px;
+      height: 44px;
+    }
+    .reco-arrow {
+      width: 19px;
+      height: 19px;
+    }
+    .reco-arrow svg {
+      width: 10px;
+      height: 10px;
+    }
+    .reco-flag :global(.lang-flag) {
+      width: 22px;
+      height: 22px;
+    }
+    .reco-lang {
+      font-size: 0.9rem;
+    }
+    .reco-secondary {
+      margin-top: 6px;
+      font-size: 0.46rem;
+    }
+    .from {
+      font-size: 0.46rem;
+    }
+    .reco-cta {
+      margin-top: 8px;
+    }
+    .reco-cta svg {
+      width: 10px;
+      height: 10px;
+    }
+    .sat-inner {
+      padding: 3px 7px 3px 4px;
+      font-size: 0.48rem;
+      gap: 4px;
+    }
+    .sat :global(.lang-flag) {
+      width: 13px;
+      height: 13px;
+    }
+    .finder-footer {
+      margin-top: 12px;
+    }
+    .choose-label {
+      margin-bottom: 5px;
+      font-size: 0.5rem;
+    }
+    .all-link {
+      font-size: 0.62rem;
     }
   }
   @media (prefers-reduced-motion: reduce) {

@@ -113,12 +113,64 @@ const c = t.cta;
     width: 17px;
     height: 17px;
   }
-  @media (max-width: 700px) {
-    .cta-photo {
-      display: none;
+  /* Mobile: a faixa continua horizontal, com a foto sangrando à esquerda —
+     é a mesma composição da vista web, só menor. */
+  @media (max-width: 900px) {
+    .cta-inner {
+      flex-wrap: nowrap;
+      gap: 16px;
+      padding-block: 20px;
+      padding-left: calc(min(24%, 320px) + 18px);
+      padding-right: 18px;
+    }
+    .cta-copy {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+    .cta-copy p {
+      font-size: 0.8rem;
+    }
+    .cta-price strong {
+      font-size: 1.4rem;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .cta {
+      margin-top: 14px;
     }
     .cta-inner {
-      padding: 30px 24px;
+      gap: 8px;
+      padding-block: 12px;
+      padding-left: calc(min(20%, 320px) + 10px);
+      padding-right: 12px;
+    }
+    .cta-photo {
+      width: min(20%, 320px);
+    }
+    .cta-title {
+      font-size: 0.7rem;
+      line-height: 1.15;
+    }
+    .cta-copy p {
+      margin-top: 2px;
+      font-size: 0.5rem;
+    }
+    .cta-price {
+      font-size: 0.44rem;
+      line-height: 1.2;
+    }
+    .cta-price strong {
+      font-size: 0.86rem;
+    }
+    .cta-btn {
+      gap: 4px;
+      padding: 6px 11px;
+      font-size: 0.52rem;
+    }
+    .cta-btn svg {
+      width: 9px;
+      height: 9px;
     }
   }
 </style>

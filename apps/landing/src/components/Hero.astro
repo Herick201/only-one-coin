@@ -22,6 +22,7 @@ const featureIcons = [
     <span class="blob blob-b" aria-hidden="true"></span>
 
     <div class="hero-grid">
+    <div class="hero-left">
     <div class="hero-copy">
       <span class="hero-badge">{h.badge}</span>
       <h1>
@@ -41,6 +42,7 @@ const featureIcons = [
         </a>
         <a href={withLang(lang, "/courses")} class="btn btn-ghost">{h.ctaCourses}</a>
       </div>
+    </div>
       <ul class="hero-features">
         {
           h.features.map((f, i) => (
@@ -149,7 +151,7 @@ const featureIcons = [
     grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.98fr);
     align-items: stretch;
   }
-  .hero-copy {
+  .hero-left {
     padding-block: 40px 44px;
     padding-left: max(24px, calc((100% - var(--maxw)) / 2 + 24px));
     padding-right: 44px;
@@ -356,54 +358,170 @@ const featureIcons = [
     opacity: 0.9;
   }
 
+  /* Mobile: mesma vista web, reduzida. As duas colunas ficam — texto à
+     esquerda, foto à direita — e a faixa de destaques desce para uma linha
+     que atravessa as duas, como no desenho da vista mobile. */
   @media (max-width: 900px) {
-    /* No mobile o mockup não tem card: o hero volta a ser full-width,
-       sem margem nem canto arredondado. */
-    .hero {
-      padding: 0;
-    }
     .hero-card {
       border-radius: 0;
       box-shadow: none;
+    }
+    .hero-left {
+      display: contents;
+    }
+    .hero-copy {
+      grid-column: 1;
+      grid-row: 1;
+      align-self: center;
+      padding: 26px 16px 20px 18px;
+    }
+    .hero-media {
+      grid-column: 2;
+      grid-row: 1;
+      min-height: 260px;
+    }
+    .hero-features {
+      grid-column: 1 / -1;
+      grid-row: 2;
+      margin: 0;
+      padding: 0 18px 22px;
+      z-index: 2;
     }
     .blob-a,
     .blob-b {
       display: none;
     }
-    .hero-grid {
-      grid-template-columns: 1fr;
+    h1 {
+      font-size: 1.9rem;
     }
-    .hero-copy {
-      padding: 44px 24px 40px;
+    .hero-price-line {
+      margin-top: 14px;
+      font-size: 1rem;
     }
     .hero-sub {
+      font-size: 0.86rem;
       max-width: none;
     }
-    .hero-media {
-      min-height: 300px;
+    .hero-actions {
+      margin-top: 18px;
+      gap: 10px;
     }
-    /* Em coluna única a emenda é horizontal: o degradê desce do topo. */
-    .hero-media::before {
-      left: 0;
-      right: 0;
-      bottom: auto;
-      width: auto;
-      height: 90px;
-      background: linear-gradient(180deg, var(--sky-soft), transparent);
+    .btn-enroll {
+      font-size: 0.82rem;
+      padding: 11px 20px;
+    }
+    .btn-enroll svg {
+      width: 14px;
+      height: 14px;
     }
     .photo-caption {
-      top: 24px;
-      right: 22px;
+      top: 22px;
+      right: 16px;
       font-size: 1.5rem;
     }
-    .hero-features li + li {
-      border-left: 0;
-      margin-left: 0;
-      padding-left: 0;
-      margin-right: 26px;
+    .caption-swoosh {
+      width: 60px;
+      margin-top: 6px;
+    }
+    .corner-blob {
+      width: 150px;
+      height: 150px;
+      right: -46px;
+      bottom: -58px;
+    }
+  }
+
+  /* Celular: a mesma composição, no menor tamanho em que ela ainda se lê. */
+  @media (max-width: 620px) {
+    .hero-copy {
+      padding: 14px 8px 10px 12px;
+    }
+    .hero-media {
+      min-height: 152px;
+    }
+    .hero-media::before {
+      width: 44px;
     }
     .hero-features {
-      gap: 14px 26px;
+      padding: 0 12px 14px;
+      gap: 6px 0;
+    }
+    .hero-badge {
+      font-size: 0.46rem;
+      letter-spacing: 0.24em;
+      margin-bottom: 6px;
+    }
+    h1 {
+      font-size: 1.28rem;
+      line-height: 1.05;
+    }
+    .hero-price-line {
+      margin-top: 8px;
+      font-size: 0.6rem;
+      gap: 4px;
+    }
+    .price-pill {
+      padding: 0 6px;
+      border-radius: 6px;
+      box-shadow: 0 6px 14px -8px rgba(245, 166, 35, 0.7);
+    }
+    .hero-sub {
+      margin-top: 6px;
+      font-size: 0.6rem;
+    }
+    .hero-actions {
+      margin-top: 12px;
+      gap: 7px;
+    }
+    .btn-enroll {
+      font-size: 0.62rem;
+      padding: 7px 13px;
+      gap: 5px;
+    }
+    .btn-enroll svg {
+      width: 10px;
+      height: 10px;
+    }
+    .hero-features li {
+      gap: 6px;
+    }
+    .hero-features li + li {
+      margin-left: 12px;
+      padding-left: 12px;
+      border-left-width: 1px;
+    }
+    .feat-icon {
+      width: 24px;
+      height: 24px;
+    }
+    .feat-icon :global(svg) {
+      width: 13px;
+      height: 13px;
+    }
+    .feat-txt strong {
+      font-size: 0.62rem;
+    }
+    .feat-txt span {
+      font-size: 0.5rem;
+    }
+    .photo-caption {
+      top: 12px;
+      right: 9px;
+      font-size: 0.92rem;
+    }
+    .caption-swoosh {
+      width: 34px;
+      margin-top: 2px;
+      stroke-width: 6;
+    }
+    /* O círculo amarelo fica no canto da foto, atrás da faixa de destaques —
+       na vista mobile ele é um detalhe, não uma mancha sobre o texto. */
+    .corner-blob {
+      width: 76px;
+      height: 76px;
+      right: -26px;
+      bottom: -30px;
+      z-index: 0;
     }
   }
 </style>

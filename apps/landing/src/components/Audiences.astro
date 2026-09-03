@@ -157,4 +157,70 @@ const icons = [
       transform: none;
     }
   }
+
+  /* Mobile: as quatro portas continuam em grade 2x2, como na vista web —
+     nunca uma coluna só de cards gigantes. */
+  @media (max-width: 900px) {
+    .grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-top: 26px;
+      gap: 16px;
+    }
+    .aud-lead {
+      font-size: 0.9rem;
+      margin-top: 8px;
+    }
+    .aud-photo :global(img) {
+      height: 110px;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .grid {
+      margin-top: 14px;
+      gap: 9px;
+    }
+    .aud-lead {
+      font-size: 0.62rem;
+      margin-top: 4px;
+    }
+    .aud-card {
+      border-radius: 9px;
+      border-width: 1px;
+    }
+    .aud-photo :global(img) {
+      height: 62px;
+    }
+    .aud-icon {
+      left: 9px;
+      bottom: -13px;
+      width: 27px;
+      height: 27px;
+      border-width: 2px;
+    }
+    .aud-icon :global(svg) {
+      width: 13px;
+      height: 13px;
+    }
+    .aud-body {
+      padding: 17px 10px 11px;
+      gap: 3px;
+    }
+    .aud-body h3 {
+      font-size: 0.72rem;
+    }
+    .aud-body p {
+      font-size: 0.56rem;
+      line-height: 1.4;
+    }
+    .aud-more {
+      padding-top: 6px;
+      gap: 4px;
+      font-size: 0.56rem;
+    }
+    .aud-more svg {
+      width: 9px;
+      height: 9px;
+    }
+  }
 </style>

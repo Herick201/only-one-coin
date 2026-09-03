@@ -289,6 +289,30 @@ monitor do lado.
 
 Detalhe e histórico da decisão: `docs/ARCHITECTURE.md` §7.
 
+### Layout da landing (`apps/landing`) — o celular mostra a vista web reduzida
+
+**Decisão 03/09/2026, a partir do desenho mobile do dono.** No site público, o
+celular **não re-empilha a página em coluna única**: cada seção mantém a
+composição em colunas da vista web e só encolhe tipografia, espaçamento e raio.
+Hero em duas colunas, públicos em 2×2, os cinco pilares numa fileira, propósito
+em três colunas, passos na horizontal, rodapé em cinco colunas.
+
+- Dois degraus de redução, os mesmos em todo componente: `@media (max-width: 900px)`
+  (tablet) e `@media (max-width: 620px)` (celular). Os tokens gerais — container,
+  `.section`, `.btn`, `.section-title` — vivem em `src/styles/global.css`; cada
+  componente ajusta o que é seu dentro desses dois breakpoints.
+- Grade com contagem declarada, não `auto-fit`: `auto-fit`/`minmax(240px, …)`
+  colapsa para uma coluna abaixo de ~700px, que é exatamente o que esta decisão
+  recusa. Onde a vista web tem N colunas, o mobile declara `repeat(N, minmax(0, 1fr))`.
+- **Consequência aceita:** em fileiras de quatro ou cinco cartões o texto cai
+  para 7–9px no celular. É o preço da fidelidade ao desenho — não é bug, e
+  "consertar" isso re-empilhando desfaz a decisão.
+- **Exceção:** prosa em coluna única (páginas legais, `InfoPage`, respostas do
+  FAQ) não encolhe até esse tamanho — no desktop ela já é uma coluna só, então
+  o celular mostra a mesma coisa refluída, em tamanho de leitura.
+- O universo orbital de idiomas fica no mobile (só reduzido), como já decidido —
+  não vira grade de bandeiras.
+
 ### Domínio e fila (`packages/domain`, `packages/queue`, `apps/api`)
 
 Regra de fronteira, vale pra qualquer contexto novo (não só `example`): `packages/domain` é DDD puro (portas e adaptadores) — nunca importa Fastify, provedor de banco ou Redis, só define a **interface** de repositório. A implementação concreta mora na infra de quem consome (`apps/api/src/infra/`). Detalhe de padrão (`BaseModel`/`BaseUseCase`, `RouteBuilder`, `container.ts`, entrypoints) está em `packages/domain/README.md` e `apps/api/README.md` — não duplicado aqui. Estrutura e dependência entre os pacotes: `docs/ARCHITECTURE.md` §1.

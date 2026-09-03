@@ -237,4 +237,137 @@ const icons = {
     font-size: 0.9rem;
     color: var(--text-muted);
   }
+
+  /* Mobile: os canais continuam em três colunas, como na vista web. */
+  @media (max-width: 900px) {
+    .contact {
+      padding-block: 34px 46px;
+    }
+    .contact-lead {
+      margin-top: 8px;
+      font-size: 0.9rem;
+    }
+    .wa-card {
+      margin-top: 24px;
+      padding: 22px 20px;
+    }
+    .wa-card-inner {
+      flex-wrap: nowrap;
+      gap: 14px;
+    }
+    .wa-card p {
+      font-size: 0.8rem;
+      max-width: none;
+    }
+    .channels {
+      margin-top: 16px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .channel {
+      padding: 16px 12px;
+      border-radius: 14px;
+    }
+    .channel-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 11px;
+      margin-bottom: 10px;
+    }
+    .channel-icon :global(svg) {
+      width: 17px;
+      height: 17px;
+    }
+    .channel h2 {
+      font-size: 0.86rem;
+      margin-bottom: 6px;
+    }
+    .channel ul,
+    .channel p {
+      gap: 5px;
+      font-size: 0.78rem;
+    }
+    .channel-link {
+      font-size: 0.7rem;
+    }
+    .channel-note {
+      margin-top: 6px;
+      font-size: 0.7rem;
+    }
+    .contact-org {
+      margin-top: 22px;
+      font-size: 0.72rem;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .contact {
+      padding-block: 20px 28px;
+    }
+    .eyebrow {
+      margin-bottom: 7px;
+      padding: 3px 8px;
+      font-size: 0.46rem;
+    }
+    .contact-lead {
+      margin-top: 5px;
+      font-size: 0.62rem;
+    }
+    .wa-card {
+      margin-top: 14px;
+      padding: 13px 12px;
+      border-radius: 14px;
+    }
+    .wa-card-inner {
+      gap: 9px;
+    }
+    .wa-card h2 {
+      font-size: 0.78rem;
+      margin-bottom: 3px;
+    }
+    .wa-card p {
+      font-size: 0.5rem;
+    }
+    .channels {
+      margin-top: 10px;
+      gap: 7px;
+    }
+    .channel {
+      padding: 9px 7px;
+      border-radius: 9px;
+      border-width: 1px;
+    }
+    .channel-icon {
+      width: 21px;
+      height: 21px;
+      border-radius: 7px;
+      margin-bottom: 6px;
+    }
+    .channel-icon :global(svg) {
+      width: 11px;
+      height: 11px;
+    }
+    .channel h2 {
+      font-size: 0.56rem;
+      margin-bottom: 4px;
+    }
+    .channel ul,
+    .channel p {
+      gap: 3px;
+      font-size: 0.5rem;
+      margin: 0 0 4px;
+    }
+    .channel-link {
+      font-size: 0.44rem;
+    }
+    .channel-note {
+      margin-top: 4px;
+      font-size: 0.44rem;
+      line-height: 1.35;
+    }
+    .contact-org {
+      margin-top: 13px;
+      font-size: 0.46rem;
+    }
+  }
 </style>

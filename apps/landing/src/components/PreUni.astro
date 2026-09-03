@@ -252,17 +252,99 @@ const temarioTabsCss = temario.groups
     0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.9; }
     50% { transform: scale(1.25) rotate(15deg); opacity: 1; }
   }
+  /* Mobile: o topo continua em duas colunas — texto e foto lado a lado —,
+     como na vista web. */
   @media (max-width: 900px) {
     .preuni-hero {
-      grid-template-columns: 1fr;
-      gap: 40px;
-    }
-    .preuni-photo {
-      transform: none;
-      margin-inline: auto;
+      gap: 18px;
     }
     .media-star {
       right: 4px;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .preuni-head h1 {
+      font-size: 2rem;
+    }
+    .lead {
+      font-size: 0.9rem;
+    }
+    .panel {
+      padding: 20px 18px;
+    }
+    .preuni-cta {
+      padding: 28px 22px;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .preuni-hero {
+      gap: 12px;
+    }
+    .preuni-photo {
+      transform: none;
+    }
+    .badge {
+      padding: 4px 10px;
+      font-size: 0.48rem;
+    }
+    .eyebrow {
+      font-size: 0.62rem;
+    }
+    .preuni-head h1 {
+      font-size: 1.3rem;
+    }
+    .lead {
+      font-size: 0.62rem;
+    }
+    .media-star {
+      font-size: 1.1rem;
+    }
+    .panel {
+      padding: 12px 11px;
+      border-radius: 14px;
+    }
+    .panel-ticks {
+      font-size: 0.56rem;
+    }
+    .panel-toggle > summary {
+      padding: 7px 14px;
+      font-size: 0.54rem;
+    }
+    .part h3 {
+      font-size: 0.6rem;
+    }
+    .part p,
+    .part-list {
+      font-size: 0.54rem;
+    }
+    .temario-tab {
+      padding: 7px 11px 8px;
+      font-size: 0.54rem;
+    }
+    .temario-panel {
+      padding: 9px;
+    }
+    .subject summary {
+      padding: 9px 11px;
+      font-size: 0.62rem;
+    }
+    .subject-count {
+      font-size: 0.44rem;
+      padding: 2px 7px;
+    }
+    .subject-topics {
+      padding: 0 11px 10px 22px;
+    }
+    .ticks li {
+      font-size: 0.58rem;
+    }
+    .preuni-cta {
+      padding: 16px 13px;
+    }
+    .preuni-cta p {
+      font-size: 0.5rem;
     }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -496,10 +578,16 @@ const temarioTabsCss = temario.groups
     color: var(--text-muted);
     font-size: 0.95rem;
   }
-  @media (min-width: 720px) {
+  /* Duas colunas em qualquer largura: é assim que o temário aparece na vista
+     web, e o celular mostra a mesma vista, reduzida. */
+  .subject-topics {
+    grid-template-columns: 1fr 1fr;
+    column-gap: 32px;
+  }
+  @media (max-width: 620px) {
     .subject-topics {
-      grid-template-columns: 1fr 1fr;
-      column-gap: 32px;
+      column-gap: 12px;
+      font-size: 0.62rem;
     }
   }
   .block-title {

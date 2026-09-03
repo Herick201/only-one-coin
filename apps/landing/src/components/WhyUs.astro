@@ -120,23 +120,87 @@ const icons = [
     font-size: 0.85rem;
     line-height: 1.45;
   }
+  /* Mobile: a introdução sobe para o topo e os cinco pilares ficam na mesma
+     fileira da vista web. Em coluna estreita a divisória some e cada pilar
+     vira um cartão — a linha fina não se lê a 60px de largura. */
   @media (max-width: 900px) {
     .why-grid {
       grid-template-columns: 1fr;
-      gap: 36px;
+      gap: 22px;
     }
     .why-intro p {
       max-width: none;
+      font-size: 0.9rem;
+    }
+    .why-cta {
+      margin-top: 14px;
     }
     .pillars {
       padding-left: 0;
       border-left: 0;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 26px 12px;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .pillar {
+      padding: 14px 8px;
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: 12px;
     }
     .pillar + .pillar {
-      border-left: 0;
+      border-left: 1px solid var(--border);
+    }
+    .pillar-icon :global(svg) {
+      width: 24px;
+      height: 24px;
+    }
+    .pillar h3 {
+      font-size: 0.78rem;
+    }
+    .pillar p {
+      font-size: 0.68rem;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .why-grid {
+      gap: 12px;
+    }
+    .why-intro p {
+      margin-top: 5px;
+      font-size: 0.6rem;
+    }
+    .why-cta {
+      margin-top: 9px;
+      gap: 5px;
+    }
+    .why-cta svg {
+      width: 10px;
+      height: 10px;
+    }
+    .pillars {
+      gap: 5px;
+    }
+    .pillar {
+      padding: 9px 4px;
+      border-radius: 8px;
+    }
+    .pillar-icon {
+      margin-bottom: 5px;
+    }
+    .pillar-icon :global(svg) {
+      width: 17px;
+      height: 17px;
+    }
+    .pillar h3 {
+      font-size: 0.55rem;
+      margin-bottom: 3px;
+      line-height: 1.15;
+    }
+    .pillar p {
+      font-size: 0.46rem;
+      line-height: 1.35;
     }
   }
 </style>

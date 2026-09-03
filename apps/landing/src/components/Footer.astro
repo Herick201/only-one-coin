@@ -288,18 +288,115 @@ const socials = [
     gap: 16px;
     flex-wrap: wrap;
   }
-  @media (max-width: 860px) {
-    .footer-grid {
-      grid-template-columns: 1fr 1fr;
-      gap: 34px;
+  /* Mobile: as cinco colunas do rodapé web permanecem — marca, Nosotros,
+     Idiomas, Alumnos, Recursos e Ayuda —, só menores. */
+  @media (max-width: 900px) {
+    .site-footer {
+      padding-top: 34px;
     }
-    .brand-col {
-      grid-column: 1 / -1;
+    .footer-grid {
+      gap: 18px;
+    }
+    .footer-logo {
+      height: 26px;
+      margin-bottom: 10px;
+    }
+    .tagline {
+      font-size: 0.78rem;
+      margin-bottom: 9px;
+    }
+    .org {
+      font-size: 0.7rem;
+      margin-bottom: 12px;
+    }
+    .col h3 {
+      font-size: 0.68rem;
+      margin-bottom: 9px;
+    }
+    .col ul {
+      gap: 6px;
+      font-size: 0.74rem;
+    }
+    .social {
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+    }
+    .social :global(svg) {
+      width: 14px;
+      height: 14px;
     }
   }
-  @media (max-width: 520px) {
+
+  @media (max-width: 620px) {
+    .site-footer {
+      padding-top: 20px;
+    }
     .footer-grid {
-      grid-template-columns: 1fr;
+      grid-template-columns: 1.35fr 1fr 1fr 1fr 1fr;
+      gap: 9px;
+    }
+    .footer-logo {
+      height: 18px;
+      margin-bottom: 7px;
+    }
+    .tagline {
+      font-size: 0.5rem;
+      margin-bottom: 6px;
+      max-width: none;
+    }
+    .org {
+      font-size: 0.44rem;
+      margin-bottom: 8px;
+    }
+    .footer-script {
+      margin-top: 12px;
+      font-size: 0.9rem;
+    }
+    .col h3 {
+      font-size: 0.48rem;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+    .legal-title {
+      margin-top: 12px;
+    }
+    .col ul {
+      gap: 4px;
+      font-size: 0.46rem;
+      overflow-wrap: break-word;
+    }
+    .lang-link {
+      gap: 4px;
+    }
+    .lang-link :global(.lang-flag) {
+      width: 10px;
+      height: 10px;
+    }
+    .socials {
+      gap: 5px;
+    }
+    .social {
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+    }
+    .social :global(svg) {
+      width: 10px;
+      height: 10px;
+    }
+    .footer-partner {
+      margin-top: 16px;
+      padding-block: 10px;
+      gap: 8px;
+    }
+    .partner-label {
+      font-size: 0.46rem;
+    }
+    .footer-bottom {
+      padding-block: 10px;
+      font-size: 0.44rem;
+      gap: 8px;
     }
   }
 </style>

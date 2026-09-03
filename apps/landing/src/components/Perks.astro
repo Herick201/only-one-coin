@@ -97,6 +97,11 @@ const icons = [
     width: 28px;
     height: 28px;
   }
+  /* Sem `min-width: 0` o bloco de texto não encolhe abaixo da própria linha
+     e transborda por cima do card vizinho quando a fileira aperta. */
+  .perk-txt {
+    min-width: 0;
+  }
   .perk-txt h3 {
     font-size: 1.05rem;
     margin-bottom: 2px;
@@ -122,5 +127,87 @@ const icons = [
   .btn-outline svg {
     width: 16px;
     height: 16px;
+  }
+
+  /* Mobile: os quatro talleres e o botão continuam na mesma fileira da vista
+     web — `flex: 1 1 0` no lugar da base de 230px, que os empilharia. */
+  @media (max-width: 900px) {
+    .perks-lead {
+      margin-top: 8px;
+      font-size: 0.9rem;
+    }
+    .perks-row {
+      margin-top: 22px;
+      flex-wrap: nowrap;
+      gap: 10px;
+    }
+    .perk {
+      flex: 1 1 0;
+      min-width: 0;
+      gap: 8px;
+      padding: 14px 10px;
+      border-radius: 14px;
+    }
+    .perk-icon :global(svg) {
+      width: 20px;
+      height: 20px;
+    }
+    .perk-txt h3 {
+      font-size: 0.8rem;
+      overflow-wrap: anywhere;
+    }
+    .perk-txt p {
+      font-size: 0.68rem;
+      overflow-wrap: anywhere;
+    }
+    .btn-outline {
+      flex: 0 1 auto;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .perks-lead {
+      margin-top: 4px;
+      font-size: 0.62rem;
+    }
+    .perks-row {
+      margin-top: 12px;
+      gap: 4px;
+    }
+    .perk {
+      gap: 4px;
+      padding: 7px 5px;
+      border-radius: 8px;
+      border-width: 1px;
+    }
+    .perk-icon :global(svg) {
+      width: 12px;
+      height: 12px;
+    }
+    .perk-txt h3 {
+      font-size: 0.48rem;
+      margin-bottom: 1px;
+    }
+    .perk-txt p {
+      font-size: 0.38rem;
+      line-height: 1.25;
+    }
+    /* O rótulo do botão quebra em duas linhas: em `nowrap` ele comia metade
+       da fileira e espremia os quatro talleres até o texto partir. */
+    .btn-outline {
+      flex: 0 1 78px;
+      gap: 3px;
+      padding: 6px 8px;
+      font-size: 0.46rem;
+      line-height: 1.25;
+      white-space: normal;
+      text-align: center;
+      border-width: 1.2px;
+    }
+    .btn-outline svg {
+      width: 8px;
+      height: 8px;
+      flex: none;
+    }
   }
 </style>

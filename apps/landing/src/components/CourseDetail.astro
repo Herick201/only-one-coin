@@ -897,10 +897,178 @@ const courseJsonLd = {
     flex-wrap: wrap;
   }
 
+  /* Mobile: as duas colunas de públicos e de conteúdos ficam — é a mesma
+     vista web, reduzida. */
+  @media (max-width: 900px) {
+    .lead {
+      font-size: 0.9rem;
+    }
+    .perks li {
+      font-size: 0.84rem;
+    }
+    .tab-row {
+      flex-wrap: nowrap;
+      gap: 8px;
+    }
+    .tab-square {
+      padding: 12px 10px;
+      flex: 1 1 0;
+      min-width: 0;
+    }
+    .tab-name {
+      font-size: 0.74rem;
+    }
+    .level-panel {
+      padding: 18px 16px;
+    }
+    .audience,
+    .feature {
+      padding: 16px 14px;
+    }
+    .audience h3 {
+      font-size: 1rem;
+    }
+    .feature h3 {
+      font-size: 0.86rem;
+    }
+    .course-cta {
+      padding: 28px 22px;
+    }
+    .course-cta-inner {
+      flex-wrap: nowrap;
+      gap: 16px;
+    }
+  }
+
   @media (max-width: 760px) {
     .audiences,
     .features {
-      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .back {
+      font-size: 0.62rem;
+    }
+    .back svg {
+      width: 11px;
+      height: 11px;
+    }
+    .urgency {
+      padding: 4px 10px;
+      font-size: 0.5rem;
+    }
+    .course-head h1 {
+      font-size: 1.5rem;
+    }
+    .name-wrap :global(.lang-flag) {
+      width: 22px;
+      height: 22px;
+    }
+    /* O furo do barbante e a costura são medidas fixas: sem encolhê-las
+       junto com a etiqueta, elas caem por cima do número. */
+    .discount {
+      padding: 6px 12px 6px 26px;
+      gap: 5px;
+      clip-path: polygon(0% 50%, 13px 0%, 100% 0%, 100% 100%, 13px 100%);
+    }
+    .discount::before {
+      left: 15px;
+      width: 6px;
+      height: 6px;
+    }
+    .discount::after {
+      inset: 3px 4px 3px 23px;
+      border-width: 1.2px;
+      border-radius: 3px;
+    }
+    .discount-amount {
+      font-size: 0.86rem;
+    }
+    .discount-label {
+      font-size: 0.46rem;
+    }
+    .lead {
+      font-size: 0.62rem;
+    }
+    .perks li {
+      font-size: 0.58rem;
+      gap: 7px;
+    }
+    .price-hook {
+      margin-top: 13px;
+      gap: 7px;
+    }
+    .hook-amount {
+      padding: 5px 13px;
+    }
+    .hook-unit {
+      font-size: 0.46rem;
+    }
+    .tab-row {
+      gap: 5px;
+    }
+    .tab-square {
+      padding: 8px 5px;
+      border-radius: 10px;
+    }
+    .tab-name {
+      font-size: 0.5rem;
+    }
+    .level-panel {
+      padding: 11px 10px;
+      border-radius: 12px;
+    }
+    .panel-title {
+      font-size: 0.72rem;
+    }
+    .panel-ticks {
+      font-size: 0.54rem;
+    }
+    .panel-option {
+      padding: 5px 10px;
+      font-size: 0.5rem;
+    }
+    .panel-toggle > summary,
+    .program-toggle > summary {
+      padding: 7px 14px;
+      font-size: 0.54rem;
+    }
+    .example-note {
+      font-size: 0.46rem;
+      padding: 4px 8px;
+    }
+    .ticks li {
+      font-size: 0.58rem;
+    }
+    .audience,
+    .feature {
+      padding: 10px 9px;
+      border-radius: 12px;
+    }
+    .audience .tag {
+      font-size: 0.44rem;
+      padding: 3px 7px;
+    }
+    .audience h3 {
+      font-size: 0.68rem;
+    }
+    .feature-icon :global(svg) {
+      width: 14px;
+      height: 14px;
+    }
+    .feature h3 {
+      font-size: 0.58rem;
+    }
+    .course-cta {
+      padding: 16px 13px;
+    }
+    .course-cta-inner {
+      gap: 10px;
+    }
+    .course-cta p {
+      font-size: 0.5rem;
     }
   }
 </style>
