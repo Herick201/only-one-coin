@@ -148,18 +148,18 @@ const ts = t.testimonials;
     background: var(--paper);
   }
   .testi-head > .section-title {
-    max-width: 640px;
+    max-width: calc(640 * var(--dp));
   }
   .testi-lead {
-    margin-top: 10px;
-    font-size: 1.06rem;
+    margin-top: calc(10 * var(--dp));
+    font-size: calc(16.96 * var(--dp));
   }
 
   .testi-carousel {
-    margin-top: 40px;
+    margin-top: calc(40 * var(--dp));
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: calc(14 * var(--dp));
   }
   .testi-window {
     flex: 1 1 auto;
@@ -168,17 +168,17 @@ const ts = t.testimonials;
   }
   .testi-track {
     display: flex;
-    gap: 26px;
+    gap: calc(26 * var(--dp));
     will-change: transform;
   }
 
   /* Blue circular arrows, vertically centered on the line of the cards */
   .t-arrow {
     flex: none;
-    width: 52px;
-    height: 52px;
+    width: calc(52 * var(--dp));
+    height: calc(52 * var(--dp));
     border-radius: 50%;
-    border: 1.5px solid var(--blue);
+    border: calc(1.5 * var(--dp)) solid var(--blue);
     background: var(--paper);
     color: var(--blue);
     display: grid;
@@ -188,8 +188,8 @@ const ts = t.testimonials;
     transition: background 0.16s ease, color 0.16s ease, transform 0.16s ease;
   }
   .t-arrow svg {
-    width: 22px;
-    height: 22px;
+    width: calc(22 * var(--dp));
+    height: calc(22 * var(--dp));
   }
   .t-arrow:hover {
     background: var(--blue);
@@ -203,36 +203,36 @@ const ts = t.testimonials;
   /* Formato web do mockup: card largo e horizontal — foto (tile) à esquerda,
      citação e assinatura à direita, dois por tela. */
   .testi-card {
-    flex: 0 0 calc((100% - 26px) / 2);
+    flex: 0 0 calc((100% - calc(26 * var(--dp))) / 2);
     margin: 0;
     background: var(--paper);
-    border: 1.5px solid var(--border);
+    border: calc(1.5 * var(--dp)) solid var(--border);
     border-radius: var(--radius);
-    padding: 26px;
+    padding: calc(26 * var(--dp));
     display: flex;
     align-items: center;
-    gap: 22px;
+    gap: calc(22 * var(--dp));
     box-shadow: var(--shadow-sm);
   }
   blockquote {
     margin: 0;
-    font-size: 1rem;
+    font-size: calc(16 * var(--dp));
     color: var(--ink);
     line-height: 1.55;
   }
   .avatar {
-    width: 132px;
+    width: calc(132 * var(--dp));
     align-self: stretch;
-    min-height: 120px;
+    min-height: calc(120 * var(--dp));
     flex: none;
     display: grid;
     place-items: center;
-    border-radius: 14px;
+    border-radius: calc(14 * var(--dp));
     background: var(--sky);
     color: var(--blue);
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 1.7rem;
+    font-size: calc(27.2 * var(--dp));
   }
   .testi-card:nth-child(even) .avatar {
     background: var(--cream);
@@ -241,7 +241,7 @@ const ts = t.testimonials;
   .testi-body {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: calc(14 * var(--dp));
     min-width: 0;
   }
   .who-txt {
@@ -254,12 +254,12 @@ const ts = t.testimonials;
     color: var(--ink);
   }
   .role {
-    font-size: 0.86rem;
+    font-size: calc(13.76 * var(--dp));
     color: var(--text-muted);
   }
   .note {
-    margin-top: 26px;
-    font-size: 0.82rem;
+    margin-top: calc(26 * var(--dp));
+    font-size: calc(13.12 * var(--dp));
     color: var(--text-muted);
     font-style: italic;
     text-align: center;
@@ -269,75 +269,6 @@ const ts = t.testimonials;
   @media (max-width: 900px) {
     .testi-card {
       flex-basis: 100%;
-    }
-  }
-  @media (max-width: 900px) {
-    .testi-lead {
-      margin-top: 6px;
-      font-size: 0.9rem;
-    }
-    .testi-carousel {
-      margin-top: 22px;
-      gap: 10px;
-    }
-    .t-arrow {
-      width: 34px;
-      height: 34px;
-    }
-    .t-arrow svg {
-      width: 15px;
-      height: 15px;
-    }
-  }
-
-  /* Celular: o card segue horizontal — retrato à esquerda, citação à direita,
-     setas dos dois lados. Empilhar virava um bloco alto demais. */
-  @media (max-width: 620px) {
-    .testi-lead {
-      margin-top: 4px;
-      font-size: 0.62rem;
-    }
-    .testi-carousel {
-      margin-top: 12px;
-      gap: 6px;
-    }
-    .t-arrow {
-      width: 22px;
-      height: 22px;
-      border-width: 1.2px;
-    }
-    .t-arrow svg {
-      width: 10px;
-      height: 10px;
-    }
-    .testi-card {
-      padding: 10px;
-      gap: 9px;
-      border-radius: 10px;
-      border-width: 1px;
-    }
-    .avatar {
-      width: 62px;
-      min-height: 54px;
-      border-radius: 8px;
-      font-size: 0.8rem;
-    }
-    .testi-body {
-      gap: 6px;
-    }
-    blockquote {
-      font-size: 0.56rem;
-      line-height: 1.5;
-    }
-    .name {
-      font-size: 0.56rem;
-    }
-    .role {
-      font-size: 0.46rem;
-    }
-    .note {
-      margin-top: 10px;
-      font-size: 0.5rem;
     }
   }
 </style>

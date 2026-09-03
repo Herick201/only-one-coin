@@ -50,6 +50,19 @@
         "3008"
       ],
       "port": 3008
+    },
+    {
+      "name": "landing-wt-lan",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@ooc/landing",
+        "dev",
+        "--host",
+        "--port",
+        "4324"
+      ],
+      "port": 4324
     }
   ]
 }

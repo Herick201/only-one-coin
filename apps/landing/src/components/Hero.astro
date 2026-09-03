@@ -22,7 +22,6 @@ const featureIcons = [
     <span class="blob blob-b" aria-hidden="true"></span>
 
     <div class="hero-grid">
-    <div class="hero-left">
     <div class="hero-copy">
       <span class="hero-badge">{h.badge}</span>
       <h1>
@@ -42,7 +41,6 @@ const featureIcons = [
         </a>
         <a href={withLang(lang, "/courses")} class="btn btn-ghost">{h.ctaCourses}</a>
       </div>
-    </div>
       <ul class="hero-features">
         {
           h.features.map((f, i) => (
@@ -63,7 +61,7 @@ const featureIcons = [
         src={heroPhoto}
         alt={h.imgAlt}
         widths={[480, 768, 1120, 1600]}
-        sizes="(max-width: 900px) 100vw, 50vw"
+        sizes="50vw"
         format="webp"
         quality={78}
         loading="eager"
@@ -86,26 +84,26 @@ const featureIcons = [
   /* A matrícula é o que a página quer que aconteça: o botão é maior que
      qualquer outro clique. */
   .btn-enroll {
-    font-size: 1.08rem;
+    font-size: calc(17.28 * var(--dp));
     letter-spacing: 0.02em;
-    padding: 16px 32px;
+    padding: calc(16 * var(--dp)) calc(32 * var(--dp));
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: calc(10 * var(--dp));
     white-space: nowrap;
   }
   .btn-enroll svg {
-    width: 18px;
-    height: 18px;
+    width: calc(18 * var(--dp));
+    height: calc(18 * var(--dp));
     transition: transform 0.2s ease;
   }
   .btn-enroll:hover svg {
-    transform: translateX(5px);
+    transform: translateX(calc(5 * var(--dp)));
   }
   .btn-ghost {
     background: var(--paper);
     color: var(--blue);
-    border: 1.5px solid var(--blue);
+    border: calc(1.5 * var(--dp)) solid var(--blue);
     box-shadow: none;
   }
   .btn-ghost:hover {
@@ -127,18 +125,18 @@ const featureIcons = [
   /* Círculos suaves na lateral esquerda, a meia altura — como no mockup.
      No topo eles viravam uma "moldura" amarela sobre o card. */
   .blob-a {
-    width: 260px;
-    height: 260px;
+    width: calc(260 * var(--dp));
+    height: calc(260 * var(--dp));
     top: 18%;
-    left: -150px;
+    left: calc(-150 * var(--dp));
     background: var(--yellow);
     opacity: 0.22;
   }
   .blob-b {
-    width: 220px;
-    height: 220px;
-    bottom: -60px;
-    left: -110px;
+    width: calc(220 * var(--dp));
+    height: calc(220 * var(--dp));
+    bottom: calc(-60 * var(--dp));
+    left: calc(-110 * var(--dp));
     background: var(--blue);
     opacity: 0.1;
   }
@@ -151,10 +149,13 @@ const featureIcons = [
     grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.98fr);
     align-items: stretch;
   }
-  .hero-left {
-    padding-block: 40px 44px;
-    padding-left: max(24px, calc((100% - var(--maxw)) / 2 + 24px));
-    padding-right: 44px;
+  .hero-copy {
+    padding-block: calc(40 * var(--dp)) calc(44 * var(--dp));
+    padding-left: max(calc(24 * var(--dp)), calc((100% - var(--maxw)) / 2 + calc(24 * var(--dp))));
+    /* 32, não 44: com 44 a faixa de destaques passava um pixel da coluna na
+       largura de desenho e quebrava em duas linhas — em todas as larguras,
+       já que agora o desenho é o mesmo em todas. */
+    padding-right: calc(32 * var(--dp));
     align-self: center;
   }
 
@@ -162,13 +163,13 @@ const featureIcons = [
     display: inline-block;
     color: var(--ink);
     font-weight: 700;
-    font-size: 0.78rem;
+    font-size: calc(12.48 * var(--dp));
     letter-spacing: 0.3em;
     text-transform: uppercase;
-    margin-bottom: 14px;
+    margin-bottom: calc(14 * var(--dp));
   }
   h1 {
-    font-size: clamp(2.5rem, 4.6vw, 3.9rem);
+    font-size: calc(54.28 * var(--dp));
     line-height: 1.08;
   }
   .line {
@@ -178,27 +179,27 @@ const featureIcons = [
     color: var(--blue);
   }
   .hero-price-line {
-    margin-top: 20px;
+    margin-top: calc(20 * var(--dp));
     font-family: var(--font-display);
     font-weight: 600;
-    font-size: clamp(1.1rem, 2vw, 1.4rem);
+    font-size: calc(22.4 * var(--dp));
     color: var(--ink);
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 9px;
+    gap: calc(9 * var(--dp));
   }
   .price-pill {
     background: linear-gradient(135deg, var(--yellow-bright), var(--yellow-deep));
     color: var(--ink);
     font-weight: 700;
-    padding: 1px 12px;
-    border-radius: 10px;
+    padding: calc(1 * var(--dp)) calc(12 * var(--dp));
+    border-radius: calc(10 * var(--dp));
     box-shadow: var(--shadow-yellow);
   }
   .hero-sub {
-    margin-top: 12px;
-    font-size: 1.04rem;
+    margin-top: calc(12 * var(--dp));
+    font-size: calc(16.64 * var(--dp));
     color: var(--text-muted);
     max-width: 40ch;
   }
@@ -207,34 +208,34 @@ const featureIcons = [
     font-weight: 700;
   }
   .hero-actions {
-    margin-top: 28px;
+    margin-top: calc(28 * var(--dp));
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: calc(16 * var(--dp));
     flex-wrap: wrap;
   }
   .hero-features {
-    margin: 34px 0 0;
+    margin: calc(34 * var(--dp)) 0 0;
     padding: 0;
     list-style: none;
     display: flex;
     flex-wrap: wrap;
-    gap: 14px 0;
+    gap: calc(14 * var(--dp)) 0;
   }
   .hero-features li {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: calc(12 * var(--dp));
   }
   /* Divisórias entre as features, como no mockup web. */
   .hero-features li + li {
-    border-left: 1.5px solid var(--border);
-    margin-left: 26px;
-    padding-left: 26px;
+    border-left: calc(1.5 * var(--dp)) solid var(--border);
+    margin-left: calc(14 * var(--dp));
+    padding-left: calc(14 * var(--dp));
   }
   .feat-icon {
-    width: 44px;
-    height: 44px;
+    width: calc(44 * var(--dp));
+    height: calc(44 * var(--dp));
     border-radius: 50%;
     background: var(--blue);
     color: #fff;
@@ -247,8 +248,8 @@ const featureIcons = [
     background: var(--blue-deep);
   }
   .feat-icon :global(svg) {
-    width: 22px;
-    height: 22px;
+    width: calc(22 * var(--dp));
+    height: calc(22 * var(--dp));
   }
   .feat-txt {
     display: flex;
@@ -259,13 +260,13 @@ const featureIcons = [
     color: var(--ink);
   }
   .feat-txt span {
-    font-size: 0.86rem;
+    font-size: calc(13.76 * var(--dp));
     color: var(--text-muted);
   }
 
   .hero-media {
     position: relative;
-    min-height: 380px;
+    min-height: calc(380 * var(--dp));
   }
   /* Funde a borda da foto com o fundo do hero — sem corte seco. */
   .hero-media::before {
@@ -274,7 +275,7 @@ const featureIcons = [
     left: 0;
     top: 0;
     bottom: 0;
-    width: 140px;
+    width: calc(140 * var(--dp));
     background: linear-gradient(90deg, var(--sky-soft), transparent);
     z-index: 1;
     pointer-events: none;
@@ -303,7 +304,7 @@ const featureIcons = [
     inset: 0;
     z-index: 1;
     pointer-events: none;
-    backdrop-filter: blur(6px);
+    backdrop-filter: blur(calc(6 * var(--dp)));
     /* Centro deslocado à direita: o desfoque fica no topo e na esquerda,
        e o lado direito da foto permanece limpo. */
     -webkit-mask-image: radial-gradient(115% 105% at 62% 55%, transparent 55%, #000 88%);
@@ -326,202 +327,36 @@ const featureIcons = [
   /* O lettering do mockup: manuscrito amarelo sobre a foto. */
   .photo-caption {
     position: absolute;
-    top: 44px;
-    right: 32px;
+    top: calc(44 * var(--dp));
+    right: calc(32 * var(--dp));
     max-width: 8ch;
     font-family: var(--font-script);
     font-weight: 700;
-    font-size: clamp(2.1rem, 3.5vw, 3rem);
+    font-size: calc(41.3 * var(--dp));
     line-height: 0.95;
     /* Dourado fechado: sobre o véu branco, o amarelo claro sumia. */
     color: var(--yellow-deep);
     text-align: right;
     transform: rotate(-7deg);
-    text-shadow: 0 2px 8px rgba(19, 34, 75, 0.18);
+    text-shadow: 0 calc(2 * var(--dp)) calc(8 * var(--dp)) rgba(19, 34, 75, 0.18);
   }
   /* O traço curvo amarelo sob o lettering, como no mockup. */
   .caption-swoosh {
     display: block;
-    width: 96px;
+    width: calc(96 * var(--dp));
     margin-left: auto;
-    margin-top: 10px;
+    margin-top: calc(10 * var(--dp));
     color: var(--yellow-deep);
   }
   .corner-blob {
     position: absolute;
-    right: -70px;
-    bottom: -90px;
-    width: 230px;
-    height: 230px;
+    right: calc(-70 * var(--dp));
+    bottom: calc(-90 * var(--dp));
+    width: calc(230 * var(--dp));
+    height: calc(230 * var(--dp));
     border-radius: 50%;
     background: var(--yellow);
     opacity: 0.9;
   }
 
-  /* Mobile: mesma vista web, reduzida. As duas colunas ficam — texto à
-     esquerda, foto à direita — e a faixa de destaques desce para uma linha
-     que atravessa as duas, como no desenho da vista mobile. */
-  @media (max-width: 900px) {
-    .hero-card {
-      border-radius: 0;
-      box-shadow: none;
-    }
-    .hero-left {
-      display: contents;
-    }
-    .hero-copy {
-      grid-column: 1;
-      grid-row: 1;
-      align-self: center;
-      padding: 26px 16px 20px 18px;
-    }
-    .hero-media {
-      grid-column: 2;
-      grid-row: 1;
-      min-height: 260px;
-    }
-    .hero-features {
-      grid-column: 1 / -1;
-      grid-row: 2;
-      margin: 0;
-      padding: 0 18px 22px;
-      z-index: 2;
-    }
-    .blob-a,
-    .blob-b {
-      display: none;
-    }
-    h1 {
-      font-size: 1.9rem;
-    }
-    .hero-price-line {
-      margin-top: 14px;
-      font-size: 1rem;
-    }
-    .hero-sub {
-      font-size: 0.86rem;
-      max-width: none;
-    }
-    .hero-actions {
-      margin-top: 18px;
-      gap: 10px;
-    }
-    .btn-enroll {
-      font-size: 0.82rem;
-      padding: 11px 20px;
-    }
-    .btn-enroll svg {
-      width: 14px;
-      height: 14px;
-    }
-    .photo-caption {
-      top: 22px;
-      right: 16px;
-      font-size: 1.5rem;
-    }
-    .caption-swoosh {
-      width: 60px;
-      margin-top: 6px;
-    }
-    .corner-blob {
-      width: 150px;
-      height: 150px;
-      right: -46px;
-      bottom: -58px;
-    }
-  }
-
-  /* Celular: a mesma composição, no menor tamanho em que ela ainda se lê. */
-  @media (max-width: 620px) {
-    .hero-copy {
-      padding: 14px 8px 10px 12px;
-    }
-    .hero-media {
-      min-height: 152px;
-    }
-    .hero-media::before {
-      width: 44px;
-    }
-    .hero-features {
-      padding: 0 12px 14px;
-      gap: 6px 0;
-    }
-    .hero-badge {
-      font-size: 0.46rem;
-      letter-spacing: 0.24em;
-      margin-bottom: 6px;
-    }
-    h1 {
-      font-size: 1.28rem;
-      line-height: 1.05;
-    }
-    .hero-price-line {
-      margin-top: 8px;
-      font-size: 0.6rem;
-      gap: 4px;
-    }
-    .price-pill {
-      padding: 0 6px;
-      border-radius: 6px;
-      box-shadow: 0 6px 14px -8px rgba(245, 166, 35, 0.7);
-    }
-    .hero-sub {
-      margin-top: 6px;
-      font-size: 0.6rem;
-    }
-    .hero-actions {
-      margin-top: 12px;
-      gap: 7px;
-    }
-    .btn-enroll {
-      font-size: 0.62rem;
-      padding: 7px 13px;
-      gap: 5px;
-    }
-    .btn-enroll svg {
-      width: 10px;
-      height: 10px;
-    }
-    .hero-features li {
-      gap: 6px;
-    }
-    .hero-features li + li {
-      margin-left: 12px;
-      padding-left: 12px;
-      border-left-width: 1px;
-    }
-    .feat-icon {
-      width: 24px;
-      height: 24px;
-    }
-    .feat-icon :global(svg) {
-      width: 13px;
-      height: 13px;
-    }
-    .feat-txt strong {
-      font-size: 0.62rem;
-    }
-    .feat-txt span {
-      font-size: 0.5rem;
-    }
-    .photo-caption {
-      top: 12px;
-      right: 9px;
-      font-size: 0.92rem;
-    }
-    .caption-swoosh {
-      width: 34px;
-      margin-top: 2px;
-      stroke-width: 6;
-    }
-    /* O círculo amarelo fica no canto da foto, atrás da faixa de destaques —
-       na vista mobile ele é um detalhe, não uma mancha sobre o texto. */
-    .corner-blob {
-      width: 76px;
-      height: 76px;
-      right: -26px;
-      bottom: -30px;
-      z-index: 0;
-    }
-  }
 </style>

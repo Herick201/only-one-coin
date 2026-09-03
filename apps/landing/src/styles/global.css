@@ -27,13 +27,26 @@
 
   /* Lines / shadow */
   --border: #e4eaf7;
-  --shadow-sm: 0 6px 18px -10px rgba(19, 34, 75, 0.28);
-  --shadow-md: 0 20px 45px -22px rgba(19, 34, 75, 0.35);
-  --shadow-blue: 0 22px 45px -18px rgba(47, 107, 255, 0.5);
-  --shadow-yellow: 0 18px 38px -16px rgba(245, 166, 35, 0.55);
+  --shadow-sm: 0 calc(6 * var(--dp)) calc(18 * var(--dp)) calc(-10 * var(--dp)) rgba(19, 34, 75, 0.28);
+  --shadow-md: 0 calc(20 * var(--dp)) calc(45 * var(--dp)) calc(-22 * var(--dp)) rgba(19, 34, 75, 0.35);
+  --shadow-blue: 0 calc(22 * var(--dp)) calc(45 * var(--dp)) calc(-18 * var(--dp)) rgba(47, 107, 255, 0.5);
+  --shadow-yellow: 0 calc(18 * var(--dp)) calc(38 * var(--dp)) calc(-16 * var(--dp)) rgba(245, 166, 35, 0.55);
 
-  --radius: 20px;
-  --radius-lg: 30px;
+  /* A LARGURA DE DESENHO e a unidade que sai dela.
+
+     Todo tamanho da landing — fonte, padding, gap, ícone, raio, sombra — é
+     um múltiplo de `--dp`, que vale 1px em 1180px de janela e encolhe na
+     mesma proporção abaixo disso. A consequência é que a página é o MESMO
+     desenho em qualquer largura: nada congela dentro de uma faixa e nada
+     salta ao cruzar um número. Acima de 1180px a unidade trava em 1px,
+     porque o container também para de crescer ali.
+
+     0.084745vw = 1/1180 da janela. Se um dia a largura de desenho mudar,
+     mude os dois números juntos. */
+  --dp: min(1px, 0.084745vw);
+
+  --radius: calc(20 * var(--dp));
+  --radius-lg: calc(30 * var(--dp));
   --maxw: 1180px;
 
   --font: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -56,6 +69,10 @@ body {
   background: var(--paper);
   color: var(--text);
   font-family: var(--font);
+  /* A base entra na mesma régua de `--dp`. Sem isto, todo texto que não
+     declara tamanho herda os 16px fixos do navegador e fica gigante ao lado
+     do resto da página quando ela encolhe. */
+  font-size: calc(16 * var(--dp));
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
@@ -86,11 +103,11 @@ img {
   width: 100%;
   max-width: var(--maxw);
   margin-inline: auto;
-  padding-inline: 24px;
+  padding-inline: calc(24 * var(--dp));
 }
 
 .section {
-  padding-block: 92px;
+  padding-block: calc(92 * var(--dp));
   position: relative;
 }
 
@@ -98,7 +115,7 @@ img {
 /* Título de seção no formato dos mockups web: menor, sem o sublinhado
    amarelo desenhado — o destaque é só a palavra em azul. */
 .section-title {
-  font-size: clamp(1.7rem, 3.2vw, 2.3rem);
+  font-size: calc(36.8 * var(--dp));
   color: var(--ink);
 }
 .section-title .accent {
@@ -114,14 +131,14 @@ img {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
-  padding: 14px 28px;
-  border-radius: 999px;
+  gap: calc(9 * var(--dp));
+  padding: calc(14 * var(--dp)) calc(28 * var(--dp));
+  border-radius: calc(999 * var(--dp));
   font-family: var(--font);
   font-weight: 700;
-  font-size: 0.98rem;
+  font-size: calc(15.68 * var(--dp));
   cursor: pointer;
-  border: 2px solid transparent;
+  border: calc(2 * var(--dp)) solid transparent;
   transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease,
     color 0.16s ease;
 }
@@ -137,7 +154,7 @@ img {
   background: var(--yellow);
   color: var(--ink);
   box-shadow: var(--shadow-yellow);
-  transform: translateY(-2px);
+  transform: translateY(calc(-2 * var(--dp)));
 }
 .btn-yellow {
   background: linear-gradient(135deg, var(--yellow-bright), var(--yellow));
@@ -145,8 +162,8 @@ img {
   box-shadow: var(--shadow-yellow);
 }
 .btn-yellow:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 24px 46px -14px rgba(245, 166, 35, 0.7);
+  transform: translateY(calc(-2 * var(--dp)));
+  box-shadow: 0 calc(24 * var(--dp)) calc(46 * var(--dp)) calc(-14 * var(--dp)) rgba(245, 166, 35, 0.7);
 }
 .btn-outline {
   border-color: var(--blue);
@@ -156,7 +173,7 @@ img {
 .btn-outline:hover {
   background: var(--blue);
   color: var(--on-blue);
-  transform: translateY(-2px);
+  transform: translateY(calc(-2 * var(--dp)));
 }
 /* Link secundário ao lado de um botão: mesma ação disponível, peso menor.
    Existe porque a página só pode ter um CTA gritando por dobra — o resto
@@ -164,10 +181,10 @@ img {
    `-on-blue` é a variante para fundo escuro. */
 .link-quiet {
   font-weight: 700;
-  font-size: 1rem;
+  font-size: calc(16 * var(--dp));
   color: var(--blue-deep);
-  border-bottom: 2px solid rgba(47, 107, 255, 0.35);
-  padding-bottom: 2px;
+  border-bottom: calc(2 * var(--dp)) solid rgba(47, 107, 255, 0.35);
+  padding-bottom: calc(2 * var(--dp));
   transition: border-color 0.16s ease, color 0.16s ease, opacity 0.16s ease;
 }
 .link-quiet:hover {
@@ -199,7 +216,7 @@ img {
 .blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(2px);
+  filter: blur(calc(2 * var(--dp)));
   opacity: 0.5;
   pointer-events: none;
   z-index: 0;
@@ -208,77 +225,19 @@ img {
 /* WhatsApp float */
 .wa-float {
   position: fixed;
-  right: 22px;
-  bottom: 22px;
-  width: 58px;
-  height: 58px;
+  right: calc(22 * var(--dp));
+  bottom: calc(22 * var(--dp));
+  width: calc(58 * var(--dp));
+  height: calc(58 * var(--dp));
   border-radius: 50%;
   background: #25d366;
   display: grid;
   place-items: center;
   z-index: 50;
-  box-shadow: 0 14px 32px -8px rgba(37, 211, 102, 0.65);
+  box-shadow: 0 calc(14 * var(--dp)) calc(32 * var(--dp)) calc(-8 * var(--dp)) rgba(37, 211, 102, 0.65);
   transition: transform 0.15s ease;
 }
 .wa-float:hover {
   transform: scale(1.08) rotate(-6deg);
 }
 
-/* Mobile = a mesma vista web, reduzida.
-   Decisão 03/09: no celular a landing não re-empilha em coluna única — cada
-   seção mantém a composição em colunas do desktop e só encolhe tipografia,
-   espaçamento e raio. Os dois degraus abaixo são o "zoom" dessa redução;
-   cada componente ajusta o que é seu dentro dos mesmos dois breakpoints. */
-@media (max-width: 900px) {
-  .container {
-    padding-inline: 18px;
-  }
-  .section {
-    padding-block: 52px;
-  }
-  .section-title {
-    font-size: 1.5rem;
-  }
-  .btn {
-    padding: 10px 18px;
-    font-size: 0.82rem;
-    gap: 7px;
-  }
-  .link-quiet {
-    font-size: 0.82rem;
-  }
-}
-
-@media (max-width: 620px) {
-  .container {
-    padding-inline: 12px;
-  }
-  .section {
-    padding-block: 30px;
-  }
-  .section-title {
-    font-size: 1.05rem;
-  }
-  .btn {
-    padding: 7px 13px;
-    font-size: 0.62rem;
-    gap: 5px;
-    border-width: 1.5px;
-  }
-  .link-quiet {
-    font-size: 0.62rem;
-    border-bottom-width: 1.5px;
-    padding-bottom: 1px;
-  }
-  .wa-float {
-    width: 40px;
-    height: 40px;
-    right: 12px;
-    bottom: 12px;
-  }
-  .wa-float :global(svg),
-  .wa-float svg {
-    width: 22px;
-    height: 22px;
-  }
-}

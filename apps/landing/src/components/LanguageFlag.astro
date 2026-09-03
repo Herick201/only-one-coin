@@ -92,11 +92,11 @@ const { slug } = Astro.props;
 
 <style>
   .lang-flag {
-    width: 20px;
-    height: 20px;
+    width: calc(20 * var(--dp));
+    height: calc(20 * var(--dp));
     flex: none;
     border-radius: 50%;
     /* Thin ring so light flags (Korea) don't melt into the white panel. */
-    border: 1px solid rgba(19, 34, 75, 0.14);
+    border: calc(1 * var(--dp)) solid rgba(19, 34, 75, 0.14);
   }
 </style>

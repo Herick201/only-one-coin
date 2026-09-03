@@ -51,33 +51,33 @@ const icons = [
   }
   .why-grid {
     display: grid;
-    grid-template-columns: minmax(260px, 0.9fr) 2fr;
-    gap: 48px;
+    grid-template-columns: minmax(calc(260 * var(--dp)), 0.9fr) 2fr;
+    gap: calc(48 * var(--dp));
     align-items: center;
   }
   .why-title {
     text-align: left;
   }
   .why-intro p {
-    margin-top: 14px;
+    margin-top: calc(14 * var(--dp));
     max-width: 34ch;
   }
   .why-cta {
-    margin-top: 24px;
+    margin-top: calc(24 * var(--dp));
     display: inline-flex;
     align-items: center;
-    gap: 9px;
+    gap: calc(9 * var(--dp));
   }
   .why-cta svg {
-    width: 17px;
-    height: 17px;
+    width: calc(17 * var(--dp));
+    height: calc(17 * var(--dp));
   }
   /* Formato web do mockup: pilares lado a lado com divisórias finas, ícones
      coloridos sem fundo, e uma divisória entre a introdução e os pilares. */
   .pillars {
     margin: 0;
-    padding: 0 0 0 40px;
-    border-left: 1.5px solid var(--border);
+    padding: 0 0 0 calc(40 * var(--dp));
+    border-left: calc(1.5 * var(--dp)) solid var(--border);
     list-style: none;
     display: flex;
     align-items: stretch;
@@ -85,15 +85,15 @@ const icons = [
   .pillar {
     flex: 1 1 0;
     text-align: center;
-    padding-inline: 14px;
+    padding-inline: calc(14 * var(--dp));
   }
   .pillar + .pillar {
-    border-left: 1.5px solid var(--border);
+    border-left: calc(1.5 * var(--dp)) solid var(--border);
   }
   .pillar-icon {
     display: grid;
     place-items: center;
-    margin-bottom: 12px;
+    margin-bottom: calc(12 * var(--dp));
     color: var(--blue);
     transition: transform 0.18s ease;
   }
@@ -108,99 +108,35 @@ const icons = [
     transform: rotate(-6deg) scale(1.08);
   }
   .pillar-icon :global(svg) {
-    width: 34px;
-    height: 34px;
+    width: calc(34 * var(--dp));
+    height: calc(34 * var(--dp));
   }
   .pillar h3 {
-    font-size: 0.98rem;
-    margin-bottom: 6px;
+    font-size: calc(15.68 * var(--dp));
+    margin-bottom: calc(6 * var(--dp));
   }
   .pillar p {
     margin: 0;
-    font-size: 0.85rem;
+    font-size: calc(13.6 * var(--dp));
     line-height: 1.45;
   }
-  /* Mobile: a introdução sobe para o topo e os cinco pilares ficam na mesma
-     fileira da vista web. Em coluna estreita a divisória some e cada pilar
-     vira um cartão — a linha fina não se lê a 60px de largura. */
   @media (max-width: 900px) {
     .why-grid {
       grid-template-columns: 1fr;
-      gap: 22px;
+      gap: calc(36 * var(--dp));
     }
     .why-intro p {
       max-width: none;
-      font-size: 0.9rem;
-    }
-    .why-cta {
-      margin-top: 14px;
     }
     .pillars {
       padding-left: 0;
       border-left: 0;
       display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 10px;
-    }
-    .pillar {
-      padding: 14px 8px;
-      background: var(--paper);
-      border: 1px solid var(--border);
-      border-radius: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(calc(140 * var(--dp)), 1fr));
+      gap: calc(26 * var(--dp)) calc(12 * var(--dp));
     }
     .pillar + .pillar {
-      border-left: 1px solid var(--border);
-    }
-    .pillar-icon :global(svg) {
-      width: 24px;
-      height: 24px;
-    }
-    .pillar h3 {
-      font-size: 0.78rem;
-    }
-    .pillar p {
-      font-size: 0.68rem;
-    }
-  }
-
-  @media (max-width: 620px) {
-    .why-grid {
-      gap: 12px;
-    }
-    .why-intro p {
-      margin-top: 5px;
-      font-size: 0.6rem;
-    }
-    .why-cta {
-      margin-top: 9px;
-      gap: 5px;
-    }
-    .why-cta svg {
-      width: 10px;
-      height: 10px;
-    }
-    .pillars {
-      gap: 5px;
-    }
-    .pillar {
-      padding: 9px 4px;
-      border-radius: 8px;
-    }
-    .pillar-icon {
-      margin-bottom: 5px;
-    }
-    .pillar-icon :global(svg) {
-      width: 17px;
-      height: 17px;
-    }
-    .pillar h3 {
-      font-size: 0.55rem;
-      margin-bottom: 3px;
-      line-height: 1.15;
-    }
-    .pillar p {
-      font-size: 0.46rem;
-      line-height: 1.35;
+      border-left: 0;
     }
   }
 </style>
