@@ -67,7 +67,12 @@ const featureIcons = [
         loading="eager"
         fetchpriority="high"
       />
-      <span class="photo-caption" aria-hidden="true">{h.photoCaption}</span>
+      <span class="photo-caption" aria-hidden="true">
+        {h.photoCaption}
+        <svg class="caption-swoosh" viewBox="0 0 120 34" fill="none" aria-hidden="true">
+          <path d="M4 8c28 26 74 26 112-4" stroke="currentColor" stroke-width="5" stroke-linecap="round" />
+        </svg>
+      </span>
       <span class="corner-blob" aria-hidden="true"></span>
     </div>
     </div>
@@ -283,17 +288,18 @@ const featureIcons = [
     height: 100%;
     object-fit: cover;
     object-position: 50% 68%;
-    filter: brightness(1.07) saturate(1.03);
+    /* O tom lavado do mockup: bem mais claro e com menos contraste. */
+    filter: brightness(1.14) contrast(0.94) saturate(1.02);
   }
-  /* O véu branco da direita do mockup, atrás do lettering. */
+  /* Véus brancos do mockup: descem do topo (apagam o teto) e entram pela
+     direita, atrás do lettering. */
   .hero-media::after {
     content: "";
     position: absolute;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    width: 34%;
-    background: linear-gradient(270deg, rgba(255, 255, 255, 0.55), transparent);
+    inset: 0;
+    background:
+      linear-gradient(195deg, rgba(255, 255, 255, 0.65), transparent 42%),
+      linear-gradient(270deg, rgba(255, 255, 255, 0.7), transparent 42%);
     z-index: 1;
     pointer-events: none;
   }
@@ -304,22 +310,26 @@ const featureIcons = [
   /* O lettering do mockup: manuscrito amarelo sobre a foto. */
   .photo-caption {
     position: absolute;
-    top: 56px;
-    right: 36px;
+    top: 44px;
+    right: 32px;
     max-width: 8ch;
     font-family: var(--font-script);
     font-weight: 700;
-    font-size: clamp(1.9rem, 3.1vw, 2.7rem);
-    line-height: 1;
-    color: var(--yellow);
+    font-size: clamp(2.1rem, 3.5vw, 3rem);
+    line-height: 0.95;
+    /* Dourado fechado: sobre o véu branco, o amarelo claro sumia. */
+    color: var(--yellow-deep);
     text-align: right;
-    transform: rotate(-8deg);
-    /* Contorno + sombra em camadas: o manuscrito segura a leitura mesmo
-       sobre as áreas claras da foto. */
-    text-shadow:
-      0 1px 0 rgba(19, 34, 75, 0.5),
-      0 0 3px rgba(19, 34, 75, 0.45),
-      0 4px 16px rgba(19, 34, 75, 0.85);
+    transform: rotate(-7deg);
+    text-shadow: 0 2px 8px rgba(19, 34, 75, 0.18);
+  }
+  /* O traço curvo amarelo sob o lettering, como no mockup. */
+  .caption-swoosh {
+    display: block;
+    width: 96px;
+    margin-left: auto;
+    margin-top: 10px;
+    color: var(--yellow-deep);
   }
   .corner-blob {
     position: absolute;
