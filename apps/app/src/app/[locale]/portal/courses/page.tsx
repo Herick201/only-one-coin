@@ -56,12 +56,18 @@ export default async function CoursesPage({
                         label={t(`enrollment_status.${e.status}`)}
                       />
                       <span className="rounded-full bg-sky px-2 py-0.5 text-[11px] font-semibold text-brand-blue-deep">
-                        {t(`modality.${e.classGroup.modality}`)}
+                        {t('common.online_label')}
                       </span>
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">
                       {e.classGroup.name}
                     </p>
+                    {e.classAccessLock !== null && (
+                      <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 ring-1 ring-inset ring-red-600/15">
+                        <Icon name="lock" size={13} />
+                        {t(`access_lock.${e.classAccessLock}`)}
+                      </p>
+                    )}
 
                     <AutoGrid as="dl" min="9rem" gap="gap-x-6 gap-y-3" className="mt-4 max-w-md text-sm">
                       <div>

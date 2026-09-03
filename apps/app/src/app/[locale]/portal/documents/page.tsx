@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { Link } from '@/i18n/navigation'
 import { getPortalSession } from '@/lib/portal/mock-data'
 import { formatDate } from '@/lib/portal/format'
 import type { Locale } from '@/lib/portal/types'
@@ -23,8 +24,22 @@ export default async function DocumentsPage({
   const t = await getTranslations('portal')
 
   const { enrollments, documents } = getPortalSession()
+  const enrollmentOf = (enrollmentId: string) =>
+    enrollments.find((e) => e.id === enrollmentId)
   const courseName = (enrollmentId: string) =>
-    enrollments.find((e) => e.id === enrollmentId)?.course.name ?? ''
+    enrollmentOf(enrollmentId)?.course.name ?? ''
+
+  /**
+   * Why a certificate is still locked: course completion with grade ≥ 14, and
+   * — for Inglés Básico — also the separately-requested certification exam
+   * (CLAUDE.md §1, docs/DOCUMENTOS-E-CERTIFICADOS.md).
+   */
+  const lockedNote = (doc: (typeof documents)[number]) => {
+    if (doc.type !== 'certificate') return t('documents.locked_note')
+    return enrollmentOf(doc.enrollmentId)?.course.requiresCertificationExam
+      ? t('documents.locked_cert_exam_note')
+      : t('documents.locked_cert_note')
+  }
 
   return (
     <div>
@@ -84,13 +99,36 @@ export default async function DocumentsPage({
                 <p className="rounded-xl bg-sky-soft px-3.5 py-2.5 text-xs text-muted-foreground">
                   {doc.status === 'pending'
                     ? t('documents.pending_note')
-                    : t('documents.locked_note')}
+                    : lockedNote(doc)}
                 </p>
               )}
             </Card>
           ))}
         </AutoGrid>
       )}
+
+      <div className="mt-6 flex flex-col gap-2 text-xs text-muted-foreground">
+        <p className="flex items-start gap-2">
+          <span className="mt-0.5 shrink-0 text-brand-blue">
+            <Icon name="alert" size={14} />
+          </span>
+          {t('documents.rules_note')}
+        </p>
+        <p className="flex items-start gap-2">
+          <span className="mt-0.5 shrink-0 text-brand-blue">
+            <Icon name="clipboard" size={14} />
+          </span>
+          <span>
+            {t('documents.constancia_note')}{' '}
+            <Link
+              href="/portal/requests"
+              className="font-semibold text-brand-blue transition hover:text-brand-blue-deep"
+            >
+              {t('documents.constancia_cta')}
+            </Link>
+          </span>
+        </p>
+      </div>
     </div>
   )
 }

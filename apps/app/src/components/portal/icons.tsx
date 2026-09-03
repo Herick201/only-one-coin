@@ -24,6 +24,16 @@ export type IconName =
   | 'shield'
   | 'chevron-right'
   | 'seat'
+  | 'lock'
+  | 'bell'
+  | 'card'
+  | 'clipboard'
+  | 'upload'
+  | 'trash'
+  | 'alert'
+  | 'check'
+  | 'freeze'
+  | 'star'
 
 const paths: Record<IconName, ReactElement> = {
   home: (
@@ -73,6 +83,34 @@ const paths: Record<IconName, ReactElement> = {
   'chevron-right': <path d="m9 6 6 6-6 6" />,
   seat: (
     <path d="M6 10V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v4M5 10h14v6H5zM7 16v3M17 16v3" />
+  ),
+  lock: (
+    <path d="M8 11V8a4 4 0 0 1 8 0v3M6 11h12v9H6zM12 14.5v2" />
+  ),
+  bell: (
+    <path d="M6 9.5a6 6 0 0 1 12 0c0 4.5 1.5 5.5 2 6H4c.5-.5 2-1.5 2-6ZM10 19.5a2 2 0 0 0 4 0" />
+  ),
+  card: (
+    <path d="M3 6h18v12H3zM3 10h18M6 14.5h5" />
+  ),
+  clipboard: (
+    <path d="M9 4h6v3H9zM9 4H7a1 1 0 0 0-1 1v15h12V5a1 1 0 0 0-1-1h-2M9.5 11.5h5M9.5 15.5h3.5" />
+  ),
+  upload: (
+    <path d="M12 15V4m0 0 4 4m-4-4L8 8M5 19h14" />
+  ),
+  trash: (
+    <path d="M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13M10 11v5M14 11v5" />
+  ),
+  alert: (
+    <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM12 8v5m0 3v.01" />
+  ),
+  check: <path d="m5 13 4 4L19 7" />,
+  freeze: (
+    <path d="M12 3v18M12 3l-2 2m2-2 2 2M12 21l-2-2m2 2 2-2M4.2 7.5l15.6 9M4.2 16.5l15.6-9" />
+  ),
+  star: (
+    <path d="m12 4 2.35 4.76 5.25.76-3.8 3.7.9 5.23L12 16l-4.7 2.45.9-5.23-3.8-3.7 5.25-.76z" />
   ),
 }
 

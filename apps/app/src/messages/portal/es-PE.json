@@ -7,6 +7,8 @@
     "nav": {
       "dashboard": "Inicio",
       "courses": "Mis cursos",
+      "payments": "Pagos",
+      "requests": "Trámites",
       "enrollments": "Mi matrícula",
       "documents": "Documentos",
       "profile": "Mi perfil",
@@ -16,7 +18,7 @@
     },
     "greeting": {
       "hello": "Hola, {name}",
-      "subtitle": "Este es tu espacio en Only One Coin. Aquí ves tus clases, tu matrícula y tus documentos."
+      "subtitle": "Este es tu espacio en Only One Coin. Aquí ves tus clases, tus pagos, tus trámites y tus documentos."
     },
     "common": {
       "view_detail": "Ver detalle",
@@ -28,7 +30,8 @@
       "teacher": "Docente",
       "schedule": "Horario",
       "starts": "Inicio",
-      "back": "Volver"
+      "back": "Volver",
+      "online_label": "100% en línea"
     },
     "next_class": {
       "title": "Tu próxima clase",
@@ -36,11 +39,13 @@
       "none_body": "Cuando tu matrícula esté activa, aquí verás tu próxima sesión.",
       "with_teacher": "con {teacher}",
       "join": "Entrar a la clase",
-      "no_link_yet": "El enlace se publicará antes de la clase"
+      "no_link_yet": "El enlace se publicará antes de la clase",
+      "locked": "Acceso pausado — regularizar pago"
     },
     "enrollment_status": {
       "under_review": "En revisión",
       "active": "Activa",
+      "frozen": "Congelada",
       "completed": "Finalizada",
       "rejected": "Rechazada"
     },
@@ -64,10 +69,40 @@
       "enrollment_certificate": "Constancia de matrícula",
       "certificate": "Certificado de finalización"
     },
-    "modality": {
-      "online": "En línea",
-      "in_person": "Presencial",
-      "hybrid": "Híbrida"
+    "billing_mode": {
+      "package": "Paquete completo",
+      "monthly": "Mensual (por módulo)"
+    },
+    "module_status": {
+      "completed": "Completado",
+      "current": "En curso",
+      "upcoming": "Próximo"
+    },
+    "access_lock": {
+      "monthly_payment_due": "Acceso a la clase pausado: falta el pago del módulo",
+      "module_failed": "Acceso a la clase pausado: no aprobaste el módulo anterior"
+    },
+    "request_type": {
+      "enrollment_certificate": "Constancia de matrícula",
+      "certification_exam": "Examen de certificación",
+      "makeup_exam": "Examen de rezagados",
+      "enrollment_freeze": "Congelamiento de matrícula"
+    },
+    "request_status": {
+      "under_review": "Pago en revisión",
+      "in_progress": "En atención",
+      "completed": "Completado",
+      "rejected": "Rechazado"
+    },
+    "notice": {
+      "monthly_payment_due": "Tu módulo de {course} está pendiente de pago. Sube tu comprobante para retomar tus clases.",
+      "next_level_invite": "¡Felicitaciones! Ya puedes matricularte en {course} desde el portal.",
+      "document_ready": "Tu certificado de {course} está listo para descargar."
+    },
+    "notice_cta": {
+      "monthly_payment_due": "Ir a Pagos",
+      "next_level_invite": "Ver oferta",
+      "document_ready": "Ver documento"
     },
     "relationship": {
       "mother": "Madre",
@@ -91,8 +126,9 @@
       "my_courses_title": "Mis cursos",
       "my_courses_sub": "Los cursos en los que estás matriculada.",
       "quick_actions_title": "Accesos rápidos",
+      "action_payments": "Ver mis pagos",
+      "action_requests": "Iniciar un trámite",
       "action_documents": "Ver mis documentos",
-      "action_enrollments": "Ver mi matrícula",
       "action_profile": "Editar mi perfil",
       "review_note": "Tienes una matrícula en revisión. Te avisaremos por correo cuando se apruebe.",
       "progress_label": "Progreso del curso"
@@ -112,14 +148,27 @@
       "level_label": "Nivel",
       "min_age_label": "Edad mínima",
       "min_age_value": "{age} años",
-      "schedule_title": "Horario y modalidad",
+      "schedule_title": "Horario y acceso a clase",
       "teacher_title": "Docente",
       "join_class": "Entrar a la clase",
       "meeting_pending": "El enlace de la clase se publicará antes del inicio.",
+      "locked": {
+        "monthly_payment_due": "Tu acceso a la clase está pausado porque el módulo actual aún no tiene pago aprobado. Sube tu comprobante y lo reactivamos apenas se valide. No es una deuda: no hay intereses ni moras.",
+        "module_failed": "Tu acceso a la clase está pausado porque no aprobaste el módulo anterior. Escríbenos por WhatsApp para ver tus opciones."
+      },
+      "locked_cta": "Regularizar pago",
+      "modules_title": "Módulos",
+      "month_unpaid": "Pago pendiente",
       "materials_title": "Materiales",
       "materials_empty": "Aún no hay materiales publicados para este curso.",
       "plan_title": "Tu plan",
       "plan_price": "Precio del plan",
+      "module_price": "Precio por módulo",
+      "monthly_note": "Modalidad mensual: pagas cada módulo por adelantado. Sin pago aprobado, el acceso a la clase se pausa — nunca se genera deuda.",
+      "result_title": "Tu resultado",
+      "result_pass_note": "Nota aprobatoria (mínimo 14): tu certificado gratuito se emite en un máximo de 25 días hábiles.",
+      "result_fail_note": "El certificado requiere nota mínima de 14.",
+      "result_did_not_attempt": "No rendiste el examen final (DA), por lo que no corresponde certificado. Puedes solicitar el examen de rezagados en Trámites.",
       "enrolled_on": "Matriculada el {date}",
       "period_dates": "Del {start} al {end}"
     },
@@ -130,14 +179,94 @@
       "empty_body": "Cuando te matricules, verás aquí el estado de cada curso.",
       "code_label": "Código de matrícula",
       "plan_label": "Plan",
+      "billing_label": "Modalidad de pago",
       "price_label": "Monto",
       "payment_title": "Comprobante de pago",
       "operation_number": "N.º de operación",
       "paid_on": "Pagado el {date}",
       "seat_label": "Vacante",
+      "monthly_title": "Pagos mensuales por módulo",
+      "month_due": "vence el {date}",
+      "month_pay_cta": "Subir comprobante",
       "review_note": "Estamos verificando tu comprobante. Este paso puede tomar unas horas.",
       "rejected_note": "No pudimos validar este pago. Escríbenos por WhatsApp para resolverlo.",
       "approved_note": "Pago aprobado. Tu vacante está confirmada."
+    },
+    "receipt_form": {
+      "amount_label": "Monto a pagar",
+      "amount_hint": "Transfiere el monto exacto. No aplican descuentos.",
+      "method_label": "¿Por dónde pagaste?",
+      "error_method": "Elige el medio de pago.",
+      "operation_label": "N.º de operación",
+      "operation_hint": "Aparece en el voucher de tu app.",
+      "error_operation": "Ingresa el número de operación.",
+      "file_label": "Comprobante",
+      "attach": "Adjuntar comprobante",
+      "remove": "Quitar archivo",
+      "file_hint": "Foto o PDF, máx. {size}.",
+      "error_type": "Formato no válido. Sube una foto (JPG, PNG, HEIC) o un PDF.",
+      "error_size": "El archivo supera el tamaño máximo.",
+      "error_file": "Adjunta tu comprobante."
+    },
+    "payments": {
+      "title": "Pagos",
+      "subtitle": "Tus pagos por módulo, tus comprobantes y todo tu historial.",
+      "due_title": "Pago del módulo",
+      "due_label": "Fecha de pago",
+      "due_note": "Paga antes del {date} para mantener tu acceso a la clase.",
+      "locked_note": "Tu acceso a la clase de {course} está pausado hasta validar el pago de este módulo. No es una deuda: no hay intereses ni moras.",
+      "open_form": "Subir comprobante",
+      "submit": "Enviar comprobante",
+      "submitted_title": "Comprobante enviado",
+      "submitted_body": "Estamos validando tu pago. Este paso puede tomar unas horas; tu acceso a la clase se reactiva apenas se apruebe.",
+      "monthly_explainer": "La modalidad mensual es una compra por módulo, por adelantado. No genera deuda, intereses ni moras: sin pago, el acceso a la clase simplemente se pausa hasta regularizar.",
+      "history_title": "Historial de pagos",
+      "history_empty": "Todavía no registras pagos.",
+      "concept_package": "{course} — Paquete completo",
+      "concept_module": "{course} — {module}",
+      "concept_procedure": "{procedure} — {course}"
+    },
+    "requests": {
+      "title": "Trámites",
+      "subtitle": "Solicita constancias, exámenes o el congelamiento de tu matrícula. Cada trámite se paga al solicitarlo.",
+      "catalog_title": "Trámites disponibles",
+      "request_cta": "Solicitar",
+      "not_eligible": "No tienes cursos elegibles para este trámite.",
+      "new_title": "Solicitar: {procedure}",
+      "cancel": "Cancelar",
+      "freeze_note": "Al congelar, retomas exactamente en el módulo donde te quedaste, sin plazo máximo. No disponible para niveles intermedio y avanzado.",
+      "choose_enrollment": "¿Para qué curso?",
+      "submit": "Enviar solicitud",
+      "submitted_body": "Recibimos tu solicitud. Validaremos el pago y te avisaremos por correo; puedes seguir el estado aquí.",
+      "my_title": "Mis solicitudes",
+      "empty_title": "Todavía no tienes solicitudes",
+      "empty_body": "Cuando inicies un trámite, verás aquí su estado.",
+      "requested_on": "solicitado el {date}",
+      "desc": {
+        "enrollment_certificate": "Documento oficial que acredita tu matrícula vigente.",
+        "certification_exam": "Examen requerido para el certificado de Inglés Básico.",
+        "makeup_exam": "Si no rendiste el examen final, puedes rendirlo en fecha extraordinaria.",
+        "enrollment_freeze": "Pausa tu matrícula y retómala después en el mismo módulo."
+      }
+    },
+    "continue_page": {
+      "title": "Continúa estudiando",
+      "subtitle": "Como ya eres alumna, te matriculas desde aquí con tus datos de siempre — sin volver a llenar formularios.",
+      "empty_title": "Aún no hay ofertas para ti",
+      "empty_body": "Cuando finalices un curso, aquí verás tu siguiente paso.",
+      "kind": {
+        "next_level": "Siguiente nivel",
+        "repeat_module": "Repetir módulo",
+        "re_enroll": "Rematrícula"
+      },
+      "based_on": "Porque finalizaste {course}",
+      "price_label": "Precio",
+      "choose_group": "Elige fecha de inicio y horario",
+      "starts": "Inicia el {date}",
+      "seats_left": "{count} vacantes",
+      "reserve_cta": "Reservar mi vacante",
+      "submitted_title": "¡Vacante reservada en {course}!",
+      "submitted_body": "Estamos validando tu pago. Te llegará un correo con la confirmación y tu nueva matrícula aparecerá en el portal."
     },
     "documents": {
       "title": "Documentos",
@@ -146,7 +275,12 @@
       "empty_body": "Tus constancias y certificados aparecerán aquí cuando estén listos.",
       "issued_on": "Emitido el {date}",
       "pending_note": "Se generará automáticamente. Vuelve a revisar pronto.",
-      "locked_note": "Estará disponible cuando finalices el curso."
+      "locked_note": "Estará disponible cuando finalices el curso.",
+      "locked_cert_note": "Se emite al finalizar el curso con nota mínima de 14.",
+      "locked_cert_exam_note": "Requiere finalizar el curso con nota mínima de 14 y aprobar el examen de certificación (se solicita en Trámites).",
+      "rules_note": "El certificado de finalización es gratuito y se emite en un máximo de 25 días hábiles desde el término del curso. Requiere nota mínima de 14; quien no rinde el examen final (DA) no lo recibe.",
+      "constancia_note": "¿Necesitas una constancia de matrícula? Es un trámite con costo.",
+      "constancia_cta": "Solicitar en Trámites"
     },
     "profile": {
       "title": "Mi perfil",

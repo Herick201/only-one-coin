@@ -50,6 +50,19 @@
         "3008"
       ],
       "port": 3008
+    },
+    {
+      "name": "app-wt2",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@ooc/app",
+        "exec",
+        "next",
+        "dev"
+      ],
+      "port": 3009,
+      "autoPort": true
     }
   ]
 }

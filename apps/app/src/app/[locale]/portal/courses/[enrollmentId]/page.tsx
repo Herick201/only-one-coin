@@ -5,7 +5,7 @@ import { getEnrollment } from '@/lib/portal/mock-data'
 import { formatDate, formatMoney } from '@/lib/portal/format'
 import type { CourseMaterial, Locale } from '@/lib/portal/types'
 import { Card, Field, SectionTitle, StatusBadge } from '@/components/portal/ui'
-import { enrollmentTone } from '@/components/portal/status-tone'
+import { enrollmentTone, moduleTone, paymentTone } from '@/components/portal/status-tone'
 import { Icon, type IconName } from '@/components/portal/icons'
 
 const materialIcon: Record<CourseMaterial['kind'], IconName> = {
@@ -28,7 +28,8 @@ export default async function CourseDetailPage({
   const enrollment = getEnrollment(enrollmentId)
   if (!enrollment) notFound()
 
-  const { course, classGroup, plan, academicPeriod } = enrollment
+  const { course, classGroup, plan, academicPeriod, monthly } = enrollment
+  const locked = enrollment.classAccessLock !== null
 
   return (
     <div className="flex flex-col gap-6">
@@ -52,7 +53,7 @@ export default async function CourseDetailPage({
         </div>
         <div className="flex flex-wrap gap-2 text-xs font-semibold">
           <span className="rounded-full bg-sky px-2.5 py-1 text-brand-blue-deep">
-            {t('modality.' + classGroup.modality)}
+            {t('common.online_label')}
           </span>
           <span className="rounded-full bg-sky px-2.5 py-1 text-brand-blue-deep">
             {t('course_detail.level_label')}: {course.level}
@@ -74,7 +75,7 @@ export default async function CourseDetailPage({
             </p>
           </Card>
 
-          {/* Schedule & format */}
+          {/* Schedule & class access */}
           <Card className="p-5 sm:p-6">
             <SectionTitle>{t('course_detail.schedule_title')}</SectionTitle>
             <ul className="mt-3 flex flex-col gap-2">
@@ -102,7 +103,27 @@ export default async function CourseDetailPage({
               })}
             </p>
             <div className="mt-4">
-              {classGroup.meetingUrl ? (
+              {/* The cadeado (CLAUDE.md §1): the lock is this portal option,
+                  never a Classroom integration. */}
+              {locked ? (
+                <div className="flex flex-col items-start gap-3 rounded-xl border border-red-600/20 bg-red-50 p-4">
+                  <p className="flex items-start gap-2 text-sm text-red-800">
+                    <span className="mt-0.5 shrink-0">
+                      <Icon name="lock" size={16} />
+                    </span>
+                    {t(`course_detail.locked.${enrollment.classAccessLock}`)}
+                  </p>
+                  {enrollment.classAccessLock === 'monthly_payment_due' && (
+                    <Link
+                      href="/portal/payments"
+                      className="inline-flex items-center gap-2 rounded-full bg-brand-blue px-4 py-2 text-sm font-bold text-white shadow-card transition hover:bg-brand-blue-deep"
+                    >
+                      <Icon name="card" size={16} />
+                      {t('course_detail.locked_cta')}
+                    </Link>
+                  )}
+                </div>
+              ) : classGroup.meetingUrl ? (
                 <a
                   href={classGroup.meetingUrl}
                   target="_blank"
@@ -122,6 +143,63 @@ export default async function CourseDetailPage({
               )}
             </div>
           </Card>
+
+          {/* Modules — progression happens in batch, decided by the
+              coordination (CLAUDE.md §1); the portal only shows where the
+              student stands. */}
+          {enrollment.modules.length > 0 && (
+            <Card className="p-5 sm:p-6">
+              <SectionTitle>{t('course_detail.modules_title')}</SectionTitle>
+              <ul className="mt-3 flex flex-col gap-2">
+                {enrollment.modules.map((m) => {
+                  const modulePayment =
+                    monthly?.payments.find((mp) => mp.moduleId === m.id) ?? null
+                  return (
+                    <li
+                      key={m.id}
+                      className={`flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border px-3.5 py-3 ${
+                        m.status === 'current'
+                          ? 'border-brand-blue/40 bg-sky'
+                          : 'border-line bg-white'
+                      }`}
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-ink">{m.name}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {t('course_detail.period_dates', {
+                            start: formatDate(m.startDate, locale),
+                            end: formatDate(m.endDate, locale),
+                          })}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        {monthly !== null &&
+                          modulePayment !== null &&
+                          (modulePayment.payment === null ? (
+                            <StatusBadge
+                              tone="danger"
+                              label={t('course_detail.month_unpaid')}
+                            />
+                          ) : (
+                            <StatusBadge
+                              tone={paymentTone[modulePayment.payment.status]}
+                              label={t(
+                                `payment_status.${modulePayment.payment.status}`,
+                              )}
+                            />
+                          ))}
+                        <StatusBadge
+                          tone={moduleTone[m.status]}
+                          label={t(`module_status.${m.status}`)}
+                          dot={false}
+                        />
+                      </div>
+                    </li>
+                  )
+                })}
+              </ul>
+            </Card>
+          )}
 
           {/* Materials */}
           <Card className="p-5 sm:p-6">
@@ -157,7 +235,7 @@ export default async function CourseDetailPage({
           </Card>
         </div>
 
-        {/* Side: teacher + plan */}
+        {/* Side: teacher + result + plan */}
         <div className="flex flex-col gap-6">
           <Card className="p-5 sm:p-6">
             <SectionTitle>{t('course_detail.teacher_title')}</SectionTitle>
@@ -171,17 +249,60 @@ export default async function CourseDetailPage({
             </div>
           </Card>
 
+          {/* Final grade — only once the class group closed. */}
+          {enrollment.status === 'completed' && enrollment.finalGrade !== null && (
+            <Card className="p-5 sm:p-6">
+              <SectionTitle>{t('course_detail.result_title')}</SectionTitle>
+              {enrollment.finalGrade === 'did_not_attempt' ? (
+                <p className="mt-3 text-sm text-muted-foreground">
+                  {t('course_detail.result_did_not_attempt')}
+                </p>
+              ) : (
+                <>
+                  <p className="mt-3 text-3xl font-bold tracking-tight text-ink">
+                    {enrollment.finalGrade}
+                    <span className="text-base font-semibold text-muted-foreground">
+                      {' '}
+                      / 20
+                    </span>
+                  </p>
+                  <p className="mt-1.5 text-xs text-muted-foreground">
+                    {enrollment.finalGrade >= 14
+                      ? t('course_detail.result_pass_note')
+                      : t('course_detail.result_fail_note')}
+                  </p>
+                </>
+              )}
+            </Card>
+          )}
+
           <Card className="p-5 sm:p-6">
             <SectionTitle>{t('course_detail.plan_title')}</SectionTitle>
             <dl className="mt-3 flex flex-col gap-3">
               <Field label={t('enrollments.plan_label')}>{plan.name}</Field>
-              <Field label={t('course_detail.plan_price')}>
-                <span className="text-lg text-ink">
-                  {formatMoney(plan.priceCents, plan.currency, locale)}
-                </span>
+              <Field label={t('enrollments.billing_label')}>
+                {t(`billing_mode.${enrollment.billingMode}`)}
               </Field>
+              {monthly !== null ? (
+                <Field label={t('course_detail.module_price')}>
+                  <span className="text-lg text-ink">
+                    {formatMoney(monthly.modulePriceCents, monthly.currency, locale)}
+                  </span>
+                </Field>
+              ) : (
+                <Field label={t('course_detail.plan_price')}>
+                  <span className="text-lg text-ink">
+                    {formatMoney(plan.priceCents, plan.currency, locale)}
+                  </span>
+                </Field>
+              )}
               <Field label={t('common.period')}>{academicPeriod.name}</Field>
             </dl>
+            {monthly !== null && (
+              <p className="mt-3 rounded-xl bg-sky-soft px-3.5 py-2.5 text-xs text-muted-foreground">
+                {t('course_detail.monthly_note')}
+              </p>
+            )}
             <p className="mt-3 border-t border-line pt-3 text-xs text-muted-foreground">
               {t('course_detail.enrolled_on', {
                 date: formatDate(enrollment.createdAt, locale),

@@ -9,7 +9,6 @@
  */
 
 import type {
-  ClassModality,
   DocumentStatus,
   DocumentType,
   EnrollmentStatus,
@@ -20,8 +19,14 @@ import type {
   SeatStatus,
 } from '@/lib/portal/types'
 
+/**
+ * TODO(content-bug): everything is online (CLAUDE.md §1) — the portal already
+ * dropped this field, and the backoffice screens/mock rows still carrying
+ * `in_person`/`hybrid` should drop it too. Kept local here until that sweep.
+ */
+export type ClassModality = 'online' | 'in_person' | 'hybrid'
+
 export type {
-  ClassModality,
   DocumentStatus,
   DocumentType,
   EnrollmentStatus,
