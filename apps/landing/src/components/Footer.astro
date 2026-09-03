@@ -1,6 +1,7 @@
 ---
 import { languageSlugs, org, whatsappUrl } from "../i18n/ui";
 import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
+import LanguageFlag from "./LanguageFlag.astro";
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
@@ -8,6 +9,7 @@ const f = t.footer;
 const year = new Date().getFullYear();
 
 const courseLangs = languageSlugs.map((slug) => ({
+  slug,
   name: t.courses.list[slug],
   href: withLang(lang, `/courses/${slug}`),
 }));
@@ -64,7 +66,14 @@ const socials = [
     <div class="col">
       <h3>{f.langsTitle}</h3>
       <ul>
-        {courseLangs.map((c) => <li><a href={c.href}>{c.name}</a></li>)}
+        {courseLangs.map((c) => (
+          <li>
+            <a href={c.href} class="lang-link">
+              <LanguageFlag slug={c.slug} />
+              <span>{c.name}</span>
+            </a>
+          </li>
+        ))}
       </ul>
     </div>
 
@@ -194,6 +203,16 @@ const socials = [
   }
   .col a:hover {
     color: var(--yellow-bright);
+  }
+  .lang-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .lang-link :global(.lang-flag) {
+    width: 17px;
+    height: 17px;
+    border-color: rgba(255, 255, 255, 0.25);
   }
   .muted {
     color: rgba(255, 255, 255, 0.5);
