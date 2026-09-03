@@ -1,105 +1,142 @@
 ---
-import { getLangFromUrl, useTranslations } from "../i18n/utils";
+import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const w = t.why;
 
-// Ícones (Lucide) por card, na mesma ordem de w.cards. Não são conteúdo
-// traduzível, por isso vivem aqui e não no dicionário i18n.
+// Ícones (Lucide) por pilar, na mesma ordem de w.cards em todos os idiomas.
 const icons = [
-  // circle-dollar-sign (precio accesible)
+  // circle-dollar-sign (educación accesible)
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>',
-  // graduation-cap (talleres gratuitos)
-  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c3 2.5 9 2.5 12 0v-5"/><path d="M22 10v6"/></svg>',
-  // award (certificado digital)
-  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="6"/><path d="M15.5 13.5 17 22l-5-3-5 3 1.5-8.5"/></svg>',
-  // laptop (plataforma del alumno)
+  // laptop (100% digital)
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M2 20h20"/></svg>',
-  // lightbulb (enseñanza innovadora)
-  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5a6 6 0 0 0-12 0c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>',
+  // user-check (docentes)
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="8" r="4"/><path d="M3 21c0-4 3.1-6 7-6 1.2 0 2.3.2 3.3.6"/><path d="m16 19 2 2 4-4"/></svg>',
+  // users (comunidad)
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3.1-6 7-6s7 2 7 6"/><path d="M16 4a4 4 0 0 1 0 8"/><path d="M19 15.5c1.9.8 3 2.3 3 5.5"/></svg>',
+  // star (oportunidades)
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.7 5.9 6.3.7-4.7 4.3 1.3 6.1L12 16.9 6.4 20l1.3-6.1L3 9.6l6.3-.7L12 3Z"/></svg>',
 ];
 ---
 
-<section class="section why" id="about">
-  <div class="container">
-    <h2 class="section-title">{w.titlePre}<span class="accent">{w.titleAccent}</span>{w.titlePost}</h2>
+<section class="section why" id="why">
+  <div class="container why-grid">
+    <div class="why-intro">
+      <h2 class="section-title why-title">{w.titlePre}<span class="accent">{w.titleAccent}</span>{w.titlePost}</h2>
+      <p class="text-muted">{w.lead}</p>
+      <a href={withLang(lang, "/about")} class="btn btn-yellow why-cta">
+        <span>{w.cta}</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+      </a>
+    </div>
 
-    <div class="cards">
+    <ul class="pillars">
       {
         w.cards.map((item, i) => (
-          <article class="card">
-            <div class="card-icon" set:html={icons[i]} />
+          <li class="pillar">
+            <span class="pillar-icon" set:html={icons[i]} />
             <h3>{item.title}</h3>
             <p class="text-muted">{item.text}</p>
-          </article>
+          </li>
         ))
       }
-    </div>
+    </ul>
   </div>
 </section>
 
 <style>
   .why {
-    background: var(--paper);
+    background: var(--sky-soft);
   }
-  /* Flex (not auto-fit grid) so the 5th card never orphans: the last row
-     centers whatever is left over, and it collapses cleanly on small screens. */
-  .cards {
-    margin-top: 46px;
+  .why-grid {
+    display: grid;
+    grid-template-columns: minmax(260px, 0.9fr) 2fr;
+    gap: 48px;
+    align-items: center;
+  }
+  .why-title {
+    text-align: left;
+  }
+  .why-intro p {
+    margin-top: 14px;
+    max-width: 34ch;
+  }
+  .why-cta {
+    margin-top: 24px;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .why-cta svg {
+    width: 17px;
+    height: 17px;
+  }
+  /* Formato web do mockup: pilares lado a lado com divisórias finas, ícones
+     coloridos sem fundo, e uma divisória entre a introdução e os pilares. */
+  .pillars {
+    margin: 0;
+    padding: 0 0 0 40px;
+    border-left: 1.5px solid var(--border);
+    list-style: none;
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 26px;
-    max-width: 1120px;
-    margin-inline: auto;
+    align-items: stretch;
   }
-  .card {
-    flex: 1 1 290px;
-    max-width: 350px;
-    background: var(--paper);
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius);
-    padding: 34px 30px;
-    box-shadow: var(--shadow-sm);
-    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  .pillar {
+    flex: 1 1 0;
+    text-align: center;
+    padding-inline: 14px;
   }
-  .card:hover {
-    transform: translateY(-8px);
-    box-shadow: var(--shadow-md);
-    border-color: transparent;
+  .pillar + .pillar {
+    border-left: 1.5px solid var(--border);
   }
-  .card-icon {
-    width: 64px;
-    height: 64px;
+  .pillar-icon {
     display: grid;
     place-items: center;
-    border-radius: 18px;
-    background: var(--sky);
+    margin-bottom: 12px;
     color: var(--blue);
-    margin-bottom: 20px;
     transition: transform 0.18s ease;
   }
-  .card:hover .card-icon {
-    transform: rotate(-6deg) scale(1.05);
-  }
-  /* Alternate the accent so the row feels playful */
-  .card:nth-child(even) .card-icon {
-    background: var(--cream);
+  .pillar:first-child .pillar-icon,
+  .pillar:last-child .pillar-icon {
     color: var(--yellow-deep);
   }
-  .card-icon :global(svg) {
-    width: 30px;
-    height: 30px;
+  .pillar:nth-child(3) .pillar-icon {
+    color: var(--blue-deep);
   }
-  .card h3 {
-    font-size: 1.28rem;
-    margin-bottom: 10px;
+  .pillar:hover .pillar-icon {
+    transform: rotate(-6deg) scale(1.08);
   }
-  @media (max-width: 560px) {
-    .card {
-      flex-basis: 100%;
-      max-width: 420px;
+  .pillar-icon :global(svg) {
+    width: 34px;
+    height: 34px;
+  }
+  .pillar h3 {
+    font-size: 0.98rem;
+    margin-bottom: 6px;
+  }
+  .pillar p {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.45;
+  }
+  @media (max-width: 900px) {
+    .why-grid {
+      grid-template-columns: 1fr;
+      gap: 36px;
+    }
+    .why-intro p {
+      max-width: none;
+    }
+    .pillars {
+      padding-left: 0;
+      border-left: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 26px 12px;
+    }
+    .pillar + .pillar {
+      border-left: 0;
     }
   }
 </style>

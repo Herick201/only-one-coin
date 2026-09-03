@@ -5,6 +5,7 @@ import { getLangFromUrl, useTranslations, withLang, formatPEN } from "../i18n/ut
 import { courseIdBySlug, enrollmentHref } from "../data/checkout";
 import { courseContent } from "../i18n/courses-content";
 import CourseProgramDetail from "./CourseProgramDetail.astro";
+import LanguageFlag from "./LanguageFlag.astro";
 
 interface Props {
   slug: CourseSlug;
@@ -171,6 +172,7 @@ const courseJsonLd = {
       <h1>
         {d.titlePre}
         <span class="accent name-wrap">
+          <LanguageFlag slug={familyRoot} />
           {name}
           {slug === "english" && (
             <span class="discount">
@@ -349,6 +351,14 @@ const courseJsonLd = {
   .name-wrap {
     position: relative;
     display: inline-block;
+  }
+  .name-wrap :global(.lang-flag) {
+    width: 0.7em;
+    height: 0.7em;
+    display: inline-block;
+    vertical-align: baseline;
+    margin-right: 4px;
+    border-width: 2px;
   }
   /* O barbante, saindo da última letra até o furo da etiqueta. */
   .tag-string {

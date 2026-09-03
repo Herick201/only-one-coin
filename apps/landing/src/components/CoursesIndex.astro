@@ -1,6 +1,7 @@
 ---
 import { languageSlugs, coursePrices } from "../i18n/ui";
 import { getLangFromUrl, useTranslations, withLang, formatPEN } from "../i18n/utils";
+import LanguageFlag from "./LanguageFlag.astro";
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
@@ -25,7 +26,10 @@ const courses = languageSlugs.map((slug) => ({
         courses.map((course) => (
           <a class="ci-card" href={course.href}>
             {course.price && <span class="ci-badge">{course.price} · {c.payOnce}</span>}
-            <h2>{course.name}</h2>
+            <h2 class="ci-name">
+              <LanguageFlag slug={course.slug} />
+              <span>{course.name}</span>
+            </h2>
             <span class="ci-link">
               {c.viewCourse}
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
@@ -83,6 +87,16 @@ const courses = languageSlugs.map((slug) => ({
   }
   .ci-card h2 {
     font-size: 1.5rem;
+  }
+  .ci-name {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .ci-name :global(.lang-flag) {
+    width: 34px;
+    height: 34px;
+    border-width: 1.5px;
   }
   .ci-link {
     margin-top: auto;

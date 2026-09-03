@@ -17,25 +17,29 @@ const featureIcons = [
 ---
 
 <section class="hero">
-  <span class="blob blob-a" aria-hidden="true"></span>
-  <span class="blob blob-b" aria-hidden="true"></span>
+  <div class="hero-card">
+    <span class="blob blob-a" aria-hidden="true"></span>
+    <span class="blob blob-b" aria-hidden="true"></span>
 
-  <div class="container hero-grid">
+    <div class="hero-grid">
     <div class="hero-copy">
+      <span class="hero-badge">{h.badge}</span>
       <h1>
         <span class="line">{h.w1}</span>
         <span class="line accent">{h.w2}</span>
-        <span class="line-price">
-          <span class="w3">{h.w3}</span>
-          <span class="price">
-            {h.price}<span class="price-unit">{h.priceUnit}</span>
-          </span>
-        </span>
       </h1>
-      <p class="hero-sub" set:html={h.subHtml} />
+      <p class="hero-price-line">
+        {h.subPre}
+        <span class="price-pill">{h.price}</span>
+        {h.priceUnit}.
+      </p>
+      <p class="hero-sub" set:html={h.sub2Html} />
       <div class="hero-actions">
-        <a href={withLang(lang, "/enrollment")} class="btn btn-yellow btn-enroll">{h.ctaEnroll}</a>
-        <a href={withLang(lang, "/courses")} class="link-quiet">{h.ctaCourses}</a>
+        <a href={withLang(lang, "/enrollment")} class="btn btn-yellow btn-enroll">
+          <span>{h.ctaEnroll}</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+        </a>
+        <a href={withLang(lang, "/courses")} class="btn btn-ghost">{h.ctaCourses}</a>
       </div>
       <ul class="hero-features">
         {
@@ -53,68 +57,117 @@ const featureIcons = [
     </div>
 
     <div class="hero-media">
-      <span class="dots" aria-hidden="true"></span>
-      <span class="star star-1" aria-hidden="true">✦</span>
-      <div class="hero-photo">
-        <Image
-          src={heroPhoto}
-          alt={h.imgAlt}
-          widths={[480, 768, 1120, 1600]}
-          sizes="(max-width: 900px) 92vw, 560px"
-          format="webp"
-          quality={78}
-          loading="eager"
-          fetchpriority="high"
-        />
-      </div>
+      <Image
+        src={heroPhoto}
+        alt={h.imgAlt}
+        widths={[480, 768, 1120, 1600]}
+        sizes="(max-width: 900px) 100vw, 50vw"
+        format="webp"
+        quality={78}
+        loading="eager"
+        fetchpriority="high"
+      />
+      <span class="photo-blur" aria-hidden="true"></span>
+      <span class="photo-caption" aria-hidden="true">
+        {h.photoCaption}
+        <svg class="caption-swoosh" viewBox="0 0 120 34" fill="none" aria-hidden="true">
+          <path d="M4 8c28 26 74 26 112-4" stroke="currentColor" stroke-width="5" stroke-linecap="round" />
+        </svg>
+      </span>
+      <span class="corner-blob" aria-hidden="true"></span>
+    </div>
     </div>
   </div>
 </section>
 
 <style>
   /* A matrícula é o que a página quer que aconteça: o botão é maior que
-     qualquer outro clique, e pulsa uma vez ao carregar para puxar o olho. */
+     qualquer outro clique. */
   .btn-enroll {
-    font-size: 1.12rem;
+    font-size: 1.08rem;
     letter-spacing: 0.02em;
-    padding: 18px 38px;
+    padding: 16px 32px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
   }
+  .btn-enroll svg {
+    width: 18px;
+    height: 18px;
+    transition: transform 0.2s ease;
+  }
+  .btn-enroll:hover svg {
+    transform: translateX(5px);
+  }
+  .btn-ghost {
+    background: var(--paper);
+    color: var(--blue);
+    border: 1.5px solid var(--blue);
+    box-shadow: none;
+  }
+  .btn-ghost:hover {
+    background: var(--sky);
+  }
+  /* Faixa retangular de borda a borda, curta — pedido de 03/09: tela
+     completa, sem cantos arredondados nem margem de card. */
   .hero {
+    background: var(--paper);
+    padding: 0;
+  }
+  .hero-card {
     position: relative;
     overflow: hidden;
-    padding-block: 64px 104px;
     background:
-      radial-gradient(60% 70% at 88% 12%, rgba(255, 201, 60, 0.18), transparent 60%),
       radial-gradient(55% 60% at 8% 90%, rgba(47, 107, 255, 0.1), transparent 60%),
       var(--sky-soft);
   }
+  /* Círculos suaves na lateral esquerda, a meia altura — como no mockup.
+     No topo eles viravam uma "moldura" amarela sobre o card. */
   .blob-a {
-    width: 320px;
-    height: 320px;
-    top: -80px;
-    right: -60px;
-    background: var(--yellow);
-    opacity: 0.28;
-  }
-  .blob-b {
     width: 260px;
     height: 260px;
-    bottom: -90px;
-    left: -70px;
-    background: var(--blue);
-    opacity: 0.16;
+    top: 18%;
+    left: -150px;
+    background: var(--yellow);
+    opacity: 0.22;
   }
+  .blob-b {
+    width: 220px;
+    height: 220px;
+    bottom: -60px;
+    left: -110px;
+    background: var(--blue);
+    opacity: 0.1;
+  }
+  /* Formato web do mockup: texto na coluna da esquerda alinhado ao container,
+     foto sangrando até a borda direita da janela, sem moldura. */
   .hero-grid {
     position: relative;
     z-index: 1;
     display: grid;
-    grid-template-columns: 1.05fr 0.95fr;
-    gap: 56px;
-    align-items: center;
+    grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.98fr);
+    align-items: stretch;
+  }
+  .hero-copy {
+    padding-block: 40px 44px;
+    padding-left: max(24px, calc((100% - var(--maxw)) / 2 + 24px));
+    padding-right: 44px;
+    align-self: center;
   }
 
+  .hero-badge {
+    display: inline-block;
+    color: var(--ink);
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
   h1 {
-    font-size: clamp(2.6rem, 7vw, 5rem);
+    font-size: clamp(2.5rem, 4.6vw, 3.9rem);
+    line-height: 1.08;
   }
   .line {
     display: block;
@@ -122,82 +175,74 @@ const featureIcons = [
   .accent {
     color: var(--blue);
   }
-  .line-price {
-    display: inline-flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: 14px;
-    margin-top: 4px;
-  }
-  .w3 {
-    font-size: clamp(1.6rem, 3.4vw, 2.4rem);
+  .hero-price-line {
+    margin-top: 20px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(1.1rem, 2vw, 1.4rem);
     color: var(--ink);
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 9px;
   }
-  .price {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 8px;
+  .price-pill {
     background: linear-gradient(135deg, var(--yellow-bright), var(--yellow-deep));
     color: var(--ink);
-    padding: 4px 20px 8px;
-    border-radius: 16px;
-    transform: rotate(-2deg);
-    box-shadow: var(--shadow-yellow);
-    font-size: clamp(2.4rem, 5.4vw, 3.6rem);
-  }
-  .price-unit {
-    font-family: var(--font);
-    font-size: 0.95rem;
     font-weight: 700;
-    white-space: nowrap;
+    padding: 1px 12px;
+    border-radius: 10px;
+    box-shadow: var(--shadow-yellow);
   }
   .hero-sub {
-    margin-top: 30px;
-    font-size: 1.2rem;
+    margin-top: 12px;
+    font-size: 1.04rem;
     color: var(--text-muted);
-    max-width: 30ch;
-  }
-  .hero-sub :global(strong) {
-    color: var(--ink);
+    max-width: 40ch;
   }
   .hero-sub :global(.accent) {
     color: var(--blue);
     font-weight: 700;
   }
   .hero-actions {
-    margin-top: 34px;
+    margin-top: 28px;
     display: flex;
     align-items: center;
-    gap: 22px;
+    gap: 16px;
     flex-wrap: wrap;
   }
   .hero-features {
-    margin: 36px 0 0;
+    margin: 34px 0 0;
     padding: 0;
     list-style: none;
     display: flex;
     flex-wrap: wrap;
-    gap: 16px 36px;
+    gap: 14px 0;
   }
   .hero-features li {
     display: flex;
     align-items: center;
     gap: 12px;
   }
+  /* Divisórias entre as features, como no mockup web. */
+  .hero-features li + li {
+    border-left: 1.5px solid var(--border);
+    margin-left: 26px;
+    padding-left: 26px;
+  }
   .feat-icon {
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    background: var(--sky);
-    color: var(--blue);
+    background: var(--blue);
+    color: #fff;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
   }
   .hero-features li:first-child .feat-icon {
-    background: var(--cream);
-    color: var(--yellow-deep);
+    background: var(--blue-deep);
   }
   .feat-icon :global(svg) {
     width: 22px;
@@ -218,66 +263,147 @@ const featureIcons = [
 
   .hero-media {
     position: relative;
+    min-height: 380px;
   }
-  .hero-photo {
-    position: relative;
-    z-index: 2;
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    border: 6px solid var(--paper);
-    box-shadow: var(--shadow-md);
-    transform: rotate(1.5deg);
-  }
-  .hero-photo img {
-    width: 100%;
-    height: auto;
-  }
-  /* Playful decorations */
-  .dots {
+  /* Funde a borda da foto com o fundo do hero — sem corte seco. */
+  .hero-media::before {
+    content: "";
     position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 140px;
+    background: linear-gradient(90deg, var(--sky-soft), transparent);
     z-index: 1;
-    top: -22px;
-    right: -18px;
-    width: 108px;
-    height: 108px;
-    background-image: radial-gradient(var(--blue) 2.4px, transparent 2.4px);
-    background-size: 16px 16px;
-    opacity: 0.35;
+    pointer-events: none;
   }
-  .star {
+  /* :global porque o <img> sai do componente <Image> — o escopo do Astro
+     não alcança elemento renderizado por componente filho.
+     object-position baixo: o corte vertical do cover subia até o teto escuro
+     do escritório e a foto inteira parecia apagada — o mockup enquadra nas
+     pessoas. brightness leve dá o tom lavado do mockup. */
+  .hero-media :global(img) {
     position: absolute;
-    z-index: 3;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Corte do mockup: sem pés — o enquadramento sobe e fecha nos rostos. */
+    object-position: 50% 34%;
+    /* O tom lavado do mockup: bem mais claro e com menos contraste. */
+    filter: brightness(1.14) contrast(0.94) saturate(1.02);
+  }
+  /* O "esfumaçado" do mockup, aproximado sem recorte: desfoca a periferia
+     da foto (fundo) e preserva o centro nítido, onde está o grupo. A versão
+     exata precisa do PNG das pessoas recortadas por cima do fundo borrado. */
+  .photo-blur {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    backdrop-filter: blur(6px);
+    /* Centro deslocado à direita: o desfoque fica no topo e na esquerda,
+       e o lado direito da foto permanece limpo. */
+    -webkit-mask-image: radial-gradient(115% 105% at 62% 55%, transparent 55%, #000 88%);
+    mask-image: radial-gradient(115% 105% at 62% 55%, transparent 55%, #000 88%);
+  }
+  /* Véu branco do mockup: só desce do topo, apagando o teto. O véu da
+     direita saiu a pedido — deixava o lado direito da foto esfumaçado. */
+  .hero-media::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(195deg, rgba(255, 255, 255, 0.65), transparent 42%);
+    z-index: 1;
+    pointer-events: none;
+  }
+  .photo-caption,
+  .corner-blob {
+    z-index: 2;
+  }
+  /* O lettering do mockup: manuscrito amarelo sobre a foto. */
+  .photo-caption {
+    position: absolute;
+    top: 44px;
+    right: 32px;
+    max-width: 8ch;
+    font-family: var(--font-script);
+    font-weight: 700;
+    font-size: clamp(2.1rem, 3.5vw, 3rem);
+    line-height: 0.95;
+    /* Dourado fechado: sobre o véu branco, o amarelo claro sumia. */
     color: var(--yellow-deep);
-    font-size: 2rem;
+    text-align: right;
+    transform: rotate(-7deg);
+    text-shadow: 0 2px 8px rgba(19, 34, 75, 0.18);
   }
-  .star-1 {
-    top: 40%;
-    right: -20px;
-    animation: twinkle 3s ease-in-out infinite;
+  /* O traço curvo amarelo sob o lettering, como no mockup. */
+  .caption-swoosh {
+    display: block;
+    width: 96px;
+    margin-left: auto;
+    margin-top: 10px;
+    color: var(--yellow-deep);
   }
-  @keyframes twinkle {
-    0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.9; }
-    50% { transform: scale(1.25) rotate(15deg); opacity: 1; }
+  .corner-blob {
+    position: absolute;
+    right: -70px;
+    bottom: -90px;
+    width: 230px;
+    height: 230px;
+    border-radius: 50%;
+    background: var(--yellow);
+    opacity: 0.9;
   }
 
   @media (max-width: 900px) {
+    /* No mobile o mockup não tem card: o hero volta a ser full-width,
+       sem margem nem canto arredondado. */
+    .hero {
+      padding: 0;
+    }
+    .hero-card {
+      border-radius: 0;
+      box-shadow: none;
+    }
+    .blob-a,
+    .blob-b {
+      display: none;
+    }
     .hero-grid {
       grid-template-columns: 1fr;
-      gap: 40px;
+    }
+    .hero-copy {
+      padding: 44px 24px 40px;
     }
     .hero-sub {
       max-width: none;
     }
-    .hero-photo {
-      transform: none;
+    .hero-media {
+      min-height: 300px;
     }
-    .star-1 {
-      right: 4px;
+    /* Em coluna única a emenda é horizontal: o degradê desce do topo. */
+    .hero-media::before {
+      left: 0;
+      right: 0;
+      bottom: auto;
+      width: auto;
+      height: 90px;
+      background: linear-gradient(180deg, var(--sky-soft), transparent);
     }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .star-1 {
-      animation: none;
+    .photo-caption {
+      top: 24px;
+      right: 22px;
+      font-size: 1.5rem;
+    }
+    .hero-features li + li {
+      border-left: 0;
+      margin-left: 0;
+      padding-left: 0;
+      margin-right: 26px;
+    }
+    .hero-features {
+      gap: 14px 26px;
     }
   }
 </style>

@@ -12,6 +12,7 @@ const ts = t.testimonials;
       <h2 class="section-title">
         {ts.titlePre}<span class="accent">{ts.titleAccent}</span>{ts.titlePost}
       </h2>
+      <p class="testi-lead text-muted">{ts.lead}</p>
     </div>
 
     <div class="testi-carousel" data-testi-carousel>
@@ -24,15 +25,16 @@ const ts = t.testimonials;
           {
             ts.items.map((item) => (
               <figure class="testi-card">
-                <div class="stars" aria-label="5/5">★★★★★</div>
-                <blockquote>{item.quote}</blockquote>
-                <figcaption class="who">
-                  <span class="avatar" aria-hidden="true">{item.initials}</span>
-                  <span class="who-txt">
+                {/* Sem foto real de aluno no repo ainda: o tile de iniciais
+                    ocupa o lugar da foto do mockup, no mesmo formato. */}
+                <span class="avatar" aria-hidden="true">{item.initials}</span>
+                <div class="testi-body">
+                  <blockquote>{item.quote}</blockquote>
+                  <figcaption class="who-txt">
                     <span class="name">{item.name}</span>
                     <span class="role">{item.role}</span>
-                  </span>
-                </figcaption>
+                  </figcaption>
+                </div>
               </figure>
             ))
           }
@@ -148,6 +150,10 @@ const ts = t.testimonials;
   .testi-head > .section-title {
     max-width: 640px;
   }
+  .testi-lead {
+    margin-top: 10px;
+    font-size: 1.06rem;
+  }
 
   .testi-carousel {
     margin-top: 40px;
@@ -194,51 +200,49 @@ const ts = t.testimonials;
     transform: scale(0.96);
   }
 
+  /* Formato web do mockup: card largo e horizontal — foto (tile) à esquerda,
+     citação e assinatura à direita, dois por tela. */
   .testi-card {
-    flex: 0 0 calc((100% - 2 * 26px) / 3);
+    flex: 0 0 calc((100% - 26px) / 2);
     margin: 0;
-    background: var(--sky-soft);
+    background: var(--paper);
     border: 1.5px solid var(--border);
     border-radius: var(--radius);
-    padding: 30px 28px;
+    padding: 26px;
     display: flex;
-    flex-direction: column;
-    gap: 16px;
+    align-items: center;
+    gap: 22px;
     box-shadow: var(--shadow-sm);
-  }
-  .stars {
-    color: var(--yellow-deep);
-    font-size: 1.1rem;
-    letter-spacing: 2px;
   }
   blockquote {
     margin: 0;
-    font-size: 1.05rem;
+    font-size: 1rem;
     color: var(--ink);
     line-height: 1.55;
   }
-  .who {
-    display: flex;
-    align-items: center;
-    gap: 13px;
-    margin-top: auto;
-  }
   .avatar {
-    width: 46px;
-    height: 46px;
+    width: 132px;
+    align-self: stretch;
+    min-height: 120px;
     flex: none;
     display: grid;
     place-items: center;
-    border-radius: 50%;
-    background: var(--blue);
-    color: #fff;
+    border-radius: 14px;
+    background: var(--sky);
+    color: var(--blue);
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: 1.7rem;
   }
   .testi-card:nth-child(even) .avatar {
-    background: var(--yellow);
-    color: var(--ink);
+    background: var(--cream);
+    color: var(--yellow-deep);
+  }
+  .testi-body {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
   }
   .who-txt {
     display: flex;
@@ -261,15 +265,21 @@ const ts = t.testimonials;
     text-align: center;
   }
 
-  /* 2 per view on tablet, 1 per view on phones */
+  /* 1 per view on smaller screens */
   @media (max-width: 900px) {
     .testi-card {
-      flex-basis: calc((100% - 26px) / 2);
+      flex-basis: 100%;
     }
   }
   @media (max-width: 620px) {
     .testi-card {
-      flex-basis: 100%;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .avatar {
+      width: 100%;
+      min-height: 90px;
+      align-self: auto;
     }
     .testi-carousel {
       gap: 8px;

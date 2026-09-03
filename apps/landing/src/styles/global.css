@@ -38,6 +38,7 @@
 
   --font: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-display: "Fredoka", "Poppins", system-ui, sans-serif;
+  --font-script: "Caveat", "Segoe Script", cursive;
 }
 
 *,
@@ -94,24 +95,14 @@ img {
 }
 
 /* Section header bits */
+/* Título de seção no formato dos mockups web: menor, sem o sublinhado
+   amarelo desenhado — o destaque é só a palavra em azul. */
 .section-title {
-  font-size: clamp(2rem, 4.4vw, 3.1rem);
+  font-size: clamp(1.7rem, 3.2vw, 2.3rem);
   color: var(--ink);
 }
 .section-title .accent {
   color: var(--blue);
-  position: relative;
-}
-/* Hand-drawn underline under the accent word */
-.section-title .accent::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -0.14em;
-  height: 0.16em;
-  border-radius: 999px;
-  background: var(--yellow);
 }
 
 .text-muted {

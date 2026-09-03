@@ -1,0 +1,225 @@
+---
+import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const s = t.steps;
+
+// A home mostra só as primeiras dúvidas; a página /faq tem a lista completa.
+const faqPreview = t.faq.items.slice(0, 4);
+---
+
+<section class="section stepsfaq" id="steps">
+  <div class="container sf-grid">
+    <div class="sf-steps">
+      <h2 class="section-title sf-title">{s.titlePre}<span class="accent">{s.titleAccent}</span>{s.titlePost}</h2>
+      <p class="text-muted sf-lead">{s.lead}</p>
+
+      <div class="steps-row">
+        <ol class="steps-list">
+          {
+            s.items.map((item, i) => (
+              <li class="step">
+                <span class="step-num">{String(i + 1).padStart(2, "0")}</span>
+                <span class="step-txt">
+                  <strong>{item.title}</strong>
+                  <span class="text-muted">{item.text}</span>
+                </span>
+              </li>
+            ))
+          }
+        </ol>
+
+        <a href={withLang(lang, "/enrollment")} class="btn btn-yellow sf-cta">
+          <span>{s.cta}</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="sf-faq">
+      <h2 class="sf-faq-title">{s.faqTitle}</h2>
+      <div class="faq-list">
+        {
+          faqPreview.map((item) => (
+            <details class="faq-item">
+              <summary>
+                <span>{item.q}</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+              </summary>
+              <p class="text-muted">{item.a}</p>
+            </details>
+          ))
+        }
+      </div>
+      <a class="faq-all" href={withLang(lang, "/faq")}>
+        {s.faqAll}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .stepsfaq {
+    background: var(--sky-soft);
+  }
+  .sf-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: 56px;
+    align-items: start;
+  }
+  .sf-title {
+    text-align: left;
+  }
+  .sf-lead {
+    margin-top: 10px;
+  }
+  /* Formato web do mockup: os três passos lado a lado, com o botão de
+     matrícula fechando a linha. */
+  .steps-row {
+    margin-top: 30px;
+    display: flex;
+    align-items: center;
+    gap: 26px;
+    flex-wrap: wrap;
+  }
+  .steps-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    gap: 22px;
+    flex: 1 1 380px;
+  }
+  .step {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .step-num {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: var(--blue);
+    color: #fff;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1rem;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+  .step:nth-child(2) .step-num {
+    background: var(--yellow);
+    color: var(--ink);
+  }
+  .step-txt {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.35;
+  }
+  .step-txt strong {
+    color: var(--ink);
+    font-size: 1rem;
+  }
+  .step-txt span {
+    font-size: 0.88rem;
+  }
+  .sf-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
+  }
+  .sf-cta svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .sf-faq-title {
+    font-size: clamp(1.3rem, 2.6vw, 1.7rem);
+    margin-bottom: 18px;
+  }
+  .faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .faq-item {
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 0 18px;
+  }
+  .faq-item summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 15px 0;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .faq-item summary::-webkit-details-marker {
+    display: none;
+  }
+  .faq-item summary svg {
+    width: 18px;
+    height: 18px;
+    color: var(--blue);
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+  }
+  .faq-item[open] summary svg {
+    transform: rotate(180deg);
+  }
+  .faq-item p {
+    margin: 0;
+    padding-bottom: 16px;
+    font-size: 0.94rem;
+  }
+  .faq-all {
+    margin-top: 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--blue);
+  }
+  .faq-all svg {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.2s ease;
+  }
+  .faq-all:hover svg {
+    transform: translateX(4px);
+  }
+  @media (max-width: 900px) {
+    .sf-grid {
+      grid-template-columns: 1fr;
+      gap: 44px;
+    }
+  }
+  @media (max-width: 620px) {
+    .steps-list {
+      flex-direction: column;
+    }
+    .step {
+      flex-direction: row;
+      align-items: center;
+      gap: 16px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .faq-all:hover svg,
+    .faq-item[open] summary svg {
+      transform: none;
+    }
+  }
+</style>
