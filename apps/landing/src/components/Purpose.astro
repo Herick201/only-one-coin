@@ -76,6 +76,16 @@ const p = t.purpose;
     width: 100%;
     height: 100%;
     object-fit: cover;
+    /* Corte ancorado no alto: o cover centrado decapitava os rostos. */
+    object-position: 50% 22%;
+  }
+  /* Degradê esquerda→direita: a foto se funde no creme da faixa. */
+  .purpose-photo::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 55%, var(--cream));
+    pointer-events: none;
   }
   .purpose-copy {
     padding: 56px 44px;
