@@ -49,7 +49,6 @@ const clientConfig = {
         <p class="from" data-finder-from hidden>
           <span>{fd.fromLabel}</span> <strong data-finder-country></strong>
         </p>
-        <p class="reco-pre">{fd.recommendPre}</p>
         <span class="reco-id">
           {
             courses.map((c) => (
@@ -391,11 +390,6 @@ const clientConfig = {
   }
   .from strong {
     color: var(--yellow-bright);
-  }
-  .reco-pre {
-    margin: 0;
-    font-size: 1.05rem;
-    color: rgba(255, 255, 255, 0.85);
   }
   .reco-lang {
     margin: 0;
