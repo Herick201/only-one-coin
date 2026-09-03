@@ -349,6 +349,10 @@ const clientConfig = {
   .orbit {
     position: absolute;
     inset: 0;
+    /* A camada da órbita cobre o universo inteiro por cima do card central;
+       sem isto ela engole todo clique no CTA, no link do curso e nas setas.
+       Só os pills (.sat-center) voltam a ser clicáveis. */
+    pointer-events: none;
   }
   .sat {
     position: absolute;
@@ -364,6 +368,7 @@ const clientConfig = {
     /* Centra o pill no ponto, qualquer que seja a largura do rótulo. */
     display: inline-block;
     transform: translate(-50%, -50%);
+    pointer-events: auto;
   }
   .sat-inner {
     display: flex;
