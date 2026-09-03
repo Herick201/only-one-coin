@@ -262,13 +262,34 @@ const featureIcons = [
     pointer-events: none;
   }
   /* :global porque o <img> sai do componente <Image> — o escopo do Astro
-     não alcança elemento renderizado por componente filho. */
+     não alcança elemento renderizado por componente filho.
+     object-position baixo: o corte vertical do cover subia até o teto escuro
+     do escritório e a foto inteira parecia apagada — o mockup enquadra nas
+     pessoas. brightness leve dá o tom lavado do mockup. */
   .hero-media :global(img) {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: 50% 68%;
+    filter: brightness(1.07) saturate(1.03);
+  }
+  /* O véu branco da direita do mockup, atrás do lettering. */
+  .hero-media::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 34%;
+    background: linear-gradient(270deg, rgba(255, 255, 255, 0.55), transparent);
+    z-index: 1;
+    pointer-events: none;
+  }
+  .photo-caption,
+  .corner-blob {
+    z-index: 2;
   }
   /* O lettering do mockup: manuscrito amarelo sobre a foto. */
   .photo-caption {
