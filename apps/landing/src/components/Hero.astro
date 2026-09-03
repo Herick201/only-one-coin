@@ -17,10 +17,11 @@ const featureIcons = [
 ---
 
 <section class="hero">
-  <span class="blob blob-a" aria-hidden="true"></span>
-  <span class="blob blob-b" aria-hidden="true"></span>
+  <div class="hero-card">
+    <span class="blob blob-a" aria-hidden="true"></span>
+    <span class="blob blob-b" aria-hidden="true"></span>
 
-  <div class="hero-grid">
+    <div class="hero-grid">
     <div class="hero-copy">
       <span class="hero-badge">{h.badge}</span>
       <h1>
@@ -69,6 +70,7 @@ const featureIcons = [
       <span class="photo-caption" aria-hidden="true">{h.photoCaption}</span>
       <span class="corner-blob" aria-hidden="true"></span>
     </div>
+    </div>
   </div>
 </section>
 
@@ -101,12 +103,22 @@ const featureIcons = [
   .btn-ghost:hover {
     background: var(--sky);
   }
+  /* Formato do mockup: o hero é um card arredondado flutuando na página
+     branca, com pequena margem — não uma faixa colada nas bordas. */
   .hero {
+    background: var(--paper);
+    padding: 16px 22px 30px;
+  }
+  .hero-card {
     position: relative;
     overflow: hidden;
+    border-radius: 26px;
+    max-width: 1500px;
+    margin-inline: auto;
     background:
       radial-gradient(55% 60% at 8% 90%, rgba(47, 107, 255, 0.1), transparent 60%),
       var(--sky-soft);
+    box-shadow: var(--shadow-sm);
   }
   .blob-a {
     width: 300px;
@@ -134,9 +146,7 @@ const featureIcons = [
     align-items: stretch;
   }
   .hero-copy {
-    padding-block: 64px 72px;
-    padding-left: max(24px, calc((100% - var(--maxw)) / 2 + 24px));
-    padding-right: 48px;
+    padding: 56px 44px 60px 56px;
     align-self: center;
   }
 
