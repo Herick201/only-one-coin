@@ -108,22 +108,18 @@ const featureIcons = [
   .btn-ghost:hover {
     background: var(--sky);
   }
-  /* Formato do mockup: o hero é um card arredondado flutuando na página
-     branca, com pequena margem — não uma faixa colada nas bordas. */
+  /* Faixa retangular de borda a borda, curta — pedido de 03/09: tela
+     completa, sem cantos arredondados nem margem de card. */
   .hero {
     background: var(--paper);
-    padding: 16px 22px 30px;
+    padding: 0;
   }
   .hero-card {
     position: relative;
     overflow: hidden;
-    border-radius: 26px;
-    max-width: 1500px;
-    margin-inline: auto;
     background:
       radial-gradient(55% 60% at 8% 90%, rgba(47, 107, 255, 0.1), transparent 60%),
       var(--sky-soft);
-    box-shadow: var(--shadow-sm);
   }
   /* Círculos suaves na lateral esquerda, a meia altura — como no mockup.
      No topo eles viravam uma "moldura" amarela sobre o card. */
@@ -153,7 +149,9 @@ const featureIcons = [
     align-items: stretch;
   }
   .hero-copy {
-    padding: 56px 44px 60px 56px;
+    padding-block: 40px 44px;
+    padding-left: max(24px, calc((100% - var(--maxw)) / 2 + 24px));
+    padding-right: 44px;
     align-self: center;
   }
 
@@ -264,7 +262,7 @@ const featureIcons = [
 
   .hero-media {
     position: relative;
-    min-height: 460px;
+    min-height: 380px;
   }
   /* Funde a borda da foto com o fundo do hero — sem corte seco. */
   .hero-media::before {
