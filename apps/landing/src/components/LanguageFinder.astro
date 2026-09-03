@@ -2,6 +2,7 @@
 import { languageSlugs, geoSuggestion } from "../i18n/ui";
 import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
 import { courseIdBySlug, enrollmentHref } from "../data/checkout";
+import LanguageFlag from "./LanguageFlag.astro";
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
@@ -39,13 +40,26 @@ const clientConfig = {
     <h2 class="section-title">{fd.titlePre}<span class="accent">{fd.titleAccent}</span>{fd.titlePost}</h2>
     <p class="finder-lead text-muted">{fd.text}</p>
 
-    <div class="finder-card">
+    <div class="universe">
+      <span class="orbit-ring" aria-hidden="true"></span>
+      <span class="spark spark-a" aria-hidden="true">✦</span>
+      <span class="spark spark-b" aria-hidden="true">✦</span>
+
       <div class="finder-reco">
         <p class="from" data-finder-from hidden>
           <span>{fd.fromLabel}</span> <strong data-finder-country></strong>
         </p>
         <p class="reco-pre">{fd.recommendPre}</p>
-        <p class="reco-lang" data-finder-name>{courses.find((c) => c.slug === defaultSlug)?.name}</p>
+        <span class="reco-id">
+          {
+            courses.map((c) => (
+              <span class="reco-flag" data-flag-for={c.slug} hidden={c.slug !== defaultSlug}>
+                <LanguageFlag slug={c.slug} />
+              </span>
+            ))
+          }
+          <p class="reco-lang" data-finder-name>{courses.find((c) => c.slug === defaultSlug)?.name}</p>
+        </span>
         <a
           class="btn btn-yellow reco-cta"
           data-finder-cta
@@ -63,13 +77,30 @@ const clientConfig = {
         </a>
       </div>
 
-      <div class="finder-choose">
-        <p class="choose-label">{fd.orChoose}</p>
-        <div class="lang-chips">
-          {courses.map((c) => <a class="chip" data-slug={c.slug} href={c.href}>{c.name}</a>)}
-        </div>
-        <a class="all-link" href={withLang(lang, "/courses")}>{fd.allCourses} →</a>
-      </div>
+      <nav class="orbit" aria-label={fd.orChoose}>
+        {
+          courses.map((c, i) => (
+            <a
+              class:list={["chip", "sat", { active: c.slug === defaultSlug }]}
+              style={`--a: ${Math.round((i * 360) / courses.length) - 90}deg`}
+              data-slug={c.slug}
+              href={c.href}
+            >
+              <span class="sat-center">
+                <span class="sat-inner">
+                  <LanguageFlag slug={c.slug} />
+                  <span class="sat-name">{c.name}</span>
+                </span>
+              </span>
+            </a>
+          ))
+        }
+      </nav>
+    </div>
+
+    <div class="finder-footer">
+      <p class="choose-label">{fd.orChoose}</p>
+      <a class="all-link" href={withLang(lang, "/courses")}>{fd.allCourses} →</a>
     </div>
   </div>
 
@@ -87,20 +118,52 @@ const clientConfig = {
     const root = document.querySelector<HTMLElement>("#finder");
     if (cfgEl && root) {
       const cfg: Cfg = JSON.parse(cfgEl.textContent || "{}");
+      const nameEl = root.querySelector<HTMLElement>("[data-finder-name]");
+      const idEl = root.querySelector<HTMLElement>(".reco-id");
+      const flagEls = root.querySelectorAll<HTMLElement>("[data-flag-for]");
+      const ctaEl = root.querySelector<HTMLAnchorElement>("[data-finder-cta]");
+      const courseEl = root.querySelector<HTMLAnchorElement>("[data-finder-course]");
+      const chips = root.querySelectorAll<HTMLAnchorElement>(".chip");
+
+      const apply = (slug: string, pop: boolean) => {
+        const course = cfg.courses[slug];
+        if (!course) return;
+        if (nameEl) nameEl.textContent = course.name;
+        flagEls.forEach((flag) => {
+          flag.hidden = flag.dataset.flagFor !== slug;
+        });
+        if (idEl && pop) {
+          idEl.classList.remove("name-pop");
+          // Reflow between remove/add so a re-click replays the animation.
+          void idEl.offsetWidth;
+          idEl.classList.add("name-pop");
+        }
+        if (ctaEl) ctaEl.href = course.enrollHref;
+        if (courseEl) courseEl.href = course.href;
+        chips.forEach((chip) => {
+          chip.classList.toggle("active", chip.dataset.slug === slug);
+        });
+      };
+
+      // In the orbit layout a satellite click selects the language in the
+      // center card instead of leaving the page; clicking the already-active
+      // one follows the link to its course page. Under 760px the chips keep
+      // navigating (the card sits above them, off-screen).
+      const orbitLayout = window.matchMedia("(min-width: 761px)");
+      chips.forEach((chip) => {
+        chip.addEventListener("click", (ev) => {
+          if (!orbitLayout.matches || chip.classList.contains("active")) return;
+          ev.preventDefault();
+          if (chip.dataset.slug) apply(chip.dataset.slug, true);
+        });
+      });
+
       fetch("/api/geo", { headers: { accept: "application/json" } })
         .then((r) => (r.ok ? r.json() : null))
         .then((data: { country?: string; countryName?: string } | null) => {
           const code = data?.country?.toUpperCase();
           const slug = (code && cfg.geo[code]) || cfg.defaultSlug;
-          const course = cfg.courses[slug];
-          if (!course) return;
-
-          const nameEl = root.querySelector<HTMLElement>("[data-finder-name]");
-          const ctaEl = root.querySelector<HTMLAnchorElement>("[data-finder-cta]");
-          const courseEl = root.querySelector<HTMLAnchorElement>("[data-finder-course]");
-          if (nameEl) nameEl.textContent = course.name;
-          if (ctaEl) ctaEl.href = course.enrollHref;
-          if (courseEl) courseEl.href = course.href;
+          apply(slug, false);
 
           const fromEl = root.querySelector<HTMLElement>("[data-finder-from]");
           const countryEl = root.querySelector<HTMLElement>("[data-finder-country]");
@@ -108,9 +171,6 @@ const clientConfig = {
             countryEl.textContent = data.countryName;
             fromEl.hidden = false;
           }
-          root.querySelectorAll<HTMLElement>(".chip").forEach((chip) => {
-            chip.classList.toggle("active", chip.dataset.slug === slug);
-          });
         })
         .catch(() => {
           /* offline / local dev: keep the server-rendered default */
@@ -133,23 +193,196 @@ const clientConfig = {
     max-width: 56ch;
     font-size: 1.08rem;
   }
-  .finder-card {
-    margin-top: 40px;
-    display: grid;
-    grid-template-columns: 1.1fr 1fr;
-    gap: 30px;
-    align-items: stretch;
+  /* ——— Universo: o card recomendado é o sol, os idiomas orbitam. ———
+     Um único ângulo animado (--orbit) posiciona E contra-gira cada
+     satélite no mesmo transform: com uma só animação não existe como o
+     giro e o contra-giro saírem de fase (duas animações separadas
+     dessincronizavam a cada restart — HMR, aba oculta — e deixavam o
+     rótulo torto). Hover/focus pausa tudo: ninguém clica em alvo que
+     foge. Browser sem @property não interpola o ângulo: órbita parada,
+     nunca quebrada. */
+  @property --orbit {
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: true;
+  }
+  .universe {
+    /* Tamanho num só lugar: o raio da órbita deriva dele. */
+    --u: min(680px, 92vw);
+    --r: calc(var(--u) / 2 - 48px);
+    position: relative;
+    width: var(--u);
+    aspect-ratio: 1;
+    margin: 44px auto 0;
+    animation: orbit-revolve 60s linear infinite;
+  }
+  .orbit-ring {
+    position: absolute;
+    inset: 34px;
+    border: 1.5px dashed rgba(47, 107, 255, 0.28);
+    border-radius: 50%;
+  }
+  .spark {
+    position: absolute;
+    color: var(--yellow-deep);
+    font-size: 1.3rem;
+    opacity: 0.8;
+  }
+  .spark-a {
+    top: 9%;
+    right: 16%;
+  }
+  .spark-b {
+    bottom: 12%;
+    left: 13%;
+    font-size: 0.95rem;
   }
   .finder-reco {
-    background: linear-gradient(135deg, var(--blue), var(--blue-deep));
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /* O sol do universo: círculo com brilho vindo de cima, halo em anéis
+       e a textura de bolinhas do hero — nada de caixa no meio da órbita. */
+    width: min(58%, 392px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.18), transparent 58%),
+      linear-gradient(135deg, var(--blue), var(--blue-deep));
     color: #fff;
-    border-radius: var(--radius-lg);
-    padding: 38px 34px;
-    box-shadow: var(--shadow-blue);
+    padding: 40px;
+    box-shadow:
+      var(--shadow-blue),
+      0 0 0 12px rgba(47, 107, 255, 0.07),
+      0 0 0 26px rgba(47, 107, 255, 0.035);
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 6px;
+    /* O centro respira: flutua devagar, como tudo que orbita algo. */
+    animation: card-bob 6s ease-in-out infinite;
+  }
+  .finder-reco::after {
+    content: "";
+    position: absolute;
+    top: 30px;
+    right: 52px;
+    width: 84px;
+    height: 84px;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.55) 2px, transparent 2px);
+    background-size: 14px 14px;
+    opacity: 0.3;
+    border-radius: 50%;
+  }
+  .reco-id {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .reco-flag {
+    display: inline-flex;
+  }
+  /* `display` de autor vence o [hidden] do UA stylesheet — reafirmar. */
+  .reco-flag[hidden] {
+    display: none;
+  }
+  .reco-flag :global(.lang-flag) {
+    width: 46px;
+    height: 46px;
+    border: 2.5px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
+  }
+  .orbit {
+    position: absolute;
+    inset: 0;
+  }
+  .sat {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    /* Ponto sem tamanho sobre o círculo da órbita. */
+    width: 0;
+    height: 0;
+    transform: rotate(calc(var(--a) + var(--orbit))) translateX(var(--r))
+      rotate(calc(-1 * (var(--a) + var(--orbit))));
+  }
+  .sat-center {
+    /* Centra o pill no ponto, qualquer que seja a largura do rótulo. */
+    display: inline-block;
+    transform: translate(-50%, -50%);
+  }
+  .sat-inner {
+    display: flex;
+    align-items: center;
     gap: 8px;
+    padding: 8px 16px 8px 9px;
+    border-radius: 999px;
+    border: 1.5px solid var(--border);
+    background: var(--paper);
+    box-shadow: 0 4px 14px rgba(19, 34, 75, 0.08);
+    font-weight: 600;
+    color: var(--ink);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+  }
+  .sat :global(.lang-flag) {
+    width: 28px;
+    height: 28px;
+  }
+  .sat:hover .sat-inner {
+    border-color: var(--blue);
+    color: var(--blue);
+    transform: scale(1.07);
+  }
+  .sat.active .sat-inner {
+    background: var(--yellow);
+    border-color: var(--yellow);
+    color: var(--ink);
+  }
+  .universe:hover,
+  .universe:focus-within {
+    animation-play-state: paused;
+  }
+  @keyframes orbit-revolve {
+    to {
+      --orbit: 360deg;
+    }
+  }
+  @keyframes card-bob {
+    0%,
+    100% {
+      transform: translate(-50%, -50%);
+    }
+    50% {
+      transform: translate(-50%, calc(-50% - 9px));
+    }
+  }
+  /* Bandeira + nome dão um pulinho quando um planeta é escolhido. */
+  .reco-id.name-pop {
+    animation: name-pop 0.4s ease;
+  }
+  @keyframes name-pop {
+    0% {
+      transform: scale(0.6);
+      opacity: 0;
+    }
+    60% {
+      transform: scale(1.08);
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  .finder-footer {
+    margin-top: 34px;
+    text-align: center;
   }
   .from {
     margin: 0 0 4px;
@@ -165,15 +398,15 @@ const clientConfig = {
     color: rgba(255, 255, 255, 0.85);
   }
   .reco-lang {
-    margin: 0 0 8px;
+    margin: 0;
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: clamp(2.2rem, 5vw, 3rem);
-    line-height: 1.05;
+    font-size: clamp(1.9rem, 4vw, 2.5rem);
+    line-height: 1.1;
     color: var(--yellow-bright);
   }
   .reco-cta {
-    margin-top: auto;
+    margin-top: 14px;
   }
   .reco-cta svg {
     width: 18px;
@@ -184,42 +417,12 @@ const clientConfig = {
     transform: translateX(5px);
   }
 
-  .finder-choose {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
   .choose-label {
-    margin: 0 0 16px;
+    margin: 0 0 10px;
     font-weight: 600;
-    color: var(--ink);
-  }
-  .lang-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-  .chip {
-    padding: 10px 18px;
-    border-radius: 999px;
-    border: 1.5px solid var(--border);
-    background: var(--paper);
-    font-weight: 600;
-    color: var(--ink);
-    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
-  }
-  .chip:hover {
-    border-color: var(--blue);
-    color: var(--blue);
-    transform: translateY(-2px);
-  }
-  .chip.active {
-    background: var(--yellow);
-    border-color: var(--yellow);
     color: var(--ink);
   }
   .all-link {
-    margin-top: 20px;
     font-weight: 700;
     color: var(--blue);
   }
@@ -227,14 +430,69 @@ const clientConfig = {
     text-decoration: underline;
   }
 
-  @media (max-width: 820px) {
-    .finder-card {
-      grid-template-columns: 1fr;
+  /* Sem espaço pra órbita: o universo colapsa em card + chips com bandeira,
+     o layout que a tela estreita já conhecia. */
+  @media (max-width: 760px) {
+    .universe {
+      width: auto;
+      aspect-ratio: auto;
+      margin-top: 32px;
+      animation: none;
+    }
+    .orbit-ring,
+    .spark {
+      display: none;
+    }
+    .finder-reco {
+      position: static;
+      transform: none;
+      width: auto;
+      aspect-ratio: auto;
+      border-radius: var(--radius-lg);
+      padding: 38px 34px;
+      animation: none;
+      align-items: flex-start;
+      text-align: left;
+    }
+    .finder-reco::after {
+      display: none;
+    }
+    .reco-id {
+      flex-direction: row;
+      align-items: center;
+    }
+    .orbit {
+      position: static;
+      margin-top: 22px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .sat {
+      position: static;
+      width: auto;
+      height: auto;
+      transform: none;
+    }
+    .sat-center {
+      transform: none;
+    }
+    .sat-inner {
+      box-shadow: none;
+    }
+    .finder-footer {
+      margin-top: 24px;
+      text-align: left;
     }
   }
   @media (prefers-reduced-motion: reduce) {
     .reco-cta:hover svg {
       transform: none;
+    }
+    .universe,
+    .finder-reco,
+    .reco-id {
+      animation: none;
     }
   }
 </style>

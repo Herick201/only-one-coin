@@ -11,13 +11,61 @@ const s = t.stats;
     {
       s.items.map((item) => (
         <div class="stat">
-          <span class="stat-value">{item.value}</span>
+          <span class="stat-value" data-countup>{item.value}</span>
           <span class="stat-label">{item.label}</span>
         </div>
       ))
     }
   </div>
 </section>
+
+<script>
+  // Count-up on first view. The final value is server-rendered from the
+  // locale string; the script only re-plays the number inside it, so any
+  // prefix/suffix ("+", "años", "millones") and the locale's decimal
+  // separator survive untouched — and no-JS visitors see the real value.
+  const NUMBER = /(\d+(?:[.,]\d+)?)/;
+  const DURATION_MS = 1400;
+
+  function animate(el: HTMLElement) {
+    const original = el.textContent ?? "";
+    const match = original.match(NUMBER);
+    if (!match || match.index === undefined) return;
+
+    const raw = match[1];
+    const separator = raw.includes(",") ? "," : ".";
+    const decimals = raw.includes(separator) ? raw.split(separator)[1].length : 0;
+    const target = Number(raw.replace(",", "."));
+    const prefix = original.slice(0, match.index);
+    const suffix = original.slice(match.index + raw.length);
+    const start = performance.now();
+
+    function frame(now: number) {
+      const progress = Math.min((now - start) / DURATION_MS, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const value = (target * eased).toFixed(decimals).replace(".", separator);
+      el.textContent = prefix + value + suffix;
+      if (progress < 1) requestAnimationFrame(frame);
+      else el.textContent = original;
+    }
+    requestAnimationFrame(frame);
+  }
+
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!reduced && "IntersectionObserver" in window) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          observer.unobserve(entry.target);
+          animate(entry.target as HTMLElement);
+        }
+      },
+      { threshold: 0.5 },
+    );
+    document.querySelectorAll<HTMLElement>("[data-countup]").forEach((el) => observer.observe(el));
+  }
+</script>
 
 <style>
   .stats {
