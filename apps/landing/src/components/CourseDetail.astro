@@ -884,4 +884,39 @@ const courseJsonLd = {
     flex-wrap: wrap;
   }
 
+
+  /* ——— Celular: a segunda largura de desenho (390px, global.css). ———
+     A etiqueta é pendurada em `left: 100% + 16dp`, ou seja, na margem à
+     direita do título. Com 390px de desenho essa margem não existe: a peça
+     saía 77dp para fora da janela e empurrava o documento inteiro. Aqui ela
+     desce e vira um selo em linha — a mesma saída que `.price-hook` já
+     documenta logo acima. A composição das páginas de curso no celular
+     continua sendo trabalho à parte; isto é só o estouro. */
+  @media (max-width: 900px) {
+    .discount {
+      position: static;
+      top: auto;
+      left: auto;
+      margin-top: calc(10 * var(--dp));
+      padding: calc(9 * var(--dp)) calc(16 * var(--dp)) calc(9 * var(--dp)) calc(34 * var(--dp));
+      transform: rotate(-3deg);
+      clip-path: polygon(0% 50%, calc(18 * var(--dp)) 0%, 100% 0%, 100% 100%, calc(18 * var(--dp)) 100%);
+    }
+    .discount::before {
+      left: calc(21 * var(--dp));
+      width: calc(8 * var(--dp));
+      height: calc(8 * var(--dp));
+    }
+    .discount::after {
+      inset: calc(4 * var(--dp)) calc(6 * var(--dp)) calc(4 * var(--dp)) calc(31 * var(--dp));
+    }
+    .discount-amount {
+      font-size: calc(19 * var(--dp));
+    }
+    /* O barbante saía da letra do título; sem a etiqueta pendurada, não há
+       de onde ele sair. */
+    .tag-string {
+      display: none;
+    }
+  }
 </style>

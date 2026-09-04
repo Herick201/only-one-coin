@@ -113,4 +113,49 @@ const c = t.cta;
     width: calc(17 * var(--dp));
     height: calc(17 * var(--dp));
   }
+
+  /* ——— Celular: a segunda largura de desenho (390px, global.css). ———
+     Abaixo de 900px não é esta seção encolhida — é outra composição para a
+     mesma seção. A foto sai da lateral e vira a faixa do
+     topo: com 390px de desenho ela ocupava um quarto da largura e deixava de
+     se ler como foto. */
+  @media (max-width: 900px) {
+    .cta-photo {
+      position: relative;
+      width: 100%;
+      height: calc(140 * var(--dp));
+    }
+    /* Faixa larga e baixa: o recorte precisa descer para pegar o rosto, que
+       na coluna vertical do desenho largo já vinha enquadrado. */
+    .cta-photo :global(img) {
+      object-position: 50% 58%;
+    }
+    .cta-photo::after {
+      background: linear-gradient(180deg, transparent 35%, rgba(27, 70, 201, 0.92));
+    }
+    .cta-inner {
+      display: block;
+      width: 100%;
+      max-width: var(--maxw);
+      margin-inline: auto;
+      padding: calc(22 * var(--dp)) calc(20 * var(--dp)) calc(30 * var(--dp));
+      text-align: center;
+    }
+    .cta-title {
+      font-size: calc(25 * var(--dp));
+    }
+    .cta-copy p {
+      font-size: calc(14.5 * var(--dp));
+    }
+    .cta-price {
+      margin-top: calc(14 * var(--dp));
+    }
+    .cta-price strong {
+      font-size: calc(26 * var(--dp));
+    }
+    .cta-btn {
+      margin-top: calc(16 * var(--dp));
+      width: 100%;
+    }
+  }
 </style>

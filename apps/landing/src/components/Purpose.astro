@@ -189,4 +189,64 @@ const p = t.purpose;
       transform: none;
     }
   }
+
+  /* ——— Celular: a segunda largura de desenho (390px, global.css). ———
+     Abaixo de 900px não é esta seção encolhida — é outra composição para a
+     mesma seção. As três colunas (foto | texto | fatos)
+     empilham, e o degradê que fundia a foto no creme gira 90 graus junto. */
+  @media (max-width: 900px) {
+    .purpose-grid {
+      grid-template-columns: 1fr;
+    }
+    .purpose-photo {
+      min-height: calc(190 * var(--dp));
+    }
+    .purpose-photo::after {
+      background: linear-gradient(180deg, transparent 50%, var(--cream));
+    }
+    .purpose-copy {
+      width: 100%;
+      max-width: var(--maxw);
+      margin-inline: auto;
+      padding: calc(26 * var(--dp)) calc(20 * var(--dp)) calc(18 * var(--dp));
+    }
+    .purpose-copy h2 {
+      font-size: calc(25 * var(--dp));
+    }
+    .text {
+      font-size: calc(15 * var(--dp));
+      max-width: none;
+    }
+    /* Os selos já são cartões empilhados desde 04/09 — a composição deles
+       não muda no celular, só a largura em que vivem e o tamanho do número
+       do gancho, que em 46dp encostava na borda do pill. */
+    .facts {
+      width: 100%;
+      max-width: var(--maxw);
+      margin-inline: auto;
+      padding: 0 calc(20 * var(--dp)) calc(30 * var(--dp));
+      gap: calc(10 * var(--dp));
+    }
+    .fact {
+      padding: calc(12 * var(--dp)) calc(14 * var(--dp));
+      gap: calc(12 * var(--dp));
+    }
+    .fact-value {
+      font-size: calc(36 * var(--dp));
+    }
+    .fact-icon {
+      width: calc(38 * var(--dp));
+      height: calc(38 * var(--dp));
+    }
+    .fact-icon :global(svg) {
+      width: calc(20 * var(--dp));
+      height: calc(20 * var(--dp));
+    }
+    .fact-label {
+      font-size: calc(14.5 * var(--dp));
+    }
+    .fact-price .fact-label {
+      font-size: calc(15.5 * var(--dp));
+    }
+  }
 </style>

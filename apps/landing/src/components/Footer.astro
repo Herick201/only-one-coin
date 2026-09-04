@@ -293,4 +293,57 @@ const socials = [
     gap: calc(16 * var(--dp));
     flex-wrap: wrap;
   }
+
+  /* ——— Celular: a segunda largura de desenho (390px, global.css). ———
+     Abaixo de 900px não é esta seção encolhida — é outra composição para a
+     mesma seção. As cinco colunas viram duas, com a coluna
+     da marca ocupando a linha inteira em cima. */
+  @media (max-width: 900px) {
+    .site-footer {
+      padding-top: calc(40 * var(--dp));
+    }
+    .footer-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: calc(26 * var(--dp)) calc(16 * var(--dp));
+    }
+    .brand-col {
+      grid-column: 1 / -1;
+    }
+    .footer-logo {
+      height: calc(30 * var(--dp));
+      margin-bottom: calc(12 * var(--dp));
+    }
+    .tagline {
+      max-width: none;
+      font-size: calc(14.5 * var(--dp));
+    }
+    .org {
+      font-size: calc(13 * var(--dp));
+      margin-bottom: calc(16 * var(--dp));
+    }
+    .footer-script {
+      margin-top: calc(18 * var(--dp));
+      font-size: calc(20 * var(--dp));
+    }
+    .col h3 {
+      font-size: calc(12 * var(--dp));
+      margin-bottom: calc(12 * var(--dp));
+    }
+    .col ul {
+      font-size: calc(13.6 * var(--dp));
+      gap: calc(9 * var(--dp));
+    }
+    .social {
+      width: calc(36 * var(--dp));
+      height: calc(36 * var(--dp));
+    }
+    .footer-partner {
+      margin-top: calc(28 * var(--dp));
+    }
+    .footer-bottom {
+      justify-content: center;
+      text-align: center;
+      font-size: calc(12.5 * var(--dp));
+    }
+  }
 </style>

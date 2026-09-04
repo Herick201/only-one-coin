@@ -200,10 +200,60 @@ const faqPreview = t.faq.items.slice(0, 4);
   .faq-all:hover svg {
     transform: translateX(calc(4 * var(--dp)));
   }
+  /* ——— Celular: a segunda largura de desenho (390px, global.css). ———
+     Passos e dúvidas deixam de dividir a linha, e os três passos deixam de
+     ser colunas: viram lista numerada, com o número ao lado do texto. */
   @media (max-width: 900px) {
     .sf-grid {
       grid-template-columns: 1fr;
-      gap: calc(44 * var(--dp));
+      gap: calc(34 * var(--dp));
+    }
+    .sf-lead {
+      font-size: calc(15 * var(--dp));
+    }
+    .steps-row {
+      margin-top: calc(22 * var(--dp));
+      flex-direction: column;
+      align-items: stretch;
+      gap: calc(16 * var(--dp));
+    }
+    .steps-list {
+      flex: 0 0 auto;
+      flex-direction: column;
+      gap: calc(14 * var(--dp));
+    }
+    .step {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: calc(12 * var(--dp));
+    }
+    .step-num {
+      width: calc(34 * var(--dp));
+      height: calc(34 * var(--dp));
+      font-size: calc(13.5 * var(--dp));
+    }
+    .step-txt strong {
+      font-size: calc(15 * var(--dp));
+    }
+    .step-txt span {
+      font-size: calc(13.4 * var(--dp));
+    }
+    .sf-cta {
+      justify-content: center;
+    }
+    .sf-faq-title {
+      font-size: calc(21 * var(--dp));
+      margin-bottom: calc(14 * var(--dp));
+    }
+    .faq-item {
+      padding-inline: calc(14 * var(--dp));
+    }
+    .faq-item summary {
+      font-size: calc(14.5 * var(--dp));
+      padding-block: calc(13 * var(--dp));
+    }
+    .faq-item p {
+      font-size: calc(13.6 * var(--dp));
     }
   }
   @media (prefers-reduced-motion: reduce) {

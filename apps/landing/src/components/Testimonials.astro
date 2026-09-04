@@ -265,10 +265,53 @@ const ts = t.testimonials;
     text-align: center;
   }
 
-  /* 1 per view on smaller screens */
+  /* ——— Celular: a segunda largura de desenho (390px, global.css). ———
+     Um depoimento por tela, e o tile de iniciais encolhe: com 132dp ao lado
+     da citação sobrava menos de 150dp para o texto. */
   @media (max-width: 900px) {
+    .testi-lead {
+      font-size: calc(15 * var(--dp));
+    }
+    .testi-carousel {
+      margin-top: calc(26 * var(--dp));
+      gap: calc(6 * var(--dp));
+    }
     .testi-card {
       flex-basis: 100%;
+      padding: calc(16 * var(--dp));
+      gap: calc(14 * var(--dp));
+    }
+    .avatar {
+      width: calc(58 * var(--dp));
+      min-height: calc(58 * var(--dp));
+      align-self: flex-start;
+      border-radius: calc(12 * var(--dp));
+      font-size: calc(18 * var(--dp));
+    }
+    blockquote {
+      font-size: calc(14 * var(--dp));
+      line-height: 1.5;
+    }
+    .testi-body {
+      gap: calc(10 * var(--dp));
+    }
+    .name {
+      font-size: calc(14 * var(--dp));
+    }
+    .role {
+      font-size: calc(12.5 * var(--dp));
+    }
+    .t-arrow {
+      width: calc(34 * var(--dp));
+      height: calc(34 * var(--dp));
+    }
+    .t-arrow svg {
+      width: calc(16 * var(--dp));
+      height: calc(16 * var(--dp));
+    }
+    .note {
+      margin-top: calc(18 * var(--dp));
+      font-size: calc(12.5 * var(--dp));
     }
   }
 </style>

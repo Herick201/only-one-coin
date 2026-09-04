@@ -53,6 +53,26 @@
      (texto base de 24px) e só então centraliza. Abaixo de 1180 nada muda. */
   --dp: min(1.5px, 0.084745vw);
 
+  /* A LARGURA DE DESENHO DO CELULAR.
+
+     O bloco acima descreve UM desenho fluido de 1180px. Abaixo de 900px ele
+     deixa de ser um desenho e vira uma miniatura dele: num aparelho de 375px
+     o texto corrido saía com 5px — ilegível em mão, não "pequeno". Composição
+     sozinha não conserta isso, porque quem define tamanho de fonte aqui é o
+     `--dp`.
+
+     Então o celular ganha a SEGUNDA largura de desenho: 390px. A régua
+     continua uma só dentro de cada faixa — o que muda ao cruzar 900px não é
+     o tamanho de um desenho, é qual desenho está na tela. 900px porque é
+     exatamente onde a composição já trocava (Header, WhyUs, StepsFaq,
+     Testimonials): nenhuma faixa fica sem dono.
+
+     0.25641vw = 1/390 da janela. O teto aqui é 1px, e não os 1.5px da faixa
+     larga: aquele teto existe para o desenho de 1180 crescer até 1770 num
+     monitor grande, coisa que não acontece embaixo de 900px. A régua trava a
+     partir de 390px e daí em diante quem cresce é a largura útil, não a
+     fonte — por isso o container ganha um teto próprio logo abaixo. */
+
   --radius: calc(20 * var(--dp));
   --radius-lg: calc(30 * var(--dp));
   /* A largura de desenho anda presa à régua: o container cresce junto com a
@@ -62,6 +82,46 @@
   --font: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-display: "Fredoka", "Poppins", system-ui, sans-serif;
   --font-script: "Caveat", "Segoe Script", cursive;
+}
+
+@media (max-width: 900px) {
+  :root {
+    --dp: min(1px, 0.25641vw);
+    /* O container para de crescer bem antes da janela: uma coluna única de
+       900px com texto de 16px dá linha longa demais para ler. 560 é a coluna
+       de leitura do desenho do celular; acima disso sobra respiro nas laterais,
+       de propósito. */
+    --maxw: calc(560 * var(--dp));
+  }
+
+  .container {
+    padding-inline: calc(20 * var(--dp));
+  }
+
+  /* Respiro vertical do celular: 92 vinha da página larga, onde a seção
+     tem 1180 de largura para equilibrar. Empilhado, vira buraco. */
+  .section {
+    padding-block: calc(56 * var(--dp));
+  }
+
+  .section-title {
+    font-size: calc(29 * var(--dp));
+  }
+
+  /* Alvo de toque: 44px é o mínimo da Apple HIG e do WCAG 2.5.8. Com o
+     padding do desenho largo o botão saía com 36px de altura. */
+  .btn {
+    padding: calc(13 * var(--dp)) calc(22 * var(--dp));
+    font-size: calc(15 * var(--dp));
+    min-height: calc(46 * var(--dp));
+  }
+
+  .wa-float {
+    width: calc(52 * var(--dp));
+    height: calc(52 * var(--dp));
+    right: calc(16 * var(--dp));
+    bottom: calc(16 * var(--dp));
+  }
 }
 
 *,

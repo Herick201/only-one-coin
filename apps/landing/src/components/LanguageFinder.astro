@@ -492,4 +492,105 @@ const clientConfig = {
       animation: none;
     }
   }
+
+  /* ——— Celular: a segunda largura de desenho (390px, global.css). ———
+     Abaixo de 900px não é esta seção encolhida — é outra composição para a
+     mesma seção. A órbita fica — ela é o desenho
+     desta seção, não um enfeite. O que sai é o rótulo de cada satélite: com o
+     raio do celular, dez pílulas com nome se sobrepõem. Sobra a bandeira, que
+     é o que identifica o idioma de relance; o nome continua no nome acessível
+     do link e é exatamente o que o centro mostra ao tocar. */
+  @media (max-width: 900px) {
+    .finder-lead {
+      font-size: calc(15 * var(--dp));
+      max-width: none;
+    }
+    /* `--u` em vw, não em %: `--r` sai daqui e é consumido num translateX,
+       onde a porcentagem se resolve contra a largura do próprio satélite —
+       que é zero. Com `100%` os dez satélites empilhavam no centro. */
+    .universe {
+      --u: min(calc(360 * var(--dp)), calc(100vw - calc(40 * var(--dp))));
+      --r: calc(var(--u) / 2 - calc(26 * var(--dp)));
+      margin-top: calc(28 * var(--dp));
+    }
+    .orbit-ring {
+      inset: calc(22 * var(--dp));
+    }
+    /* Fora da tela, dentro da árvore de acessibilidade. */
+    .sat-name {
+      position: absolute;
+      width: calc(1 * var(--dp));
+      height: calc(1 * var(--dp));
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+    .sat-inner {
+      gap: 0;
+      padding: calc(4 * var(--dp));
+      border-radius: 50%;
+    }
+    .sat :global(.lang-flag) {
+      width: calc(30 * var(--dp));
+      height: calc(30 * var(--dp));
+    }
+    .spark {
+      display: none;
+    }
+
+    .finder-reco {
+      width: min(66%, calc(240 * var(--dp)));
+      padding: calc(16 * var(--dp));
+      gap: calc(4 * var(--dp));
+    }
+    /* A textura de bolinhas era do círculo grande; no pequeno ela encosta na
+       bandeira e vira sujeira. */
+    .finder-reco::after {
+      display: none;
+    }
+    .from {
+      font-size: calc(12 * var(--dp));
+    }
+    .reco-nav {
+      gap: calc(6 * var(--dp));
+    }
+    .reco-arrow {
+      width: calc(26 * var(--dp));
+      height: calc(26 * var(--dp));
+    }
+    .reco-arrow svg {
+      width: calc(14 * var(--dp));
+      height: calc(14 * var(--dp));
+    }
+    .reco-id {
+      gap: calc(6 * var(--dp));
+    }
+    .reco-flag :global(.lang-flag) {
+      width: calc(34 * var(--dp));
+      height: calc(34 * var(--dp));
+      border-width: calc(2 * var(--dp));
+    }
+    .reco-lang {
+      font-size: calc(17 * var(--dp));
+    }
+    .reco-cta {
+      margin-top: calc(10 * var(--dp));
+      font-size: calc(12.5 * var(--dp));
+      padding: calc(11 * var(--dp)) calc(15 * var(--dp));
+    }
+    .reco-cta svg {
+      width: calc(14 * var(--dp));
+      height: calc(14 * var(--dp));
+    }
+    .reco-secondary {
+      margin-top: calc(8 * var(--dp));
+      font-size: calc(12.5 * var(--dp));
+    }
+    .finder-footer {
+      margin-top: calc(24 * var(--dp));
+    }
+    .choose-label {
+      font-size: calc(14 * var(--dp));
+    }
+  }
 </style>
