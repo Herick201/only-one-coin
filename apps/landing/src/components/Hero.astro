@@ -324,36 +324,46 @@ const featureIcons = [
   .corner-blob {
     z-index: 2;
   }
-  /* O lettering do mockup: manuscrito amarelo sobre a foto. */
+  /* O lettering vai DENTRO da bolinha amarela do canto (pedido do dono,
+     04/09/2026): sobre a foto ele não se lia em cor nenhuma — dourado sumia
+     no véu branco e navy ficava disputando com os rostos. Na bola o fundo é
+     chapado, então navy sobre amarelo resolve o contraste sem truque. A bola
+     cresceu e subiu para caber as três linhas com folga; o traço curvo virou
+     branco, porque dourado sobre dourado não existe. */
   .photo-caption {
     position: absolute;
-    top: calc(44 * var(--dp));
-    right: calc(32 * var(--dp));
-    max-width: 8ch;
+    right: calc(18 * var(--dp));
+    bottom: calc(22 * var(--dp));
+    z-index: 3;
+    /* 10ch quebra em "Juntos por / un mejor / futuro", as três linhas do
+       desenho do dono — e cabe na parte visível da bola. */
+    max-width: 10ch;
     font-family: var(--font-script);
     font-weight: 700;
-    font-size: calc(41.3 * var(--dp));
+    font-size: calc(32 * var(--dp));
     line-height: 0.95;
-    /* Dourado fechado: sobre o véu branco, o amarelo claro sumia. */
-    color: var(--yellow-deep);
-    text-align: right;
-    transform: rotate(-7deg);
-    text-shadow: 0 calc(2 * var(--dp)) calc(8 * var(--dp)) rgba(19, 34, 75, 0.18);
+    color: var(--ink);
+    text-align: center;
+    transform: rotate(-5deg);
   }
-  /* O traço curvo amarelo sob o lettering, como no mockup. */
+  /* O traço curvo sob o lettering, como no mockup. */
   .caption-swoosh {
     display: block;
-    width: calc(96 * var(--dp));
-    margin-left: auto;
-    margin-top: calc(10 * var(--dp));
-    color: var(--yellow-deep);
+    width: calc(74 * var(--dp));
+    margin-inline: auto;
+    margin-top: calc(6 * var(--dp));
+    color: var(--paper);
   }
+  /* Enterrada no canto de propósito: aparece um quarto de círculo de
+     220×200, o bastante para segurar o lettering sem comer a foto. O texto
+     é dimensionado para caber INTEIRO dentro do arco — a linha mais larga
+     ("Juntos por") é a que primeiro escapa se a fonte crescer. */
   .corner-blob {
     position: absolute;
-    right: calc(-70 * var(--dp));
-    bottom: calc(-90 * var(--dp));
-    width: calc(230 * var(--dp));
-    height: calc(230 * var(--dp));
+    right: calc(-60 * var(--dp));
+    bottom: calc(-80 * var(--dp));
+    width: calc(280 * var(--dp));
+    height: calc(280 * var(--dp));
     border-radius: 50%;
     background: var(--yellow);
     opacity: 0.9;
