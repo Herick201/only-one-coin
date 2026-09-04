@@ -16,10 +16,14 @@ const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const d = t.courseDetail;
 const name = t.courses.list[slug];
-// As formas de pagar o nível, com valor. Ordem fixa: a sessão abre (é o
-// gancho da marca), o paquete fecha e é sempre o recomendado (pedido do dono,
-// 04/09/2026). Mensual entra só onde existe — inglês (CLAUDE.md §1, decisão
-// 02/09/2026) — e só onde a coordenação já deu o valor.
+// As formas de pagar o nível, com valor. Mensual entra só onde existe —
+// inglês (CLAUDE.md §1, decisão 02/09/2026) — e só onde a coordenação já deu
+// o valor. O paquete fecha a fileira e é sempre o recomendado (pedido do
+// dono, 04/09/2026).
+//
+// O preço por sessão NÃO é uma opção de compra: ninguém paga uma aula avulsa
+// (CLAUDE.md §1). Como card solto ele prometia exatamente isso, então virou
+// a equivalência pendurada no paquete — o argumento de pagar tudo de uma vez.
 //
 // Modalidade sem preço não vira card: nunca anunciamos uma forma de pagar sem
 // dizer quanto custa (CLAUDE.md §9).
@@ -27,13 +31,22 @@ const paymentOptions = (levelSlug: CourseSlug) => {
   const monthly = monthlyPrices[levelSlug] ?? null;
   const full = coursePrices[levelSlug];
   return [
-    { key: "session", name: d.paymentSessionName, price: t.hero.price, recommended: false },
     ...(monthly === null
       ? []
-      : [{ key: "monthly", name: d.paymentMonthlyName, price: formatPEN(monthly, lang), recommended: false }]),
+      : [{ key: "monthly", name: d.paymentMonthlyName, price: formatPEN(monthly, lang), note: null, full: false }]),
     ...(full === null
       ? []
-      : [{ key: "full", name: d.paymentFullName, price: formatPEN(full, lang), recommended: true }]),
+      : [
+          {
+            key: "full",
+            name: d.paymentFullName,
+            price: formatPEN(full, lang),
+            // Em pedaços, porque o VALOR por sessão é o destaque da linha —
+            // ele leva a pílula amarela, o resto da frase não.
+            note: { pre: d.paymentEquivalentPre, price: t.hero.price, unit: t.hero.priceUnit },
+            full: true,
+          },
+        ]),
   ];
 };
 // Matrícula desta página já cai no checkout com ESTE curso escolhido.
@@ -74,6 +87,9 @@ const levelPanels = siblings.map((levelSlug) => {
     highlights: d.levelHighlights[levelSlug] ?? fallbackHighlights(levelProgram),
     program: levelProgram,
     options: paymentOptions(levelSlug),
+    // O selo só faz sentido onde há escolha: um card sozinho não é o
+    // recomendado de nada, é o preço.
+    recommendFull: paymentOptions(levelSlug).length > 1,
     enrollHref: enrollmentHref(withLang(lang, "/enrollment"), {
       courseId: courseIdBySlug[levelSlug],
       content: "course_page",
@@ -259,25 +275,33 @@ const courseJsonLd = {
                   {p.highlights.map((item) => <li>{item}</li>)}
                 </ul>
               )}
-              {/* Como pagar, com o valor de cada forma. Uma opção sozinha não
-                  é escolha — aí o bloco some e o preço da sessão continua no
-                  gancho do topo. */}
-              {p.options.length > 1 && (
+              {/* Como pagar, com o valor de cada forma. */}
+              {p.options.length > 0 && (
                 <div class="panel-options">
                   {p.options.map((o) => (
-                    <span class:list={["panel-option", { "panel-option-full": o.recommended }]}>
-                      {o.recommended && (
+                    <span class:list={["panel-option", { "panel-option-full": o.full && p.recommendFull }]}>
+                      {o.full && p.recommendFull && (
                         <svg class="panel-option-star" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l2.9 6.26 6.6.72-4.9 4.55 1.34 6.47L12 16.77 6.06 20l1.34-6.47L2.5 8.98l6.6-.72L12 2z"/></svg>
                       )}
                       <span class="option-name">{o.name}</span>
                       <span class="option-price">{o.price}</span>
-                      {/* A linha do selo existe em TODOS os cards, vazia onde
-                          não há selo: sem ela o card recomendado ganha uma
-                          linha a mais e o valor dele sai do alinhamento com os
-                          vizinhos — justo numa fileira feita para comparar. */}
-                      <span class:list={["option-flag", { "option-flag-empty": !o.recommended }]}>
-                        {o.recommended ? d.paymentRecommended : ""}
+                      {/* Equivalência e selo existem em TODOS os cards, vazios
+                          onde não se aplicam: sem isso o card do paquete ganha
+                          duas linhas a mais e o valor dele sai do alinhamento
+                          com o vizinho — justo numa fileira feita pra
+                          comparar. A altura vazia vem do `min-height` em `em`
+                          das duas classes. */}
+                      <span class="option-note">
+                        {o.note && (
+                          <Fragment>
+                            {o.note.pre}
+                            <strong class="option-note-price">{o.note.price}</strong>
+                            {" "}
+                            {o.note.unit}
+                          </Fragment>
+                        )}
                       </span>
+                      <span class="option-flag">{o.full && p.recommendFull ? d.paymentRecommended : ""}</span>
                     </span>
                   ))}
                 </div>
@@ -623,22 +647,32 @@ const courseJsonLd = {
   }
   /* As duas modalidades como etiquetas, sem valores — pílulas informativas,
      não botões: a escolha de verdade acontece no checkout. */
-  /* As formas de pagar, lado a lado. `auto-fit` em vez de `flex-wrap`: os
-     cards ficam da MESMA largura, e o valor de um alinha com o do outro —
-     é a comparação que a pessoa veio fazer. */
+  /* As formas de pagar, lado a lado e centradas. Base fixa em vez de `1fr`:
+     com duas opções, `1fr` esticava cada card para meio painel (420dp) e o
+     valor sumia no meio da caixa. Todos com a mesma base, então os números
+     continuam alinhados um sob o outro — é a comparação que a pessoa veio
+     fazer — e o bloco quebra sozinho quando a coluna aperta. */
   .panel-options {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(calc(150 * var(--dp)), 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     align-items: stretch;
     gap: calc(12 * var(--dp));
     margin-top: calc(26 * var(--dp));
   }
   .panel-option {
+    /* 250, não 230: a linha da equivalência (com a pílula dentro) pede ~215px
+       de conteúdo e sobrava 214 — quebrava por um pixel. */
+    flex: 0 1 calc(250 * var(--dp));
     position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    /* Do topo para baixo, não centrado: assim nome e valor de um card ficam
+       na mesma linha do vizinho mesmo quando a equivalência quebra em duas
+       (no celular, ou noutro idioma). Centrar empurrava tudo para cima no
+       card mais alto. */
+    justify-content: flex-start;
     gap: calc(2 * var(--dp));
     padding: calc(16 * var(--dp)) calc(16 * var(--dp)) calc(14 * var(--dp));
     border: calc(1.5 * var(--dp)) solid var(--border);
@@ -668,8 +702,29 @@ const courseJsonLd = {
   .panel-option-full .option-price {
     color: var(--ink);
   }
-  /* A linha do selo reserva a própria altura mesmo vazia — `min-height` em
-     `em`, que acompanha o corpo da letra em qualquer largura e em qualquer
+  /* A equivalência é o argumento do paquete. A frase fica em tinta cheia e o
+     VALOR leva a pílula amarela — a mesma que o herói usa para o preço.
+     Amarelo como COR DE TEXTO sobre o creme do card dava ~2:1 de contraste:
+     lavado de longe e reprovado de perto. Como fundo, com a tinta por cima,
+     ele vira o ponto mais brilhante do card, que é o que a linha quer. */
+  .option-note {
+    margin-top: calc(4 * var(--dp));
+    line-height: 1.6;
+    min-height: 1.6em;
+    font-size: calc(12.8 * var(--dp));
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .option-note-price {
+    display: inline-block;
+    padding: calc(1 * var(--dp)) calc(7 * var(--dp));
+    border-radius: calc(7 * var(--dp));
+    background: linear-gradient(135deg, var(--yellow-bright), var(--yellow));
+    color: var(--ink);
+    font-weight: 800;
+  }
+  /* Selo e equivalência reservam a própria altura mesmo vazios — `min-height`
+     em `em`, que acompanha o corpo da letra em qualquer largura e em qualquer
      idioma, sem número mágico. */
   .option-flag {
     margin-top: calc(4 * var(--dp));
@@ -679,7 +734,11 @@ const courseJsonLd = {
     font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--yellow-deep);
+    /* Mesma razão da nota: o amarelo escuro sumia sobre o creme. A estrela e
+       o próprio fundo do card já dizem "este"; a palavra só precisa ser
+       legível. */
+    color: var(--ink);
+    opacity: 0.62;
   }
   /* A estrela cavalga a borda de cima da pílula, no centro — é o selo. */
   .panel-option-star {
