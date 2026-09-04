@@ -369,4 +369,175 @@ const featureIcons = [
     opacity: 0.9;
   }
 
+
+  /* ——— Celular: a segunda largura de desenho (390px, global.css). ———
+     Abaixo de 900px não é esta seção encolhida — é outra composição para a
+     mesma seção. As duas colunas viram uma, na ordem em que se lê:
+     a promessa e o botão primeiro, a foto logo depois. */
+  @media (max-width: 900px) {
+    /* A foto deixa de ser um bloco embaixo do texto e passa a ser o FUNDO
+       dele: uma coluna só não comporta dois blocos disputando a primeira
+       tela. Ela sobe ancorada no rodapé do hero, o texto corre por cima, e
+       o véu (o próprio `--sky-soft` do fundo) faz a passagem — opaco onde
+       mora o texto, aberto embaixo, onde as pessoas aparecem inteiras. */
+    .hero-grid {
+      display: block;
+      position: relative;
+    }
+    .hero-copy {
+      position: relative;
+      z-index: 1;
+      /* Este respiro é o que decide onde a foto entra atrás do texto: a foto
+         está ancorada no rodapé do hero, então a sobreposição é
+         `altura da foto − este padding`. Ela precisa ser curta (~45 de 310)
+         porque o véu tem que estar forte onde termina a faixa de destaques e
+         já ter acabado onde começam as cabeças, por volta de 25% da foto. */
+      padding: calc(30 * var(--dp)) calc(20 * var(--dp)) calc(265 * var(--dp));
+      width: 100%;
+      max-width: var(--maxw);
+      margin-inline: auto;
+    }
+    .hero-badge {
+      font-size: calc(11 * var(--dp));
+      letter-spacing: 0.24em;
+      margin-bottom: calc(10 * var(--dp));
+    }
+    h1 {
+      font-size: calc(38 * var(--dp));
+    }
+    .hero-price-line {
+      margin-top: calc(14 * var(--dp));
+      font-size: calc(18 * var(--dp));
+      gap: calc(7 * var(--dp));
+    }
+    .hero-sub {
+      margin-top: calc(10 * var(--dp));
+      font-size: calc(15 * var(--dp));
+      max-width: none;
+    }
+    /* Um CTA por linha, largura cheia. Lado a lado cada um fica com 170dp e
+       "Conoce nuestros cursos" quebra em duas linhas — dois botões altos e
+       desalinhados no lugar mais importante da página. */
+    .hero-actions {
+      margin-top: calc(22 * var(--dp));
+      flex-direction: column;
+      align-items: stretch;
+      gap: calc(10 * var(--dp));
+    }
+    .btn-enroll,
+    .btn-ghost {
+      font-size: calc(15 * var(--dp));
+      padding: calc(13 * var(--dp)) calc(18 * var(--dp));
+    }
+    /* Os três destaques continuam em fileira, com as divisórias, mas o ícone
+       sobe para cima do texto: lado a lado o rótulo não cabe em 110dp. */
+    .hero-features {
+      margin-top: calc(26 * var(--dp));
+      gap: 0;
+    }
+    .hero-features li {
+      flex: 1 1 0;
+      min-width: 0;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: calc(7 * var(--dp));
+    }
+    .hero-features li + li {
+      margin-left: 0;
+      padding-left: calc(10 * var(--dp));
+    }
+    .feat-icon {
+      width: calc(36 * var(--dp));
+      height: calc(36 * var(--dp));
+    }
+    .feat-icon :global(svg) {
+      width: calc(18 * var(--dp));
+      height: calc(18 * var(--dp));
+    }
+    .feat-txt {
+      align-items: center;
+    }
+    .feat-txt strong {
+      font-size: calc(13.5 * var(--dp));
+    }
+    .feat-txt span {
+      font-size: calc(12 * var(--dp));
+    }
+
+    .hero-media {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: calc(310 * var(--dp));
+      min-height: 0;
+      z-index: 0;
+    }
+    .hero-media :global(img) {
+      /* Em 390 de desenho a foto cobre a faixa pela altura, então o corte é
+         só horizontal e o meio já é o grupo. Perto de 900 a faixa fica larga
+         e baixa, o corte vira vertical e o meio cai nos troncos — 22% sobe a
+         janela para os rostos e não muda nada na largura de celular, onde
+         não há folga vertical para deslocar. */
+      object-position: 50% 22%;
+    }
+    /* O degradê da esquerda existia para fundir a foto na coluna de texto ao
+       lado dela. Empilhado não há lado — só um véu cinza no meio da foto. */
+    .hero-media::before {
+      display: none;
+    }
+    /* O véu do desenho largo desce em diagonal a partir do topo da foto,
+       para apagar o teto do escritório. Aqui ele tem outro trabalho: separar
+       o texto da foto. Vertical, forte em cima e aberto embaixo. */
+    .hero-media::after {
+      background: linear-gradient(
+        180deg,
+        var(--sky-soft) 0%,
+        rgba(246, 249, 255, 0.94) 12%,
+        rgba(246, 249, 255, 0.55) 18%,
+        rgba(246, 249, 255, 0.15) 24%,
+        rgba(246, 249, 255, 0) 30%
+      );
+    }
+    /* Desfoque de periferia com máscara radial: fazia sentido numa foto que
+       ocupava metade da tela sozinha. Atrás do texto ele só borra a borda de
+       cima, que o véu já apagou. */
+    .photo-blur {
+      display: none;
+    }
+    /* O lettering mora DENTRO da bolinha (decisão 04/09), então os dois
+       encolhem juntos ou nenhum: reduzir só a bola joga o texto para fora do
+       arco, e reduzir só o texto deixa a bola vazia. A proporção entre eles é
+       a mesma da faixa larga; o que muda é a altura da foto, que aqui é 250dp
+       e não comporta uma bola de 280.
+
+       E a bola troca de canto. No celular o canto inferior direito tem dono
+       fixo — o botão do WhatsApp mora ali em toda a página — e na primeira
+       tela ele caía exatamente em cima do lettering. À esquerda não disputa
+       com nada. */
+    .corner-blob {
+      width: calc(210 * var(--dp));
+      height: calc(210 * var(--dp));
+      right: auto;
+      left: calc(-45 * var(--dp));
+      bottom: calc(-60 * var(--dp));
+    }
+    .photo-caption {
+      right: auto;
+      left: calc(14 * var(--dp));
+      bottom: calc(16 * var(--dp));
+      font-size: calc(24 * var(--dp));
+    }
+    .caption-swoosh {
+      width: calc(56 * var(--dp));
+      margin-top: calc(4 * var(--dp));
+    }
+    /* Os círculos da lateral esquerda decoravam a margem larga do desenho de
+       1180px. Numa coluna só eles caem atrás do título. */
+    .blob-a,
+    .blob-b {
+      display: none;
+    }
+  }
 </style>

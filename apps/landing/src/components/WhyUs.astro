@@ -120,23 +120,58 @@ const icons = [
     font-size: calc(13.6 * var(--dp));
     line-height: 1.45;
   }
+  /* ——— Celular: a segunda largura de desenho (390px, global.css). ———
+     São cinco pilares: em duas colunas o quinto fica órfão numa linha só. Em
+     uma coluna vira lista — ícone à esquerda, divisória horizontal entre um
+     e outro, que é a mesma ideia das divisórias verticais da vista larga. */
   @media (max-width: 900px) {
     .why-grid {
       grid-template-columns: 1fr;
-      gap: calc(36 * var(--dp));
+      gap: calc(26 * var(--dp));
+      align-items: start;
     }
     .why-intro p {
       max-width: none;
+      font-size: calc(15 * var(--dp));
+    }
+    .why-cta {
+      margin-top: calc(18 * var(--dp));
     }
     .pillars {
       padding-left: 0;
       border-left: 0;
+      display: flex;
+      flex-direction: column;
+      gap: calc(16 * var(--dp));
+    }
+    .pillar {
+      flex: 0 0 auto;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(calc(140 * var(--dp)), 1fr));
-      gap: calc(26 * var(--dp)) calc(12 * var(--dp));
+      grid-template-columns: auto minmax(0, 1fr);
+      column-gap: calc(14 * var(--dp));
+      align-items: start;
+      text-align: left;
+      padding-inline: 0;
     }
     .pillar + .pillar {
       border-left: 0;
+      border-top: calc(1.5 * var(--dp)) solid var(--border);
+      padding-top: calc(16 * var(--dp));
+    }
+    .pillar-icon {
+      grid-row: 1 / span 2;
+      margin-bottom: 0;
+      margin-top: calc(3 * var(--dp));
+    }
+    .pillar-icon :global(svg) {
+      width: calc(26 * var(--dp));
+      height: calc(26 * var(--dp));
+    }
+    .pillar h3 {
+      font-size: calc(15.5 * var(--dp));
+    }
+    .pillar p {
+      font-size: calc(13.4 * var(--dp));
     }
   }
 </style>

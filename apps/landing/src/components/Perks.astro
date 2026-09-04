@@ -131,4 +131,40 @@ const icons = [
     width: calc(16 * var(--dp));
     height: calc(16 * var(--dp));
   }
+
+  /* ——— Celular: a segunda largura de desenho (390px, global.css). ———
+     Abaixo de 900px não é esta seção encolhida — é outra composição para a
+     mesma seção. A fileira de quatro oficinas vira lista, e o
+     botão fecha a lista em largura cheia em vez de disputar a linha. */
+  @media (max-width: 900px) {
+    .perks-lead {
+      font-size: calc(15 * var(--dp));
+    }
+    .perks-row {
+      margin-top: calc(24 * var(--dp));
+      flex-direction: column;
+      align-items: stretch;
+      gap: calc(12 * var(--dp));
+    }
+    .perk {
+      flex: 0 0 auto;
+      padding: calc(16 * var(--dp));
+      gap: calc(12 * var(--dp));
+      border-radius: calc(16 * var(--dp));
+    }
+    .perk-icon :global(svg) {
+      width: calc(24 * var(--dp));
+      height: calc(24 * var(--dp));
+    }
+    .perk-txt h3 {
+      font-size: calc(15.5 * var(--dp));
+    }
+    .perk-txt p {
+      font-size: calc(13.4 * var(--dp));
+    }
+    .perks-all {
+      margin-top: calc(4 * var(--dp));
+      justify-content: center;
+    }
+  }
 </style>

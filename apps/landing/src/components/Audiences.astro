@@ -158,12 +158,47 @@ const icons = [
     }
   }
 
-  /* Única troca de composição desta seção: no celular o desenho do dono põe
-     as quatro portas em 2x2, não na fileira da vista web. É mudança de grade,
-     não de tamanho — os tamanhos continuam saindo de --dp. */
-  @media (max-width: 620px) {
+  /* ——— Celular: a segunda largura de desenho (390px, global.css). ———
+     As quatro portas em 2x2, como no desenho do dono. Antes isso começava em
+     620px; agora começa em 900, junto com o desenho de celular, para não
+     sobrar uma faixa entre os dois sem dono. */
+  @media (max-width: 900px) {
+    .aud-lead {
+      font-size: calc(15 * var(--dp));
+    }
     .grid {
+      margin-top: calc(26 * var(--dp));
       grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: calc(14 * var(--dp));
+    }
+    .aud-photo :global(img) {
+      height: calc(100 * var(--dp));
+    }
+    .aud-icon {
+      left: calc(12 * var(--dp));
+      bottom: calc(-17 * var(--dp));
+      width: calc(36 * var(--dp));
+      height: calc(36 * var(--dp));
+      border-width: calc(2.5 * var(--dp));
+    }
+    .aud-icon :global(svg) {
+      width: calc(17 * var(--dp));
+      height: calc(17 * var(--dp));
+    }
+    .aud-body {
+      padding: calc(25 * var(--dp)) calc(14 * var(--dp)) calc(16 * var(--dp));
+      gap: calc(5 * var(--dp));
+    }
+    .aud-body h3 {
+      font-size: calc(15.5 * var(--dp));
+    }
+    .aud-body p {
+      font-size: calc(13 * var(--dp));
+      line-height: 1.4;
+    }
+    .aud-more {
+      font-size: calc(13.5 * var(--dp));
+      padding-top: calc(8 * var(--dp));
     }
   }
 </style>

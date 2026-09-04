@@ -102,7 +102,7 @@ const programs = [
     </nav>
 
     <div class="header-actions">
-      <LanguageSwitcher />
+      <span class="lang-slot"><LanguageSwitcher /></span>
       <a href={withLang(lang, "/enrollment")} class="btn btn-yellow enroll-btn">
         {t.hero.ctaEnroll}
       </a>
@@ -127,6 +127,8 @@ const programs = [
   <!-- Mobile drawer -->
   <div class="mobile-drawer">
     <nav class="mobile-nav" aria-label="Principal (móvil)">
+      <div class="m-lang"><LanguageSwitcher /></div>
+
       {nav.map((n) => <a href={n.href}>{n.label}</a>)}
 
       <details class="m-dd">
@@ -525,12 +527,59 @@ const programs = [
     font-weight: 700 !important;
   }
 
+  /* O seletor de idioma só existe fora do menu na barra larga. */
+  .m-lang {
+    display: none;
+  }
+
+  /* ——— Celular: a segunda largura de desenho (390px, global.css). ———
+     A barra não comporta quatro controles em 390px: marca (145dp) + idioma
+     (95dp) + matrícula (143dp) + hambúrguer (38dp) dá 421dp numa faixa de
+     358dp úteis. Sai o idioma, que é ação rara e reaparece no topo do menu
+     (e continua no rodapé); fica a matrícula, que é o que a página quer que
+     aconteça. */
   @media (max-width: 900px) {
     .nav {
       display: none;
     }
     .login-btn {
       display: none;
+    }
+    .lang-slot {
+      display: none;
+    }
+    .m-lang {
+      display: block;
+      padding-bottom: calc(12 * var(--dp));
+      margin-bottom: calc(4 * var(--dp));
+      border-bottom: calc(1 * var(--dp)) solid var(--border);
+    }
+    .header-inner {
+      height: calc(58 * var(--dp));
+      padding-inline: calc(16 * var(--dp));
+      gap: calc(10 * var(--dp));
+    }
+    .brand img {
+      height: calc(24 * var(--dp));
+    }
+    .header-actions {
+      gap: calc(8 * var(--dp));
+    }
+    .enroll-btn {
+      padding: calc(11 * var(--dp)) calc(14 * var(--dp));
+      font-size: calc(12.5 * var(--dp));
+      min-height: calc(40 * var(--dp));
+    }
+    .burger {
+      width: calc(38 * var(--dp));
+      height: calc(38 * var(--dp));
+    }
+    .mobile-nav {
+      padding: calc(12 * var(--dp)) calc(20 * var(--dp)) calc(20 * var(--dp));
+    }
+    .mobile-nav > a {
+      font-size: calc(15.5 * var(--dp));
+      padding-block: calc(12 * var(--dp));
     }
     .burger {
       display: inline-flex;
