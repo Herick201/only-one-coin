@@ -11,12 +11,20 @@ const intlMiddleware = createMiddleware(routing)
 // entrar um <Script> de terceiro (analytics, etc.), o valor também precisa
 // ser encaminhado via header de request (`x-nonce`) pro Server Component ler
 // com `headers()` — não precisa disso ainda, nada aqui usa script inline.
+//
+// style-src NÃO leva nonce, de propósito: nonce nunca autoriza *atributo*
+// `style`, e a presença dele faz o browser ignorar 'unsafe-inline' — o que
+// matava todo valor dinâmico por elemento (as colunas do AutoGrid, a largura
+// do ProgressBar) e colapsava as grades do app inteiro em coluna única.
+// Valor dinâmico contínuo não tem classe possível, então estilo inline fica
+// liberado; o vetor que a CSP existe pra fechar é script, e script-src segue
+// nonce + strict-dynamic.
 function buildCsp(nonce: string): string {
   const isDev = process.env.NODE_ENV === 'development'
   return `
     default-src 'self';
     script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ''};
-    style-src 'self' 'nonce-${nonce}';
+    style-src 'self' 'unsafe-inline';
     img-src 'self' data:;
     font-src 'self';
     connect-src 'self';
