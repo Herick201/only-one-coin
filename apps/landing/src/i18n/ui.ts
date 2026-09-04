@@ -71,13 +71,12 @@ export const audienceAnchors = ["kids", "teens-and-adults"] as const;
 // Full-package ("paquete completo", pago único) price per course, in PEN.
 // Source: the merchant e-commerce catalog.
 //
-// NOT DISPLAYED ANYWHERE since 2026-09-04: the owner asked for the landing to
-// advertise the per-session price alone (S/0.60) and to stop showing the
-// package total. The table stays because it is real business data the sales
-// conversation still uses, and because dropping it would mean re-collecting
-// eleven prices when a page needs them again — but nothing on the site reads
-// it today. Anything that starts reading it is putting a package price back on
-// a public page, which is the thing that was removed.
+// Displayed ONLY inside the modality block of a course page (2026-09-04): the
+// headline of every page is the per-session price, and the package total shows
+// up next to it as one of the ways to pay — never as the number the page
+// leads with. Display copy only; the payment system is the source of truth for
+// charged amounts. A course whose price is `null` simply loses that modality
+// card instead of showing an invented number.
 export const coursePrices: Record<CourseSlug, number | null> = {
   "english": 69.9,
   // "79.90 paquete completo" no documento do programa de inglês (INGLES.docx):
@@ -541,6 +540,7 @@ export const content = {
       eyebrowPost: "",
       titlePre: "Aprende ",
       titlePost: "",
+      paymentSessionName: "Por sesión",
       paymentMonthlyName: "Mensual",
       paymentFullName: "Paquete completo",
       paymentRecommended: "Recomendado",
@@ -1080,6 +1080,7 @@ export const content = {
       eyebrowPost: " course",
       titlePre: "Learn ",
       titlePost: "",
+      paymentSessionName: "Per session",
       paymentMonthlyName: "Monthly",
       paymentFullName: "Full package",
       paymentRecommended: "Recommended",
@@ -1618,6 +1619,7 @@ export const content = {
       eyebrowPost: "",
       titlePre: "Aprenda ",
       titlePost: "",
+      paymentSessionName: "Por sessão",
       paymentMonthlyName: "Mensal",
       paymentFullName: "Pacote completo",
       paymentRecommended: "Recomendado",

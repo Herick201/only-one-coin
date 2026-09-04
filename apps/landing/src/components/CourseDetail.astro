@@ -1,7 +1,7 @@
 ---
 import type { CourseSlug } from "../i18n/ui";
-import { audienceAnchors, courseParent, htmlLang, levelsOf, monthlyPrices, org, whatsappUrl } from "../i18n/ui";
-import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
+import { audienceAnchors, courseParent, coursePrices, htmlLang, levelsOf, monthlyPrices, org, whatsappUrl } from "../i18n/ui";
+import { getLangFromUrl, useTranslations, withLang, formatPEN } from "../i18n/utils";
 import { courseIdBySlug, enrollmentHref } from "../data/checkout";
 import { courseContent } from "../i18n/courses-content";
 import CourseProgramDetail from "./CourseProgramDetail.astro";
@@ -16,8 +16,26 @@ const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const d = t.courseDetail;
 const name = t.courses.list[slug];
-// Mensual só existe para inglês (CLAUDE.md §1, decisão 02/09/2026) — hoje é
-// só o gatilho das pílulas de modalidade, sem valor na tela.
+// As formas de pagar o nível, com valor. Ordem fixa: a sessão abre (é o
+// gancho da marca), o paquete fecha e é sempre o recomendado (pedido do dono,
+// 04/09/2026). Mensual entra só onde existe — inglês (CLAUDE.md §1, decisão
+// 02/09/2026) — e só onde a coordenação já deu o valor.
+//
+// Modalidade sem preço não vira card: nunca anunciamos uma forma de pagar sem
+// dizer quanto custa (CLAUDE.md §9).
+const paymentOptions = (levelSlug: CourseSlug) => {
+  const monthly = monthlyPrices[levelSlug] ?? null;
+  const full = coursePrices[levelSlug];
+  return [
+    { key: "session", name: d.paymentSessionName, price: t.hero.price, recommended: false },
+    ...(monthly === null
+      ? []
+      : [{ key: "monthly", name: d.paymentMonthlyName, price: formatPEN(monthly, lang), recommended: false }]),
+    ...(full === null
+      ? []
+      : [{ key: "full", name: d.paymentFullName, price: formatPEN(full, lang), recommended: true }]),
+  ];
+};
 // Matrícula desta página já cai no checkout com ESTE curso escolhido.
 // Programa real deste curso, quando a coordenação já entregou o documento.
 // Sem ele a página segue no texto genérico, com o aviso de exemplo.
@@ -55,9 +73,7 @@ const levelPanels = siblings.map((levelSlug) => {
     shortName: d.levelShortNames[levelSlug] ?? t.courses.list[levelSlug],
     highlights: d.levelHighlights[levelSlug] ?? fallbackHighlights(levelProgram),
     program: levelProgram,
-    // O hub não mostra valores (pedido do dono, 03/09/2026) — mensal aqui
-    // é só o gatilho das pílulas de modalidade no painel.
-    hasMonthly: (monthlyPrices[levelSlug] ?? null) !== null,
+    options: paymentOptions(levelSlug),
     enrollHref: enrollmentHref(withLang(lang, "/enrollment"), {
       courseId: courseIdBySlug[levelSlug],
       content: "course_page",
@@ -243,19 +259,27 @@ const courseJsonLd = {
                   {p.highlights.map((item) => <li>{item}</li>)}
                 </ul>
               )}
-              {/* As duas modalidades, sem valores — o preço já mora no
-                  quadradinho do nível. O paquete leva o selo: é o que carrega
-                  os talleres. Só aparece onde a escolha existe (mensual). */}
-              {p.hasMonthly && (
+              {/* Como pagar, com o valor de cada forma. Uma opção sozinha não
+                  é escolha — aí o bloco some e o preço da sessão continua no
+                  gancho do topo. */}
+              {p.options.length > 1 && (
                 <div class="panel-options">
-                  <span class="panel-option">{d.paymentMonthlyName}</span>
-                  {/* A recomendação é a estrela em cima da pílula; a palavra
-                      fica só para leitor de tela. */}
-                  <span class="panel-option panel-option-full">
-                    <svg class="panel-option-star" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l2.9 6.26 6.6.72-4.9 4.55 1.34 6.47L12 16.77 6.06 20l1.34-6.47L2.5 8.98l6.6-.72L12 2z"/></svg>
-                    {d.paymentFullName}
-                    <span class="visually-hidden">{d.paymentRecommended}</span>
-                  </span>
+                  {p.options.map((o) => (
+                    <span class:list={["panel-option", { "panel-option-full": o.recommended }]}>
+                      {o.recommended && (
+                        <svg class="panel-option-star" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l2.9 6.26 6.6.72-4.9 4.55 1.34 6.47L12 16.77 6.06 20l1.34-6.47L2.5 8.98l6.6-.72L12 2z"/></svg>
+                      )}
+                      <span class="option-name">{o.name}</span>
+                      <span class="option-price">{o.price}</span>
+                      {/* A linha do selo existe em TODOS os cards, vazia onde
+                          não há selo: sem ela o card recomendado ganha uma
+                          linha a mais e o valor dele sai do alinhamento com os
+                          vizinhos — justo numa fileira feita para comparar. */}
+                      <span class:list={["option-flag", { "option-flag-empty": !o.recommended }]}>
+                        {o.recommended ? d.paymentRecommended : ""}
+                      </span>
+                    </span>
+                  ))}
                 </div>
               )}
               <a class="btn btn-yellow panel-enroll" href={p.enrollHref}>{t.hero.ctaEnroll}</a>
@@ -599,32 +623,63 @@ const courseJsonLd = {
   }
   /* As duas modalidades como etiquetas, sem valores — pílulas informativas,
      não botões: a escolha de verdade acontece no checkout. */
+  /* As formas de pagar, lado a lado. `auto-fit` em vez de `flex-wrap`: os
+     cards ficam da MESMA largura, e o valor de um alinha com o do outro —
+     é a comparação que a pessoa veio fazer. */
   .panel-options {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(calc(150 * var(--dp)), 1fr));
+    align-items: stretch;
     gap: calc(12 * var(--dp));
-    margin-top: calc(20 * var(--dp));
+    margin-top: calc(26 * var(--dp));
   }
   .panel-option {
-    display: inline-flex;
+    position: relative;
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: calc(8 * var(--dp));
-    padding: calc(9 * var(--dp)) calc(18 * var(--dp));
+    justify-content: center;
+    gap: calc(2 * var(--dp));
+    padding: calc(16 * var(--dp)) calc(16 * var(--dp)) calc(14 * var(--dp));
     border: calc(1.5 * var(--dp)) solid var(--border);
-    border-radius: calc(999 * var(--dp));
-    font-weight: 700;
-    font-size: calc(14.72 * var(--dp));
-    color: var(--text-muted);
+    border-radius: calc(16 * var(--dp));
     background: var(--paper);
   }
+  .option-name {
+    font-weight: 600;
+    font-size: calc(13.6 * var(--dp));
+    color: var(--text-muted);
+  }
+  .option-price {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: calc(26 * var(--dp));
+    line-height: 1.15;
+    color: var(--ink);
+  }
+  /* O recomendado é o único com fundo: numa fileira de três, cor é o que
+     diz "este" antes de qualquer palavra. */
   .panel-option-full {
-    position: relative;
     border-color: var(--yellow);
     background: var(--cream);
-    color: var(--ink);
     box-shadow: var(--shadow-yellow);
+  }
+  .panel-option-full .option-name,
+  .panel-option-full .option-price {
+    color: var(--ink);
+  }
+  /* A linha do selo reserva a própria altura mesmo vazia — `min-height` em
+     `em`, que acompanha o corpo da letra em qualquer largura e em qualquer
+     idioma, sem número mágico. */
+  .option-flag {
+    margin-top: calc(4 * var(--dp));
+    line-height: 1.6;
+    min-height: 1.6em;
+    font-size: calc(10.4 * var(--dp));
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--yellow-deep);
   }
   /* A estrela cavalga a borda de cima da pílula, no centro — é o selo. */
   .panel-option-star {
