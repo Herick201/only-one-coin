@@ -1,5 +1,5 @@
 ---
-import { languageSlugs, coursePrices } from "../i18n/ui";
+import { languageSlugs, sessionPrices } from "../i18n/ui";
 import { getLangFromUrl, useTranslations, withLang, formatPEN } from "../i18n/utils";
 import LanguageFlag from "./LanguageFlag.astro";
 
@@ -7,13 +7,18 @@ const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const c = t.courses;
 
-const courses = languageSlugs.map((slug) => ({
-  slug,
-  name: t.courses.list[slug],
-  href: withLang(lang, `/courses/${slug}`),
-  // Curso sem preço definido ainda não mostra badge de valor.
-  price: coursePrices[slug] === null ? null : formatPEN(coursePrices[slug] as number, lang),
-}));
+// O card anuncia o preço da SESSÃO — que é de cada curso, não um valor único
+// do site (tabela do dono, 04/09/2026): vai de S/0.60 no inglés a S/5 no
+// japonês. O total do paquete saiu da lista e mora só na página do curso.
+const courses = languageSlugs.map((slug) => {
+  const perSession = sessionPrices[slug];
+  return {
+    slug,
+    name: t.courses.list[slug],
+    href: withLang(lang, `/courses/${slug}`),
+    price: perSession === null ? null : formatPEN(perSession, lang),
+  };
+});
 ---
 
 <section class="section courses-index">
@@ -25,7 +30,14 @@ const courses = languageSlugs.map((slug) => ({
       {
         courses.map((course) => (
           <a class="ci-card" href={course.href}>
-            {course.price && <span class="ci-badge">{course.price} · {c.payOnce}</span>}
+            {/* Sem valor anunciado, a pílula fica no lugar mas vazia: o
+                título de um card sem preço subia uma linha e desalinhava a
+                fileira inteira. */}
+            {course.price ? (
+              <span class="ci-badge">{course.price} · {c.priceUnit}</span>
+            ) : (
+              <span class="ci-badge ci-badge-empty" aria-hidden="true">&nbsp;</span>
+            )}
             <h2 class="ci-name">
               <LanguageFlag slug={course.slug} />
               <span>{course.name}</span>
@@ -84,6 +96,9 @@ const courses = languageSlugs.map((slug) => ({
     background: var(--cream);
     padding: calc(6 * var(--dp)) calc(12 * var(--dp));
     border-radius: calc(999 * var(--dp));
+  }
+  .ci-badge-empty {
+    visibility: hidden;
   }
   .ci-card h2 {
     font-size: calc(24 * var(--dp));

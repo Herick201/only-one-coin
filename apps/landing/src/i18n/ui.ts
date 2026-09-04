@@ -34,6 +34,8 @@ export const courseSlugs = [
   "portuguese",
   "mandarin-chinese",
   "korean",
+  "japanese",
+  "russian",
 ] as const;
 
 export type CourseSlug = (typeof courseSlugs)[number];
@@ -67,11 +69,14 @@ export function levelsOf(slug: CourseSlug): CourseSlug[] {
 export const audienceAnchors = ["kids", "teens-and-adults"] as const;
 
 // Full-package ("paquete completo", pago único) price per course, in PEN.
-// Source: the merchant e-commerce catalog. Display copy only — the actual
-// payment system is the source of truth for charged amounts. Language-agnostic
-// number; format per locale with `formatPEN` (utils). The "1 sol" hook comes
-// from the monthly modality (≈S/20 / 20 sesiones = 1 sol por sesión), NOT from
-// these package prices — never present a course as costing only S/1.
+// Source: the merchant e-commerce catalog.
+//
+// Displayed ONLY inside the modality block of a course page (2026-09-04): the
+// headline of every page is the per-session price, and the package total shows
+// up next to it as one of the ways to pay — never as the number the page
+// leads with. Display copy only; the payment system is the source of truth for
+// charged amounts. A course whose price is `null` simply loses that modality
+// card instead of showing an invented number.
 export const coursePrices: Record<CourseSlug, number | null> = {
   "english": 69.9,
   // "79.90 paquete completo" no documento do programa de inglês (INGLES.docx):
@@ -84,12 +89,47 @@ export const coursePrices: Record<CourseSlug, number | null> = {
   "french": 80,
   // `null` = preço ainda não definido pela coordenação. A página omite o valor
   // em vez de inventar um: preço é dado de negócio, nunca chute (CLAUDE.md §9).
-  "french-advanced": null,
+  "french-advanced": 120,
   "italian": 80,
   "german": 30,
   "portuguese": 80,
   "mandarin-chinese": 95,
   "korean": 60,
+  "japanese": 40,
+  "russian": 40,
+};
+
+/**
+ * Preço POR SESSÃO de cada curso, em PEN — o gancho da marca, e o número que
+ * a landing mostra maior que qualquer outro.
+ *
+ * Não é o total dividido pelas sessões: é o valor que a coordenação anuncia
+ * (tabela do dono, 04/09/2026), e as duas contas nem sempre fecham — inglés
+ * básico são 80 sessões a S/0.60 num paquete de S/69.90. Quem manda é a
+ * tabela, nunca a divisão.
+ *
+ * `null` = sem valor anunciado; o card então mostra só o total, sem a
+ * equivalência por sessão.
+ */
+export const sessionPrices: Record<CourseSlug, number | null> = {
+  "english": 0.6,
+  "english-intermediate": 1,
+  // Cambridge não veio na tabela de 04/09/2026 — nem B1 nem B2.
+  "cambridge-b1": null,
+  "cambridge-b2": null,
+  "french": 2,
+  "french-advanced": 2,
+  "italian": 2,
+  // "1 sol por clase (1 hora), 20 sesiones".
+  "german": 1,
+  "portuguese": 2,
+  // A tabela trazia dois valores para a mesma condição ("S/2.50 si es 2 meses
+  // – S/1.60 si es dos meses"); o dono confirmou S/2.50 (04/09/2026).
+  "mandarin-chinese": 2.5,
+  "korean": 2,
+  // "8 sesiones, 5 soles" — e 8 × 5 fecha os S/40 do paquete.
+  "japanese": 5,
+  "russian": 5,
 };
 
 // Monthly ("mensual") modality — price per module, in PEN. Only English
@@ -100,6 +140,45 @@ export const coursePrices: Record<CourseSlug, number | null> = {
 // truth for charged amounts.
 export const monthlyPrices: Partial<Record<CourseSlug, number>> = {
   "english": 20,
+};
+
+/**
+ * Pacotes que cobrem MAIS DE UM nível de um idioma, pagos de uma vez.
+ *
+ * Não são cursos: não têm slug de catálogo, não entram no menu nem viram
+ * página. São uma FORMA DE PAGAR (decisão do dono, 04/09/2026) — um terceiro
+ * card no bloco de modalidades, ao lado do mensual e do paquete do nível.
+ *
+ * `covers` diz em quais painéis o card aparece, e é também o que a lista do
+ * card mostra ("Básico + Intermedio/Avanzado"), montado a partir do nome curto
+ * de cada nível — nada de escrever a combinação à mão em três idiomas.
+ */
+export const bundles = {
+  // 69.90 (básico) + 79.90 (intermedio) = 149.80, exato. Sem valor por sessão
+  // na tabela do dono.
+  "english-intensive": {
+    price: 149.8,
+    perSession: null as number | null,
+    covers: ["english", "english-intermediate"] as CourseSlug[],
+  },
+  // 80 (básico) + 120 (intermedio) = 200, cobrado 180.
+  "french-full": {
+    price: 180,
+    perSession: 1.2 as number | null,
+    covers: ["french", "french-advanced"] as CourseSlug[],
+  },
+};
+
+export type BundleId = keyof typeof bundles;
+
+/**
+ * Preço por sessão DENTRO da modalidade mensual — o contraste que faz o
+ * paquete valer a pena: no inglés básico, S/1 por classe pagando mês a mês
+ * contra S/0.60 pagando tudo de uma vez. Mesma regra do `sessionPrices`:
+ * valor anunciado, não conta derivada.
+ */
+export const monthlySessionPrices: Partial<Record<CourseSlug, number>> = {
+  "english": 1,
 };
 
 // Legal identity and contact channels of the operating company.
@@ -171,6 +250,8 @@ export const geoSuggestion: Record<string, CourseSlug> = {
   CN: "mandarin-chinese",
   TW: "mandarin-chinese",
   KR: "korean",
+  JP: "japanese",
+  RU: "russian",
   US: "english",
   GB: "english",
 };
@@ -180,21 +261,23 @@ export const content = {
     meta: {
       title: "Cursos de inglés e idiomas online en Perú — Only One Coin",
       description:
-        "Clases 100% online para todo el Perú: inglés, francés, italiano, alemán, portugués, chino y coreano. Paquete completo de pago único, certificado y talleres gratis.",
+        "Clases 100% online para todo el Perú: inglés, francés, italiano, alemán, portugués, chino, coreano, japonés y ruso. Clases desde S/0.60 por sesión, certificado y talleres gratis.",
       siteName: "Only One Coin",
       imageAlt: "Only One Coin Perú — cursos de idiomas online",
       courses: {
         title: "Cursos de idiomas online: precios y paquetes — Only One Coin",
         description:
-          "Elige inglés, francés, italiano, alemán, portugués, chino mandarín o coreano. Clases online desde los 6 años, con paquete completo de pago único y sin mensualidades.",
+          "Elige inglés, francés, italiano, alemán, portugués, chino mandarín, coreano, japonés o ruso. Clases online desde los 6 años, desde S/0.60 por sesión y sin mensualidades.",
       },
       course: {
         titlePre: "Curso de ",
-        titleMid: " online en Perú · ",
-        titlePost: " pago único",
+        titleMid: " online en Perú",
+        // O separador vive no PEDAÇO do preço: curso sem valor anunciado sai
+        // com o título inteiro em vez de terminar num "·" pendurado.
+        titlePost: " · {price} por sesión",
         descPre: "Aprende ",
-        descMid: " online con Only One Coin Perú: paquete completo por ",
-        descPost: " de pago único, desde los 6 años, con certificado digital y talleres gratis.",
+        descPost: " online con Only One Coin Perú: desde los 6 años, con certificado digital y talleres gratis.",
+        descPrice: " Clases desde {price} por sesión.",
       },
       faq: {
         title: "Preguntas frecuentes sobre los cursos online — Only One Coin",
@@ -229,7 +312,7 @@ export const content = {
       about: {
         title: "Nosotros — Only One Coin Perú",
         description:
-          "Conoce a Only One Coin Perú: educación accesible para todos, clases de inglés desde S/1.00 por sesión, y nuestra misión, visión y valores.",
+          "Conoce a Only One Coin Perú: educación accesible para todos, clases de idiomas desde S/0.60 por sesión, y nuestra misión, visión y valores.",
       },
       contact: {
         title: "Contacto — Only One Coin Perú",
@@ -256,11 +339,10 @@ export const content = {
       closeMenu: "Cerrar menú",
     },
     hero: {
-      badge: "Only One Coin",
       w1: "Aprende idiomas.",
       w2: "Transforma tu futuro.",
       subPre: "Estudia idiomas desde",
-      price: "S/1",
+      price: "S/0.60",
       priceUnit: "por sesión",
       sub2Html:
         'Clases online para niños, jóvenes y adultos, desde los <span class="accent">6 años</span>.',
@@ -269,7 +351,7 @@ export const content = {
       photoCaption: "Juntos por un mejor futuro",
       imgAlt: "Estudiantes de Only One Coin",
       features: [
-        { title: "S/1", text: "Por sesión" },
+        { title: "S/0.60", text: "Por sesión" },
         { title: "+ Idiomas", text: "Para elegir" },
         { title: "100% online", text: "Desde cualquier lugar" },
       ],
@@ -284,7 +366,7 @@ export const content = {
       cards: [
         {
           title: "Educación accesible",
-          text: "Idiomas desde S/1 por sesión.",
+          text: "Idiomas desde S/0.60 por sesión.",
         },
         {
           title: "100% digital",
@@ -292,7 +374,7 @@ export const content = {
         },
         {
           title: "Docentes",
-          text: "Profesores comprometidos con tu aprendizaje.",
+          text: "Docentes con soporte en vivo.",
         },
         {
           title: "Comunidad",
@@ -354,7 +436,7 @@ export const content = {
       text: "Only One Coin nació con un propósito: democratizar el acceso a la educación.",
       cta: "Conoce nuestra historia",
       imgAlt: "Una alumna muestra una moneda de un sol",
-      priceValue: "S/1",
+      priceValue: "S/0.60",
       priceLabel: "por sesión",
       fact2: "Educación accesible",
       fact3: "Impacto social",
@@ -390,7 +472,7 @@ export const content = {
       title: "Tu próximo idioma empieza aquí.",
       sub: "Aprende. Crece. Conecta.",
       pricePre: "Desde",
-      price: "S/1",
+      price: "S/0.60",
       priceUnit: "por sesión.",
       imgAlt: "Alumna de Only One Coin en una clase online",
     },
@@ -422,10 +504,10 @@ export const content = {
       ctaText: "Escríbenos por WhatsApp y te ayudamos con la matrícula, los horarios y todo lo demás.",
       ctaButton: "Escríbenos por WhatsApp",
       items: [
-        { q: "¿Cuánto cuesta y cómo funciona el pago?", a: "Cada curso tiene un paquete completo de pago único (por ejemplo, Inglés cuesta S/69.90), que incluye matrícula, material, certificado y talleres. También existe una modalidad mensual que equivale a 1 sol por sesión. Sin mensualidades ocultas ni cobros sorpresa." },
+        { q: "¿Cuánto cuesta y cómo funciona el pago?", a: "Estudias desde S/0.60 por sesión, con matrícula, material, certificado y talleres incluidos. Consúltanos por WhatsApp el detalle del curso que te interesa. Sin mensualidades ocultas ni cobros sorpresa." },
         { q: "¿Desde qué edad puedo matricularme?", a: "Recibimos alumnos desde los 6 años en adelante. Hay grupos pensados para niños y grupos para jóvenes y adultos." },
         { q: "¿Cómo me matriculo?", a: "Escríbenos por WhatsApp para reservar tu cupo. Luego completas el formulario de matrícula, subes tu comprobante y recibes tus credenciales de acceso." },
-        { q: "¿Las clases son presenciales o virtuales?", a: "Todas nuestras clases son 100% online, en vivo con un docente. Puedes estudiar desde cualquier ciudad del Perú sin moverte de casa. Consúltanos por WhatsApp los horarios disponibles del periodo." },
+        { q: "¿Las clases son presenciales o virtuales?", a: "Todas nuestras clases son 100% online, en vivo con un docente. Puedes estudiar desde cualquier parte del mundo sin moverte de casa. Consúltanos por WhatsApp los horarios disponibles del periodo." },
         { q: "¿Qué incluye la matrícula?", a: "El acceso a tu curso de idioma, la plataforma del alumno y los talleres gratuitos de Excel, Emprendimiento, Liderazgo y Quechua." },
         { q: "¿Recibo algún certificado?", a: "Sí. Al culminar tu curso recibes un certificado digital que valida tu aprendizaje." },
       ],
@@ -448,6 +530,8 @@ export const content = {
         "portuguese": "Portugués",
         "mandarin-chinese": "Chino Mandarín",
         "korean": "Coreano",
+        "japanese": "Japonés",
+        "russian": "Ruso",
         "english-intermediate": "Inglés Intermedio/Avanzado",
         "cambridge-b1": "Inglés B1 · Cambridge",
         "cambridge-b2": "Inglés B2 · Cambridge",
@@ -457,8 +541,8 @@ export const content = {
       indexTitlePre: "Elige el idioma que ",
       indexTitleAccent: "quieres aprender",
       indexTitlePost: "",
-      indexText: "Cada curso tiene su paquete completo de pago único y está abierto desde los 6 años. Elige un idioma para ver el precio y el detalle.",
-      payOnce: "pago único",
+      indexText: "Todos los cursos están abiertos desde los 6 años, desde S/0.60 por sesión. Elige un idioma para ver el precio y el detalle.",
+      priceUnit: "por sesión",
       viewCourse: "Ver curso",
     },
     courseDetail: {
@@ -528,6 +612,12 @@ export const content = {
       eyebrowPost: "",
       titlePre: "Aprende ",
       titlePost: "",
+      paymentBundleNames: {
+        "english-intensive": "Intensivo completo",
+        "french-full": "Completo",
+      },
+      paymentSessionsWith: "{sessions} + reforzamientos",
+      paymentWorkshops: "Este paquete incluye {count} talleres gratuitos",
       paymentMonthlyName: "Mensual",
       paymentFullName: "Paquete completo",
       paymentRecommended: "Recomendado",
@@ -619,18 +709,17 @@ export const content = {
         soonText: "Estamos construyendo el espacio de nuestra comunidad. Mientras tanto, síguenos en nuestras redes sociales.",
       },
       about: {
-        eyebrow: "Only One Coin",
         titlePre: "Educación accesible ",
         titleAccent: "para todos",
         titlePost: "",
         // {years} is filled from `org.foundedYear` so the claim never goes stale.
-        lead: "En Only One Coin creemos firmemente que la educación es un derecho fundamental y no un privilegio. Con esta visión, llevamos {years} años ofreciendo clases de inglés a un precio simbólico de S/1.00 por sesión.",
+        lead: "En Only One Coin creemos firmemente que la educación es un derecho fundamental y no un privilegio. Con esta visión, llevamos {years} años ofreciendo clases de idiomas a precios simbólicos, desde S/0.60 por sesión.",
         lead2: "Nuestro compromiso es brindar a niños, jóvenes y adultos de todas las edades y niveles sociales la oportunidad de aprender y crecer, sin barreras económicas.",
         teamAlt: "Equipo de Only One Coin en su oficina de Lima",
-        coinAlt: "Una moneda de un sol: el precio simbólico de cada sesión",
+        coinAlt: "Una moneda: el precio simbólico de cada sesión",
         whyTitle: "¿Por qué elegirnos?",
         whyText: "Nuestro equipo de profesores está altamente calificado y comprometido con la enseñanza. Utilizamos métodos innovadores y dinámicos para asegurar que cada estudiante aprenda de manera efectiva y disfrute del proceso.",
-        whyText2: "Queremos que cada persona que pase por nuestras clases salga con más que solo conocimientos de inglés: salga con confianza y preparación para enfrentar los desafíos del futuro.",
+        whyText2: "Queremos que cada persona que pase por nuestras clases salga con más que solo conocimientos de idiomas: salga con confianza y preparación para enfrentar los desafíos del futuro.",
         whyAlt: "Docente de Only One Coin dictando una clase online",
         whyAlt2: "Dos integrantes del equipo de Only One Coin resolviendo una consulta",
         missionTitle: "Misión",
@@ -724,21 +813,21 @@ export const content = {
     meta: {
       title: "Online language courses in Peru — Only One Coin",
       description:
-        "100% online classes across Peru: English, French, Italian, German, Portuguese, Chinese and Korean. Full package with a single payment, certificate and free workshops from age 6.",
+        "100% online classes across Peru: English, French, Italian, German, Portuguese, Chinese, Korean, Japanese and Russian. Classes from S/0.60 per session, certificate and free workshops from age 6.",
       siteName: "Only One Coin",
       imageAlt: "Only One Coin Perú — online language courses",
       courses: {
         title: "Online language courses: prices and packages — Only One Coin",
         description:
-          "Choose English, French, Italian, German, Portuguese, Mandarin Chinese or Korean. Online classes from age 6, each a full package with a single payment and no monthly fees.",
+          "Choose English, French, Italian, German, Portuguese, Mandarin Chinese, Korean, Japanese or Russian. Online classes from age 6, from S/0.60 per session and no monthly fees.",
       },
       course: {
         titlePre: "Online ",
-        titleMid: " course in Peru · ",
-        titlePost: " single payment",
+        titleMid: " course in Peru",
+        titlePost: " · {price} per session",
         descPre: "Learn ",
-        descMid: " online with Only One Coin Perú: full package for ",
-        descPost: " as a single payment, from age 6, with a digital certificate and free workshops.",
+        descPost: " online with Only One Coin Perú: from age 6, with a digital certificate and free workshops.",
+        descPrice: " Classes from {price} per session.",
       },
       faq: {
         title: "FAQ about our online courses — Only One Coin",
@@ -773,7 +862,7 @@ export const content = {
       about: {
         title: "About us — Only One Coin Perú",
         description:
-          "Meet Only One Coin Perú: accessible education for everyone, English classes from S/1.00 a session, and our mission, vision and values.",
+          "Meet Only One Coin Perú: accessible education for everyone, language classes from S/0.60 a session, and our mission, vision and values.",
       },
       contact: {
         title: "Contact — Only One Coin Perú",
@@ -800,11 +889,10 @@ export const content = {
       closeMenu: "Close menu",
     },
     hero: {
-      badge: "Only One Coin",
       w1: "Learn languages.",
       w2: "Transform your future.",
       subPre: "Study languages from",
-      price: "S/1",
+      price: "S/0.60",
       priceUnit: "per session",
       sub2Html:
         'Online classes for children, teens and adults, from <span class="accent">age 6</span>.',
@@ -813,7 +901,7 @@ export const content = {
       photoCaption: "Together for a better future",
       imgAlt: "Only One Coin students",
       features: [
-        { title: "S/1", text: "Per session" },
+        { title: "S/0.60", text: "Per session" },
         { title: "+ Languages", text: "To choose from" },
         { title: "100% online", text: "From anywhere" },
       ],
@@ -828,7 +916,7 @@ export const content = {
       cards: [
         {
           title: "Accessible education",
-          text: "Languages from S/1 per session.",
+          text: "Languages from S/0.60 per session.",
         },
         {
           title: "100% digital",
@@ -836,7 +924,7 @@ export const content = {
         },
         {
           title: "Teachers",
-          text: "Teachers committed to your learning.",
+          text: "Teachers with live support.",
         },
         {
           title: "Community",
@@ -898,7 +986,7 @@ export const content = {
       text: "Only One Coin was born with a purpose: to democratize access to education.",
       cta: "Discover our story",
       imgAlt: "A student holds up a one-sol coin",
-      priceValue: "S/1",
+      priceValue: "S/0.60",
       priceLabel: "per session",
       fact2: "Accessible education",
       fact3: "Social impact",
@@ -934,7 +1022,7 @@ export const content = {
       title: "Your next language starts here.",
       sub: "Learn. Grow. Connect.",
       pricePre: "From",
-      price: "S/1",
+      price: "S/0.60",
       priceUnit: "per session.",
       imgAlt: "Only One Coin student in an online class",
     },
@@ -966,10 +1054,10 @@ export const content = {
       ctaText: "Message us on WhatsApp and we'll help you with enrolment, schedules and anything else.",
       ctaButton: "Message us on WhatsApp",
       items: [
-        { q: "How much does it cost and how does payment work?", a: "Each course has a full package with a single payment (for example, English is S/69.90), including enrollment, materials, certificate and workshops. There's also a monthly modality that works out to 1 sol per session. No hidden monthly fees or surprise charges." },
+        { q: "How much does it cost and how does payment work?", a: "You study from S/0.60 per session, with enrollment, materials, certificate and workshops included. Ask us on WhatsApp for the details of the course you are interested in. No hidden monthly fees or surprise charges." },
         { q: "From what age can I enroll?", a: "We welcome students from 6 years old and up. There are groups designed for children and groups for teens and adults." },
         { q: "How do I enroll?", a: "Message us on WhatsApp to reserve your spot. Then you fill out the enrollment form, upload your receipt and receive your access credentials." },
-        { q: "Are classes in-person or online?", a: "All our classes are 100% online and live with a teacher. You can study from anywhere in Peru without leaving home. Ask us on WhatsApp about the available schedules for the term." },
+        { q: "Are classes in-person or online?", a: "All our classes are 100% online and live with a teacher. You can study from anywhere in the world without leaving home. Ask us on WhatsApp about the available schedules for the term." },
         { q: "What does enrollment include?", a: "Access to your language course, the student platform and the free Excel, Entrepreneurship, Leadership and Quechua workshops." },
         { q: "Do I get a certificate?", a: "Yes. When you complete your course you receive a digital certificate that validates your learning." },
       ],
@@ -992,6 +1080,8 @@ export const content = {
         "portuguese": "Portuguese",
         "mandarin-chinese": "Mandarin Chinese",
         "korean": "Korean",
+        "japanese": "Japanese",
+        "russian": "Russian",
         "english-intermediate": "Intermediate/Advanced English",
         "cambridge-b1": "English B1 · Cambridge",
         "cambridge-b2": "English B2 · Cambridge",
@@ -1001,8 +1091,8 @@ export const content = {
       indexTitlePre: "Choose the language you ",
       indexTitleAccent: "want to learn",
       indexTitlePost: "",
-      indexText: "Each course has its own single-payment full package and is open from age 6. Pick a language to see the price and details.",
-      payOnce: "single payment",
+      indexText: "Every course is open from age 6, from S/0.60 per session. Pick a language to see the price and the details.",
+      priceUnit: "per session",
       viewCourse: "View course",
     },
     courseDetail: {
@@ -1068,6 +1158,12 @@ export const content = {
       eyebrowPost: " course",
       titlePre: "Learn ",
       titlePost: "",
+      paymentBundleNames: {
+        "english-intensive": "Full intensive",
+        "french-full": "Full course",
+      },
+      paymentSessionsWith: "{sessions} + reinforcement classes",
+      paymentWorkshops: "This package includes {count} free workshops",
       paymentMonthlyName: "Monthly",
       paymentFullName: "Full package",
       paymentRecommended: "Recommended",
@@ -1159,17 +1255,16 @@ export const content = {
         soonText: "We're building our community space. In the meantime, follow us on our social media.",
       },
       about: {
-        eyebrow: "Only One Coin",
         titlePre: "Accessible education ",
         titleAccent: "for everyone",
         titlePost: "",
-        lead: "At Only One Coin we firmly believe that education is a fundamental right, not a privilege. With that in mind, we have spent {years} years offering English classes at a symbolic price of S/1.00 a session.",
+        lead: "At Only One Coin we firmly believe that education is a fundamental right, not a privilege. With that in mind, we have spent {years} years offering language classes at symbolic prices, from S/0.60 a session.",
         lead2: "Our commitment is to give children, teenagers and adults of every age and background the chance to learn and grow, with no financial barriers.",
         teamAlt: "The Only One Coin team at their office in Lima",
-        coinAlt: "A one-sol coin: the symbolic price of each session",
+        coinAlt: "A coin: the symbolic price of each session",
         whyTitle: "Why choose us?",
         whyText: "Our teachers are highly qualified and committed to teaching. We use innovative, dynamic methods so that every student learns effectively and enjoys the process.",
-        whyText2: "We want everyone who goes through our classes to leave with more than English: to leave with the confidence and preparation to face what comes next.",
+        whyText2: "We want everyone who goes through our classes to leave with more than a language: to leave with the confidence and preparation to face what comes next.",
         whyAlt: "An Only One Coin teacher running an online class",
         whyAlt2: "Two Only One Coin team members working through a question together",
         missionTitle: "Mission",
@@ -1263,21 +1358,21 @@ export const content = {
     meta: {
       title: "Cursos de inglês e idiomas online no Peru — Only One Coin",
       description:
-        "Aulas 100% online para todo o Peru: inglês, francês, italiano, alemão, português, chinês e coreano. Pacote completo em pagamento único, certificado e oficinas grátis.",
+        "Aulas 100% online para todo o Peru: inglês, francês, italiano, alemão, português, chinês, coreano, japonês e russo. Aulas a partir de S/0,60 por sessão, certificado e oficinas grátis.",
       siteName: "Only One Coin",
       imageAlt: "Only One Coin Peru — cursos de idiomas online",
       courses: {
         title: "Cursos de idiomas online: preços e pacotes — Only One Coin",
         description:
-          "Escolha inglês, francês, italiano, alemão, português, chinês mandarim ou coreano. Aulas online a partir dos 6 anos, com pacote completo em pagamento único e sem mensalidades.",
+          "Escolha inglês, francês, italiano, alemão, português, chinês mandarim, coreano, japonês ou russo. Aulas online a partir dos 6 anos, a partir de S/0,60 por sessão e sem mensalidades.",
       },
       course: {
         titlePre: "Curso de ",
-        titleMid: " online no Peru · ",
-        titlePost: " pagamento único",
+        titleMid: " online no Peru",
+        titlePost: " · {price} por sessão",
         descPre: "Aprenda ",
-        descMid: " online com a Only One Coin Peru: pacote completo por ",
-        descPost: " em pagamento único, a partir dos 6 anos, com certificado digital e oficinas grátis.",
+        descPost: " online com a Only One Coin Peru: a partir dos 6 anos, com certificado digital e oficinas grátis.",
+        descPrice: " Aulas a partir de {price} por sessão.",
       },
       faq: {
         title: "Perguntas frequentes sobre os cursos online — Only One Coin",
@@ -1312,7 +1407,7 @@ export const content = {
       about: {
         title: "Sobre nós — Only One Coin Peru",
         description:
-          "Conheça a Only One Coin Peru: educação acessível para todos, aulas de inglês a partir de S/1,00 por sessão, e nossa missão, visão e valores.",
+          "Conheça a Only One Coin Peru: educação acessível para todos, aulas de idiomas a partir de S/0,60 por sessão, e nossa missão, visão e valores.",
       },
       contact: {
         title: "Contato — Only One Coin Peru",
@@ -1339,11 +1434,10 @@ export const content = {
       closeMenu: "Fechar menu",
     },
     hero: {
-      badge: "Only One Coin",
       w1: "Aprenda idiomas.",
       w2: "Transforme seu futuro.",
       subPre: "Estude idiomas a partir de",
-      price: "S/1",
+      price: "S/0,60",
       priceUnit: "por sessão",
       sub2Html:
         'Aulas online para crianças, jovens e adultos, a partir dos <span class="accent">6 anos</span>.',
@@ -1352,7 +1446,7 @@ export const content = {
       photoCaption: "Juntos por um futuro melhor",
       imgAlt: "Estudantes da Only One Coin",
       features: [
-        { title: "S/1", text: "Por sessão" },
+        { title: "S/0,60", text: "Por sessão" },
         { title: "+ Idiomas", text: "Para escolher" },
         { title: "100% online", text: "De qualquer lugar" },
       ],
@@ -1367,7 +1461,7 @@ export const content = {
       cards: [
         {
           title: "Educação acessível",
-          text: "Idiomas a partir de S/1 por sessão.",
+          text: "Idiomas a partir de S/0,60 por sessão.",
         },
         {
           title: "100% digital",
@@ -1375,7 +1469,7 @@ export const content = {
         },
         {
           title: "Docentes",
-          text: "Professores comprometidos com seu aprendizado.",
+          text: "Docentes com suporte ao vivo.",
         },
         {
           title: "Comunidade",
@@ -1437,7 +1531,7 @@ export const content = {
       text: "A Only One Coin nasceu com um propósito: democratizar o acesso à educação.",
       cta: "Conheça nossa história",
       imgAlt: "Uma aluna mostra uma moeda de um sol",
-      priceValue: "S/1",
+      priceValue: "S/0,60",
       priceLabel: "por sessão",
       fact2: "Educação acessível",
       fact3: "Impacto social",
@@ -1473,7 +1567,7 @@ export const content = {
       title: "Seu próximo idioma começa aqui.",
       sub: "Aprenda. Cresça. Conecte.",
       pricePre: "A partir de",
-      price: "S/1",
+      price: "S/0,60",
       priceUnit: "por sessão.",
       imgAlt: "Aluna da Only One Coin em uma aula online",
     },
@@ -1505,10 +1599,10 @@ export const content = {
       ctaText: "Fale com a gente no WhatsApp: ajudamos com matrícula, horários e o que mais precisar.",
       ctaButton: "Falar no WhatsApp",
       items: [
-        { q: "Quanto custa e como funciona o pagamento?", a: "Cada curso tem um pacote completo em pagamento único (por exemplo, Inglês custa S/69,90), que inclui matrícula, material, certificado e oficinas. Também existe uma modalidade mensal que equivale a 1 sol por sessão. Sem mensalidades ocultas nem cobranças-surpresa." },
+        { q: "Quanto custa e como funciona o pagamento?", a: "Você estuda a partir de S/0,60 por sessão, com matrícula, material, certificado e oficinas incluídos. Consulte no WhatsApp o detalhe do curso que você quer. Sem mensalidades ocultas nem cobranças-surpresa." },
         { q: "A partir de que idade posso me matricular?", a: "Recebemos alunos a partir dos 6 anos. Há turmas pensadas para crianças e turmas para jovens e adultos." },
         { q: "Como me matriculo?", a: "Fale com a gente no WhatsApp para reservar sua vaga. Depois você preenche o formulário de matrícula, envia seu comprovante e recebe suas credenciais de acesso." },
-        { q: "As aulas são presenciais ou online?", a: "Todas as nossas aulas são 100% online e ao vivo com um professor. Você pode estudar de qualquer cidade do Peru sem sair de casa. Consulte no WhatsApp os horários disponíveis do período." },
+        { q: "As aulas são presenciais ou online?", a: "Todas as nossas aulas são 100% online e ao vivo com um professor. Você pode estudar de qualquer parte do mundo sem sair de casa. Consulte no WhatsApp os horários disponíveis do período." },
         { q: "O que a matrícula inclui?", a: "O acesso ao seu curso de idioma, a plataforma do aluno e as oficinas gratuitas de Excel, Empreendedorismo, Liderança e Quíchua." },
         { q: "Recebo algum certificado?", a: "Sim. Ao concluir seu curso você recebe um certificado digital que valida seu aprendizado." },
       ],
@@ -1531,6 +1625,8 @@ export const content = {
         "portuguese": "Português",
         "mandarin-chinese": "Chinês Mandarim",
         "korean": "Coreano",
+        "japanese": "Japonês",
+        "russian": "Russo",
         "english-intermediate": "Inglês Intermediário/Avançado",
         "cambridge-b1": "Inglês B1 · Cambridge",
         "cambridge-b2": "Inglês B2 · Cambridge",
@@ -1540,8 +1636,8 @@ export const content = {
       indexTitlePre: "Escolha o idioma que ",
       indexTitleAccent: "você quer aprender",
       indexTitlePost: "",
-      indexText: "Cada curso tem seu pacote completo em pagamento único e é aberto a partir dos 6 anos. Escolha um idioma para ver o preço e o detalhe.",
-      payOnce: "pagamento único",
+      indexText: "Todos os cursos são abertos a partir dos 6 anos, a partir de S/0,60 por sessão. Escolha um idioma para ver o preço e o detalhe.",
+      priceUnit: "por sessão",
       viewCourse: "Ver curso",
     },
     courseDetail: {
@@ -1607,6 +1703,12 @@ export const content = {
       eyebrowPost: "",
       titlePre: "Aprenda ",
       titlePost: "",
+      paymentBundleNames: {
+        "english-intensive": "Intensivo completo",
+        "french-full": "Completo",
+      },
+      paymentSessionsWith: "{sessions} + reforços",
+      paymentWorkshops: "Este pacote inclui {count} oficinas gratuitas",
       paymentMonthlyName: "Mensal",
       paymentFullName: "Pacote completo",
       paymentRecommended: "Recomendado",
@@ -1698,17 +1800,16 @@ export const content = {
         soonText: "Estamos construindo o espaço da nossa comunidade. Enquanto isso, siga a gente nas redes sociais.",
       },
       about: {
-        eyebrow: "Only One Coin",
         titlePre: "Educação acessível ",
         titleAccent: "para todos",
         titlePost: "",
-        lead: "Na Only One Coin acreditamos firmemente que a educação é um direito fundamental, e não um privilégio. Com essa visão, há {years} anos oferecemos aulas de inglês a um preço simbólico de S/1,00 por sessão.",
+        lead: "Na Only One Coin acreditamos firmemente que a educação é um direito fundamental, e não um privilégio. Com essa visão, há {years} anos oferecemos aulas de idiomas a preços simbólicos, a partir de S/0,60 por sessão.",
         lead2: "Nosso compromisso é dar a crianças, jovens e adultos de todas as idades e classes sociais a oportunidade de aprender e crescer, sem barreiras econômicas.",
         teamAlt: "Equipe da Only One Coin no escritório em Lima",
-        coinAlt: "Uma moeda de um sol: o preço simbólico de cada sessão",
+        coinAlt: "Uma moeda: o preço simbólico de cada sessão",
         whyTitle: "Por que nos escolher?",
         whyText: "Nosso time de professores é altamente qualificado e comprometido com o ensino. Usamos métodos inovadores e dinâmicos para garantir que cada estudante aprenda de forma efetiva e aproveite o processo.",
-        whyText2: "Queremos que cada pessoa que passa pelas nossas turmas saia com mais do que conhecimento de inglês: saia com confiança e preparo para encarar os desafios que vêm pela frente.",
+        whyText2: "Queremos que cada pessoa que passa pelas nossas turmas saia com mais do que conhecimento de idiomas: saia com confiança e preparo para encarar os desafios que vêm pela frente.",
         whyAlt: "Professora da Only One Coin dando uma aula online",
         whyAlt2: "Dois integrantes da equipe da Only One Coin resolvendo uma dúvida juntos",
         missionTitle: "Missão",

@@ -25,6 +25,8 @@ export const courseIdBySlug: Record<CourseSlug, string> = {
   german: "crs_de_basic",
   "mandarin-chinese": "crs_zh_basic",
   korean: "crs_ko_full",
+  japanese: "crs_ja_full",
+  russian: "crs_ru_full",
 };
 
 /** Inglês para crianças é um curso próprio, não o mesmo com outra idade. */

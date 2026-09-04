@@ -1,6 +1,7 @@
 ---
 import type { CourseSlug } from "../i18n/ui";
-import { audienceAnchors, courseParent, coursePrices, htmlLang, levelsOf, monthlyPrices, org, whatsappUrl } from "../i18n/ui";
+import { audienceAnchors, bundles, courseParent, coursePrices, htmlLang, levelsOf, monthlyPrices, monthlySessionPrices, org, sessionPrices, whatsappUrl } from "../i18n/ui";
+import type { BundleId } from "../i18n/ui";
 import { getLangFromUrl, useTranslations, withLang, formatPEN } from "../i18n/utils";
 import { courseIdBySlug, enrollmentHref } from "../data/checkout";
 import { courseContent } from "../i18n/courses-content";
@@ -16,15 +17,90 @@ const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const d = t.courseDetail;
 const name = t.courses.list[slug];
-const rawPrice = coursePrices[slug];
-const price = rawPrice === null ? null : formatPEN(rawPrice, lang);
-// Mensual só existe para inglês (CLAUDE.md §1, decisão 02/09/2026) — entra
-// no painel do nível e na oferta do JSON-LD; nos demais cursos nem aparece.
-const rawMonthly = monthlyPrices[slug] ?? null;
+// As formas de pagar o nível, com valor. Mensual entra só onde existe —
+// inglês (CLAUDE.md §1, decisão 02/09/2026) — e só onde a coordenação já deu
+// o valor. O paquete fecha a fileira e é sempre o recomendado (pedido do
+// dono, 04/09/2026).
+//
+// O preço por sessão NÃO é uma opção de compra: ninguém paga uma aula avulsa
+// (CLAUDE.md §1). Como card solto ele prometia exatamente isso, então virou
+// a equivalência pendurada no paquete — o argumento de pagar tudo de uma vez.
+//
+// Modalidade sem preço não vira card: nunca anunciamos uma forma de pagar sem
+// dizer quanto custa (CLAUDE.md §9).
+const paymentOptions = (levelSlug: CourseSlug) => {
+  const monthly = monthlyPrices[levelSlug] ?? null;
+  const full = coursePrices[levelSlug];
+  // O que o paquete entrega, dito com dado que já existe: as sessões vêm do
+  // programa do próprio nível (80, 60 ou 16, conforme o curso) e a contagem
+  // de talleres vem da lista de benefícios — nada de número escrito à mão que
+  // envelhece quando um taller entra ou sai.
+  const sessions = courseContent[lang][levelSlug]?.sessions ?? null;
+  const perSession = sessionPrices[levelSlug];
+  const monthlyPerSession = monthlySessionPrices[levelSlug] ?? null;
+  const shortName = (levelId: CourseSlug) => d.levelShortNames[levelId] ?? t.courses.list[levelId];
+  const noteOf = (value: number | null) =>
+    value === null ? null : { price: formatPEN(value, lang), unit: t.hero.priceUnit };
+  const workshops = d.paymentWorkshops.replace("{count}", String(t.perks.items.length));
+  const perks = [
+    ...(sessions === null ? [] : [d.paymentSessionsWith.replace("{sessions}", sessions)]),
+    workshops,
+  ];
+  // Os pacotes que cobrem este nível junto com outro. A linha que os descreve
+  // sai dos nomes curtos dos níveis cobertos — a combinação nunca é escrita à
+  // mão, em nenhum dos três idiomas.
+  const levelBundles = (Object.entries(bundles) as [BundleId, (typeof bundles)[BundleId]][])
+    .filter(([, bundle]) => bundle.covers.includes(levelSlug))
+    .map(([id, bundle]) => ({
+      key: id,
+      name: d.paymentBundleNames[id],
+      price: formatPEN(bundle.price, lang),
+      note: noteOf(bundle.perSession),
+      perks: [bundle.covers.map(shortName).join(" + "), workshops],
+      recommended: false,
+    }));
+  const options = [
+    ...(monthly === null
+      ? []
+      : [
+          {
+            key: "monthly",
+            name: d.paymentMonthlyName,
+            price: formatPEN(monthly, lang),
+            note: noteOf(monthlyPerSession),
+            perks: [] as string[],
+            recommended: false,
+          },
+        ]),
+    ...(full === null
+      ? []
+      : [
+          {
+            key: "full",
+            name: d.paymentFullName,
+            price: formatPEN(full, lang),
+            // Só a pílula e a unidade: "equivale a" era preâmbulo, e o que
+            // importa é o número.
+            note: noteOf(perSession),
+            perks,
+            recommended: false,
+          },
+        ]),
+    ...levelBundles,
+  ];
+  // Em ordem do mais curto ao mais completo, e o ÚLTIMO é o recomendado — que
+  // é o mais completo disponível ali, seja o paquete do nível ou o pacote que
+  // cobre dois. Um card sozinho não é o recomendado de nada, é o preço.
+  if (options.length > 1) options[options.length - 1].recommended = true;
+  return options;
+};
 // Matrícula desta página já cai no checkout com ESTE curso escolhido.
 // Programa real deste curso, quando a coordenação já entregou o documento.
 // Sem ele a página segue no texto genérico, com o aviso de exemplo.
 const program = courseContent[lang][slug] ?? null;
+// O gancho do topo é o preço por sessão DESTE curso. Antes vinha do herói,
+// que carrega o mínimo do site (S/0.60): japonês, a S/5, anunciava 0.60.
+const hookPrice = sessionPrices[slug];
 
 // Idioma e seus níveis. A página de um idioma vira o hub da família: um
 // seletor de níveis em quadradinhos, e UM painel de detalhe que troca com a
@@ -58,9 +134,7 @@ const levelPanels = siblings.map((levelSlug) => {
     shortName: d.levelShortNames[levelSlug] ?? t.courses.list[levelSlug],
     highlights: d.levelHighlights[levelSlug] ?? fallbackHighlights(levelProgram),
     program: levelProgram,
-    // O hub não mostra valores (pedido do dono, 03/09/2026) — mensal aqui
-    // é só o gatilho das pílulas de modalidade no painel.
-    hasMonthly: (monthlyPrices[levelSlug] ?? null) !== null,
+    options: paymentOptions(levelSlug),
     enrollHref: enrollmentHref(withLang(lang, "/enrollment"), {
       courseId: courseIdBySlug[levelSlug],
       content: "course_page",
@@ -123,26 +197,10 @@ const courseJsonLd = {
     courseMode: "Online",
     inLanguage: htmlLang[lang],
   },
-  offers: [
-    {
-      "@type": "Offer",
-      category: "Paid",
-      price: (rawPrice ?? 0).toFixed(2),
-      priceCurrency: "PEN",
-      availability: "https://schema.org/InStock",
-    },
-    ...(rawMonthly !== null
-      ? [
-          {
-            "@type": "Offer",
-            category: "Paid",
-            price: rawMonthly.toFixed(2),
-            priceCurrency: "PEN",
-            availability: "https://schema.org/InStock",
-          },
-        ]
-      : []),
-  ],
+  // Sem `offers`: a página não anuncia mais o total do paquete (pedido do
+  // dono, 04/09/2026), e dado estruturado que declara um preço invisível na
+  // página é exatamente o que o Google trata como marcação enganosa. O preço
+  // por sessão não é o preço do curso, então também não entra aqui.
 };
 ---
 
@@ -198,15 +256,14 @@ const courseJsonLd = {
         <p class="lead text-muted">{d.leadPre}{name}{d.leadPost}</p>
       )}
 
-      {/* O que a página grita é o sol por sessão; o total do paquete continua
-          logo abaixo, menor — quem decide precisa dele à vista. */}
-      {/* Renderização condicional, não `hidden`: o atributo perde para o
-          `display: flex` da regra e o bloco reaparecia num curso sem preço. */}
-      {price && (
+      {/* O único preço da página é o da sessão — o total do paquete saiu de
+          toda a landing (pedido do dono, 04/09/2026). Vale para todo curso,
+          então não há mais ramo condicional. */}
+      {hookPrice !== null && (
         <p class="price-hook">
           <span class="hook-pre">{d.priceHookPre}</span>
           <span class="hook-amount">
-            {t.hero.price}<span class="hook-unit">{t.hero.priceUnit}</span>
+            {formatPEN(hookPrice, lang)}<span class="hook-unit">{t.hero.priceUnit}</span>
           </span>
         </p>
       )}
@@ -265,19 +322,36 @@ const courseJsonLd = {
                   {p.highlights.map((item) => <li>{item}</li>)}
                 </ul>
               )}
-              {/* As duas modalidades, sem valores — o preço já mora no
-                  quadradinho do nível. O paquete leva o selo: é o que carrega
-                  os talleres. Só aparece onde a escolha existe (mensual). */}
-              {p.hasMonthly && (
+              {/* Como pagar, com o valor de cada forma. */}
+              {p.options.length > 0 && (
                 <div class="panel-options">
-                  <span class="panel-option">{d.paymentMonthlyName}</span>
-                  {/* A recomendação é a estrela em cima da pílula; a palavra
-                      fica só para leitor de tela. */}
-                  <span class="panel-option panel-option-full">
-                    <svg class="panel-option-star" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l2.9 6.26 6.6.72-4.9 4.55 1.34 6.47L12 16.77 6.06 20l1.34-6.47L2.5 8.98l6.6-.72L12 2z"/></svg>
-                    {d.paymentFullName}
-                    <span class="visually-hidden">{d.paymentRecommended}</span>
-                  </span>
+                  {p.options.map((o) => (
+                    <span class:list={["panel-option", { "panel-option-full": o.recommended }]}>
+                      {o.recommended && (
+                        <svg class="panel-option-star" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l2.9 6.26 6.6.72-4.9 4.55 1.34 6.47L12 16.77 6.06 20l1.34-6.47L2.5 8.98l6.6-.72L12 2z"/></svg>
+                      )}
+                      <span class="option-name">{o.name}</span>
+                      <span class="option-price">{o.price}</span>
+                      {/* Equivalência e selo existem em TODOS os cards, vazios
+                          onde não se aplicam: sem isso o card do paquete ganha
+                          duas linhas a mais e o valor dele sai do alinhamento
+                          com o vizinho — justo numa fileira feita pra
+                          comparar. A altura vazia vem do `min-height` em `em`
+                          das duas classes. */}
+                      {o.note && (
+                        <span class="option-note">
+                          <strong class="option-note-price">{o.note.price}</strong>
+                          <span class="option-note-unit">{o.note.unit}</span>
+                        </span>
+                      )}
+                      {o.perks.length > 0 && (
+                        <ul class="option-perks">
+                          {o.perks.map((perk) => <li>{perk}</li>)}
+                        </ul>
+                      )}
+                      {o.recommended && <span class="option-flag">{d.paymentRecommended}</span>}
+                    </span>
+                  ))}
                 </div>
               )}
               <a class="btn btn-yellow panel-enroll" href={p.enrollHref}>{t.hero.ctaEnroll}</a>
@@ -621,32 +695,149 @@ const courseJsonLd = {
   }
   /* As duas modalidades como etiquetas, sem valores — pílulas informativas,
      não botões: a escolha de verdade acontece no checkout. */
+  /* As formas de pagar, lado a lado e centradas. Base fixa em vez de `1fr`:
+     com duas opções, `1fr` esticava cada card para meio painel (420dp) e o
+     valor sumia no meio da caixa. Todos com a mesma base, então os números
+     continuam alinhados um sob o outro — é a comparação que a pessoa veio
+     fazer — e o bloco quebra sozinho quando a coluna aperta. */
   .panel-options {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    align-items: center;
+    /* Cada card com a PRÓPRIA altura, não esticado até o mais alto: o paquete
+       lista o que entrega e o mensual não, então esticar deixava o mensual
+       como uma caixa vazia de 300px. Alinhados pelo topo, nome e valor
+       continuam na mesma linha e o card maior é o recomendado — o tamanho
+       passa a dizer a mesma coisa que a estrela. */
+    align-items: flex-start;
     gap: calc(12 * var(--dp));
-    margin-top: calc(20 * var(--dp));
+    margin-top: calc(26 * var(--dp));
   }
   .panel-option {
-    display: inline-flex;
+    /* 250, não 230: a linha da equivalência (com a pílula dentro) pede ~215px
+       de conteúdo e sobrava 214 — quebrava por um pixel. */
+    flex: 0 1 calc(250 * var(--dp));
+    position: relative;
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: calc(8 * var(--dp));
-    padding: calc(9 * var(--dp)) calc(18 * var(--dp));
+    /* Do topo para baixo, não centrado: assim nome e valor de um card ficam
+       na mesma linha do vizinho mesmo quando a equivalência quebra em duas
+       (no celular, ou noutro idioma). Centrar empurrava tudo para cima no
+       card mais alto. */
+    justify-content: flex-start;
+    gap: calc(2 * var(--dp));
+    padding: calc(16 * var(--dp)) calc(16 * var(--dp)) calc(14 * var(--dp));
     border: calc(1.5 * var(--dp)) solid var(--border);
-    border-radius: calc(999 * var(--dp));
-    font-weight: 700;
-    font-size: calc(14.72 * var(--dp));
-    color: var(--text-muted);
+    border-radius: calc(16 * var(--dp));
     background: var(--paper);
   }
+  .option-name {
+    font-weight: 600;
+    font-size: calc(13.6 * var(--dp));
+    color: var(--text-muted);
+  }
+  .option-price {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: calc(26 * var(--dp));
+    line-height: 1.15;
+    color: var(--ink);
+  }
+  /* O recomendado é o único com fundo: numa fileira de três, cor é o que
+     diz "este" antes de qualquer palavra. */
   .panel-option-full {
-    position: relative;
     border-color: var(--yellow);
     background: var(--cream);
-    color: var(--ink);
     box-shadow: var(--shadow-yellow);
+  }
+  .panel-option-full .option-name,
+  .panel-option-full .option-price {
+    color: var(--ink);
+  }
+  /* O preço por sessão: a pílula amarela — a mesma que o herói usa — e a
+     unidade embaixo. Amarelo como COR DE TEXTO sobre o creme do card dava
+     ~2:1 de contraste: lavado de longe e reprovado de perto. Como fundo, com
+     a tinta por cima, ele vira o ponto mais brilhante do card. */
+  .option-note {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: calc(2 * var(--dp));
+    margin-top: calc(8 * var(--dp));
+  }
+  .option-note-price {
+    display: inline-block;
+    padding: calc(2 * var(--dp)) calc(10 * var(--dp));
+    border-radius: calc(8 * var(--dp));
+    /* Neutra por padrão: no card do mensual o amarelo puxava o olho para o
+       valor por sessão MAIS CARO — a pílula acesa vendia a opção errada. */
+    background: var(--sky);
+    color: var(--ink);
+    font-size: calc(15.2 * var(--dp));
+    font-weight: 800;
+    line-height: 1.4;
+  }
+  .panel-option-full .option-note-price {
+    background: linear-gradient(135deg, var(--yellow-bright), var(--yellow));
+  }
+  .option-note-unit {
+    font-size: calc(11.8 * var(--dp));
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--text-muted);
+  }
+  /* O que o paquete entrega. Alinhado à esquerda mesmo num card centrado: uma
+     lista de itens centrada vira uma pilha de linhas soltas, sem margem comum
+     por onde o olho desça. */
+  .option-perks {
+    list-style: none;
+    margin-top: calc(12 * var(--dp));
+    padding-top: calc(12 * var(--dp));
+    border-top: calc(1 * var(--dp)) solid rgba(19, 34, 75, 0.1);
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: calc(6 * var(--dp));
+    text-align: left;
+    font-size: calc(12.8 * var(--dp));
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--ink);
+  }
+  .option-perks li {
+    position: relative;
+    padding-left: calc(20 * var(--dp));
+  }
+  /* O tique é desenhado em CSS, não é texto: duas bordas e uma rotação. Não
+     entra no conteúdo lido em voz alta nem depende de fonte de ícone. */
+  .option-perks li::before {
+    content: "";
+    position: absolute;
+    left: calc(4 * var(--dp));
+    top: calc(3 * var(--dp));
+    width: calc(5 * var(--dp));
+    height: calc(9 * var(--dp));
+    border-right: calc(2 * var(--dp)) solid var(--yellow-deep);
+    border-bottom: calc(2 * var(--dp)) solid var(--yellow-deep);
+    transform: rotate(42deg);
+  }
+  /* Nem o selo nem a equivalência reservam altura vazia: os cards alinham
+     pelo topo, então nome e valor já batem entre si sem precisar disso — e o
+     card sem equivalência (o intensivo, que não tem valor por sessão na
+     tabela) abria um buraco entre o preço e a lista. */
+  .option-flag {
+    margin-top: calc(4 * var(--dp));
+    line-height: 1.6;
+    font-size: calc(10.4 * var(--dp));
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    /* Mesma razão da nota: o amarelo escuro sumia sobre o creme. A estrela e
+       o próprio fundo do card já dizem "este"; a palavra só precisa ser
+       legível. */
+    color: var(--ink);
+    opacity: 0.62;
   }
   /* A estrela cavalga a borda de cima da pílula, no centro — é o selo. */
   .panel-option-star {

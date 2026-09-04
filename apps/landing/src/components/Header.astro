@@ -456,9 +456,14 @@ const programs = [
     border: calc(1.5 * var(--dp)) solid var(--border);
     background: var(--paper);
     cursor: pointer;
-    place-items: center;
-    gap: calc(5 * var(--dp));
+    /* `place-items` sozinho só resolve o eixo cruzado (aqui, o horizontal):
+       num flex column o vertical continua em `flex-start` e as três barras
+       (17.2dp somadas) grudam no topo dos 38dp da caixa. Centrar os dois
+       eixos é o que mantém o ícone no meio do botão. */
     flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: calc(5 * var(--dp));
   }
   .burger span {
     width: calc(20 * var(--dp));
