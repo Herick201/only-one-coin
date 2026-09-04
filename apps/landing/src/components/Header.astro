@@ -236,24 +236,34 @@ const programs = [
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: calc(24 * var(--dp));
+    gap: calc(12 * var(--dp));
     height: calc(80 * var(--dp));
     /* O header é a única faixa que usa a largura toda: a marca encosta numa
        ponta e as ações na outra, com a nav respirando no meio. O resto do site
        segue no container de calc(1180 * var(--dp)) — é o texto que precisa de medida de
        leitura, não a barra. */
     max-width: none;
-    padding-inline: calc(35.4 * var(--dp));
+    padding-inline: calc(20 * var(--dp));
+  }
+  /* A marca NUNCA encolhe. Com `img { max-width: 100% }` (global) e altura
+     fixa, o flex esmagava a largura do logo e mantinha a altura — o lockup
+     saía achatado, e era isso o que se via de 1180 a 1770 de janela. A barra
+     inteira foi apertada (gaps, padding, corpo da nav) para caber na largura
+     de desenho com folga em vez de comer o logo. */
+  .brand {
+    flex: none;
   }
   .brand img {
     height: calc(34 * var(--dp));
     width: auto;
+    max-width: none;
   }
 
   .nav {
     display: flex;
     align-items: center;
-    gap: calc(28.32 * var(--dp));
+    gap: calc(14 * var(--dp));
+    font-size: calc(14 * var(--dp));
     font-weight: 600;
     color: #0e1730;
   }
@@ -357,7 +367,7 @@ const programs = [
   .header-actions {
     display: flex;
     align-items: center;
-    gap: calc(14 * var(--dp));
+    gap: calc(10 * var(--dp));
   }
   /* A matrícula viaja em todas as páginas, no lugar mais quente do header.
      Escondida abaixo de calc(1080 * var(--dp)): aí o menu já colapsa e ela reaparece dentro
@@ -385,7 +395,7 @@ const programs = [
     white-space: nowrap;
   }
   .enroll-btn {
-    padding: calc(12 * var(--dp)) calc(22 * var(--dp));
+    padding: calc(12 * var(--dp)) calc(16 * var(--dp));
     font-size: calc(15.04 * var(--dp));
     letter-spacing: 0.02em;
     white-space: nowrap;
@@ -398,7 +408,7 @@ const programs = [
      para que o amarelo da matrícula seja a única coisa gritando no header. */
   .login-btn {
     white-space: nowrap;
-    padding: calc(9 * var(--dp)) calc(16 * var(--dp));
+    padding: calc(9 * var(--dp)) calc(12 * var(--dp));
     gap: calc(6 * var(--dp));
     font-size: calc(13.76 * var(--dp));
     background: transparent;
