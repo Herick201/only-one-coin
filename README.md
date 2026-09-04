@@ -1,6 +1,6 @@
 # Only One Coin — Plataforma Académica Digital
 
-Plataforma académica para a **Asociación Only One Coin Perú** (RUC 20610561463):
+Plataforma académica da **Only One Coin** (razão social `INGLES POR UN SOL S.A.C.`, RUC 20613918028):
 site público, matrícula com leitura de comprovante por IA, portal do aluno,
 backoffice administrativo e módulo de e-mail.
 
