@@ -42,12 +42,22 @@
      porque o container também para de crescer ali.
 
      0.084745vw = 1/1180 da janela. Se um dia a largura de desenho mudar,
-     mude os dois números juntos. */
-  --dp: min(1px, 0.084745vw);
+     mude os dois números juntos.
+
+     O TETO (1.5px) é o único ponto em que a régua para de crescer. Antes ele
+     era 1px, e a consequência aparecia em monitor grande: a partir de 1180px
+     a página inteira congelava numa coluna de 1180px no meio da tela, com
+     texto de 16px, enquanto as faixas que sangram (hero, propósito, CTA)
+     continuavam ocupando a janela toda — foto gigante ao lado de letra
+     miúda. Com o teto em 1.5, a mesma página cresce até 1770px de desenho
+     (texto base de 24px) e só então centraliza. Abaixo de 1180 nada muda. */
+  --dp: min(1.5px, 0.084745vw);
 
   --radius: calc(20 * var(--dp));
   --radius-lg: calc(30 * var(--dp));
-  --maxw: 1180px;
+  /* A largura de desenho anda presa à régua: o container cresce junto com a
+     fonte, em vez de travar em 1180px e deixar o resto crescer sozinho. */
+  --maxw: calc(1180 * var(--dp));
 
   --font: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-display: "Fredoka", "Poppins", system-ui, sans-serif;
