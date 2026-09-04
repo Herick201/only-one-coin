@@ -758,11 +758,16 @@ const courseJsonLd = {
     display: inline-block;
     padding: calc(2 * var(--dp)) calc(10 * var(--dp));
     border-radius: calc(8 * var(--dp));
-    background: linear-gradient(135deg, var(--yellow-bright), var(--yellow));
+    /* Neutra por padrão: no card do mensual o amarelo puxava o olho para o
+       valor por sessão MAIS CARO — a pílula acesa vendia a opção errada. */
+    background: var(--sky);
     color: var(--ink);
     font-size: calc(15.2 * var(--dp));
     font-weight: 800;
     line-height: 1.4;
+  }
+  .panel-option-full .option-note-price {
+    background: linear-gradient(135deg, var(--yellow-bright), var(--yellow));
   }
   .option-note-unit {
     font-size: calc(11.8 * var(--dp));
