@@ -554,21 +554,28 @@ const programs = [
       margin-bottom: calc(4 * var(--dp));
       border-bottom: calc(1 * var(--dp)) solid var(--border);
     }
+    /* A barra tinha os três elementos encostados: o botão ocupava 43 de 56px
+       de altura (77% dela — no desenho largo são 51%) e sobravam 8px até o
+       hambúrguer. Aqui a barra ganha altura, o botão perde 5px e um pouco de
+       largura, e a folga entre eles dobra. O alvo de toque do botão fica em
+       38dp: bem acima do mínimo de 24 do WCAG 2.5.8, e o pill ainda é largo.
+       Manter os 44 do AAA numa barra de 62 devolveria o problema — o botão
+       voltaria a ser a barra inteira. */
     .header-inner {
-      height: calc(58 * var(--dp));
+      height: calc(62 * var(--dp));
       padding-inline: calc(16 * var(--dp));
-      gap: calc(10 * var(--dp));
+      gap: calc(12 * var(--dp));
     }
     .brand img {
-      height: calc(24 * var(--dp));
+      height: calc(22 * var(--dp));
     }
     .header-actions {
-      gap: calc(8 * var(--dp));
+      gap: calc(12 * var(--dp));
     }
     .enroll-btn {
-      padding: calc(11 * var(--dp)) calc(14 * var(--dp));
-      font-size: calc(12.5 * var(--dp));
-      min-height: calc(40 * var(--dp));
+      padding: calc(10 * var(--dp)) calc(13 * var(--dp));
+      font-size: calc(11.8 * var(--dp));
+      min-height: calc(38 * var(--dp));
     }
     .burger {
       width: calc(38 * var(--dp));
