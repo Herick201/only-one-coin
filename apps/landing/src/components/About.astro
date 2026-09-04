@@ -226,16 +226,16 @@ const valueIcons = [
   .about-intro {
     position: relative;
     overflow: hidden;
-    padding-block: 64px 88px;
+    padding-block: calc(64 * var(--dp)) calc(88 * var(--dp));
     background:
       radial-gradient(50% 55% at 92% 4%, rgba(255, 201, 60, 0.16), transparent 60%),
       var(--sky-soft);
   }
   .intro-blob {
-    width: 320px;
-    height: 320px;
-    top: -140px;
-    left: -110px;
+    width: calc(320 * var(--dp));
+    height: calc(320 * var(--dp));
+    top: calc(-140 * var(--dp));
+    left: calc(-110 * var(--dp));
     background: var(--blue);
     opacity: 0.12;
   }
@@ -246,36 +246,36 @@ const valueIcons = [
     position: relative;
     z-index: 1;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
-    gap: 54px;
+    grid-template-columns: repeat(auto-fit, minmax(calc(330 * var(--dp)), 1fr));
+    gap: calc(54 * var(--dp));
     align-items: center;
   }
   .eyebrow {
     display: inline-block;
-    margin-bottom: 14px;
-    padding: 6px 14px;
-    border-radius: 999px;
+    margin-bottom: calc(14 * var(--dp));
+    padding: calc(6 * var(--dp)) calc(14 * var(--dp));
+    border-radius: calc(999 * var(--dp));
     background: var(--cream);
     color: var(--yellow-deep);
-    font-size: 0.78rem;
+    font-size: calc(12.48 * var(--dp));
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
   .lead {
-    margin-top: 18px;
-    font-size: 1.12rem;
+    margin-top: calc(18 * var(--dp));
+    font-size: calc(17.92 * var(--dp));
     color: var(--ink);
   }
   .intro-copy p + p {
-    margin-top: 12px;
+    margin-top: calc(12 * var(--dp));
   }
   .intro-actions {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 22px;
-    margin-top: 28px;
+    gap: calc(22 * var(--dp));
+    margin-top: calc(28 * var(--dp));
   }
 
   /* ---------- shared photo frame ---------- */
@@ -302,12 +302,12 @@ const valueIcons = [
      without covering faces. */
   .photo-inset {
     position: absolute;
-    left: -26px;
-    bottom: -26px;
-    width: 240px;
+    left: calc(-26 * var(--dp));
+    bottom: calc(-26 * var(--dp));
+    width: calc(240 * var(--dp));
     border-radius: var(--radius);
     overflow: hidden;
-    border: 5px solid var(--paper);
+    border: calc(5 * var(--dp)) solid var(--paper);
     box-shadow: var(--shadow-md);
   }
   .photo-inset :global(img) {
@@ -323,7 +323,7 @@ const valueIcons = [
     position: relative;
     overflow: hidden;
     background: var(--paper);
-    padding-block: 88px;
+    padding-block: calc(88 * var(--dp));
   }
   /* Big, quiet, and bleeding off the edge: at this opacity it reads as texture,
      not as a second logo competing with the header. */
@@ -331,19 +331,19 @@ const valueIcons = [
     position: absolute;
     /* Pushed well off the corner on purpose: a mark that fits entirely on the
        page reads as a second logo, a cropped one reads as texture. */
-    right: -150px;
-    bottom: -120px;
-    width: min(760px, 62vw);
+    right: calc(-150 * var(--dp));
+    bottom: calc(-120 * var(--dp));
+    width: min(calc(760 * var(--dp)), calc(731.6 * var(--dp)));
     height: auto;
     opacity: 0.06;
     pointer-events: none;
     user-select: none;
   }
   .why-blob {
-    width: 300px;
-    height: 300px;
-    top: -90px;
-    left: -120px;
+    width: calc(300 * var(--dp));
+    height: calc(300 * var(--dp));
+    top: calc(-90 * var(--dp));
+    left: calc(-120 * var(--dp));
     background: var(--yellow);
     opacity: 0.22;
   }
@@ -354,19 +354,19 @@ const valueIcons = [
   .why-dots {
     position: absolute;
     z-index: 1;
-    left: -26px;
-    bottom: -26px;
-    width: 108px;
-    height: 108px;
-    background-image: radial-gradient(var(--blue) 2.4px, transparent 2.4px);
-    background-size: 16px 16px;
+    left: calc(-26 * var(--dp));
+    bottom: calc(-26 * var(--dp));
+    width: calc(108 * var(--dp));
+    height: calc(108 * var(--dp));
+    background-image: radial-gradient(var(--blue) calc(2.4 * var(--dp)), transparent calc(2.4 * var(--dp)));
+    background-size: calc(16 * var(--dp)) calc(16 * var(--dp));
     opacity: 0.3;
   }
   .why-photo {
     position: relative;
     z-index: 1;
     aspect-ratio: 4 / 5;
-    max-height: 560px;
+    max-height: calc(560 * var(--dp));
   }
   /* Above the decoration, always: the dot grid sits in the grid's bottom-left,
      which is beside the photo in two columns but behind the copy in one. */
@@ -374,66 +374,61 @@ const valueIcons = [
     position: relative;
     z-index: 2;
   }
-  /* The row needs 2x330px + 54px gap + 48px padding before it can hold two
+  /* The row needs 2x330px + calc(54 * var(--dp)) gap + calc(48 * var(--dp)) padding before it can hold two
      columns; below that it stacks and the dots have nothing to decorate. */
-  @media (max-width: 800px) {
-    .why-dots {
-      display: none;
-    }
-  }
   .section-title.small {
-    font-size: clamp(1.6rem, 3vw, 2.2rem);
-    margin-bottom: 18px;
+    font-size: calc(35.2 * var(--dp));
+    margin-bottom: calc(18 * var(--dp));
   }
   .why-copy p + p {
-    margin-top: 12px;
+    margin-top: calc(12 * var(--dp));
   }
   /* Small and off to the side: it fills the gap under the copy without
      competing with the tall photo across the row. */
   .why-photo-side {
-    margin-top: 28px;
-    width: min(360px, 100%);
+    margin-top: calc(28 * var(--dp));
+    width: min(calc(360 * var(--dp)), 100%);
     aspect-ratio: 3 / 2;
   }
 
   /* ---------- mission / vision ---------- */
   .about-mv {
     background: var(--sky);
-    padding-block: 78px;
+    padding-block: calc(78 * var(--dp));
   }
   .mv-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 26px;
+    grid-template-columns: repeat(auto-fit, minmax(calc(320 * var(--dp)), 1fr));
+    gap: calc(26 * var(--dp));
   }
   .mv-card {
     background: var(--paper);
-    border: 1.5px solid var(--border);
+    border: calc(1.5 * var(--dp)) solid var(--border);
     border-radius: var(--radius);
-    padding: 36px 32px;
+    padding: calc(36 * var(--dp)) calc(32 * var(--dp));
     box-shadow: var(--shadow-sm);
   }
   .mv-icon {
-    width: 62px;
-    height: 62px;
+    width: calc(62 * var(--dp));
+    height: calc(62 * var(--dp));
     display: grid;
     place-items: center;
-    border-radius: 18px;
+    border-radius: calc(18 * var(--dp));
     background: var(--sky);
     color: var(--blue);
-    margin-bottom: 18px;
+    margin-bottom: calc(18 * var(--dp));
   }
   .mv-card:nth-child(even) .mv-icon {
     background: var(--cream);
     color: var(--yellow-deep);
   }
   .mv-icon :global(svg) {
-    width: 30px;
-    height: 30px;
+    width: calc(30 * var(--dp));
+    height: calc(30 * var(--dp));
   }
   .mv-card h2 {
-    font-size: 1.4rem;
-    margin-bottom: 10px;
+    font-size: calc(22.4 * var(--dp));
+    margin-bottom: calc(10 * var(--dp));
   }
   .mv-card p {
     color: var(--text-muted);
@@ -442,97 +437,97 @@ const valueIcons = [
   /* ---------- values ---------- */
   .about-values {
     background: var(--paper);
-    padding-block: 88px;
+    padding-block: calc(88 * var(--dp));
   }
   .values-head {
-    max-width: 760px;
+    max-width: calc(760 * var(--dp));
     margin-inline: auto;
     text-align: center;
   }
   .values-head p {
-    margin-top: 16px;
+    margin-top: calc(16 * var(--dp));
   }
   .values-banner {
-    margin-top: 46px;
+    margin-top: calc(46 * var(--dp));
     aspect-ratio: 21 / 8;
-    max-height: 380px;
+    max-height: calc(380 * var(--dp));
   }
   .value-cards {
-    margin-top: 40px;
+    margin-top: calc(40 * var(--dp));
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(auto-fit, minmax(calc(250 * var(--dp)), 1fr));
+    gap: calc(24 * var(--dp));
   }
   .value-card {
     background: var(--paper);
-    border: 1.5px solid var(--border);
+    border: calc(1.5 * var(--dp)) solid var(--border);
     border-radius: var(--radius);
-    padding: 30px 26px;
+    padding: calc(30 * var(--dp)) calc(26 * var(--dp));
     box-shadow: var(--shadow-sm);
     transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
   }
   .value-card:hover {
-    transform: translateY(-8px);
+    transform: translateY(calc(-8 * var(--dp)));
     box-shadow: var(--shadow-md);
     border-color: transparent;
   }
   .value-icon {
-    width: 56px;
-    height: 56px;
+    width: calc(56 * var(--dp));
+    height: calc(56 * var(--dp));
     display: grid;
     place-items: center;
-    border-radius: 16px;
+    border-radius: calc(16 * var(--dp));
     background: var(--sky);
     color: var(--blue);
-    margin-bottom: 16px;
+    margin-bottom: calc(16 * var(--dp));
   }
   .value-card:nth-child(even) .value-icon {
     background: var(--cream);
     color: var(--yellow-deep);
   }
   .value-icon :global(svg) {
-    width: 27px;
-    height: 27px;
+    width: calc(27 * var(--dp));
+    height: calc(27 * var(--dp));
   }
   .value-card h3 {
-    font-size: 1.15rem;
-    margin-bottom: 8px;
+    font-size: calc(18.4 * var(--dp));
+    margin-bottom: calc(8 * var(--dp));
   }
 
   /* ---------- strategic partner ---------- */
   .about-partner {
-    padding-block: 24px 88px;
+    padding-block: calc(24 * var(--dp)) calc(88 * var(--dp));
   }
   /* auto-fit, not a breakpoint: the logo sits beside the copy while there is
      room for two readable columns, and stacks above it when there isn't. */
   .partner-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 40px;
+    grid-template-columns: repeat(auto-fit, minmax(calc(260 * var(--dp)), 1fr));
+    gap: calc(40 * var(--dp));
     align-items: center;
-    padding: 38px;
-    border: 1px solid var(--border);
+    padding: calc(38 * var(--dp));
+    border: calc(1 * var(--dp)) solid var(--border);
     border-radius: var(--radius-lg);
     background: var(--sky-soft);
   }
   .partner-logo {
     display: grid;
     place-items: center;
-    padding: 30px;
+    padding: calc(30 * var(--dp));
     border-radius: var(--radius);
     background: var(--paper);
     box-shadow: var(--shadow-sm);
     transition: transform 0.18s ease, box-shadow 0.18s ease;
   }
   .partner-logo:hover {
-    transform: translateY(-4px);
+    transform: translateY(calc(-4 * var(--dp)));
     box-shadow: var(--shadow-md);
   }
   .partner-logo img {
     /* Ink-on-transparent lockup, sized by width so the 455x160 art keeps its
        ratio inside the card. */
     width: 100%;
-    max-width: 320px;
+    max-width: calc(320 * var(--dp));
     height: auto;
     display: block;
   }
@@ -554,28 +549,17 @@ const valueIcons = [
     right: 0;
     bottom: -0.14em;
     height: 0.16em;
-    border-radius: 999px;
+    border-radius: calc(999 * var(--dp));
     background: var(--yellow);
   }
   .wordmark-dot {
     color: #0041b3;
   }
   .partner-copy p {
-    margin-top: 12px;
+    margin-top: calc(12 * var(--dp));
   }
   .partner-cta {
-    margin-top: 24px;
+    margin-top: calc(24 * var(--dp));
   }
 
-  @media (max-width: 620px) {
-    .photo-inset {
-      display: none;
-    }
-    .values-banner {
-      aspect-ratio: 4 / 3;
-    }
-    .partner-grid {
-      padding: 24px;
-    }
-  }
 </style>

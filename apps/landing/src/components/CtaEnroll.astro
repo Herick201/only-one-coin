@@ -14,7 +14,7 @@ const c = t.cta;
       src={ctaPhoto}
       alt={c.imgAlt}
       widths={[480, 768]}
-      sizes="(max-width: 700px) 100vw, 320px"
+      sizes="24vw"
       format="webp"
       quality={72}
     />
@@ -41,14 +41,14 @@ const c = t.cta;
     position: relative;
     overflow: hidden;
     background: linear-gradient(105deg, var(--blue-deep), var(--blue) 55%, var(--blue-deep));
-    margin-top: 24px;
+    margin-top: calc(24 * var(--dp));
   }
   .cta-photo {
     position: absolute;
     left: 0;
     top: 0;
     bottom: 0;
-    width: min(24%, 320px);
+    width: min(24%, calc(320 * var(--dp)));
   }
   /* :global porque o <img> sai do componente <Image> — o escopo do Astro
      não alcança elemento renderizado por componente filho. */
@@ -72,21 +72,21 @@ const c = t.cta;
     z-index: 1;
     display: flex;
     align-items: center;
-    gap: 36px;
+    gap: calc(36 * var(--dp));
     flex-wrap: wrap;
-    padding-block: 34px;
-    padding-left: max(calc(min(24%, 320px) + 44px), calc((100% - var(--maxw)) / 2 + 24px));
-    padding-right: max(24px, calc((100% - var(--maxw)) / 2 + 24px));
+    padding-block: calc(34 * var(--dp));
+    padding-left: max(calc(min(24%, calc(320 * var(--dp))) + calc(44 * var(--dp))), calc((100% - var(--maxw)) / 2 + calc(24 * var(--dp))));
+    padding-right: max(calc(24 * var(--dp)), calc((100% - var(--maxw)) / 2 + calc(24 * var(--dp))));
   }
   .cta-copy {
-    flex: 1 1 300px;
+    flex: 1 1 calc(300 * var(--dp));
   }
   .cta-title {
-    font-size: clamp(1.5rem, 2.8vw, 2.1rem);
+    font-size: calc(33.04 * var(--dp));
     color: #fff;
   }
   .cta-copy p {
-    margin-top: 6px;
+    margin-top: calc(6 * var(--dp));
     color: rgba(255, 255, 255, 0.85);
   }
   .cta-price {
@@ -99,26 +99,18 @@ const c = t.cta;
   .cta-price strong {
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 2rem;
+    font-size: calc(32 * var(--dp));
     line-height: 1.05;
     color: var(--yellow-bright);
   }
   .cta-btn {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: calc(10 * var(--dp));
     white-space: nowrap;
   }
   .cta-btn svg {
-    width: 17px;
-    height: 17px;
-  }
-  @media (max-width: 700px) {
-    .cta-photo {
-      display: none;
-    }
-    .cta-inner {
-      padding: 30px 24px;
-    }
+    width: calc(17 * var(--dp));
+    height: calc(17 * var(--dp));
   }
 </style>

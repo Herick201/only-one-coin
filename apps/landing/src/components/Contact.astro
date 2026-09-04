@@ -89,58 +89,58 @@ const icons = {
   .contact {
     position: relative;
     overflow: hidden;
-    padding-block: 64px 88px;
+    padding-block: calc(64 * var(--dp)) calc(88 * var(--dp));
     background:
       radial-gradient(50% 55% at 92% 4%, rgba(255, 201, 60, 0.16), transparent 60%),
       var(--sky-soft);
   }
   .contact-blob {
-    width: 320px;
-    height: 320px;
-    top: -140px;
-    left: -110px;
+    width: calc(320 * var(--dp));
+    height: calc(320 * var(--dp));
+    top: calc(-140 * var(--dp));
+    left: calc(-110 * var(--dp));
     background: var(--blue);
     opacity: 0.12;
   }
   .contact-head {
     position: relative;
     z-index: 1;
-    max-width: 700px;
+    max-width: calc(700 * var(--dp));
     margin-inline: auto;
     text-align: center;
   }
   .eyebrow {
     display: inline-block;
-    margin-bottom: 14px;
-    padding: 6px 14px;
-    border-radius: 999px;
+    margin-bottom: calc(14 * var(--dp));
+    padding: calc(6 * var(--dp)) calc(14 * var(--dp));
+    border-radius: calc(999 * var(--dp));
     background: var(--cream);
     color: var(--yellow-deep);
-    font-size: 0.78rem;
+    font-size: calc(12.48 * var(--dp));
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
   .contact-lead {
-    margin-top: 16px;
-    font-size: 1.08rem;
+    margin-top: calc(16 * var(--dp));
+    font-size: calc(17.28 * var(--dp));
   }
 
   .wa-card {
     position: relative;
     z-index: 1;
     overflow: hidden;
-    margin: 46px auto 0;
+    margin: calc(46 * var(--dp)) auto 0;
     background: linear-gradient(135deg, var(--blue), var(--blue-deep));
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-blue);
-    padding: 40px 44px;
+    padding: calc(40 * var(--dp)) calc(44 * var(--dp));
   }
   .wa-card-blob {
-    width: 220px;
-    height: 220px;
-    top: -110px;
-    right: -60px;
+    width: calc(220 * var(--dp));
+    height: calc(220 * var(--dp));
+    top: calc(-110 * var(--dp));
+    right: calc(-60 * var(--dp));
     background: var(--yellow);
     opacity: 0.28;
   }
@@ -152,12 +152,12 @@ const icons = {
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 22px;
+    gap: calc(22 * var(--dp));
   }
   .wa-card h2 {
     color: #fff;
-    font-size: clamp(1.3rem, 2.4vw, 1.7rem);
-    margin-bottom: 6px;
+    font-size: calc(27.2 * var(--dp));
+    margin-bottom: calc(6 * var(--dp));
   }
   .wa-card p {
     color: rgba(255, 255, 255, 0.86);
@@ -167,39 +167,39 @@ const icons = {
   .channels {
     position: relative;
     z-index: 1;
-    margin-top: 26px;
+    margin-top: calc(26 * var(--dp));
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(auto-fit, minmax(calc(300 * var(--dp)), 1fr));
+    gap: calc(24 * var(--dp));
   }
   .channel {
     background: var(--paper);
-    border: 1.5px solid var(--border);
+    border: calc(1.5 * var(--dp)) solid var(--border);
     border-radius: var(--radius);
-    padding: 30px 26px;
+    padding: calc(30 * var(--dp)) calc(26 * var(--dp));
     box-shadow: var(--shadow-sm);
   }
   .channel-icon {
-    width: 54px;
-    height: 54px;
+    width: calc(54 * var(--dp));
+    height: calc(54 * var(--dp));
     display: grid;
     place-items: center;
-    border-radius: 16px;
+    border-radius: calc(16 * var(--dp));
     background: var(--sky);
     color: var(--blue);
-    margin-bottom: 16px;
+    margin-bottom: calc(16 * var(--dp));
   }
   .channel:nth-child(even) .channel-icon {
     background: var(--cream);
     color: var(--yellow-deep);
   }
   .channel-icon :global(svg) {
-    width: 26px;
-    height: 26px;
+    width: calc(26 * var(--dp));
+    height: calc(26 * var(--dp));
   }
   .channel h2 {
-    font-size: 1.1rem;
-    margin-bottom: 10px;
+    font-size: calc(17.6 * var(--dp));
+    margin-bottom: calc(10 * var(--dp));
   }
   .channel ul {
     list-style: none;
@@ -207,7 +207,7 @@ const icons = {
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: calc(8 * var(--dp));
   }
   .channel a {
     color: var(--blue-deep);
@@ -221,20 +221,20 @@ const icons = {
     /* Sized to clear the address on one line at three columns. If a fallback
        font ever renders wider, the <wbr> after the "@" is the fallback break —
        so the worst case is two readable halves, never a split domain. */
-    font-size: 0.88rem;
+    font-size: calc(14.08 * var(--dp));
     overflow-wrap: break-word;
   }
   .channel-note {
-    margin-top: 10px;
-    font-size: 0.92rem;
+    margin-top: calc(10 * var(--dp));
+    font-size: calc(14.72 * var(--dp));
   }
 
   .contact-org {
     position: relative;
     z-index: 1;
-    margin-top: 40px;
+    margin-top: calc(40 * var(--dp));
     text-align: center;
-    font-size: 0.9rem;
+    font-size: calc(14.4 * var(--dp));
     color: var(--text-muted);
   }
 </style>

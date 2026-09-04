@@ -93,44 +93,44 @@ const hasTopics = program.curriculum.some((unit) => unit.topics.length > 0);
 
 <style>
   .program-detail {
-    margin: 26px auto 0;
-    max-width: 860px;
+    margin: calc(26 * var(--dp)) auto 0;
+    max-width: calc(860 * var(--dp));
     text-align: left;
     background: var(--paper);
-    border: 1px solid var(--border);
+    border: calc(1 * var(--dp)) solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow-sm);
-    padding: 30px 32px;
+    padding: calc(30 * var(--dp)) calc(32 * var(--dp));
   }
   .program-part + .program-part {
-    margin-top: 24px;
-    padding-top: 24px;
-    border-top: 1px solid var(--border);
+    margin-top: calc(24 * var(--dp));
+    padding-top: calc(24 * var(--dp));
+    border-top: calc(1 * var(--dp)) solid var(--border);
   }
   .program-part h3 {
-    font-size: 1.02rem;
+    font-size: calc(16.32 * var(--dp));
     color: var(--blue-deep);
-    margin-bottom: 10px;
+    margin-bottom: calc(10 * var(--dp));
   }
   .program-part p {
-    margin: 0 0 10px;
+    margin: 0 0 calc(10 * var(--dp));
     max-width: 72ch;
   }
   .program-part ul {
     margin: 0;
-    padding-left: 18px;
+    padding-left: calc(18 * var(--dp));
     display: grid;
-    gap: 6px;
+    gap: calc(6 * var(--dp));
     color: var(--text-muted);
-    font-size: 0.94rem;
+    font-size: calc(15.04 * var(--dp));
   }
   .outcome-note {
-    margin-top: 16px;
-    padding: 14px 18px;
-    border-left: 3px solid var(--yellow);
+    margin-top: calc(16 * var(--dp));
+    padding: calc(14 * var(--dp)) calc(18 * var(--dp));
+    border-left: calc(3 * var(--dp)) solid var(--yellow);
     background: var(--cream);
-    border-radius: 0 12px 12px 0;
-    font-size: 0.94rem;
+    border-radius: 0 calc(12 * var(--dp)) calc(12 * var(--dp)) 0;
+    font-size: calc(15.04 * var(--dp));
     color: var(--text);
   }
 </style>

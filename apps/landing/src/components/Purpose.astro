@@ -15,7 +15,7 @@ const p = t.purpose;
         src={purposePhoto}
         alt={p.imgAlt}
         widths={[480, 768, 1024]}
-        sizes="(max-width: 900px) 100vw, 33vw"
+        sizes="33vw"
         format="webp"
         quality={74}
       />
@@ -66,7 +66,7 @@ const p = t.purpose;
   .purpose-photo {
     position: relative;
     align-self: stretch;
-    min-height: 300px;
+    min-height: calc(300 * var(--dp));
   }
   /* :global porque o <img> sai do componente <Image> — o escopo do Astro
      não alcança elemento renderizado por componente filho. */
@@ -88,45 +88,45 @@ const p = t.purpose;
     pointer-events: none;
   }
   .purpose-copy {
-    padding: 56px 44px;
+    padding: calc(56 * var(--dp)) calc(44 * var(--dp));
   }
   .eyebrow {
-    margin: 0 0 10px;
+    margin: 0 0 calc(10 * var(--dp));
     font-weight: 700;
-    font-size: 0.8rem;
+    font-size: calc(12.8 * var(--dp));
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--blue);
   }
   .purpose-copy h2 {
-    font-size: clamp(1.6rem, 3vw, 2.1rem);
+    font-size: calc(33.6 * var(--dp));
     line-height: 1.2;
   }
   .text {
-    margin-top: 14px;
+    margin-top: calc(14 * var(--dp));
     color: var(--text-muted);
     max-width: 46ch;
   }
   .purpose-cta {
-    margin-top: 18px;
+    margin-top: calc(18 * var(--dp));
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: calc(8 * var(--dp));
     font-weight: 700;
     color: var(--blue);
   }
   .purpose-cta svg {
-    width: 16px;
-    height: 16px;
+    width: calc(16 * var(--dp));
+    height: calc(16 * var(--dp));
     transition: transform 0.2s ease;
   }
   .purpose-cta:hover svg {
-    transform: translateX(4px);
+    transform: translateX(calc(4 * var(--dp)));
   }
   .facts {
     margin: 0;
-    padding: 24px 0;
-    padding-right: max(24px, calc((100% - var(--maxw)) / 8));
+    padding: calc(24 * var(--dp)) 0;
+    padding-right: max(calc(24 * var(--dp)), calc((100% - var(--maxw)) / 8));
     list-style: none;
     display: flex;
     align-items: center;
@@ -137,16 +137,16 @@ const p = t.purpose;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: 8px;
-    padding-inline: 16px;
+    gap: calc(8 * var(--dp));
+    padding-inline: calc(16 * var(--dp));
   }
   .fact + .fact {
-    border-left: 1.5px solid rgba(19, 34, 75, 0.12);
+    border-left: calc(1.5 * var(--dp)) solid rgba(19, 34, 75, 0.12);
   }
   .fact-value {
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 2.1rem;
+    font-size: calc(33.6 * var(--dp));
     line-height: 1;
     color: var(--ink);
   }
@@ -156,30 +156,14 @@ const p = t.purpose;
     place-items: center;
   }
   .fact-icon :global(svg) {
-    width: 30px;
-    height: 30px;
+    width: calc(30 * var(--dp));
+    height: calc(30 * var(--dp));
   }
   .fact-label {
     font-weight: 600;
-    font-size: 0.92rem;
+    font-size: calc(14.72 * var(--dp));
     color: var(--ink);
     line-height: 1.3;
-  }
-  @media (max-width: 900px) {
-    .purpose-grid {
-      grid-template-columns: 1fr;
-    }
-    .purpose-photo {
-      min-height: 240px;
-    }
-    .purpose-copy {
-      padding: 36px 24px 8px;
-    }
-    .facts {
-      padding: 24px;
-      flex-wrap: wrap;
-      gap: 18px 0;
-    }
   }
   @media (prefers-reduced-motion: reduce) {
     .purpose-cta:hover svg {

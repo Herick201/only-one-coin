@@ -312,7 +312,7 @@ const courseJsonLd = {
 
 <style>
   .course {
-    padding-block: 48px 88px;
+    padding-block: calc(48 * var(--dp)) calc(88 * var(--dp));
     background:
       radial-gradient(50% 60% at 90% 0%, rgba(255, 201, 60, 0.14), transparent 60%),
       var(--sky-soft);
@@ -320,28 +320,28 @@ const courseJsonLd = {
   .back {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: calc(6 * var(--dp));
     font-weight: 600;
     color: var(--blue);
-    margin-bottom: 26px;
+    margin-bottom: calc(26 * var(--dp));
   }
   .back svg {
-    width: 18px;
-    height: 18px;
+    width: calc(18 * var(--dp));
+    height: calc(18 * var(--dp));
     transition: transform 0.16s ease;
   }
   .back:hover svg {
-    transform: translateX(-3px);
+    transform: translateX(calc(-3 * var(--dp)));
   }
   .course-head {
-    max-width: 720px;
+    max-width: calc(720 * var(--dp));
   }
   .badges {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 10px;
-    margin: 0 0 16px;
+    gap: calc(10 * var(--dp));
+    margin: 0 0 calc(16 * var(--dp));
   }
   /* Etiqueta de preço, a de pendurar: bico à esquerda, furo do barbante e o
      pontilhado costurado por dentro — colada meio torta, como na vitrine.
@@ -357,47 +357,47 @@ const courseJsonLd = {
     height: 0.7em;
     display: inline-block;
     vertical-align: baseline;
-    margin-right: 4px;
-    border-width: 2px;
+    margin-right: calc(4 * var(--dp));
+    border-width: calc(2 * var(--dp));
   }
   /* O barbante, saindo da última letra até o furo da etiqueta. */
   .tag-string {
     position: absolute;
-    left: -15px;
+    left: calc(-15 * var(--dp));
     top: 50%;
-    width: 17px;
-    height: 2px;
+    width: calc(17 * var(--dp));
+    height: calc(2 * var(--dp));
     background: #c9101f;
     transform: rotate(12deg);
-    border-radius: 2px;
+    border-radius: calc(2 * var(--dp));
   }
   .discount {
     position: absolute;
-    left: calc(100% + 16px);
+    left: calc(100% + calc(16 * var(--dp)));
     top: 26%;
     /* A etiqueta nunca quebra em duas linhas: ela é um objeto, não um
        parágrafo — e o título é grande demais para ela crescer em altura. */
     white-space: nowrap;
     display: inline-flex;
     align-items: center;
-    gap: 9px;
-    padding: 13px 24px 13px 46px;
+    gap: calc(9 * var(--dp));
+    padding: calc(13 * var(--dp)) calc(24 * var(--dp)) calc(13 * var(--dp)) calc(46 * var(--dp));
     background: linear-gradient(145deg, #ee2a36, #c9101f);
     color: #fff;
     transform: rotate(-7deg);
-    clip-path: polygon(0% 50%, 24px 0%, 100% 0%, 100% 100%, 24px 100%);
+    clip-path: polygon(0% 50%, calc(24 * var(--dp)) 0%, 100% 0%, 100% 100%, calc(24 * var(--dp)) 100%);
     z-index: 1;
-    filter: drop-shadow(0 8px 14px rgba(201, 16, 31, 0.34));
+    filter: drop-shadow(0 calc(8 * var(--dp)) calc(14 * var(--dp)) rgba(201, 16, 31, 0.34));
   }
   /* Furo do barbante. Pintado da cor do fundo da seção: clip-path já recortou
      a peça, e não dá para recortar de novo por dentro. */
   .discount::before {
     content: "";
     position: absolute;
-    left: 28px;
+    left: calc(28 * var(--dp));
     top: 50%;
-    width: 10px;
-    height: 10px;
+    width: calc(10 * var(--dp));
+    height: calc(10 * var(--dp));
     border-radius: 50%;
     background: var(--sky-soft);
     transform: translateY(-50%);
@@ -406,111 +406,98 @@ const courseJsonLd = {
   .discount::after {
     content: "";
     position: absolute;
-    inset: 5px 7px 5px 42px;
-    border: 2px dashed rgba(255, 255, 255, 0.7);
-    border-radius: 5px;
+    inset: calc(5 * var(--dp)) calc(7 * var(--dp)) calc(5 * var(--dp)) calc(42 * var(--dp));
+    border: calc(2 * var(--dp)) dashed rgba(255, 255, 255, 0.7);
+    border-radius: calc(5 * var(--dp));
     pointer-events: none;
   }
   .discount-amount {
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 1.5rem;
+    font-size: calc(24 * var(--dp));
     line-height: 1;
     letter-spacing: -0.01em;
   }
   .discount-label {
     font-weight: 800;
-    font-size: 0.78rem;
+    font-size: calc(12.48 * var(--dp));
     letter-spacing: 0.06em;
     text-transform: uppercase;
   }
   /* Sem largura para pendurar ao lado, a etiqueta desce e vira um selo comum:
      melhor abaixo do título do que empurrando a página para o lado. */
-  @media (max-width: 700px) {
-    .name-wrap {
-      display: inline;
-    }
-    .discount {
-      position: static;
-      margin-top: 14px;
-      transform: rotate(-3deg);
-    }
-    .tag-string {
-      display: none;
-    }
-  }
   .price-hook {
-    margin-top: 24px;
+    margin-top: calc(24 * var(--dp));
     display: flex;
     align-items: baseline;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: calc(12 * var(--dp));
   }
   .hook-pre {
     font-family: var(--font-display);
-    font-size: clamp(1.2rem, 2.4vw, 1.7rem);
+    font-size: calc(27.2 * var(--dp));
     font-weight: 600;
     color: var(--ink);
   }
   .hook-amount {
     display: inline-flex;
     align-items: baseline;
-    gap: 8px;
+    gap: calc(8 * var(--dp));
     background: linear-gradient(135deg, var(--yellow-bright), var(--yellow));
     color: var(--ink);
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: clamp(2rem, 4.4vw, 3rem);
+    font-size: calc(48 * var(--dp));
     line-height: 1;
-    padding: 10px 24px;
-    border-radius: 18px;
+    padding: calc(10 * var(--dp)) calc(24 * var(--dp));
+    border-radius: calc(18 * var(--dp));
     box-shadow: var(--shadow-yellow);
   }
   .hook-unit {
     font-family: var(--font);
-    font-size: 0.8rem;
+    font-size: calc(12.8 * var(--dp));
     font-weight: 700;
   }
   .urgency {
     display: inline-flex;
     align-items: center;
-    padding: 8px 18px;
-    border-radius: 999px;
+    padding: calc(8 * var(--dp)) calc(18 * var(--dp));
+    border-radius: calc(999 * var(--dp));
     background: linear-gradient(135deg, var(--yellow-bright), var(--yellow));
     color: var(--ink);
     font-weight: 700;
-    font-size: 0.9rem;
+    font-size: calc(14.4 * var(--dp));
     box-shadow: var(--shadow-yellow);
   }
   .course-head h1 {
-    margin-top: 10px;
-    font-size: clamp(2.2rem, 6vw, 3.6rem);
+    margin-top: calc(10 * var(--dp));
+    font-size: calc(57.6 * var(--dp));
   }
   .course-head h1 .accent {
     color: var(--blue);
   }
   .lead {
-    margin-top: 18px;
-    font-size: 1.15rem;
+    margin-top: calc(18 * var(--dp));
+    font-size: calc(18.4 * var(--dp));
   }
   /* As quatro coisas que decidem a matrícula: quantas clases, que son en
      vivo, cuándo, y qué viene incluido. O resto do programa está mais abaixo
      para quem quiser — aqui em cima não cabe um texto. */
   .pitch {
-    margin-top: 20px;
+    margin-top: calc(20 * var(--dp));
   }
   .perks {
     list-style: none;
     margin: 0;
     padding: 0;
     display: grid;
-    gap: 10px;
+    gap: calc(10 * var(--dp));
     max-width: 62ch;
   }
   .perks li {
     position: relative;
-    padding-left: 30px;
-    font-size: 1.02rem;
+    padding-left: calc(30 * var(--dp));
+    font-size: calc(16.32 * var(--dp));
     font-weight: 600;
     color: var(--text);
   }
@@ -519,10 +506,10 @@ const courseJsonLd = {
     position: absolute;
     left: 0;
     top: 0.35em;
-    width: 16px;
-    height: 9px;
-    border-left: 3px solid var(--yellow-deep);
-    border-bottom: 3px solid var(--yellow-deep);
+    width: calc(16 * var(--dp));
+    height: calc(9 * var(--dp));
+    border-left: calc(3 * var(--dp)) solid var(--yellow-deep);
+    border-bottom: calc(3 * var(--dp)) solid var(--yellow-deep);
     transform: rotate(-45deg);
   }
   /* Duração, nível e modalidade: os três números que a pessoa procura antes de
@@ -542,9 +529,9 @@ const courseJsonLd = {
      geradas no frontmatter (`levelTabsCss`); aqui fica só o visual. */
   .level-radio {
     position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
+    width: calc(1 * var(--dp));
+    height: calc(1 * var(--dp));
+    margin: calc(-1 * var(--dp));
     clip-path: inset(50%);
     overflow: hidden;
   }
@@ -552,26 +539,26 @@ const courseJsonLd = {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 12px;
-    max-width: 860px;
+    gap: calc(12 * var(--dp));
+    max-width: calc(860 * var(--dp));
     margin-inline: auto;
   }
   .tab-square {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
-    min-width: 150px;
-    padding: 18px 24px;
+    gap: calc(10 * var(--dp));
+    min-width: calc(150 * var(--dp));
+    padding: calc(18 * var(--dp)) calc(24 * var(--dp));
     background: var(--paper);
-    border: 1.5px solid var(--border);
+    border: calc(1.5 * var(--dp)) solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow-sm);
     cursor: pointer;
     transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
   }
   .tab-square:hover {
-    transform: translateY(-2px);
+    transform: translateY(calc(-2 * var(--dp)));
     border-color: var(--blue);
   }
   /* As barras sobem como sinal de celular: alinhadas pela base, cada uma um
@@ -579,12 +566,12 @@ const courseJsonLd = {
   .tab-steps {
     display: flex;
     align-items: flex-end;
-    gap: 4px;
-    height: 24px;
+    gap: calc(4 * var(--dp));
+    height: calc(24 * var(--dp));
   }
   .step {
-    width: 7px;
-    border-radius: 4px;
+    width: calc(7 * var(--dp));
+    border-radius: calc(4 * var(--dp));
     background: var(--sky);
     transition: background 0.16s ease;
   }
@@ -594,12 +581,12 @@ const courseJsonLd = {
   .tab-name {
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 1rem;
+    font-size: calc(16 * var(--dp));
     color: var(--ink);
   }
   .level-panels {
-    max-width: 860px;
-    margin: 26px auto 0;
+    max-width: calc(860 * var(--dp));
+    margin: calc(26 * var(--dp)) auto 0;
   }
   .level-panel {
     display: none;
@@ -607,28 +594,28 @@ const courseJsonLd = {
     overflow: hidden;
     text-align: center;
     background: var(--paper);
-    border: 1.5px solid var(--border);
+    border: calc(1.5 * var(--dp)) solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow-sm);
-    padding: 30px 32px;
+    padding: calc(30 * var(--dp)) calc(32 * var(--dp));
   }
   .panel-watermark {
     position: absolute;
-    right: -20px;
-    bottom: 14px;
-    width: 340px;
+    right: calc(-20 * var(--dp));
+    bottom: calc(14 * var(--dp));
+    width: calc(340 * var(--dp));
     opacity: 0.07;
     transform: rotate(-8deg);
     pointer-events: none;
   }
   .panel-title {
-    font-size: 1.2rem;
-    margin-bottom: 14px;
+    font-size: calc(19.2 * var(--dp));
+    margin-bottom: calc(14 * var(--dp));
   }
   /* Checks centrados como bloco, texto alinhado dentro: o conjunto fica no
      meio do card sem cada linha começar num ponto diferente. */
   .panel-ticks {
-    font-size: 0.96rem;
+    font-size: calc(15.36 * var(--dp));
     display: inline-grid;
     text-align: left;
   }
@@ -639,18 +626,18 @@ const courseJsonLd = {
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
-    gap: 12px;
-    margin-top: 20px;
+    gap: calc(12 * var(--dp));
+    margin-top: calc(20 * var(--dp));
   }
   .panel-option {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 9px 18px;
-    border: 1.5px solid var(--border);
-    border-radius: 999px;
+    gap: calc(8 * var(--dp));
+    padding: calc(9 * var(--dp)) calc(18 * var(--dp));
+    border: calc(1.5 * var(--dp)) solid var(--border);
+    border-radius: calc(999 * var(--dp));
     font-weight: 700;
-    font-size: 0.92rem;
+    font-size: calc(14.72 * var(--dp));
     color: var(--text-muted);
     background: var(--paper);
   }
@@ -664,33 +651,33 @@ const courseJsonLd = {
   /* A estrela cavalga a borda de cima da pílula, no centro — é o selo. */
   .panel-option-star {
     position: absolute;
-    top: -11px;
+    top: calc(-11 * var(--dp));
     left: 50%;
     transform: translateX(-50%);
-    width: 18px;
-    height: 18px;
+    width: calc(18 * var(--dp));
+    height: calc(18 * var(--dp));
     color: var(--yellow);
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.18));
+    filter: drop-shadow(0 calc(1 * var(--dp)) calc(2 * var(--dp)) rgba(0, 0, 0, 0.18));
   }
   .visually-hidden {
     position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
+    width: calc(1 * var(--dp));
+    height: calc(1 * var(--dp));
+    margin: calc(-1 * var(--dp));
     clip-path: inset(50%);
     overflow: hidden;
   }
   .panel-enroll {
-    margin-top: 20px;
+    margin-top: calc(20 * var(--dp));
   }
   /* O toggle do programa dentro do painel: alinhado à esquerda com o resto
      do conteúdo, separado do CTA por um respiro. */
   .panel-toggle {
-    margin-top: 22px;
+    margin-top: calc(22 * var(--dp));
   }
   .panel-toggle > summary {
-    padding: 12px 26px;
-    font-size: 0.95rem;
+    padding: calc(12 * var(--dp)) calc(26 * var(--dp));
+    font-size: calc(15.2 * var(--dp));
   }
   /* O programa inteiro atrás de um único botão. `<details>` nativo — abre sem
      JavaScript, que esta página não carrega. O summary é o botão "Ver
@@ -700,13 +687,13 @@ const courseJsonLd = {
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 12px;
-    padding: 15px 36px;
+    gap: calc(12 * var(--dp));
+    padding: calc(15 * var(--dp)) calc(36 * var(--dp));
     background: var(--paper);
-    border: 1.5px solid var(--border);
-    border-radius: 999px;
+    border: calc(1.5 * var(--dp)) solid var(--border);
+    border-radius: calc(999 * var(--dp));
     font-weight: 700;
-    font-size: 1.02rem;
+    font-size: calc(16.32 * var(--dp));
     color: var(--blue-deep);
     box-shadow: var(--shadow-sm);
     transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
@@ -714,7 +701,7 @@ const courseJsonLd = {
   .program-toggle > summary:hover {
     border-color: var(--blue);
     box-shadow: var(--shadow-blue);
-    transform: translateY(-2px);
+    transform: translateY(calc(-2 * var(--dp)));
   }
   .program-toggle > summary::-webkit-details-marker {
     display: none;
@@ -723,122 +710,122 @@ const courseJsonLd = {
   .program-toggle > summary::after {
     content: "";
     flex: none;
-    width: 9px;
-    height: 9px;
-    margin-top: -4px;
-    border-right: 2.5px solid var(--blue);
-    border-bottom: 2.5px solid var(--blue);
+    width: calc(9 * var(--dp));
+    height: calc(9 * var(--dp));
+    margin-top: calc(-4 * var(--dp));
+    border-right: calc(2.5 * var(--dp)) solid var(--blue);
+    border-bottom: calc(2.5 * var(--dp)) solid var(--blue);
     transform: rotate(45deg);
     transition: transform 0.16s ease;
   }
   .program-toggle[open] > summary::after {
     transform: rotate(225deg);
-    margin-top: 4px;
+    margin-top: calc(4 * var(--dp));
   }
   .ticks {
     list-style: none;
     margin: 0;
     padding: 0;
     display: grid;
-    gap: 10px;
+    gap: calc(10 * var(--dp));
     color: var(--text-muted);
   }
   .ticks li {
     position: relative;
-    padding-left: 26px;
+    padding-left: calc(26 * var(--dp));
   }
   .ticks li::before {
     content: "";
     position: absolute;
     left: 0;
     top: 0.45em;
-    width: 14px;
-    height: 8px;
-    border-left: 2.5px solid var(--blue);
-    border-bottom: 2.5px solid var(--blue);
+    width: calc(14 * var(--dp));
+    height: calc(8 * var(--dp));
+    border-left: calc(2.5 * var(--dp)) solid var(--blue);
+    border-bottom: calc(2.5 * var(--dp)) solid var(--blue);
     transform: rotate(-45deg);
   }
   .example-note {
-    margin-top: 16px;
+    margin-top: calc(16 * var(--dp));
     display: inline-block;
-    font-size: 0.82rem;
+    font-size: calc(13.12 * var(--dp));
     font-style: italic;
     color: var(--text-muted);
     background: var(--cream);
-    border: 1px solid var(--border);
-    padding: 7px 13px;
-    border-radius: 10px;
+    border: calc(1 * var(--dp)) solid var(--border);
+    padding: calc(7 * var(--dp)) calc(13 * var(--dp));
+    border-radius: calc(10 * var(--dp));
   }
 
   .block {
-    margin-top: 56px;
+    margin-top: calc(56 * var(--dp));
   }
   .block-title {
-    font-size: clamp(1.5rem, 3.4vw, 2rem);
-    margin-bottom: 24px;
+    font-size: calc(32 * var(--dp));
+    margin-bottom: calc(24 * var(--dp));
   }
 
   .audiences {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 22px;
+    gap: calc(22 * var(--dp));
   }
   .audience {
     /* The header is sticky; without this it covers the card we just jumped to. */
-    scroll-margin-top: 96px;
+    scroll-margin-top: calc(96 * var(--dp));
     background: var(--paper);
-    border: 1.5px solid var(--border);
+    border: calc(1.5 * var(--dp)) solid var(--border);
     border-radius: var(--radius);
-    padding: 30px 28px;
+    padding: calc(30 * var(--dp)) calc(28 * var(--dp));
     box-shadow: var(--shadow-sm);
   }
   .audience .tag {
     display: inline-block;
-    font-size: 0.74rem;
+    font-size: calc(11.84 * var(--dp));
     font-weight: 700;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     color: var(--blue-deep);
     background: var(--sky);
-    padding: 6px 12px;
-    border-radius: 999px;
+    padding: calc(6 * var(--dp)) calc(12 * var(--dp));
+    border-radius: calc(999 * var(--dp));
   }
   .audience h3 {
-    margin: 14px 0 8px;
-    font-size: 1.4rem;
+    margin: calc(14 * var(--dp)) 0 calc(8 * var(--dp));
+    font-size: calc(22.4 * var(--dp));
   }
 
   .features {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
+    gap: calc(20 * var(--dp));
   }
   .feature {
     display: flex;
-    gap: 16px;
+    gap: calc(16 * var(--dp));
     background: var(--paper);
-    border: 1.5px solid var(--border);
+    border: calc(1.5 * var(--dp)) solid var(--border);
     border-radius: var(--radius);
-    padding: 24px 24px;
+    padding: calc(24 * var(--dp)) calc(24 * var(--dp));
     box-shadow: var(--shadow-sm);
   }
   .feature-icon {
-    width: 50px;
-    height: 50px;
+    width: calc(50 * var(--dp));
+    height: calc(50 * var(--dp));
     flex: none;
     display: grid;
     place-items: center;
-    border-radius: 14px;
+    border-radius: calc(14 * var(--dp));
     background: var(--sky);
     color: var(--blue);
   }
   .feature-icon :global(svg) {
-    width: 26px;
-    height: 26px;
+    width: calc(26 * var(--dp));
+    height: calc(26 * var(--dp));
   }
   .feature h3 {
-    font-size: 1.12rem;
-    margin-bottom: 6px;
+    font-size: calc(17.92 * var(--dp));
+    margin-bottom: calc(6 * var(--dp));
   }
 
   /* O mesmo cartão do "¿Tienes alguna consulta?" da home: gradiente azul,
@@ -847,26 +834,26 @@ const courseJsonLd = {
   .course-cta {
     position: relative;
     overflow: hidden;
-    margin-top: 64px;
+    margin-top: calc(64 * var(--dp));
     background: linear-gradient(135deg, var(--blue), var(--blue-deep));
     color: #fff;
     border-radius: var(--radius-lg);
-    padding: 52px 48px;
+    padding: calc(52 * var(--dp)) calc(48 * var(--dp));
     box-shadow: var(--shadow-blue);
   }
   .course-cta-blob-a {
-    width: 240px;
-    height: 240px;
-    top: -110px;
+    width: calc(240 * var(--dp));
+    height: calc(240 * var(--dp));
+    top: calc(-110 * var(--dp));
     right: 8%;
     background: var(--yellow);
     opacity: 0.35;
   }
   .course-cta-blob-b {
-    width: 180px;
-    height: 180px;
-    bottom: -100px;
-    left: -40px;
+    width: calc(180 * var(--dp));
+    height: calc(180 * var(--dp));
+    bottom: calc(-100 * var(--dp));
+    left: calc(-40 * var(--dp));
     background: #fff;
     opacity: 0.14;
   }
@@ -877,30 +864,24 @@ const courseJsonLd = {
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 26px;
+    gap: calc(26 * var(--dp));
   }
   .course-cta h2 {
     color: #fff;
-    font-size: clamp(1.9rem, 4vw, 2.6rem);
+    font-size: calc(41.6 * var(--dp));
   }
   .course-cta h2 .accent {
     color: var(--yellow-bright);
   }
   .course-cta p {
-    margin-top: 10px;
-    max-width: 560px;
+    margin-top: calc(10 * var(--dp));
+    max-width: calc(560 * var(--dp));
     color: rgba(255, 255, 255, 0.85);
   }
   .course-cta-actions {
     display: flex;
-    gap: 12px;
+    gap: calc(12 * var(--dp));
     flex-wrap: wrap;
   }
 
-  @media (max-width: 760px) {
-    .audiences,
-    .features {
-      grid-template-columns: 1fr;
-    }
-  }
 </style>

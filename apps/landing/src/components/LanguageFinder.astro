@@ -154,14 +154,14 @@ const clientConfig = {
         });
       };
 
-      // In the orbit layout a satellite click selects the language in the
-      // center card instead of leaving the page; clicking the already-active
-      // one follows the link to its course page. Under 760px the chips keep
-      // navigating (the card sits above them, off-screen).
-      const orbitLayout = window.matchMedia("(min-width: 761px)");
+      // A satellite click selects the language in the center card instead of
+      // leaving the page; clicking the already-active one follows the link to
+      // its course page. The orbit is the layout at every width now — it
+      // scales down instead of unfolding into a list — so there is no width
+      // at which the chips fall back to plain navigation.
       chips.forEach((chip) => {
         chip.addEventListener("click", (ev) => {
-          if (!orbitLayout.matches || chip.classList.contains("active")) return;
+          if (chip.classList.contains("active")) return;
           ev.preventDefault();
           if (chip.dataset.slug) apply(chip.dataset.slug, true);
         });
@@ -207,13 +207,13 @@ const clientConfig = {
   }
   .reco-secondary {
     display: inline-block;
-    margin-top: 14px;
-    font-size: 0.94rem;
+    margin-top: calc(14 * var(--dp));
+    font-size: calc(15.04 * var(--dp));
   }
   .finder-lead {
-    margin-top: 14px;
+    margin-top: calc(14 * var(--dp));
     max-width: 56ch;
-    font-size: 1.08rem;
+    font-size: calc(17.28 * var(--dp));
   }
   /* ——— Universo: o card recomendado é o sol, os idiomas orbitam. ———
      Um único ângulo animado (--orbit) posiciona E contra-gira cada
@@ -230,24 +230,24 @@ const clientConfig = {
   }
   .universe {
     /* Tamanho num só lugar: o raio da órbita deriva dele. */
-    --u: min(680px, 92vw);
-    --r: calc(var(--u) / 2 - 48px);
+    --u: min(calc(680 * var(--dp)), calc(1085.6 * var(--dp)));
+    --r: calc(var(--u) / 2 - calc(48 * var(--dp)));
     position: relative;
     width: var(--u);
     aspect-ratio: 1;
-    margin: 44px auto 0;
+    margin: calc(44 * var(--dp)) auto 0;
     animation: orbit-revolve 60s linear infinite;
   }
   .orbit-ring {
     position: absolute;
-    inset: 34px;
-    border: 1.5px dashed rgba(47, 107, 255, 0.28);
+    inset: calc(34 * var(--dp));
+    border: calc(1.5 * var(--dp)) dashed rgba(47, 107, 255, 0.28);
     border-radius: 50%;
   }
   .spark {
     position: absolute;
     color: var(--yellow-deep);
-    font-size: 1.3rem;
+    font-size: calc(20.8 * var(--dp));
     opacity: 0.8;
   }
   .spark-a {
@@ -257,7 +257,7 @@ const clientConfig = {
   .spark-b {
     bottom: 12%;
     left: 13%;
-    font-size: 0.95rem;
+    font-size: calc(15.2 * var(--dp));
   }
   .finder-reco {
     position: absolute;
@@ -266,49 +266,49 @@ const clientConfig = {
     transform: translate(-50%, -50%);
     /* O sol do universo: círculo com brilho vindo de cima, halo em anéis
        e a textura de bolinhas do hero — nada de caixa no meio da órbita. */
-    width: min(58%, 392px);
+    width: min(58%, calc(392 * var(--dp)));
     aspect-ratio: 1;
     border-radius: 50%;
     background:
       radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.18), transparent 58%),
       linear-gradient(135deg, var(--blue), var(--blue-deep));
     color: #fff;
-    padding: 40px;
+    padding: calc(40 * var(--dp));
     box-shadow:
       var(--shadow-blue),
-      0 0 0 12px rgba(47, 107, 255, 0.07),
-      0 0 0 26px rgba(47, 107, 255, 0.035);
+      0 0 0 calc(12 * var(--dp)) rgba(47, 107, 255, 0.07),
+      0 0 0 calc(26 * var(--dp)) rgba(47, 107, 255, 0.035);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
-    gap: 6px;
+    gap: calc(6 * var(--dp));
     /* O centro respira: flutua devagar, como tudo que orbita algo. */
     animation: card-bob 6s ease-in-out infinite;
   }
   .finder-reco::after {
     content: "";
     position: absolute;
-    top: 30px;
-    right: 52px;
-    width: 84px;
-    height: 84px;
-    background-image: radial-gradient(rgba(255, 255, 255, 0.55) 2px, transparent 2px);
-    background-size: 14px 14px;
+    top: calc(30 * var(--dp));
+    right: calc(52 * var(--dp));
+    width: calc(84 * var(--dp));
+    height: calc(84 * var(--dp));
+    background-image: radial-gradient(rgba(255, 255, 255, 0.55) calc(2 * var(--dp)), transparent calc(2 * var(--dp)));
+    background-size: calc(14 * var(--dp)) calc(14 * var(--dp));
     opacity: 0.3;
     border-radius: 50%;
   }
   .reco-nav {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: calc(12 * var(--dp));
   }
   .reco-arrow {
-    width: 34px;
-    height: 34px;
+    width: calc(34 * var(--dp));
+    height: calc(34 * var(--dp));
     border-radius: 50%;
-    border: 1.5px solid rgba(255, 255, 255, 0.55);
+    border: calc(1.5 * var(--dp)) solid rgba(255, 255, 255, 0.55);
     background: rgba(255, 255, 255, 0.12);
     color: #fff;
     display: inline-flex;
@@ -323,14 +323,14 @@ const clientConfig = {
     transform: scale(1.08);
   }
   .reco-arrow svg {
-    width: 18px;
-    height: 18px;
+    width: calc(18 * var(--dp));
+    height: calc(18 * var(--dp));
   }
   .reco-id {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: calc(10 * var(--dp));
     min-width: 0;
   }
   .reco-flag {
@@ -341,10 +341,10 @@ const clientConfig = {
     display: none;
   }
   .reco-flag :global(.lang-flag) {
-    width: 46px;
-    height: 46px;
-    border: 2.5px solid rgba(255, 255, 255, 0.9);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
+    width: calc(46 * var(--dp));
+    height: calc(46 * var(--dp));
+    border: calc(2.5 * var(--dp)) solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 calc(4 * var(--dp)) calc(12 * var(--dp)) rgba(0, 0, 0, 0.22);
   }
   .orbit {
     position: absolute;
@@ -373,12 +373,12 @@ const clientConfig = {
   .sat-inner {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 16px 8px 9px;
-    border-radius: 999px;
-    border: 1.5px solid var(--border);
+    gap: calc(8 * var(--dp));
+    padding: calc(8 * var(--dp)) calc(16 * var(--dp)) calc(8 * var(--dp)) calc(9 * var(--dp));
+    border-radius: calc(999 * var(--dp));
+    border: calc(1.5 * var(--dp)) solid var(--border);
     background: var(--paper);
-    box-shadow: 0 4px 14px rgba(19, 34, 75, 0.08);
+    box-shadow: 0 calc(4 * var(--dp)) calc(14 * var(--dp)) rgba(19, 34, 75, 0.08);
     font-weight: 600;
     color: var(--ink);
     white-space: nowrap;
@@ -386,8 +386,8 @@ const clientConfig = {
     transition: border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
   }
   .sat :global(.lang-flag) {
-    width: 28px;
-    height: 28px;
+    width: calc(28 * var(--dp));
+    height: calc(28 * var(--dp));
   }
   .sat:hover .sat-inner {
     border-color: var(--blue);
@@ -414,7 +414,7 @@ const clientConfig = {
       transform: translate(-50%, -50%);
     }
     50% {
-      transform: translate(-50%, calc(-50% - 9px));
+      transform: translate(-50%, calc(-50% - calc(9 * var(--dp))));
     }
   }
   /* Bandeira + nome dão um pulinho quando um planeta é escolhido. */
@@ -436,12 +436,12 @@ const clientConfig = {
   }
 
   .finder-footer {
-    margin-top: 34px;
+    margin-top: calc(34 * var(--dp));
     text-align: center;
   }
   .from {
-    margin: 0 0 4px;
-    font-size: 0.95rem;
+    margin: 0 0 calc(4 * var(--dp));
+    font-size: calc(15.2 * var(--dp));
     color: rgba(255, 255, 255, 0.82);
   }
   .from strong {
@@ -451,24 +451,24 @@ const clientConfig = {
     margin: 0;
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: clamp(1.7rem, 3.4vw, 2.2rem);
+    font-size: calc(35.2 * var(--dp));
     line-height: 1.1;
     color: var(--yellow-bright);
   }
   .reco-cta {
-    margin-top: 14px;
+    margin-top: calc(14 * var(--dp));
   }
   .reco-cta svg {
-    width: 18px;
-    height: 18px;
+    width: calc(18 * var(--dp));
+    height: calc(18 * var(--dp));
     transition: transform 0.2s ease;
   }
   .reco-cta:hover svg {
-    transform: translateX(5px);
+    transform: translateX(calc(5 * var(--dp)));
   }
 
   .choose-label {
-    margin: 0 0 10px;
+    margin: 0 0 calc(10 * var(--dp));
     font-weight: 600;
     color: var(--ink);
   }
@@ -482,59 +482,6 @@ const clientConfig = {
 
   /* Sem espaço pra órbita: o universo colapsa em card + chips com bandeira,
      o layout que a tela estreita já conhecia. */
-  @media (max-width: 760px) {
-    .universe {
-      width: auto;
-      aspect-ratio: auto;
-      margin-top: 32px;
-      animation: none;
-    }
-    .orbit-ring,
-    .spark {
-      display: none;
-    }
-    .finder-reco {
-      position: static;
-      transform: none;
-      width: auto;
-      aspect-ratio: auto;
-      border-radius: var(--radius-lg);
-      padding: 38px 34px;
-      animation: none;
-      align-items: flex-start;
-      text-align: left;
-    }
-    .finder-reco::after {
-      display: none;
-    }
-    .reco-id {
-      flex-direction: row;
-      align-items: center;
-    }
-    .orbit {
-      position: static;
-      margin-top: 22px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .sat {
-      position: static;
-      width: auto;
-      height: auto;
-      transform: none;
-    }
-    .sat-center {
-      transform: none;
-    }
-    .sat-inner {
-      box-shadow: none;
-    }
-    .finder-footer {
-      margin-top: 24px;
-      text-align: left;
-    }
-  }
   @media (prefers-reduced-motion: reduce) {
     .reco-cta:hover svg {
       transform: none;

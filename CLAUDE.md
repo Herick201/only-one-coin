@@ -289,6 +289,43 @@ monitor do lado.
 
 Detalhe e histórico da decisão: `docs/ARCHITECTURE.md` §7.
 
+### Layout da landing (`apps/landing`) — uma régua só, sem breakpoint de tamanho
+
+**Decisão 04/09/2026.** A landing tinha os tamanhos presos a breakpoints: dentro
+de uma faixa nada mudava e, ao cruzar o número, tudo saltava. Entre 620px e
+900px o título do hero ficava em 30,4px enquanto a coluna crescia 280px — e em
+910px pulava para 41,9px de uma vez. É isso que fazia a página quebrar em
+larguras intermediárias, no desktop tanto quanto no celular.
+
+**Todo tamanho da landing é múltiplo de `--dp`** (`src/styles/global.css`):
+
+```css
+--dp: min(1px, 0.084745vw); /* 1px em 1180px de janela; 1/1180 abaixo disso */
+```
+
+Fonte, padding, gap, ícone, raio, sombra, borda, `minmax()` de grade — tudo sai
+daí, inclusive `font-size` do `body`. A página passa a ser **o mesmo desenho em
+qualquer largura**: nada congela numa faixa, nada salta num limite. Verificável —
+medindo qualquer bloco em duas larguras, a razão das alturas é a razão das
+larguras.
+
+- **A largura de desenho é 1180px** (`--maxw`), onde `--dp` vale 1px. Acima
+  disso a unidade trava, porque o container também para de crescer. Consequência
+  prática: **conserta-se em 1180px e o conserto vale para todas as larguras** —
+  o que não couber ali não cabe em lugar nenhum.
+- **`vw` puro é equivalente** e podia ficar; foi convertido para `--dp` só para
+  haver uma régua só. Não misture as duas.
+- **Nada de `clamp()` para tamanho.** O `clamp` é exatamente o mecanismo que
+  congela dentro de uma faixa: os limites viram degraus.
+- **Breakpoint só para composição**, nunca para tamanho, e só onde o desenho do
+  dono pede outra grade: `Header` (nav vira hambúrguer em 900px), `WhyUs` e
+  `StepsFaq` (a introdução sobe para cima em 900px), `Testimonials` (um card por
+  vez em 900px) e `Audiences` (as quatro portas viram 2×2 em 620px). Mais nenhum.
+- **Consequência aceita:** num celular de 390px a página inteira roda a ~33% —
+  o texto corrido fica em torno de 5px. É a proporção do desenho aprovado. Para
+  o celular ler maior não se mexe em `--dp` (isso quebra o encaixe): muda-se a
+  **composição** daquela seção, como já se faz em `Audiences`.
+
 ### Domínio e fila (`packages/domain`, `packages/queue`, `apps/api`)
 
 Regra de fronteira, vale pra qualquer contexto novo (não só `example`): `packages/domain` é DDD puro (portas e adaptadores) — nunca importa Fastify, provedor de banco ou Redis, só define a **interface** de repositório. A implementação concreta mora na infra de quem consome (`apps/api/src/infra/`). Detalhe de padrão (`BaseModel`/`BaseUseCase`, `RouteBuilder`, `container.ts`, entrypoints) está em `packages/domain/README.md` e `apps/api/README.md` — não duplicado aqui. Estrutura e dependência entre os pacotes: `docs/ARCHITECTURE.md` §1.

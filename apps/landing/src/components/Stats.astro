@@ -70,17 +70,17 @@ const s = t.stats;
 <style>
   .stats {
     background: var(--paper);
-    padding-block: 8px 4px;
+    padding-block: calc(8 * var(--dp)) calc(4 * var(--dp));
   }
   .stats-inner {
     display: grid;
     /* Quantos números couberem por linha — o browser decide, não um
        breakpoint: a lista mudou de 3 para 4 itens e vai mudar de novo. */
-    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(calc(190 * var(--dp)), 1fr));
+    gap: calc(20 * var(--dp));
     background: linear-gradient(135deg, var(--blue), var(--blue-deep));
     border-radius: var(--radius-lg);
-    padding: 34px 28px;
+    padding: calc(34 * var(--dp)) calc(28 * var(--dp));
     box-shadow: var(--shadow-blue);
   }
   .stat {
@@ -90,38 +90,25 @@ const s = t.stats;
   .stat:not(:last-child)::after {
     content: "";
     position: absolute;
-    right: -10px;
+    right: calc(-10 * var(--dp));
     top: 12%;
     height: 76%;
-    width: 1px;
+    width: calc(1 * var(--dp));
     background: rgba(255, 255, 255, 0.22);
   }
   .stat-value {
     display: block;
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: clamp(2rem, 5vw, 3rem);
+    font-size: calc(48 * var(--dp));
     line-height: 1;
     color: var(--yellow-bright);
   }
   .stat-label {
     display: block;
-    margin-top: 8px;
+    margin-top: calc(8 * var(--dp));
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: calc(15.2 * var(--dp));
     color: rgba(255, 255, 255, 0.9);
-  }
-  @media (max-width: 640px) {
-    .stats-inner {
-      grid-template-columns: 1fr;
-      gap: 26px;
-    }
-    .stat:not(:last-child)::after {
-      display: none;
-    }
-    .stat:not(:last-child) {
-      padding-bottom: 26px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.18);
-    }
   }
 </style>
