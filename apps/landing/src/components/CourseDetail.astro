@@ -99,6 +99,17 @@ const featureIcons = [
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M2 20h20"/></svg>',
 ];
 
+const priceOffer = (value: number) => ({
+  "@type": "Offer",
+  category: "Paid",
+  price: value.toFixed(2),
+  priceCurrency: "PEN",
+  availability: "https://schema.org/InStock",
+});
+const offers = [rawPrice, rawMonthly]
+  .filter((value): value is number => value !== null)
+  .map(priceOffer);
+
 // Course structured data: name, provider and the single-payment price, so the
 // course pages are eligible for rich results instead of being a plain page.
 const courseJsonLd = {
@@ -123,26 +134,11 @@ const courseJsonLd = {
     courseMode: "Online",
     inLanguage: htmlLang[lang],
   },
-  offers: [
-    {
-      "@type": "Offer",
-      category: "Paid",
-      price: (rawPrice ?? 0).toFixed(2),
-      priceCurrency: "PEN",
-      availability: "https://schema.org/InStock",
-    },
-    ...(rawMonthly !== null
-      ? [
-          {
-            "@type": "Offer",
-            category: "Paid",
-            price: rawMonthly.toFixed(2),
-            priceCurrency: "PEN",
-            availability: "https://schema.org/InStock",
-          },
-        ]
-      : []),
-  ],
+  // Sem preço fechado a oferta fica FORA do JSON-LD, e sem nenhuma oferta a
+  // chave inteira sai: `?? 0` publicava "0.00 PEN" ao lado de
+  // `isAccessibleForFree: false` — dado estruturado dizendo que um curso pago
+  // é grátis. A página já omite o valor nesse caso; o buscador segue a regra.
+  ...(offers.length > 0 ? { offers } : {}),
 };
 ---
 

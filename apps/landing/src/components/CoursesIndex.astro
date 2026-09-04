@@ -25,7 +25,16 @@ const courses = languageSlugs.map((slug) => ({
       {
         courses.map((course) => (
           <a class="ci-card" href={course.href}>
-            {course.price && <span class="ci-badge">{course.price} · {c.payOnce}</span>}
+            {course.price ? (
+              <span class="ci-badge">{course.price} · {c.payOnce}</span>
+            ) : (
+              /* Sem preço definido o card mantém o ESPAÇO da pílula, vazio: o
+                 título de um curso sem valor subia uma linha e desalinhava a
+                 fileira inteira. Nada de texto substituto aqui — "preço a
+                 confirmar" seria um anúncio, e preço é dado de negócio
+                 (CLAUDE.md §9). */
+              <span class="ci-badge ci-badge-empty" aria-hidden="true" />
+            )}
             <h2 class="ci-name">
               <LanguageFlag slug={course.slug} />
               <span>{course.name}</span>
@@ -84,6 +93,15 @@ const courses = languageSlugs.map((slug) => ({
     background: var(--cream);
     padding: calc(6 * var(--dp)) calc(12 * var(--dp));
     border-radius: calc(999 * var(--dp));
+  }
+  .ci-badge-empty {
+    visibility: hidden;
+  }
+  /* Um espaço rígido dá à pílula vazia a MESMA altura da pílula com texto —
+     `visibility: hidden` esconde, mas um span vazio não abre linha e a fileira
+     voltaria a desalinhar por ~20px. */
+  .ci-badge-empty::before {
+    content: "\00a0";
   }
   .ci-card h2 {
     font-size: calc(24 * var(--dp));

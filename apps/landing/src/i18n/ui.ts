@@ -34,6 +34,8 @@ export const courseSlugs = [
   "portuguese",
   "mandarin-chinese",
   "korean",
+  "japanese",
+  "russian",
 ] as const;
 
 export type CourseSlug = (typeof courseSlugs)[number];
@@ -90,6 +92,11 @@ export const coursePrices: Record<CourseSlug, number | null> = {
   "portuguese": 80,
   "mandarin-chinese": 95,
   "korean": 60,
+  // Japonês e russo entraram no catálogo (04/09/2026) sem valor fechado pela
+  // coordenação: mesmo tratamento do francês intermedio — a página omite o
+  // preço em vez de chutar um (CLAUDE.md §9).
+  "japanese": null,
+  "russian": null,
 };
 
 // Monthly ("mensual") modality — price per module, in PEN. Only English
@@ -171,6 +178,8 @@ export const geoSuggestion: Record<string, CourseSlug> = {
   CN: "mandarin-chinese",
   TW: "mandarin-chinese",
   KR: "korean",
+  JP: "japanese",
+  RU: "russian",
   US: "english",
   GB: "english",
 };
@@ -180,13 +189,13 @@ export const content = {
     meta: {
       title: "Cursos de inglés e idiomas online en Perú — Only One Coin",
       description:
-        "Clases 100% online para todo el Perú: inglés, francés, italiano, alemán, portugués, chino y coreano. Paquete completo de pago único, certificado y talleres gratis.",
+        "Clases 100% online para todo el Perú: inglés, francés, italiano, alemán, portugués, chino, coreano, japonés y ruso. Paquete completo de pago único, certificado y talleres gratis.",
       siteName: "Only One Coin",
       imageAlt: "Only One Coin Perú — cursos de idiomas online",
       courses: {
         title: "Cursos de idiomas online: precios y paquetes — Only One Coin",
         description:
-          "Elige inglés, francés, italiano, alemán, portugués, chino mandarín o coreano. Clases online desde los 6 años, con paquete completo de pago único y sin mensualidades.",
+          "Elige inglés, francés, italiano, alemán, portugués, chino mandarín, coreano, japonés o ruso. Clases online desde los 6 años, con paquete completo de pago único y sin mensualidades.",
       },
       course: {
         titlePre: "Curso de ",
@@ -448,6 +457,8 @@ export const content = {
         "portuguese": "Portugués",
         "mandarin-chinese": "Chino Mandarín",
         "korean": "Coreano",
+        "japanese": "Japonés",
+        "russian": "Ruso",
         "english-intermediate": "Inglés Intermedio/Avanzado",
         "cambridge-b1": "Inglés B1 · Cambridge",
         "cambridge-b2": "Inglés B2 · Cambridge",
@@ -724,13 +735,13 @@ export const content = {
     meta: {
       title: "Online language courses in Peru — Only One Coin",
       description:
-        "100% online classes across Peru: English, French, Italian, German, Portuguese, Chinese and Korean. Full package with a single payment, certificate and free workshops from age 6.",
+        "100% online classes across Peru: English, French, Italian, German, Portuguese, Chinese, Korean, Japanese and Russian. Full package with a single payment, certificate and free workshops from age 6.",
       siteName: "Only One Coin",
       imageAlt: "Only One Coin Perú — online language courses",
       courses: {
         title: "Online language courses: prices and packages — Only One Coin",
         description:
-          "Choose English, French, Italian, German, Portuguese, Mandarin Chinese or Korean. Online classes from age 6, each a full package with a single payment and no monthly fees.",
+          "Choose English, French, Italian, German, Portuguese, Mandarin Chinese, Korean, Japanese or Russian. Online classes from age 6, each a full package with a single payment and no monthly fees.",
       },
       course: {
         titlePre: "Online ",
@@ -992,6 +1003,8 @@ export const content = {
         "portuguese": "Portuguese",
         "mandarin-chinese": "Mandarin Chinese",
         "korean": "Korean",
+        "japanese": "Japanese",
+        "russian": "Russian",
         "english-intermediate": "Intermediate/Advanced English",
         "cambridge-b1": "English B1 · Cambridge",
         "cambridge-b2": "English B2 · Cambridge",
@@ -1263,13 +1276,13 @@ export const content = {
     meta: {
       title: "Cursos de inglês e idiomas online no Peru — Only One Coin",
       description:
-        "Aulas 100% online para todo o Peru: inglês, francês, italiano, alemão, português, chinês e coreano. Pacote completo em pagamento único, certificado e oficinas grátis.",
+        "Aulas 100% online para todo o Peru: inglês, francês, italiano, alemão, português, chinês, coreano, japonês e russo. Pacote completo em pagamento único, certificado e oficinas grátis.",
       siteName: "Only One Coin",
       imageAlt: "Only One Coin Peru — cursos de idiomas online",
       courses: {
         title: "Cursos de idiomas online: preços e pacotes — Only One Coin",
         description:
-          "Escolha inglês, francês, italiano, alemão, português, chinês mandarim ou coreano. Aulas online a partir dos 6 anos, com pacote completo em pagamento único e sem mensalidades.",
+          "Escolha inglês, francês, italiano, alemão, português, chinês mandarim, coreano, japonês ou russo. Aulas online a partir dos 6 anos, com pacote completo em pagamento único e sem mensalidades.",
       },
       course: {
         titlePre: "Curso de ",
@@ -1531,6 +1544,8 @@ export const content = {
         "portuguese": "Português",
         "mandarin-chinese": "Chinês Mandarim",
         "korean": "Coreano",
+        "japanese": "Japonês",
+        "russian": "Russo",
         "english-intermediate": "Inglês Intermediário/Avançado",
         "cambridge-b1": "Inglês B1 · Cambridge",
         "cambridge-b2": "Inglês B2 · Cambridge",
