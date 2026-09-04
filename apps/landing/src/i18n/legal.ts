@@ -54,7 +54,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
           blocks: [
             list(
               "Usuario: Cualquier persona que acceda o utilice el Sitio.",
-              "Servicios: Clases de inglés accesibles por S/1.00, talleres gratuitos, entre otros productos ofrecidos en el Sitio.",
+              "Servicios: Clases de idiomas accesibles desde S/0.60 por sesión, talleres gratuitos, entre otros productos ofrecidos en el Sitio.",
               "Contenido: Toda la información, textos, gráficos, imágenes, videos y demás material disponible en el Sitio.",
             ),
           ],
@@ -278,7 +278,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
           blocks: [
             list(
               "User: Any person who accesses or uses the Site.",
-              "Services: English classes available for S/1.00, free workshops, and other products offered on the Site.",
+              "Services: Language classes available from S/0.60 per session, free workshops, and other products offered on the Site.",
               "Content: All information, text, graphics, images, videos and other material available on the Site.",
             ),
           ],
@@ -502,7 +502,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
           blocks: [
             list(
               "Usuário: Qualquer pessoa que acesse ou utilize o Site.",
-              "Serviços: Aulas de inglês acessíveis por S/1,00, oficinas gratuitas, entre outros produtos oferecidos no Site.",
+              "Serviços: Aulas de idiomas acessíveis a partir de S/0,60 por sessão, oficinas gratuitas, entre outros produtos oferecidos no Site.",
               "Conteúdo: Toda a informação, textos, gráficos, imagens, vídeos e demais material disponível no Site.",
             ),
           ],

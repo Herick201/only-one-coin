@@ -23,15 +23,22 @@ const featureIcons = [
 
     <div class="hero-grid">
     <div class="hero-copy">
-      <span class="hero-badge">{h.badge}</span>
+      {/* Sem etiqueta "ONLY ONE COIN" aqui: o logo está logo acima, na mesma
+          primeira tela, e a marca aparecia duas vezes seguidas. */}
       <h1>
         <span class="line">{h.w1}</span>
         <span class="line accent">{h.w2}</span>
       </h1>
+      {/* Pílula e unidade andam JUNTAS: são um item de flex só, então a
+          linha quebra antes do preço e nunca entre ele e "por sesión". Com
+          três itens soltos, o celular deixava "por sesión." órfão na linha
+          de baixo. */}
       <p class="hero-price-line">
         {h.subPre}
-        <span class="price-pill">{h.price}</span>
-        {h.priceUnit}.
+        <span class="price-part">
+          <span class="price-pill">{h.price}</span>
+          {h.priceUnit}.
+        </span>
       </p>
       <p class="hero-sub" set:html={h.sub2Html} />
       <div class="hero-actions">
@@ -159,15 +166,6 @@ const featureIcons = [
     align-self: center;
   }
 
-  .hero-badge {
-    display: inline-block;
-    color: var(--ink);
-    font-weight: 700;
-    font-size: calc(12.48 * var(--dp));
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    margin-bottom: calc(14 * var(--dp));
-  }
   h1 {
     font-size: calc(54.28 * var(--dp));
     line-height: 1.08;
@@ -187,6 +185,11 @@ const featureIcons = [
     display: flex;
     align-items: center;
     flex-wrap: wrap;
+    gap: calc(9 * var(--dp));
+  }
+  .price-part {
+    display: inline-flex;
+    align-items: center;
     gap: calc(9 * var(--dp));
   }
   .price-pill {
@@ -397,17 +400,15 @@ const featureIcons = [
       max-width: var(--maxw);
       margin-inline: auto;
     }
-    .hero-badge {
-      font-size: calc(11 * var(--dp));
-      letter-spacing: 0.24em;
-      margin-bottom: calc(10 * var(--dp));
-    }
     h1 {
       font-size: calc(38 * var(--dp));
     }
     .hero-price-line {
       margin-top: calc(14 * var(--dp));
       font-size: calc(18 * var(--dp));
+      gap: calc(7 * var(--dp));
+    }
+    .price-part {
       gap: calc(7 * var(--dp));
     }
     .hero-sub {

@@ -1,7 +1,7 @@
 ---
 import type { CourseSlug } from "../i18n/ui";
-import { audienceAnchors, courseParent, coursePrices, htmlLang, levelsOf, monthlyPrices, org, whatsappUrl } from "../i18n/ui";
-import { getLangFromUrl, useTranslations, withLang, formatPEN } from "../i18n/utils";
+import { audienceAnchors, courseParent, htmlLang, levelsOf, monthlyPrices, org, whatsappUrl } from "../i18n/ui";
+import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
 import { courseIdBySlug, enrollmentHref } from "../data/checkout";
 import { courseContent } from "../i18n/courses-content";
 import CourseProgramDetail from "./CourseProgramDetail.astro";
@@ -16,11 +16,8 @@ const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const d = t.courseDetail;
 const name = t.courses.list[slug];
-const rawPrice = coursePrices[slug];
-const price = rawPrice === null ? null : formatPEN(rawPrice, lang);
-// Mensual só existe para inglês (CLAUDE.md §1, decisão 02/09/2026) — entra
-// no painel do nível e na oferta do JSON-LD; nos demais cursos nem aparece.
-const rawMonthly = monthlyPrices[slug] ?? null;
+// Mensual só existe para inglês (CLAUDE.md §1, decisão 02/09/2026) — hoje é
+// só o gatilho das pílulas de modalidade, sem valor na tela.
 // Matrícula desta página já cai no checkout com ESTE curso escolhido.
 // Programa real deste curso, quando a coordenação já entregou o documento.
 // Sem ele a página segue no texto genérico, com o aviso de exemplo.
@@ -99,17 +96,6 @@ const featureIcons = [
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M2 20h20"/></svg>',
 ];
 
-const priceOffer = (value: number) => ({
-  "@type": "Offer",
-  category: "Paid",
-  price: value.toFixed(2),
-  priceCurrency: "PEN",
-  availability: "https://schema.org/InStock",
-});
-const offers = [rawPrice, rawMonthly]
-  .filter((value): value is number => value !== null)
-  .map(priceOffer);
-
 // Course structured data: name, provider and the single-payment price, so the
 // course pages are eligible for rich results instead of being a plain page.
 const courseJsonLd = {
@@ -134,11 +120,10 @@ const courseJsonLd = {
     courseMode: "Online",
     inLanguage: htmlLang[lang],
   },
-  // Sem preço fechado a oferta fica FORA do JSON-LD, e sem nenhuma oferta a
-  // chave inteira sai: `?? 0` publicava "0.00 PEN" ao lado de
-  // `isAccessibleForFree: false` — dado estruturado dizendo que um curso pago
-  // é grátis. A página já omite o valor nesse caso; o buscador segue a regra.
-  ...(offers.length > 0 ? { offers } : {}),
+  // Sem `offers`: a página não anuncia mais o total do paquete (pedido do
+  // dono, 04/09/2026), e dado estruturado que declara um preço invisível na
+  // página é exatamente o que o Google trata como marcação enganosa. O preço
+  // por sessão não é o preço do curso, então também não entra aqui.
 };
 ---
 
@@ -194,18 +179,15 @@ const courseJsonLd = {
         <p class="lead text-muted">{d.leadPre}{name}{d.leadPost}</p>
       )}
 
-      {/* O que a página grita é o sol por sessão; o total do paquete continua
-          logo abaixo, menor — quem decide precisa dele à vista. */}
-      {/* Renderização condicional, não `hidden`: o atributo perde para o
-          `display: flex` da regra e o bloco reaparecia num curso sem preço. */}
-      {price && (
-        <p class="price-hook">
-          <span class="hook-pre">{d.priceHookPre}</span>
-          <span class="hook-amount">
-            {t.hero.price}<span class="hook-unit">{t.hero.priceUnit}</span>
-          </span>
-        </p>
-      )}
+      {/* O único preço da página é o da sessão — o total do paquete saiu de
+          toda a landing (pedido do dono, 04/09/2026). Vale para todo curso,
+          então não há mais ramo condicional. */}
+      <p class="price-hook">
+        <span class="hook-pre">{d.priceHookPre}</span>
+        <span class="hook-amount">
+          {t.hero.price}<span class="hook-unit">{t.hero.priceUnit}</span>
+        </span>
+      </p>
       {!program && <p class="example-note">{d.exampleNote}</p>}
     </header>
 
