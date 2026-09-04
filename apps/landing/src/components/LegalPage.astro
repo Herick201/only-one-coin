@@ -1,7 +1,6 @@
 ---
-import { org } from "../i18n/ui";
 import { legalContent, type LegalKind } from "../i18n/legal";
-import { getLangFromUrl } from "../i18n/utils";
+import { fillOrgTokens, getLangFromUrl } from "../i18n/utils";
 
 interface Props {
   kind: LegalKind;
@@ -11,18 +10,9 @@ const { kind } = Astro.props;
 const lang = getLangFromUrl(Astro.url);
 const doc = legalContent[lang][kind];
 
-// The legal copy carries placeholders instead of retyping the Asociación's
+// The legal copy carries placeholders instead of retyping the company's
 // identity in all three locales (see i18n/legal.ts). Resolved once, here.
-const tokens: Record<string, string> = {
-  "{ruc}": org.ruc,
-  "{address}": org.address,
-  "{site}": org.site,
-  "{phones}": org.phones.join(" / "),
-  "{email}": org.email,
-};
-
-const fill = (text: string): string =>
-  Object.entries(tokens).reduce((out, [token, value]) => out.replaceAll(token, value), text);
+const fill = fillOrgTokens;
 ---
 
 <section class="section legal">

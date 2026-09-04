@@ -1,6 +1,6 @@
 ---
 import type { CourseSlug } from "../i18n/ui";
-import { audienceAnchors, courseParent, coursePrices, htmlLang, levelsOf, monthlyPrices, whatsappUrl } from "../i18n/ui";
+import { audienceAnchors, courseParent, coursePrices, htmlLang, levelsOf, monthlyPrices, org, whatsappUrl } from "../i18n/ui";
 import { getLangFromUrl, useTranslations, withLang, formatPEN } from "../i18n/utils";
 import { courseIdBySlug, enrollmentHref } from "../data/checkout";
 import { courseContent } from "../i18n/courses-content";
@@ -112,7 +112,7 @@ const courseJsonLd = {
   provider: {
     "@type": "EducationalOrganization",
     name: "Only One Coin Perú",
-    legalName: "Asociación Only One Coin Perú",
+    legalName: org.legalName,
     url: new URL("/", Astro.site).href,
   },
   isAccessibleForFree: false,

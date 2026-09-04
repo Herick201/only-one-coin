@@ -102,13 +102,18 @@ export const monthlyPrices: Partial<Record<CourseSlug, number>> = {
   "english": 20,
 };
 
-// Legal identity and contact channels of the Asociación. Language-agnostic
-// data — the same digits, address and handles in every locale — so it lives
-// here once instead of being retyped inside each dictionary. The legal pages
-// interpolate these through the {ruc} / {address} / {site} / {phones} /
-// {email} tokens in `i18n/legal.ts`.
+// Legal identity and contact channels of the operating company.
+// Language-agnostic data — the same digits, address and handles in every
+// locale — so it lives here once instead of being retyped inside each
+// dictionary. The legal pages interpolate these through the {legalName} /
+// {ruc} / {address} / {site} / {phones} / {email} tokens in `i18n/legal.ts`.
 export const org = {
-  ruc: "20610561463",
+  // Razão social que responde pelo site — trocada da Asociación Only One Coin
+  // Perú (RUC 20610561463) para a S.A.C., a pedido do dono (04/09/2026). Só o
+  // nome legal muda: a marca continua "Only One Coin" em toda a interface.
+  // Escrita em caixa alta como sai na ficha RUC.
+  legalName: "INGLES POR UN SOL S.A.C.",
+  ruc: "20613918028",
   address:
     "Av. Manuel Murillo, Condominio Gral Manuel Murillo 180, Chorrillos, Lima, Perú",
   site: "onlyonecoin.edu.pe",
@@ -680,7 +685,7 @@ export const content = {
     },
     footer: {
       tagline: "Educación de idiomas de calidad al alcance de todos, en todo el Perú.",
-      orgHtml: "Only One Coin Perú<br />RUC 20610561463",
+      orgHtml: "{legalName}<br />RUC {ruc}",
       colAbout: "Nosotros",
       aboutHistory: "Nuestra historia",
       aboutMission: "Misión y visión",
@@ -1219,7 +1224,7 @@ export const content = {
     },
     footer: {
       tagline: "Quality language education within everyone's reach, across all of Peru.",
-      orgHtml: "Only One Coin Perú<br />RUC 20610561463",
+      orgHtml: "{legalName}<br />RUC {ruc}",
       colAbout: "About us",
       aboutHistory: "Our story",
       aboutMission: "Mission & vision",
@@ -1758,7 +1763,7 @@ export const content = {
     },
     footer: {
       tagline: "Educação de idiomas de qualidade ao alcance de todos, em todo o Peru.",
-      orgHtml: "Only One Coin Peru<br />RUC 20610561463",
+      orgHtml: "{legalName}<br />RUC {ruc}",
       colAbout: "Sobre nós",
       aboutHistory: "Nossa história",
       aboutMission: "Missão e visão",

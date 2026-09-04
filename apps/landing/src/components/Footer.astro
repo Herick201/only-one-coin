@@ -1,12 +1,17 @@
 ---
 import { languageSlugs, org, whatsappUrl } from "../i18n/ui";
-import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
+import { fillOrgTokens, getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
 import LanguageFlag from "./LanguageFlag.astro";
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const f = t.footer;
 const year = new Date().getFullYear();
+
+// A razão social e o RUC não são digitados no locale: vêm de `org` pelos
+// mesmos placeholders das páginas legais, para que rodapé e Términos nunca
+// discordem sobre quem responde pelo site.
+const orgHtml = fillOrgTokens(f.orgHtml);
 
 const courseLangs = languageSlugs.map((slug) => ({
   slug,
@@ -42,7 +47,7 @@ const socials = [
     <div class="col brand-col">
       <img src="/brand/logo.png" alt="Only One Coin" width="230" height="38" class="footer-logo" />
       <p class="tagline">{f.tagline}</p>
-      <p class="org" set:html={f.orgHtml} />
+      <p class="org" set:html={orgHtml} />
       <div class="socials" aria-label={f.followTitle}>
         {
           socials.map((s) => (
