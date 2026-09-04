@@ -89,17 +89,48 @@ export const coursePrices: Record<CourseSlug, number | null> = {
   "french": 80,
   // `null` = preço ainda não definido pela coordenação. A página omite o valor
   // em vez de inventar um: preço é dado de negócio, nunca chute (CLAUDE.md §9).
-  "french-advanced": null,
+  "french-advanced": 120,
   "italian": 80,
   "german": 30,
   "portuguese": 80,
   "mandarin-chinese": 95,
   "korean": 60,
-  // Japonês e russo entraram no catálogo (04/09/2026) sem valor fechado pela
-  // coordenação: mesmo tratamento do francês intermedio — a página omite o
-  // preço em vez de chutar um (CLAUDE.md §9).
-  "japanese": null,
-  "russian": null,
+  "japanese": 40,
+  "russian": 40,
+};
+
+/**
+ * Preço POR SESSÃO de cada curso, em PEN — o gancho da marca, e o número que
+ * a landing mostra maior que qualquer outro.
+ *
+ * Não é o total dividido pelas sessões: é o valor que a coordenação anuncia
+ * (tabela do dono, 04/09/2026), e as duas contas nem sempre fecham — inglés
+ * básico são 80 sessões a S/0.60 num paquete de S/69.90. Quem manda é a
+ * tabela, nunca a divisão.
+ *
+ * `null` = sem valor anunciado; o card então mostra só o total, sem a
+ * equivalência por sessão.
+ */
+export const sessionPrices: Record<CourseSlug, number | null> = {
+  "english": 0.6,
+  "english-intermediate": 1,
+  // Cambridge não veio na tabela de 04/09/2026 — nem B1 nem B2.
+  "cambridge-b1": null,
+  "cambridge-b2": null,
+  "french": 2,
+  "french-advanced": 2,
+  "italian": 2,
+  // "1 sol por clase (1 hora), 20 sesiones".
+  "german": 1,
+  "portuguese": 2,
+  // A tabela traz dois valores para a MESMA condição ("S/2.50 si es 2 meses –
+  // S/1.60 si es dos meses"). Fica sem equivalência até a coordenação dizer
+  // qual dos dois vale.
+  "mandarin-chinese": null,
+  "korean": 2,
+  // "8 sesiones, 5 soles" — e 8 × 5 fecha os S/40 do paquete.
+  "japanese": 5,
+  "russian": 5,
 };
 
 // Monthly ("mensual") modality — price per module, in PEN. Only English
@@ -110,6 +141,16 @@ export const coursePrices: Record<CourseSlug, number | null> = {
 // truth for charged amounts.
 export const monthlyPrices: Partial<Record<CourseSlug, number>> = {
   "english": 20,
+};
+
+/**
+ * Preço por sessão DENTRO da modalidade mensual — o contraste que faz o
+ * paquete valer a pena: no inglés básico, S/1 por classe pagando mês a mês
+ * contra S/0.60 pagando tudo de uma vez. Mesma regra do `sessionPrices`:
+ * valor anunciado, não conta derivada.
+ */
+export const monthlySessionPrices: Partial<Record<CourseSlug, number>> = {
+  "english": 1,
 };
 
 // Legal identity and contact channels of the operating company.
@@ -202,10 +243,13 @@ export const content = {
       },
       course: {
         titlePre: "Curso de ",
-        titleMid: " online en Perú · ",
-        titlePost: "S/0.60 por sesión",
+        titleMid: " online en Perú",
+        // O separador vive no PEDAÇO do preço: curso sem valor anunciado sai
+        // com o título inteiro em vez de terminar num "·" pendurado.
+        titlePost: " · {price} por sesión",
         descPre: "Aprende ",
-        descPost: " online con Only One Coin Perú: clases desde S/0.60 por sesión, desde los 6 años, con certificado digital y talleres gratis.",
+        descPost: " online con Only One Coin Perú: desde los 6 años, con certificado digital y talleres gratis.",
+        descPrice: " Clases desde {price} por sesión.",
       },
       faq: {
         title: "Preguntas frecuentes sobre los cursos online — Only One Coin",
@@ -469,7 +513,7 @@ export const content = {
       indexTitlePre: "Elige el idioma que ",
       indexTitleAccent: "quieres aprender",
       indexTitlePost: "",
-      indexText: "Todos los cursos están abiertos desde los 6 años y cuestan S/0.60 por sesión. Elige un idioma para ver el detalle.",
+      indexText: "Todos los cursos están abiertos desde los 6 años, desde S/0.60 por sesión. Elige un idioma para ver el precio y el detalle.",
       priceUnit: "por sesión",
       viewCourse: "Ver curso",
     },
@@ -637,7 +681,7 @@ export const content = {
         titleAccent: "para todos",
         titlePost: "",
         // {years} is filled from `org.foundedYear` so the claim never goes stale.
-        lead: "En Only One Coin creemos firmemente que la educación es un derecho fundamental y no un privilegio. Con esta visión, llevamos {years} años ofreciendo clases de idiomas a un precio simbólico de S/0.60 por sesión.",
+        lead: "En Only One Coin creemos firmemente que la educación es un derecho fundamental y no un privilegio. Con esta visión, llevamos {years} años ofreciendo clases de idiomas a precios simbólicos, desde S/0.60 por sesión.",
         lead2: "Nuestro compromiso es brindar a niños, jóvenes y adultos de todas las edades y niveles sociales la oportunidad de aprender y crecer, sin barreras económicas.",
         teamAlt: "Equipo de Only One Coin en su oficina de Lima",
         coinAlt: "Una moneda: el precio simbólico de cada sesión",
@@ -747,10 +791,11 @@ export const content = {
       },
       course: {
         titlePre: "Online ",
-        titleMid: " course in Peru · ",
-        titlePost: "S/0.60 per session",
+        titleMid: " course in Peru",
+        titlePost: " · {price} per session",
         descPre: "Learn ",
-        descPost: " online with Only One Coin Perú: classes from S/0.60 per session, from age 6, with a digital certificate and free workshops.",
+        descPost: " online with Only One Coin Perú: from age 6, with a digital certificate and free workshops.",
+        descPrice: " Classes from {price} per session.",
       },
       faq: {
         title: "FAQ about our online courses — Only One Coin",
@@ -1014,7 +1059,7 @@ export const content = {
       indexTitlePre: "Choose the language you ",
       indexTitleAccent: "want to learn",
       indexTitlePost: "",
-      indexText: "Every course is open from age 6 and costs S/0.60 per session. Pick a language to see the details.",
+      indexText: "Every course is open from age 6, from S/0.60 per session. Pick a language to see the price and the details.",
       priceUnit: "per session",
       viewCourse: "View course",
     },
@@ -1177,7 +1222,7 @@ export const content = {
         titlePre: "Accessible education ",
         titleAccent: "for everyone",
         titlePost: "",
-        lead: "At Only One Coin we firmly believe that education is a fundamental right, not a privilege. With that in mind, we have spent {years} years offering language classes at a symbolic price of S/0.60 a session.",
+        lead: "At Only One Coin we firmly believe that education is a fundamental right, not a privilege. With that in mind, we have spent {years} years offering language classes at symbolic prices, from S/0.60 a session.",
         lead2: "Our commitment is to give children, teenagers and adults of every age and background the chance to learn and grow, with no financial barriers.",
         teamAlt: "The Only One Coin team at their office in Lima",
         coinAlt: "A coin: the symbolic price of each session",
@@ -1287,10 +1332,11 @@ export const content = {
       },
       course: {
         titlePre: "Curso de ",
-        titleMid: " online no Peru · ",
-        titlePost: "S/0,60 por sessão",
+        titleMid: " online no Peru",
+        titlePost: " · {price} por sessão",
         descPre: "Aprenda ",
-        descPost: " online com a Only One Coin Peru: aulas a partir de S/0,60 por sessão, a partir dos 6 anos, com certificado digital e oficinas grátis.",
+        descPost: " online com a Only One Coin Peru: a partir dos 6 anos, com certificado digital e oficinas grátis.",
+        descPrice: " Aulas a partir de {price} por sessão.",
       },
       faq: {
         title: "Perguntas frequentes sobre os cursos online — Only One Coin",
@@ -1554,7 +1600,7 @@ export const content = {
       indexTitlePre: "Escolha o idioma que ",
       indexTitleAccent: "você quer aprender",
       indexTitlePost: "",
-      indexText: "Todos os cursos são abertos a partir dos 6 anos e custam S/0,60 por sessão. Escolha um idioma para ver o detalhe.",
+      indexText: "Todos os cursos são abertos a partir dos 6 anos, a partir de S/0,60 por sessão. Escolha um idioma para ver o preço e o detalhe.",
       priceUnit: "por sessão",
       viewCourse: "Ver curso",
     },
@@ -1717,7 +1763,7 @@ export const content = {
         titlePre: "Educação acessível ",
         titleAccent: "para todos",
         titlePost: "",
-        lead: "Na Only One Coin acreditamos firmemente que a educação é um direito fundamental, e não um privilégio. Com essa visão, há {years} anos oferecemos aulas de idiomas a um preço simbólico de S/0,60 por sessão.",
+        lead: "Na Only One Coin acreditamos firmemente que a educação é um direito fundamental, e não um privilégio. Com essa visão, há {years} anos oferecemos aulas de idiomas a preços simbólicos, a partir de S/0,60 por sessão.",
         lead2: "Nosso compromisso é dar a crianças, jovens e adultos de todas as idades e classes sociais a oportunidade de aprender e crescer, sem barreiras econômicas.",
         teamAlt: "Equipe da Only One Coin no escritório em Lima",
         coinAlt: "Uma moeda: o preço simbólico de cada sessão",

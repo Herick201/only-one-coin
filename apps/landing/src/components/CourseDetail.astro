@@ -1,6 +1,6 @@
 ---
 import type { CourseSlug } from "../i18n/ui";
-import { audienceAnchors, courseParent, coursePrices, htmlLang, levelsOf, monthlyPrices, org, whatsappUrl } from "../i18n/ui";
+import { audienceAnchors, courseParent, coursePrices, htmlLang, levelsOf, monthlyPrices, monthlySessionPrices, org, sessionPrices, whatsappUrl } from "../i18n/ui";
 import { getLangFromUrl, useTranslations, withLang, formatPEN } from "../i18n/utils";
 import { courseIdBySlug, enrollmentHref } from "../data/checkout";
 import { courseContent } from "../i18n/courses-content";
@@ -35,6 +35,8 @@ const paymentOptions = (levelSlug: CourseSlug) => {
   // de talleres vem da lista de benefícios — nada de número escrito à mão que
   // envelhece quando um taller entra ou sai.
   const sessions = courseContent[lang][levelSlug]?.sessions ?? null;
+  const perSession = sessionPrices[levelSlug];
+  const monthlyPerSession = monthlySessionPrices[levelSlug] ?? null;
   const perks = [
     ...(sessions === null ? [] : [d.paymentSessionsWith.replace("{sessions}", sessions)]),
     d.paymentWorkshops.replace("{count}", String(t.perks.items.length)),
@@ -47,7 +49,10 @@ const paymentOptions = (levelSlug: CourseSlug) => {
             key: "monthly",
             name: d.paymentMonthlyName,
             price: formatPEN(monthly, lang),
-            note: null,
+            note:
+              monthlyPerSession === null
+                ? null
+                : { price: formatPEN(monthlyPerSession, lang), unit: t.hero.priceUnit },
             perks: [] as string[],
             full: false,
           },
@@ -61,7 +66,10 @@ const paymentOptions = (levelSlug: CourseSlug) => {
             price: formatPEN(full, lang),
             // Só a pílula e a unidade: "equivale a" era preâmbulo, e o que
             // importa é o número.
-            note: { price: t.hero.price, unit: t.hero.priceUnit },
+            note:
+              perSession === null
+                ? null
+                : { price: formatPEN(perSession, lang), unit: t.hero.priceUnit },
             perks,
             full: true,
           },
@@ -72,6 +80,9 @@ const paymentOptions = (levelSlug: CourseSlug) => {
 // Programa real deste curso, quando a coordenação já entregou o documento.
 // Sem ele a página segue no texto genérico, com o aviso de exemplo.
 const program = courseContent[lang][slug] ?? null;
+// O gancho do topo é o preço por sessão DESTE curso. Antes vinha do herói,
+// que carrega o mínimo do site (S/0.60): japonês, a S/5, anunciava 0.60.
+const hookPrice = sessionPrices[slug];
 
 // Idioma e seus níveis. A página de um idioma vira o hub da família: um
 // seletor de níveis em quadradinhos, e UM painel de detalhe que troca com a
@@ -233,12 +244,14 @@ const courseJsonLd = {
       {/* O único preço da página é o da sessão — o total do paquete saiu de
           toda a landing (pedido do dono, 04/09/2026). Vale para todo curso,
           então não há mais ramo condicional. */}
-      <p class="price-hook">
-        <span class="hook-pre">{d.priceHookPre}</span>
-        <span class="hook-amount">
-          {t.hero.price}<span class="hook-unit">{t.hero.priceUnit}</span>
-        </span>
-      </p>
+      {hookPrice !== null && (
+        <p class="price-hook">
+          <span class="hook-pre">{d.priceHookPre}</span>
+          <span class="hook-amount">
+            {formatPEN(hookPrice, lang)}<span class="hook-unit">{t.hero.priceUnit}</span>
+          </span>
+        </p>
+      )}
       {!program && <p class="example-note">{d.exampleNote}</p>}
     </header>
 
