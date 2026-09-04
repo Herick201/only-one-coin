@@ -1,6 +1,7 @@
 ---
 import type { CourseSlug } from "../i18n/ui";
-import { audienceAnchors, courseParent, coursePrices, htmlLang, levelsOf, monthlyPrices, monthlySessionPrices, org, sessionPrices, whatsappUrl } from "../i18n/ui";
+import { audienceAnchors, bundles, courseParent, coursePrices, htmlLang, levelsOf, monthlyPrices, monthlySessionPrices, org, sessionPrices, whatsappUrl } from "../i18n/ui";
+import type { BundleId } from "../i18n/ui";
 import { getLangFromUrl, useTranslations, withLang, formatPEN } from "../i18n/utils";
 import { courseIdBySlug, enrollmentHref } from "../data/checkout";
 import { courseContent } from "../i18n/courses-content";
@@ -37,11 +38,28 @@ const paymentOptions = (levelSlug: CourseSlug) => {
   const sessions = courseContent[lang][levelSlug]?.sessions ?? null;
   const perSession = sessionPrices[levelSlug];
   const monthlyPerSession = monthlySessionPrices[levelSlug] ?? null;
+  const shortName = (levelId: CourseSlug) => d.levelShortNames[levelId] ?? t.courses.list[levelId];
+  const noteOf = (value: number | null) =>
+    value === null ? null : { price: formatPEN(value, lang), unit: t.hero.priceUnit };
+  const workshops = d.paymentWorkshops.replace("{count}", String(t.perks.items.length));
   const perks = [
     ...(sessions === null ? [] : [d.paymentSessionsWith.replace("{sessions}", sessions)]),
-    d.paymentWorkshops.replace("{count}", String(t.perks.items.length)),
+    workshops,
   ];
-  return [
+  // Os pacotes que cobrem este nível junto com outro. A linha que os descreve
+  // sai dos nomes curtos dos níveis cobertos — a combinação nunca é escrita à
+  // mão, em nenhum dos três idiomas.
+  const levelBundles = (Object.entries(bundles) as [BundleId, (typeof bundles)[BundleId]][])
+    .filter(([, bundle]) => bundle.covers.includes(levelSlug))
+    .map(([id, bundle]) => ({
+      key: id,
+      name: d.paymentBundleNames[id],
+      price: formatPEN(bundle.price, lang),
+      note: noteOf(bundle.perSession),
+      perks: [bundle.covers.map(shortName).join(" + "), workshops],
+      recommended: false,
+    }));
+  const options = [
     ...(monthly === null
       ? []
       : [
@@ -49,12 +67,9 @@ const paymentOptions = (levelSlug: CourseSlug) => {
             key: "monthly",
             name: d.paymentMonthlyName,
             price: formatPEN(monthly, lang),
-            note:
-              monthlyPerSession === null
-                ? null
-                : { price: formatPEN(monthlyPerSession, lang), unit: t.hero.priceUnit },
+            note: noteOf(monthlyPerSession),
             perks: [] as string[],
-            full: false,
+            recommended: false,
           },
         ]),
     ...(full === null
@@ -66,15 +81,18 @@ const paymentOptions = (levelSlug: CourseSlug) => {
             price: formatPEN(full, lang),
             // Só a pílula e a unidade: "equivale a" era preâmbulo, e o que
             // importa é o número.
-            note:
-              perSession === null
-                ? null
-                : { price: formatPEN(perSession, lang), unit: t.hero.priceUnit },
+            note: noteOf(perSession),
             perks,
-            full: true,
+            recommended: false,
           },
         ]),
+    ...levelBundles,
   ];
+  // Em ordem do mais curto ao mais completo, e o ÚLTIMO é o recomendado — que
+  // é o mais completo disponível ali, seja o paquete do nível ou o pacote que
+  // cobre dois. Um card sozinho não é o recomendado de nada, é o preço.
+  if (options.length > 1) options[options.length - 1].recommended = true;
+  return options;
 };
 // Matrícula desta página já cai no checkout com ESTE curso escolhido.
 // Programa real deste curso, quando a coordenação já entregou o documento.
@@ -117,9 +135,6 @@ const levelPanels = siblings.map((levelSlug) => {
     highlights: d.levelHighlights[levelSlug] ?? fallbackHighlights(levelProgram),
     program: levelProgram,
     options: paymentOptions(levelSlug),
-    // O selo só faz sentido onde há escolha: um card sozinho não é o
-    // recomendado de nada, é o preço.
-    recommendFull: paymentOptions(levelSlug).length > 1,
     enrollHref: enrollmentHref(withLang(lang, "/enrollment"), {
       courseId: courseIdBySlug[levelSlug],
       content: "course_page",
@@ -311,8 +326,8 @@ const courseJsonLd = {
               {p.options.length > 0 && (
                 <div class="panel-options">
                   {p.options.map((o) => (
-                    <span class:list={["panel-option", { "panel-option-full": o.full && p.recommendFull }]}>
-                      {o.full && p.recommendFull && (
+                    <span class:list={["panel-option", { "panel-option-full": o.recommended }]}>
+                      {o.recommended && (
                         <svg class="panel-option-star" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l2.9 6.26 6.6.72-4.9 4.55 1.34 6.47L12 16.77 6.06 20l1.34-6.47L2.5 8.98l6.6-.72L12 2z"/></svg>
                       )}
                       <span class="option-name">{o.name}</span>
@@ -323,20 +338,18 @@ const courseJsonLd = {
                           com o vizinho — justo numa fileira feita pra
                           comparar. A altura vazia vem do `min-height` em `em`
                           das duas classes. */}
-                      <span class="option-note">
-                        {o.note && (
-                          <Fragment>
-                            <strong class="option-note-price">{o.note.price}</strong>
-                            <span class="option-note-unit">{o.note.unit}</span>
-                          </Fragment>
-                        )}
-                      </span>
+                      {o.note && (
+                        <span class="option-note">
+                          <strong class="option-note-price">{o.note.price}</strong>
+                          <span class="option-note-unit">{o.note.unit}</span>
+                        </span>
+                      )}
                       {o.perks.length > 0 && (
                         <ul class="option-perks">
                           {o.perks.map((perk) => <li>{perk}</li>)}
                         </ul>
                       )}
-                      <span class="option-flag">{o.full && p.recommendFull ? d.paymentRecommended : ""}</span>
+                      {o.recommended && <span class="option-flag">{d.paymentRecommended}</span>}
                     </span>
                   ))}
                 </div>
@@ -752,7 +765,6 @@ const courseJsonLd = {
     align-items: center;
     gap: calc(2 * var(--dp));
     margin-top: calc(8 * var(--dp));
-    min-height: 1.6em;
   }
   .option-note-price {
     display: inline-block;
@@ -810,13 +822,13 @@ const courseJsonLd = {
     border-bottom: calc(2 * var(--dp)) solid var(--yellow-deep);
     transform: rotate(42deg);
   }
-  /* Selo e equivalência reservam a própria altura mesmo vazios — `min-height`
-     em `em`, que acompanha o corpo da letra em qualquer largura e em qualquer
-     idioma, sem número mágico. */
+  /* Nem o selo nem a equivalência reservam altura vazia: os cards alinham
+     pelo topo, então nome e valor já batem entre si sem precisar disso — e o
+     card sem equivalência (o intensivo, que não tem valor por sessão na
+     tabela) abria um buraco entre o preço e a lista. */
   .option-flag {
     margin-top: calc(4 * var(--dp));
     line-height: 1.6;
-    min-height: 1.6em;
     font-size: calc(10.4 * var(--dp));
     font-weight: 800;
     letter-spacing: 0.08em;

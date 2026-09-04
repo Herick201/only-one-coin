@@ -123,10 +123,9 @@ export const sessionPrices: Record<CourseSlug, number | null> = {
   // "1 sol por clase (1 hora), 20 sesiones".
   "german": 1,
   "portuguese": 2,
-  // A tabela traz dois valores para a MESMA condição ("S/2.50 si es 2 meses –
-  // S/1.60 si es dos meses"). Fica sem equivalência até a coordenação dizer
-  // qual dos dois vale.
-  "mandarin-chinese": null,
+  // A tabela trazia dois valores para a mesma condição ("S/2.50 si es 2 meses
+  // – S/1.60 si es dos meses"); o dono confirmou S/2.50 (04/09/2026).
+  "mandarin-chinese": 2.5,
   "korean": 2,
   // "8 sesiones, 5 soles" — e 8 × 5 fecha os S/40 do paquete.
   "japanese": 5,
@@ -142,6 +141,35 @@ export const sessionPrices: Record<CourseSlug, number | null> = {
 export const monthlyPrices: Partial<Record<CourseSlug, number>> = {
   "english": 20,
 };
+
+/**
+ * Pacotes que cobrem MAIS DE UM nível de um idioma, pagos de uma vez.
+ *
+ * Não são cursos: não têm slug de catálogo, não entram no menu nem viram
+ * página. São uma FORMA DE PAGAR (decisão do dono, 04/09/2026) — um terceiro
+ * card no bloco de modalidades, ao lado do mensual e do paquete do nível.
+ *
+ * `covers` diz em quais painéis o card aparece, e é também o que a lista do
+ * card mostra ("Básico + Intermedio/Avanzado"), montado a partir do nome curto
+ * de cada nível — nada de escrever a combinação à mão em três idiomas.
+ */
+export const bundles = {
+  // 69.90 (básico) + 79.90 (intermedio) = 149.80, exato. Sem valor por sessão
+  // na tabela do dono.
+  "english-intensive": {
+    price: 149.8,
+    perSession: null as number | null,
+    covers: ["english", "english-intermediate"] as CourseSlug[],
+  },
+  // 80 (básico) + 120 (intermedio) = 200, cobrado 180.
+  "french-full": {
+    price: 180,
+    perSession: 1.2 as number | null,
+    covers: ["french", "french-advanced"] as CourseSlug[],
+  },
+};
+
+export type BundleId = keyof typeof bundles;
 
 /**
  * Preço por sessão DENTRO da modalidade mensual — o contraste que faz o
@@ -584,6 +612,10 @@ export const content = {
       eyebrowPost: "",
       titlePre: "Aprende ",
       titlePost: "",
+      paymentBundleNames: {
+        "english-intensive": "Intensivo completo",
+        "french-full": "Completo",
+      },
       paymentSessionsWith: "{sessions} + reforzamientos",
       paymentWorkshops: "Este paquete incluye {count} talleres gratuitos",
       paymentMonthlyName: "Mensual",
@@ -1126,6 +1158,10 @@ export const content = {
       eyebrowPost: " course",
       titlePre: "Learn ",
       titlePost: "",
+      paymentBundleNames: {
+        "english-intensive": "Full intensive",
+        "french-full": "Full course",
+      },
       paymentSessionsWith: "{sessions} + reinforcement classes",
       paymentWorkshops: "This package includes {count} free workshops",
       paymentMonthlyName: "Monthly",
@@ -1667,6 +1703,10 @@ export const content = {
       eyebrowPost: "",
       titlePre: "Aprenda ",
       titlePost: "",
+      paymentBundleNames: {
+        "english-intensive": "Intensivo completo",
+        "french-full": "Completo",
+      },
       paymentSessionsWith: "{sessions} + reforços",
       paymentWorkshops: "Este pacote inclui {count} oficinas gratuitas",
       paymentMonthlyName: "Mensal",
