@@ -60,8 +60,9 @@ const orgJsonLd = {
   "@type": "EducationalOrganization",
   name: "Only One Coin Perú",
   // A razão social fica no `legalName`: o buscador mostra o `name`, e o
-  // dado estruturado continua verdadeiro sobre quem é a entidade.
-  legalName: "Asociación Only One Coin Perú",
+  // dado estruturado continua verdadeiro sobre quem é a entidade. Vem de
+  // `org` — o mesmo valor do rodapé e das páginas legais.
+  legalName: org.legalName,
   alternateName: t.meta.siteName,
   url: new URL("/", Astro.site).href,
   logo: new URL("/brand/logo.png", Astro.site).href,

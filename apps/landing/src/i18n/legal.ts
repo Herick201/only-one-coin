@@ -5,11 +5,12 @@
 // `Record<Lang, Record<LegalKind, LegalDoc>>` makes the compiler reject a
 // locale that is missing a document, which `as const` alone would not.
 //
-// The copy is the text signed by the Asociación, transcribed verbatim; the
+// The copy is the text signed by the company, transcribed verbatim; the
 // English and Portuguese versions are translations of that same text. Values
-// that are the same in every language (RUC, address, phones, e-mail, domain)
-// are NOT retyped per locale — they come from `org` in `ui.ts` through the
-// {ruc} / {address} / {site} / {phones} / {email} tokens, resolved at render.
+// that are the same in every language (razão social, RUC, address, phones,
+// e-mail, domain) are NOT retyped per locale — they come from `org` in
+// `ui.ts` through the {legalName} / {ruc} / {address} / {site} / {phones} /
+// {email} tokens, resolved at render.
 import type { Lang } from "./ui";
 
 /** One rendered block inside a legal document. */
@@ -44,7 +45,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
           heading: "1. Introducción",
           blocks: [
             p(
-              "Bienvenido a la página web de ASOCIACIÓN ONLY ONE COIN PERÚ (en adelante, «la Asociación»), con RUC N.º {ruc}, ubicada en {address}. Los presentes términos y condiciones regulan el uso del sitio web {site} (en adelante, «el Sitio»), así como todos los servicios ofrecidos por la Asociación a través de la plataforma. Al utilizar este Sitio, el usuario acepta los términos aquí establecidos.",
+              "Bienvenido a la página web de {legalName} (en adelante, «la Empresa»), con RUC N.º {ruc}, ubicada en {address}. Los presentes términos y condiciones regulan el uso del sitio web {site} (en adelante, «el Sitio»), así como todos los servicios ofrecidos por la Empresa a través de la plataforma. Al utilizar este Sitio, el usuario acepta los términos aquí establecidos.",
             ),
           ],
         },
@@ -70,7 +71,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
           heading: "4. Servicios ofrecidos",
           blocks: [
             p(
-              "La Asociación ofrece clases de inglés accesibles, dirigidas a niños y adultos, así como talleres adicionales gratuitos. Las condiciones específicas de cada curso o taller serán detalladas al momento de la inscripción, siendo responsabilidad del usuario leer y aceptar las mismas antes de proceder.",
+              "La Empresa ofrece clases de inglés accesibles, dirigidas a niños y adultos, así como talleres adicionales gratuitos. Las condiciones específicas de cada curso o taller serán detalladas al momento de la inscripción, siendo responsabilidad del usuario leer y aceptar las mismas antes de proceder.",
             ),
           ],
         },
@@ -78,7 +79,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
           heading: "5. Uso del sitio web",
           blocks: [
             p(
-              "El usuario se compromete a utilizar el Sitio conforme a la ley, a estos términos y condiciones, y a la moral y buenas costumbres generalmente aceptadas. Queda prohibido el uso del Sitio con fines ilícitos o que puedan perjudicar los derechos de la Asociación o de terceros.",
+              "El usuario se compromete a utilizar el Sitio conforme a la ley, a estos términos y condiciones, y a la moral y buenas costumbres generalmente aceptadas. Queda prohibido el uso del Sitio con fines ilícitos o que puedan perjudicar los derechos de la Empresa o de terceros.",
             ),
           ],
         },
@@ -102,7 +103,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
           heading: "8. Propiedad intelectual",
           blocks: [
             p(
-              "Todos los derechos de propiedad intelectual e industrial sobre el contenido del Sitio pertenecen a la Asociación o a sus licenciantes. Está prohibida la reproducción, distribución, transformación o cualquier forma de explotación del contenido sin la previa autorización por escrito de la Asociación.",
+              "Todos los derechos de propiedad intelectual e industrial sobre el contenido del Sitio pertenecen a la Empresa o a sus licenciantes. Está prohibida la reproducción, distribución, transformación o cualquier forma de explotación del contenido sin la previa autorización por escrito de la Empresa.",
             ),
           ],
         },
@@ -110,7 +111,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
           heading: "9. Limitación de responsabilidad",
           blocks: [
             p(
-              "La Asociación no será responsable de los daños o perjuicios que puedan derivarse del uso del Sitio o de la imposibilidad de acceder a los servicios. Asimismo, no se garantiza la disponibilidad, continuidad ni infalibilidad del funcionamiento del Sitio.",
+              "La Empresa no será responsable de los daños o perjuicios que puedan derivarse del uso del Sitio o de la imposibilidad de acceder a los servicios. Asimismo, no se garantiza la disponibilidad, continuidad ni infalibilidad del funcionamiento del Sitio.",
             ),
           ],
         },
@@ -118,7 +119,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
           heading: "10. Modificaciones de los términos",
           blocks: [
             p(
-              "La Asociación se reserva el derecho de modificar en cualquier momento los términos y condiciones aquí establecidos. Los cambios serán efectivos a partir de su publicación en el Sitio, por lo que recomendamos revisar periódicamente esta sección.",
+              "La Empresa se reserva el derecho de modificar en cualquier momento los términos y condiciones aquí establecidos. Los cambios serán efectivos a partir de su publicación en el Sitio, por lo que recomendamos revisar periódicamente esta sección.",
             ),
           ],
         },
@@ -145,7 +146,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
       title: "Política de privacidad",
       intro: [
         p(
-          "En ASOCIACIÓN ONLY ONE COIN PERÚ (en adelante, «la Asociación»), con RUC N.º {ruc}, ubicada en {address}, respetamos tu privacidad y nos comprometemos a proteger tus datos personales conforme a la legislación peruana vigente. Esta Política de Privacidad explica cómo recopilamos, usamos, almacenamos y protegemos tu información personal cuando visitas nuestro sitio web {site} (en adelante, «el Sitio»).",
+          "En {legalName} (en adelante, «la Empresa»), con RUC N.º {ruc}, ubicada en {address}, respetamos tu privacidad y nos comprometemos a proteger tus datos personales conforme a la legislación peruana vigente. Esta Política de Privacidad explica cómo recopilamos, usamos, almacenamos y protegemos tu información personal cuando visitas nuestro sitio web {site} (en adelante, «el Sitio»).",
         ),
         p(
           "Al utilizar nuestro Sitio y proporcionarnos tus datos personales, aceptas los términos de esta Política de Privacidad.",
@@ -170,7 +171,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
             p("Recopilamos y tratamos tus datos personales con las siguientes finalidades:"),
             list(
               "Proporcionarte acceso a nuestros servicios educativos, como clases y talleres.",
-              "Gestionar inscripciones y participación en actividades ofrecidas por la Asociación.",
+              "Gestionar inscripciones y participación en actividades ofrecidas por la Empresa.",
               "Comunicarnos contigo para informarte sobre novedades, promociones, sorteos o eventos.",
               "Mejorar la experiencia de navegación en el Sitio y personalizar el contenido.",
               "Cumplir con obligaciones legales.",
@@ -205,7 +206,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
           heading: "6. Compartición de datos con terceros",
           blocks: [
             p(
-              "La Asociación no vende, alquila ni comparte tus datos personales con terceros, salvo en los siguientes casos:",
+              "La Empresa no vende, alquila ni comparte tus datos personales con terceros, salvo en los siguientes casos:",
             ),
             list(
               "Cuando sea necesario para cumplir con obligaciones legales.",
@@ -241,7 +242,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
           heading: "9. Modificaciones de la política de privacidad",
           blocks: [
             p(
-              "La Asociación se reserva el derecho de modificar esta Política de Privacidad en cualquier momento. Los cambios serán efectivos a partir de su publicación en el Sitio. Te recomendamos revisar esta política periódicamente para estar informado sobre cómo protegemos tu información.",
+              "La Empresa se reserva el derecho de modificar esta Política de Privacidad en cualquier momento. Los cambios serán efectivos a partir de su publicación en el Sitio. Te recomendamos revisar esta política periódicamente para estar informado sobre cómo protegemos tu información.",
             ),
           ],
         },
@@ -268,7 +269,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
           heading: "1. Introduction",
           blocks: [
             p(
-              "Welcome to the website of ASOCIACIÓN ONLY ONE COIN PERÚ (hereinafter, “the Association”), tax ID (RUC) No. {ruc}, located at {address}. These terms and conditions govern the use of the website {site} (hereinafter, “the Site”), as well as all services offered by the Association through the platform. By using this Site, the user accepts the terms set out herein.",
+              "Welcome to the website of {legalName} (hereinafter, “the Company”), tax ID (RUC) No. {ruc}, located at {address}. These terms and conditions govern the use of the website {site} (hereinafter, “the Site”), as well as all services offered by the Company through the platform. By using this Site, the user accepts the terms set out herein.",
             ),
           ],
         },
@@ -294,7 +295,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
           heading: "4. Services offered",
           blocks: [
             p(
-              "The Association offers affordable English classes for children and adults, as well as additional free workshops. The specific conditions of each course or workshop are detailed at the time of enrolment, and it is the user's responsibility to read and accept them before proceeding.",
+              "The Company offers affordable English classes for children and adults, as well as additional free workshops. The specific conditions of each course or workshop are detailed at the time of enrolment, and it is the user's responsibility to read and accept them before proceeding.",
             ),
           ],
         },
@@ -302,7 +303,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
           heading: "5. Use of the website",
           blocks: [
             p(
-              "The user undertakes to use the Site in accordance with the law, with these terms and conditions, and with generally accepted morals and good practice. Use of the Site for unlawful purposes, or in ways that may harm the rights of the Association or of third parties, is prohibited.",
+              "The user undertakes to use the Site in accordance with the law, with these terms and conditions, and with generally accepted morals and good practice. Use of the Site for unlawful purposes, or in ways that may harm the rights of the Company or of third parties, is prohibited.",
             ),
           ],
         },
@@ -326,7 +327,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
           heading: "8. Intellectual property",
           blocks: [
             p(
-              "All intellectual and industrial property rights over the content of the Site belong to the Association or to its licensors. Reproduction, distribution, transformation or any other form of exploitation of the content without the prior written authorisation of the Association is prohibited.",
+              "All intellectual and industrial property rights over the content of the Site belong to the Company or to its licensors. Reproduction, distribution, transformation or any other form of exploitation of the content without the prior written authorisation of the Company is prohibited.",
             ),
           ],
         },
@@ -334,7 +335,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
           heading: "9. Limitation of liability",
           blocks: [
             p(
-              "The Association is not liable for any damages or losses arising from the use of the Site or from the inability to access the services. Nor does it guarantee the availability, continuity or infallibility of the Site's operation.",
+              "The Company is not liable for any damages or losses arising from the use of the Site or from the inability to access the services. Nor does it guarantee the availability, continuity or infallibility of the Site's operation.",
             ),
           ],
         },
@@ -342,7 +343,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
           heading: "10. Changes to the terms",
           blocks: [
             p(
-              "The Association reserves the right to amend the terms and conditions set out herein at any time. Changes take effect once published on the Site, so we recommend reviewing this section periodically.",
+              "The Company reserves the right to amend the terms and conditions set out herein at any time. Changes take effect once published on the Site, so we recommend reviewing this section periodically.",
             ),
           ],
         },
@@ -369,7 +370,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
       title: "Privacy policy",
       intro: [
         p(
-          "At ASOCIACIÓN ONLY ONE COIN PERÚ (hereinafter, “the Association”), tax ID (RUC) No. {ruc}, located at {address}, we respect your privacy and are committed to protecting your personal data in accordance with applicable Peruvian law. This Privacy Policy explains how we collect, use, store and protect your personal information when you visit our website {site} (hereinafter, “the Site”).",
+          "At {legalName} (hereinafter, “the Company”), tax ID (RUC) No. {ruc}, located at {address}, we respect your privacy and are committed to protecting your personal data in accordance with applicable Peruvian law. This Privacy Policy explains how we collect, use, store and protect your personal information when you visit our website {site} (hereinafter, “the Site”).",
         ),
         p(
           "By using our Site and providing us with your personal data, you accept the terms of this Privacy Policy.",
@@ -394,7 +395,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
             p("We collect and process your personal data for the following purposes:"),
             list(
               "To give you access to our educational services, such as classes and workshops.",
-              "To manage enrolments and participation in activities offered by the Association.",
+              "To manage enrolments and participation in activities offered by the Company.",
               "To contact you with news, promotions, prize draws or events.",
               "To improve the browsing experience on the Site and personalise content.",
               "To comply with legal obligations.",
@@ -429,7 +430,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
           heading: "6. Sharing data with third parties",
           blocks: [
             p(
-              "The Association does not sell, rent or share your personal data with third parties, except in the following cases:",
+              "The Company does not sell, rent or share your personal data with third parties, except in the following cases:",
             ),
             list(
               "When necessary to comply with legal obligations.",
@@ -465,7 +466,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
           heading: "9. Changes to the privacy policy",
           blocks: [
             p(
-              "The Association reserves the right to amend this Privacy Policy at any time. Changes take effect once published on the Site. We recommend reviewing this policy periodically to stay informed about how we protect your information.",
+              "The Company reserves the right to amend this Privacy Policy at any time. Changes take effect once published on the Site. We recommend reviewing this policy periodically to stay informed about how we protect your information.",
             ),
           ],
         },
@@ -492,7 +493,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
           heading: "1. Introdução",
           blocks: [
             p(
-              "Bem-vindo ao site da ASOCIACIÓN ONLY ONE COIN PERÚ (doravante, «a Associação»), com RUC n.º {ruc}, localizada em {address}. Os presentes termos e condições regulam o uso do site {site} (doravante, «o Site»), bem como todos os serviços oferecidos pela Associação através da plataforma. Ao utilizar este Site, o usuário aceita os termos aqui estabelecidos.",
+              "Bem-vindo ao site da {legalName} (doravante, «a Empresa»), com RUC n.º {ruc}, localizada em {address}. Os presentes termos e condições regulam o uso do site {site} (doravante, «o Site»), bem como todos os serviços oferecidos pela Empresa através da plataforma. Ao utilizar este Site, o usuário aceita os termos aqui estabelecidos.",
             ),
           ],
         },
@@ -518,7 +519,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
           heading: "4. Serviços oferecidos",
           blocks: [
             p(
-              "A Associação oferece aulas de inglês acessíveis, dirigidas a crianças e adultos, além de oficinas adicionais gratuitas. As condições específicas de cada curso ou oficina serão detalhadas no momento da inscrição, sendo responsabilidade do usuário lê-las e aceitá-las antes de prosseguir.",
+              "A Empresa oferece aulas de inglês acessíveis, dirigidas a crianças e adultos, além de oficinas adicionais gratuitas. As condições específicas de cada curso ou oficina serão detalhadas no momento da inscrição, sendo responsabilidade do usuário lê-las e aceitá-las antes de prosseguir.",
             ),
           ],
         },
@@ -526,7 +527,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
           heading: "5. Uso do site",
           blocks: [
             p(
-              "O usuário compromete-se a utilizar o Site em conformidade com a lei, com estes termos e condições e com a moral e os bons costumes geralmente aceitos. É proibido o uso do Site para fins ilícitos ou que possam prejudicar os direitos da Associação ou de terceiros.",
+              "O usuário compromete-se a utilizar o Site em conformidade com a lei, com estes termos e condições e com a moral e os bons costumes geralmente aceitos. É proibido o uso do Site para fins ilícitos ou que possam prejudicar os direitos da Empresa ou de terceiros.",
             ),
           ],
         },
@@ -550,7 +551,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
           heading: "8. Propriedade intelectual",
           blocks: [
             p(
-              "Todos os direitos de propriedade intelectual e industrial sobre o conteúdo do Site pertencem à Associação ou a seus licenciantes. É proibida a reprodução, distribuição, transformação ou qualquer forma de exploração do conteúdo sem a prévia autorização por escrito da Associação.",
+              "Todos os direitos de propriedade intelectual e industrial sobre o conteúdo do Site pertencem à Empresa ou a seus licenciantes. É proibida a reprodução, distribuição, transformação ou qualquer forma de exploração do conteúdo sem a prévia autorização por escrito da Empresa.",
             ),
           ],
         },
@@ -558,7 +559,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
           heading: "9. Limitação de responsabilidade",
           blocks: [
             p(
-              "A Associação não será responsável pelos danos ou prejuízos que possam decorrer do uso do Site ou da impossibilidade de acessar os serviços. Da mesma forma, não se garante a disponibilidade, a continuidade nem a infalibilidade do funcionamento do Site.",
+              "A Empresa não será responsável pelos danos ou prejuízos que possam decorrer do uso do Site ou da impossibilidade de acessar os serviços. Da mesma forma, não se garante a disponibilidade, a continuidade nem a infalibilidade do funcionamento do Site.",
             ),
           ],
         },
@@ -566,7 +567,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
           heading: "10. Alterações dos termos",
           blocks: [
             p(
-              "A Associação reserva-se o direito de modificar a qualquer momento os termos e condições aqui estabelecidos. As alterações entram em vigor a partir de sua publicação no Site, por isso recomendamos revisar periodicamente esta seção.",
+              "A Empresa reserva-se o direito de modificar a qualquer momento os termos e condições aqui estabelecidos. As alterações entram em vigor a partir de sua publicação no Site, por isso recomendamos revisar periodicamente esta seção.",
             ),
           ],
         },
@@ -593,7 +594,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
       title: "Política de privacidade",
       intro: [
         p(
-          "Na ASOCIACIÓN ONLY ONE COIN PERÚ (doravante, «a Associação»), com RUC n.º {ruc}, localizada em {address}, respeitamos sua privacidade e nos comprometemos a proteger seus dados pessoais conforme a legislação peruana vigente. Esta Política de Privacidade explica como coletamos, usamos, armazenamos e protegemos suas informações pessoais quando você visita nosso site {site} (doravante, «o Site»).",
+          "Na {legalName} (doravante, «a Empresa»), com RUC n.º {ruc}, localizada em {address}, respeitamos sua privacidade e nos comprometemos a proteger seus dados pessoais conforme a legislação peruana vigente. Esta Política de Privacidade explica como coletamos, usamos, armazenamos e protegemos suas informações pessoais quando você visita nosso site {site} (doravante, «o Site»).",
         ),
         p(
           "Ao utilizar nosso Site e nos fornecer seus dados pessoais, você aceita os termos desta Política de Privacidade.",
@@ -618,7 +619,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
             p("Coletamos e tratamos seus dados pessoais com as seguintes finalidades:"),
             list(
               "Fornecer acesso aos nossos serviços educacionais, como aulas e oficinas.",
-              "Gerenciar inscrições e a participação nas atividades oferecidas pela Associação.",
+              "Gerenciar inscrições e a participação nas atividades oferecidas pela Empresa.",
               "Entrar em contato com você para informar sobre novidades, promoções, sorteios ou eventos.",
               "Melhorar a experiência de navegação no Site e personalizar o conteúdo.",
               "Cumprir obrigações legais.",
@@ -653,7 +654,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
           heading: "6. Compartilhamento de dados com terceiros",
           blocks: [
             p(
-              "A Associação não vende, aluga nem compartilha seus dados pessoais com terceiros, salvo nos seguintes casos:",
+              "A Empresa não vende, aluga nem compartilha seus dados pessoais com terceiros, salvo nos seguintes casos:",
             ),
             list(
               "Quando for necessário para cumprir obrigações legais.",
@@ -689,7 +690,7 @@ export const legalContent: Record<Lang, Record<LegalKind, LegalDoc>> = {
           heading: "9. Alterações da política de privacidade",
           blocks: [
             p(
-              "A Associação reserva-se o direito de modificar esta Política de Privacidade a qualquer momento. As alterações entram em vigor a partir de sua publicação no Site. Recomendamos revisar esta política periodicamente para estar informado sobre como protegemos suas informações.",
+              "A Empresa reserva-se o direito de modificar esta Política de Privacidade a qualquer momento. As alterações entram em vigor a partir de sua publicação no Site. Recomendamos revisar esta política periodicamente para estar informado sobre como protegemos suas informações.",
             ),
           ],
         },

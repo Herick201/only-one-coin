@@ -6,7 +6,9 @@ Contexto permanente do projeto. Lido em toda sessão. Se algo aqui conflitar com
 
 ## 1. O projeto
 
-Plataforma académica para a **Asociación Only One Coin Perú** (RUC 20610561463) — instituição peruana que oferece cursos de idiomas e oficinas de baixo custo a alunos de todo o Peru.
+Plataforma académica da **Only One Coin** — marca peruana que oferece cursos de idiomas e oficinas de baixo custo a alunos de todo o Peru.
+
+**Razão social que responde pelo site: `INGLES POR UN SOL S.A.C.` — RUC `20613918028`** (decisão do dono, 04/09/2026). Substituiu a *Asociación Only One Coin Perú* (RUC 20610561463), que **não aparece mais em nenhuma página pública**: rodapé, Términos y condiciones, Política de privacidad e dados estruturados (JSON-LD) nomeiam a S.A.C. A identidade legal vive num lugar só — `org` em `apps/landing/src/i18n/ui.ts` — e chega aos textos pelos tokens `{legalName}` / `{ruc}`. **Em aberto:** a relação entre as duas entidades (qual delas emite certificado, assina contrato de docente e recebe o pagamento) e o **endereço fiscal da S.A.C.** — o site ainda mostra o endereço da Asociación em Chorrillos.
 
 Cinco módulos:
 
@@ -300,7 +302,8 @@ larguras intermediárias, no desktop tanto quanto no celular.
 **Todo tamanho da landing é múltiplo de `--dp`** (`src/styles/global.css`):
 
 ```css
---dp: min(1px, 0.084745vw); /* 1px em 1180px de janela; 1/1180 abaixo disso */
+--dp: min(1.5px, 0.084745vw); /* 1/1180 da janela, com teto em 1.5px */
+--maxw: calc(1180 * var(--dp));  /* a coluna cresce junto com a régua */
 ```
 
 Fonte, padding, gap, ícone, raio, sombra, borda, `minmax()` de grade — tudo sai
@@ -309,10 +312,17 @@ qualquer largura**: nada congela numa faixa, nada salta num limite. Verificável
 medindo qualquer bloco em duas larguras, a razão das alturas é a razão das
 larguras.
 
-- **A largura de desenho é 1180px** (`--maxw`), onde `--dp` vale 1px. Acima
-  disso a unidade trava, porque o container também para de crescer. Consequência
+- **A largura de desenho é 1180px**, onde `--dp` vale 1px. Consequência
   prática: **conserta-se em 1180px e o conserto vale para todas as larguras** —
   o que não couber ali não cabe em lugar nenhum.
+- **A régua cresce até 1.5px e só então trava** (ajuste 04/09/2026). O teto era
+  1px, e isso quebrava monitor grande: a partir de 1180px a página congelava
+  numa coluna de 1180px com texto de 16px, enquanto as faixas que sangram
+  (hero, propósito, CTA) continuavam ocupando a janela inteira — foto gigante
+  ao lado de letra miúda. Agora o desenho cresce até **1770px** (`1180 × 1.5`,
+  texto base de 24px) e aí centraliza. **`--maxw` anda preso à régua**
+  (`calc(1180 * var(--dp))`): a coluna cresce junto com a fonte, em vez de o
+  container travar e o resto crescer sozinho. Abaixo de 1180px nada mudou.
 - **`vw` puro é equivalente** e podia ficar; foi convertido para `--dp` só para
   haver uma régua só. Não misture as duas.
 - **Nada de `clamp()` para tamanho.** O `clamp` é exatamente o mecanismo que
