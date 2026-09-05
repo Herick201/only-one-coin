@@ -291,7 +291,7 @@ const courseJsonLd = {
         botão que leva ao SEU curso no checkout. A âncora `#kids` é a que o
         card da home aponta. */}
     {showsKids && (
-      <section class="block kids-block" id={audienceAnchors[0]}>
+      <section class="block block-center kids-block" id={audienceAnchors[0]}>
         <h2 class="block-title">{d.kidsTitle}</h2>
         <article class="kids-card">
           <span class="tag">{d.kidsTag}</span>
@@ -1035,8 +1035,11 @@ const courseJsonLd = {
     border-radius: calc(999 * var(--dp));
   }
   .kids-card h3 {
-    margin: calc(14 * var(--dp)) 0 calc(8 * var(--dp));
-    font-size: calc(28 * var(--dp));
+    margin: calc(12 * var(--dp)) 0 calc(8 * var(--dp));
+    font-size: calc(23 * var(--dp));
+  }
+  .kids-card p {
+    font-size: calc(14.8 * var(--dp));
   }
   .kids-actions {
     display: flex;
