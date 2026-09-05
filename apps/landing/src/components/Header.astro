@@ -7,11 +7,6 @@ import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 
-// Top-level links only. The logo already goes home, and contact is reachable
-// from the footer and from the CTA at the bottom of every page, so neither
-// needs a slot up here.
-const nav = [{ label: t.nav.about, href: withLang(lang, "/about") }];
-
 const courses = languageSlugs.map((slug) => ({
   slug,
   label: t.courses.list[slug],
@@ -19,16 +14,21 @@ const courses = languageSlugs.map((slug) => ({
 }));
 const coursesHref = withLang(lang, "/courses");
 
-// "Recursos" dropdown — community / blog / FAQ / contact, one page each.
-// Rendered by both the desktop dropdown and the mobile drawer, so this array
-// is the only place an entry has to be added.
+// "Recursos" dropdown — quem somos / community / blog / FAQ / contact, one
+// page each. Rendered by both the desktop dropdown and the mobile drawer, so
+// this array is the only place an entry has to be added.
+//
+// "Nosotros" era o único link solto da barra e voltou para cá a pedido do
+// dono (05/09/2026): a barra de cima fica com o que leva à matrícula —
+// idiomas, cursos, beneficios —, e quem quer conhecer a asociación abre o
+// menu. O logo continua indo para a home, então nada some do caminho.
 const resources = [
+  { label: t.nav.about, href: withLang(lang, "/about") },
   { label: t.nav.community, href: withLang(lang, "/community") },
   { label: t.nav.blog, href: withLang(lang, "/blog") },
   { label: t.nav.faq, href: withLang(lang, "/faq") },
   { label: t.nav.contact, href: withLang(lang, "/contact") },
 ];
-const resourcesHref = resources[0].href;
 
 // "Cursos" — o que não é idioma. Hoje só o preuniversitario, ainda sem
 // matrícula aberta: entra com selo em vez de sumir do menu, porque o "em
@@ -54,8 +54,6 @@ const programs = [
 
     <!-- Desktop navigation -->
     <nav class="nav" aria-label="Principal">
-      {nav.map((n) => <a href={n.href}>{n.label}</a>)}
-
       <details class="nav-dd">
         <summary>
           {t.nav.courses}
@@ -128,8 +126,6 @@ const programs = [
   <div class="mobile-drawer">
     <nav class="mobile-nav" aria-label="Principal (móvil)">
       <div class="m-lang"><LanguageSwitcher /></div>
-
-      {nav.map((n) => <a href={n.href}>{n.label}</a>)}
 
       <details class="m-dd">
         <summary>
