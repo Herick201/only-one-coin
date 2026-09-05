@@ -99,10 +99,11 @@ export function Field({ label, children }: { label: string; children: ReactNode 
   )
 }
 
-const progressFill: Record<'default' | 'warning' | 'danger', string> = {
+const progressFill: Record<'default' | 'warning' | 'danger' | 'success', string> = {
   default: 'bg-brand-blue',
   warning: 'bg-brand-yellow',
   danger: 'bg-red-500',
+  success: 'bg-emerald-500',
 }
 
 /**
@@ -118,7 +119,7 @@ export function ProgressBar({
 }: {
   value: number
   label?: string
-  tone?: 'default' | 'warning' | 'danger'
+  tone?: 'default' | 'warning' | 'danger' | 'success'
   locked?: boolean
 }) {
   const clamped = Math.max(0, Math.min(100, value))

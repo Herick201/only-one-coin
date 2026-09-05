@@ -56,12 +56,14 @@ export default async function CoursesPage({
                   <h2 className="text-base font-semibold text-ink">
                     {e.course.name}
                   </h2>
-                  {e.status !== 'active' && (
-                    <StatusBadge
-                      tone={enrollmentTone[e.status]}
-                      label={t(`enrollment_status.${e.status}`)}
-                    />
-                  )}
+                  {e.status !== 'active' &&
+                    e.status !== 'under_review' &&
+                    e.status !== 'completed' && (
+                      <StatusBadge
+                        tone={enrollmentTone[e.status]}
+                        label={t(`enrollment_status.${e.status}`)}
+                      />
+                    )}
                 </div>
 
                 {e.classAccessLock !== null && (
@@ -89,12 +91,31 @@ export default async function CoursesPage({
                 </ul>
 
                 {e.status === 'under_review' ? (
-                  <ProgressBar
-                    value={100}
-                    tone="warning"
-                    locked
-                    label={t('courses.progress_label')}
-                  />
+                  <div className="flex flex-col gap-1.5">
+                    <ProgressBar
+                      value={100}
+                      tone="warning"
+                      locked
+                      label={t('courses.progress_label')}
+                    />
+                    {/* The state lives with the bar, not as a badge upstairs. */}
+                    <p className="flex items-center gap-1.5 text-xs font-medium text-brand-yellow-deep">
+                      <Icon name="clock" size={13} className="shrink-0" />
+                      {t('enrollment_status.under_review')}
+                    </p>
+                  </div>
+                ) : e.status === 'completed' ? (
+                  <div className="flex flex-col gap-1.5">
+                    <ProgressBar
+                      value={100}
+                      tone="success"
+                      label={t('courses.progress_label')}
+                    />
+                    <p className="flex items-center gap-1.5 text-xs font-medium text-emerald-700">
+                      <Icon name="check" size={13} className="shrink-0" />
+                      {t('enrollment_status.completed')}
+                    </p>
+                  </div>
                 ) : (
                   e.progressPct !== null && (
                     <ProgressBar
