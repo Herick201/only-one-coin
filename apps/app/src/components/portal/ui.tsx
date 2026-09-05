@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Icon } from './icons'
 
 /**
  * Presentational portal primitives. They never hold UI copy — every label is
@@ -98,14 +99,45 @@ export function Field({ label, children }: { label: string; children: ReactNode 
   )
 }
 
-export function ProgressBar({ value, label }: { value: number; label?: string }) {
+const progressFill: Record<'default' | 'warning' | 'danger', string> = {
+  default: 'bg-brand-blue',
+  warning: 'bg-brand-yellow',
+  danger: 'bg-red-500',
+}
+
+/**
+ * Progress that carries state: yellow while the enrollment is still under
+ * review, red while class access is locked — and in both cases a padlock
+ * takes the percent's seat.
+ */
+export function ProgressBar({
+  value,
+  label,
+  tone = 'default',
+  locked = false,
+}: {
+  value: number
+  label?: string
+  tone?: 'default' | 'warning' | 'danger'
+  locked?: boolean
+}) {
   const clamped = Math.max(0, Math.min(100, value))
   return (
     <div>
       {label && (
         <div className="mb-1.5 flex items-center justify-between text-xs font-medium text-muted-foreground">
           <span>{label}</span>
-          <span className="text-ink">{clamped}%</span>
+          {locked ? (
+            <span
+              className={
+                tone === 'danger' ? 'text-red-600' : 'text-brand-yellow-deep'
+              }
+            >
+              <Icon name="lock" size={13} />
+            </span>
+          ) : (
+            <span className="text-ink">{clamped}%</span>
+          )}
         </div>
       )}
       <div
@@ -116,7 +148,7 @@ export function ProgressBar({ value, label }: { value: number; label?: string })
         aria-valuemax={100}
       >
         <div
-          className="h-full rounded-full bg-brand-blue transition-[width]"
+          className={`h-full rounded-full transition-[width] ${progressFill[tone]}`}
           style={{ width: `${clamped}%` }}
         />
       </div>

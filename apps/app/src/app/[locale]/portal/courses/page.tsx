@@ -88,11 +88,22 @@ export default async function CoursesPage({
                   </li>
                 </ul>
 
-                {e.progressPct !== null && (
+                {e.status === 'under_review' ? (
                   <ProgressBar
-                    value={e.progressPct}
+                    value={100}
+                    tone="warning"
+                    locked
                     label={t('courses.progress_label')}
                   />
+                ) : (
+                  e.progressPct !== null && (
+                    <ProgressBar
+                      value={e.progressPct}
+                      tone={e.classAccessLock !== null ? 'danger' : 'default'}
+                      locked={e.classAccessLock !== null}
+                      label={t('courses.progress_label')}
+                    />
+                  )
                 )}
 
                 <Link

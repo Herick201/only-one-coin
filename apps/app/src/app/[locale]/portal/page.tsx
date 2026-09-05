@@ -144,11 +144,22 @@ export default async function DashboardPage({
                   {t(`access_lock.${e.classAccessLock}`)}
                 </p>
               )}
-              {e.progressPct !== null && (
+              {e.status === 'under_review' ? (
                 <ProgressBar
-                  value={e.progressPct}
+                  value={100}
+                  tone="warning"
+                  locked
                   label={t('dashboard.progress_label')}
                 />
+              ) : (
+                e.progressPct !== null && (
+                  <ProgressBar
+                    value={e.progressPct}
+                    tone={e.classAccessLock !== null ? 'danger' : 'default'}
+                    locked={e.classAccessLock !== null}
+                    label={t('dashboard.progress_label')}
+                  />
+                )
               )}
               <Link
                 href={`/portal/courses/${e.id}`}
