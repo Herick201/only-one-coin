@@ -1,9 +1,9 @@
 ---
 import type { CourseSlug } from "../i18n/ui";
-import { audienceAnchors, bundles, courseParent, coursePrices, htmlLang, levelsOf, monthlyPrices, monthlySessionPrices, org, sessionPrices, whatsappUrl } from "../i18n/ui";
+import { audienceAnchors, bundles, courseParent, coursePrices, hasKidsProgram, htmlLang, levelsOf, monthlyPrices, monthlySessionPrices, org, sessionPrices, whatsappUrl } from "../i18n/ui";
 import type { BundleId } from "../i18n/ui";
 import { getLangFromUrl, useTranslations, withLang, formatPEN } from "../i18n/utils";
-import { courseIdBySlug, enrollmentHref } from "../data/checkout";
+import { courseIdBySlug, englishKidsCourseId, enrollmentHref } from "../data/checkout";
 import { courseContent } from "../i18n/courses-content";
 import CourseProgramDetail from "./CourseProgramDetail.astro";
 import LanguageFlag from "./LanguageFlag.astro";
@@ -109,6 +109,18 @@ const hookPrice = sessionPrices[slug];
 // caindo no lugar certo.
 const parentSlug = courseParent[slug] ?? null;
 const familyRoot = parentSlug ?? slug;
+// Quem entra neste curso, por idade: o OOC Kids (6 a 12) existe só no inglês,
+// e é a página do idioma que o hospeda. Todo o resto — os outros idiomas e os
+// níveis acima do básico — é de 13 anos em diante e diz isso num selo.
+const showsKids = hasKidsProgram(slug);
+// O OOC Kids não é um nível desta página: é OUTRO curso, com id próprio no
+// catálogo do checkout. Quem sai daqui matriculando uma criança tem que cair
+// no curso dela — o mesmo botão dos níveis levaria ao curso de jovens e
+// adultos, que é justamente o engano que esta seção existe para desfazer.
+const kidsEnrollHref = enrollmentHref(withLang(lang, "/enrollment"), {
+  courseId: englishKidsCourseId,
+  content: "course_page_kids",
+});
 const siblings = [familyRoot, ...levelsOf(familyRoot)];
 // Um curso sem níveis é uma família de um: mesmo hub, mesma cara — um único
 // quadradinho já selecionado sobre o seu painel (pedido do dono, 03/09/2026).
@@ -226,6 +238,7 @@ const courseJsonLd = {
           (o preço do plano segue sendo o vigente, `CLAUDE.md` §1). */}
       <p class="badges">
         <span class="urgency">{d.urgency}</span>
+        <span class="age">{d.ageBadge}</span>
       </p>
       <h1>
         {d.titlePre}
@@ -270,13 +283,38 @@ const courseJsonLd = {
       {!program && <p class="example-note">{d.exampleNote}</p>}
     </header>
 
+    {/* O OOC Kids é um CURSO à parte — não a faixa de baixo do mesmo curso.
+        Enquanto ele morava num bloco "¿Para quién es?" ao lado dos níveis,
+        quem chegava pelo card da home lia a página inteira como um curso só e
+        acabava matriculando a criança no curso de jovens e adultos. Por isso
+        ele tem card próprio, dito com todas as letras ("curso aparte"), e um
+        botão que leva ao SEU curso no checkout. A âncora `#kids` é a que o
+        card da home aponta. */}
+    {showsKids && (
+      <section class="block block-center kids-block" id={audienceAnchors[0]}>
+        <h2 class="block-title">{d.kidsTitle}</h2>
+        <article class="kids-card">
+          <span class="tag">{d.kidsTag}</span>
+          <h3>{d.kidsName}</h3>
+          <p class="text-muted">{d.kidsText}</p>
+          <div class="kids-actions">
+            <a class="btn btn-yellow" href={kidsEnrollHref}>{d.kidsCta}</a>
+            <a class="kids-wa" href={whatsappUrl} target="_blank" rel="noopener">
+              {d.ctaWhatsApp}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+            </a>
+          </div>
+        </article>
+      </section>
+    )}
+
     {/* O hub de níveis: quadradinhos em cima, UM painel embaixo. Clicar num
         nível troca só o painel — radio + CSS, sem JavaScript e sem recarregar.
         O painel carrega o essencial (3–4 checks, modalidades, matrícula) e o
         programa inteiro fica atrás do "Ver detalles" dele. Curso sem níveis
         rende o mesmo painel, sem quadradinhos. */}
     {levelPanels.length > 0 && (
-      <section class="block block-center level-tabs">
+      <section class="block block-center level-tabs" id={audienceAnchors[1]}>
         <h2 class="block-title">{d.levelsTitle}</h2>
         {levelPanels.map((p) => (
           <input
@@ -326,7 +364,7 @@ const courseJsonLd = {
               {p.options.length > 0 && (
                 <div class="panel-options">
                   {p.options.map((o) => (
-                    <span class:list={["panel-option", { "panel-option-full": o.recommended }]}>
+                    <span class:list={["panel-option", { "panel-option-full": o.recommended, "panel-option-monthly": o.key === "monthly" }]}>
                       {o.recommended && (
                         <svg class="panel-option-star" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l2.9 6.26 6.6.72-4.9 4.55 1.34 6.47L12 16.77 6.06 20l1.34-6.47L2.5 8.98l6.6-.72L12 2z"/></svg>
                       )}
@@ -542,6 +580,18 @@ const courseJsonLd = {
     font-weight: 700;
     font-size: calc(14.4 * var(--dp));
     box-shadow: var(--shadow-yellow);
+  }
+  /* O selo de idade anda ao lado da urgência, mas não disputa com ela: a
+     urgência é o amarelo da marca, este é o azul claro das etiquetas. */
+  .age {
+    display: inline-flex;
+    align-items: center;
+    padding: calc(8 * var(--dp)) calc(18 * var(--dp));
+    border-radius: calc(999 * var(--dp));
+    background: var(--sky);
+    color: var(--blue-deep);
+    font-weight: 700;
+    font-size: calc(14.4 * var(--dp));
   }
   .course-head h1 {
     margin-top: calc(10 * var(--dp));
@@ -770,16 +820,21 @@ const courseJsonLd = {
     display: inline-block;
     padding: calc(2 * var(--dp)) calc(10 * var(--dp));
     border-radius: calc(8 * var(--dp));
-    /* Neutra por padrão: no card do mensual o amarelo puxava o olho para o
-       valor por sessão MAIS CARO — a pílula acesa vendia a opção errada. */
-    background: var(--sky);
+    background: linear-gradient(135deg, var(--yellow-bright), var(--yellow));
     color: var(--ink);
     font-size: calc(15.2 * var(--dp));
     font-weight: 800;
     line-height: 1.4;
   }
-  .panel-option-full .option-note-price {
-    background: linear-gradient(135deg, var(--yellow-bright), var(--yellow));
+  /* O amarelo é do pagamento único — é ali que mora o S/0.60 que a landing
+     inteira anuncia. No mensual a pílula fica neutra: acesa, ela puxava o
+     olho para o valor por sessão MAIS CARO e vendia a opção errada.
+     A regra estava pendurada em `.panel-option-full` (o card recomendado), e
+     quebrou no dia em que o pacote de dois níveis entrou na fileira e virou o
+     recomendado: o S/0.60 do paquete ficou apagado e o card recomendado nem
+     tem valor por sessão para mostrar. */
+  .panel-option-monthly .option-note-price {
+    background: var(--sky);
   }
   .option-note-unit {
     font-size: calc(11.8 * var(--dp));
@@ -956,21 +1011,23 @@ const courseJsonLd = {
     margin-bottom: calc(24 * var(--dp));
   }
 
-  .audiences {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: calc(22 * var(--dp));
-  }
-  .audience {
-    /* The header is sticky; without this it covers the card we just jumped to. */
+  /* O card do curso de crianças. Fica claro que é outro produto: título
+     próprio, etiqueta dizendo "curso aparte" e o botão amarelo da matrícula,
+     igual ao dos níveis — o mesmo peso, outro destino. */
+  .kids-card {
     scroll-margin-top: calc(96 * var(--dp));
+    /* Centrado e estreito de propósito: é um desvio para quem chegou à
+       página errada, não a oferta desta página. Largo e à esquerda, ele
+       competia com os níveis logo abaixo. */
+    max-width: calc(520 * var(--dp));
+    margin-inline: auto;
     background: var(--paper);
     border: calc(1.5 * var(--dp)) solid var(--border);
     border-radius: var(--radius);
-    padding: calc(30 * var(--dp)) calc(28 * var(--dp));
+    padding: calc(24 * var(--dp)) calc(26 * var(--dp));
     box-shadow: var(--shadow-sm);
   }
-  .audience .tag {
+  .kids-card .tag {
     display: inline-block;
     font-size: calc(11.84 * var(--dp));
     font-weight: 700;
@@ -981,9 +1038,35 @@ const courseJsonLd = {
     padding: calc(6 * var(--dp)) calc(12 * var(--dp));
     border-radius: calc(999 * var(--dp));
   }
-  .audience h3 {
-    margin: calc(14 * var(--dp)) 0 calc(8 * var(--dp));
-    font-size: calc(22.4 * var(--dp));
+  .kids-card h3 {
+    margin: calc(12 * var(--dp)) 0 calc(8 * var(--dp));
+    font-size: calc(23 * var(--dp));
+  }
+  .kids-card p {
+    font-size: calc(14.8 * var(--dp));
+  }
+  .kids-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: calc(18 * var(--dp));
+    margin-top: calc(18 * var(--dp));
+  }
+  .kids-wa {
+    display: inline-flex;
+    align-items: center;
+    gap: calc(6 * var(--dp));
+    font-weight: 700;
+    color: var(--blue);
+  }
+  .kids-wa svg {
+    width: calc(16 * var(--dp));
+    height: calc(16 * var(--dp));
+    transition: transform 0.16s ease;
+  }
+  .kids-wa:hover svg {
+    transform: translateX(calc(3 * var(--dp)));
   }
 
   .features {
@@ -1084,6 +1167,24 @@ const courseJsonLd = {
      documenta logo acima. A composição das páginas de curso no celular
      continua sendo trabalho à parte; isto é só o estouro. */
   @media (max-width: 900px) {
+    /* O CTA do rodapé é uma linha de duas colunas (texto | botão) que, ao
+       quebrar, deixava o botão encostado à esquerda embaixo de um texto
+       alinhado à esquerda — parecia solto. No celular ele vira uma coluna
+       centrada, e o respiro lateral encolhe para o botão caber numa linha. */
+    .course-cta {
+      padding: calc(40 * var(--dp)) calc(22 * var(--dp));
+      text-align: center;
+    }
+    .course-cta-inner {
+      justify-content: center;
+    }
+    .course-cta p {
+      margin-inline: auto;
+    }
+    .course-cta-actions {
+      width: 100%;
+      justify-content: center;
+    }
     .discount {
       position: static;
       top: auto;
