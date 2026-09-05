@@ -82,7 +82,7 @@ export default async function PaymentsPage({
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title={t('payments.title')} subtitle={t('payments.subtitle')} />
+      <PageHeader title={t('payments.title')} />
 
       {dueMonths.length > 0 && (
         <section className="-mt-4">

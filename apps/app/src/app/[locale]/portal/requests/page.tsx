@@ -69,7 +69,7 @@ export default async function RequestsPage({
 
   return (
     <div>
-      <PageHeader title={t('requests.title')} subtitle={t('requests.subtitle')} />
+      <PageHeader title={t('requests.title')} />
       <RequestsView procedures={procedureViews} initialRequests={requestViews} />
     </div>
   )

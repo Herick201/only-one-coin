@@ -43,10 +43,7 @@ export default async function DocumentsPage({
 
   return (
     <div>
-      <PageHeader
-        title={t('documents.title')}
-        subtitle={t('documents.subtitle')}
-      />
+      <PageHeader title={t('documents.title')} />
 
       {documents.length === 0 ? (
         <EmptyState

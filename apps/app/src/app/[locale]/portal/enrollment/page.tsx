@@ -42,10 +42,7 @@ export default async function EnrollmentPage({
 
   return (
     <div>
-      <PageHeader
-        title={t('enrollments.title')}
-        subtitle={t('enrollments.subtitle')}
-      />
+      <PageHeader title={t('enrollments.title')} />
 
       {enrollments.length === 0 ? (
         <EmptyState

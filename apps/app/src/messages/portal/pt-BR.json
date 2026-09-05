@@ -14,11 +14,12 @@
       "profile": "Meu perfil",
       "logout": "Sair",
       "back_to_site": "Ir ao site",
-      "menu": "Menu"
+      "menu": "Menu",
+      "collapse": "Esconder menu",
+      "expand": "Mostrar menu"
     },
     "greeting": {
-      "hello": "Olá, {name}",
-      "subtitle": "Este é o seu espaço na Only One Coin. Aqui você vê suas aulas, seus pagamentos, suas solicitações e seus documentos."
+      "hello": "Olá, {name}"
     },
     "common": {
       "view_detail": "Ver detalhes",
@@ -135,7 +136,6 @@
     },
     "courses": {
       "title": "Meus cursos",
-      "subtitle": "Tudo o que você está cursando e o que já concluiu.",
       "empty_title": "Você ainda não tem cursos",
       "empty_body": "Quando concluir sua matrícula, seus cursos aparecerão aqui.",
       "seats_label": "Vagas",
@@ -174,7 +174,6 @@
     },
     "enrollments": {
       "title": "Minha matrícula",
-      "subtitle": "O estado das suas matrículas e seus comprovantes.",
       "empty_title": "Você não tem matrículas registradas",
       "empty_body": "Quando você se matricular, verá aqui o estado de cada curso.",
       "code_label": "Código da matrícula",
@@ -210,7 +209,6 @@
     },
     "payments": {
       "title": "Pagamentos",
-      "subtitle": "Seus pagamentos por módulo, seus comprovantes e todo o seu histórico.",
       "due_title": "Pagamento do módulo",
       "due_label": "Data de pagamento",
       "due_note": "Pague até {date} para manter seu acesso à aula.",
@@ -228,7 +226,6 @@
     },
     "requests": {
       "title": "Solicitações",
-      "subtitle": "Solicite comprovantes, exames ou o congelamento da sua matrícula. Cada solicitação é paga ao ser feita.",
       "catalog_title": "Solicitações disponíveis",
       "request_cta": "Solicitar",
       "not_eligible": "Você não tem cursos elegíveis para esta solicitação.",
@@ -251,7 +248,6 @@
     },
     "continue_page": {
       "title": "Continue estudando",
-      "subtitle": "Como você já é aluna, a matrícula sai daqui, com seus dados de sempre — sem preencher formulários de novo.",
       "empty_title": "Ainda não há ofertas para você",
       "empty_body": "Quando você concluir um curso, verá aqui o seu próximo passo.",
       "kind": {
@@ -270,7 +266,6 @@
     },
     "documents": {
       "title": "Documentos",
-      "subtitle": "Seus comprovantes e certificados.",
       "empty_title": "Você ainda não tem documentos",
       "empty_body": "Seus comprovantes e certificados aparecerão aqui quando estiverem prontos.",
       "issued_on": "Emitido em {date}",
@@ -284,7 +279,6 @@
     },
     "profile": {
       "title": "Meu perfil",
-      "subtitle": "Seus dados e os do seu responsável.",
       "personal_title": "Dados pessoais",
       "full_name": "Nome completo",
       "id_label": "Documento de identidade",
@@ -300,6 +294,10 @@
       "consent_version": "Versão {version}",
       "consent_none": "Registro pendente.",
       "edit_note": "Precisa corrigir um dado? Fale conosco pelo WhatsApp."
+    },
+    "notifications": {
+      "title": "Notificações",
+      "empty": "Você não tem notificações."
     }
   }
 }

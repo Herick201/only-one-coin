@@ -57,10 +57,68 @@ export default async function DashboardPage({
         <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
           {t('greeting.hello', { name: student.firstName })}
         </h1>
-        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          {t('greeting.subtitle')}
-        </p>
       </header>
+
+      {/* Next class — first thing on the page, and the one block in brand
+          yellow: everything else on screen is blue, so the bar the student
+          actually clicks to attend is the one that looks different. */}
+      <section className="-mt-2">
+        <div className="mb-3">
+          <SectionTitle>{t('next_class.title')}</SectionTitle>
+        </div>
+        {nextClass ? (
+          <Card className="overflow-hidden border-brand-yellow-deep/30">
+            <div className="flex flex-wrap items-center justify-between gap-4 bg-brand-yellow p-5 text-ink sm:p-6">
+              <div className="flex flex-col gap-1">
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink/70">
+                  <Icon name="calendar" size={16} />
+                  {formatDateTime(nextClass.startsAt, locale)}
+                </span>
+                <span className="text-xl font-semibold">
+                  {nextClass.courseName}
+                </span>
+                <span className="text-sm text-ink/80">
+                  {nextClass.classGroupName}
+                </span>
+                <span className="text-sm text-ink/60">
+                  {t('next_class.with_teacher', { teacher: nextClass.teacherName })}
+                </span>
+              </div>
+              {nextClass.classAccessLock !== null ? (
+                <Link
+                  href="/portal/payments"
+                  className="inline-flex shrink-0 items-center gap-2 rounded-full bg-ink/10 px-4 py-2 text-xs font-semibold text-ink transition hover:bg-ink/20"
+                >
+                  <Icon name="lock" size={16} />
+                  {t('next_class.locked')}
+                </Link>
+              ) : nextClass.meetingUrl ? (
+                <a
+                  href={nextClass.meetingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-white shadow-card transition hover:bg-brand-blue-deep"
+                >
+                  <Icon name="video" size={18} />
+                  {t('next_class.join')}
+                </a>
+              ) : (
+                <span className="inline-flex shrink-0 items-center gap-2 rounded-full bg-white/50 px-4 py-2 text-xs font-semibold text-ink/80">
+                  <Icon name="clock" size={16} />
+                  {t('next_class.no_link_yet')}
+                </span>
+              )}
+            </div>
+          </Card>
+        ) : (
+          <Card className="flex flex-col items-start gap-1 p-6">
+            <p className="text-base font-semibold text-ink">
+              {t('next_class.none_title')}
+            </p>
+            <p className="text-sm text-muted-foreground">{t('next_class.none_body')}</p>
+          </Card>
+        )}
+      </section>
 
       {/* Notices — the portal side of the reminder e-mails (CLAUDE.md §1). */}
       {notifications.length > 0 && (
@@ -97,65 +155,6 @@ export default async function DashboardPage({
           <p>{t('dashboard.review_note')}</p>
         </div>
       )}
-
-      {/* Next class */}
-      <section>
-        <div className="mb-3">
-          <SectionTitle>{t('next_class.title')}</SectionTitle>
-        </div>
-        {nextClass ? (
-          <Card className="overflow-hidden">
-            <div className="flex flex-wrap items-center justify-between gap-4 bg-brand-blue p-5 text-white sm:p-6">
-              <div className="flex flex-col gap-1">
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/80">
-                  <Icon name="calendar" size={16} />
-                  {formatDateTime(nextClass.startsAt, locale)}
-                </span>
-                <span className="text-xl font-semibold">
-                  {nextClass.courseName}
-                </span>
-                <span className="text-sm text-white/85">
-                  {nextClass.classGroupName}
-                </span>
-                <span className="text-sm text-white/70">
-                  {t('next_class.with_teacher', { teacher: nextClass.teacherName })}
-                </span>
-              </div>
-              {nextClass.classAccessLock !== null ? (
-                <Link
-                  href="/portal/payments"
-                  className="inline-flex shrink-0 items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/25"
-                >
-                  <Icon name="lock" size={16} />
-                  {t('next_class.locked')}
-                </Link>
-              ) : nextClass.meetingUrl ? (
-                <a
-                  href={nextClass.meetingUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-brand-blue-deep shadow-card transition hover:bg-brand-yellow hover:text-ink"
-                >
-                  <Icon name="video" size={18} />
-                  {t('next_class.join')}
-                </a>
-              ) : (
-                <span className="inline-flex shrink-0 items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-xs font-semibold text-white/85">
-                  <Icon name="clock" size={16} />
-                  {t('next_class.no_link_yet')}
-                </span>
-              )}
-            </div>
-          </Card>
-        ) : (
-          <Card className="flex flex-col items-start gap-1 p-6">
-            <p className="text-base font-semibold text-ink">
-              {t('next_class.none_title')}
-            </p>
-            <p className="text-sm text-muted-foreground">{t('next_class.none_body')}</p>
-          </Card>
-        )}
-      </section>
 
       {/* My courses */}
       <section>

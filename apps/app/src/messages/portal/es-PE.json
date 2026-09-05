@@ -14,11 +14,12 @@
       "profile": "Mi perfil",
       "logout": "Cerrar sesión",
       "back_to_site": "Ir al sitio",
-      "menu": "Menú"
+      "menu": "Menú",
+      "collapse": "Ocultar menú",
+      "expand": "Mostrar menú"
     },
     "greeting": {
-      "hello": "Hola, {name}",
-      "subtitle": "Este es tu espacio en Only One Coin. Aquí ves tus clases, tus pagos, tus trámites y tus documentos."
+      "hello": "Hola, {name}"
     },
     "common": {
       "view_detail": "Ver detalle",
@@ -135,7 +136,6 @@
     },
     "courses": {
       "title": "Mis cursos",
-      "subtitle": "Todo lo que estás llevando y lo que ya finalizaste.",
       "empty_title": "Todavía no tienes cursos",
       "empty_body": "Cuando completes tu matrícula, tus cursos aparecerán aquí.",
       "seats_label": "Vacantes",
@@ -174,7 +174,6 @@
     },
     "enrollments": {
       "title": "Mi matrícula",
-      "subtitle": "El estado de tus matrículas y sus comprobantes.",
       "empty_title": "No tienes matrículas registradas",
       "empty_body": "Cuando te matricules, verás aquí el estado de cada curso.",
       "code_label": "Código de matrícula",
@@ -210,7 +209,6 @@
     },
     "payments": {
       "title": "Pagos",
-      "subtitle": "Tus pagos por módulo, tus comprobantes y todo tu historial.",
       "due_title": "Pago del módulo",
       "due_label": "Fecha de pago",
       "due_note": "Paga antes del {date} para mantener tu acceso a la clase.",
@@ -228,7 +226,6 @@
     },
     "requests": {
       "title": "Trámites",
-      "subtitle": "Solicita constancias, exámenes o el congelamiento de tu matrícula. Cada trámite se paga al solicitarlo.",
       "catalog_title": "Trámites disponibles",
       "request_cta": "Solicitar",
       "not_eligible": "No tienes cursos elegibles para este trámite.",
@@ -251,7 +248,6 @@
     },
     "continue_page": {
       "title": "Continúa estudiando",
-      "subtitle": "Como ya eres alumna, te matriculas desde aquí con tus datos de siempre — sin volver a llenar formularios.",
       "empty_title": "Aún no hay ofertas para ti",
       "empty_body": "Cuando finalices un curso, aquí verás tu siguiente paso.",
       "kind": {
@@ -270,7 +266,6 @@
     },
     "documents": {
       "title": "Documentos",
-      "subtitle": "Tus constancias y certificados.",
       "empty_title": "Todavía no tienes documentos",
       "empty_body": "Tus constancias y certificados aparecerán aquí cuando estén listos.",
       "issued_on": "Emitido el {date}",
@@ -284,7 +279,6 @@
     },
     "profile": {
       "title": "Mi perfil",
-      "subtitle": "Tus datos y los de tu apoderado.",
       "personal_title": "Datos personales",
       "full_name": "Nombres y apellidos",
       "id_label": "Documento de identidad",
@@ -300,6 +294,10 @@
       "consent_version": "Versión {version}",
       "consent_none": "Pendiente de registro.",
       "edit_note": "¿Necesitas corregir un dato? Escríbenos por WhatsApp."
+    },
+    "notifications": {
+      "title": "Notificaciones",
+      "empty": "No tienes notificaciones."
     }
   }
 }

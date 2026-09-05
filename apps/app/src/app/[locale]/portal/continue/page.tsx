@@ -16,10 +16,7 @@ export default async function ContinuePage({
 
   return (
     <div>
-      <PageHeader
-        title={t('continue_page.title')}
-        subtitle={t('continue_page.subtitle')}
-      />
+      <PageHeader title={t('continue_page.title')} />
       <ContinueView offers={offers} />
     </div>
   )

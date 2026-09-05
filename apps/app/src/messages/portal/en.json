@@ -14,11 +14,12 @@
       "profile": "My profile",
       "logout": "Sign out",
       "back_to_site": "Go to site",
-      "menu": "Menu"
+      "menu": "Menu",
+      "collapse": "Hide menu",
+      "expand": "Show menu"
     },
     "greeting": {
-      "hello": "Hi, {name}",
-      "subtitle": "This is your space at Only One Coin. Here you can see your classes, your payments, your requests and your documents."
+      "hello": "Hi, {name}"
     },
     "common": {
       "view_detail": "View details",
@@ -135,7 +136,6 @@
     },
     "courses": {
       "title": "My courses",
-      "subtitle": "Everything you're taking and what you've already finished.",
       "empty_title": "You don't have any courses yet",
       "empty_body": "Once you complete your enrollment, your courses will appear here.",
       "seats_label": "Seats",
@@ -174,7 +174,6 @@
     },
     "enrollments": {
       "title": "My enrollment",
-      "subtitle": "The status of your enrollments and their receipts.",
       "empty_title": "You have no enrollments on record",
       "empty_body": "Once you enroll, you'll see the status of each course here.",
       "code_label": "Enrollment code",
@@ -210,7 +209,6 @@
     },
     "payments": {
       "title": "Payments",
-      "subtitle": "Your module payments, your receipts and your full history.",
       "due_title": "Module payment",
       "due_label": "Payment date",
       "due_note": "Pay before {date} to keep your class access.",
@@ -228,7 +226,6 @@
     },
     "requests": {
       "title": "Requests",
-      "subtitle": "Request certificates, exams or an enrollment freeze. Each request is paid when you submit it.",
       "catalog_title": "Available requests",
       "request_cta": "Request",
       "not_eligible": "You have no eligible courses for this request.",
@@ -251,7 +248,6 @@
     },
     "continue_page": {
       "title": "Keep studying",
-      "subtitle": "Since you're already a student, you enroll from here with your existing details — no forms to fill in again.",
       "empty_title": "No offers for you yet",
       "empty_body": "Once you finish a course, your next step will show up here.",
       "kind": {
@@ -270,7 +266,6 @@
     },
     "documents": {
       "title": "Documents",
-      "subtitle": "Your certificates and records.",
       "empty_title": "You don't have any documents yet",
       "empty_body": "Your certificates and records will appear here once they're ready.",
       "issued_on": "Issued on {date}",
@@ -284,7 +279,6 @@
     },
     "profile": {
       "title": "My profile",
-      "subtitle": "Your details and your guardian's.",
       "personal_title": "Personal details",
       "full_name": "Full name",
       "id_label": "ID document",
@@ -300,6 +294,10 @@
       "consent_version": "Version {version}",
       "consent_none": "Registration pending.",
       "edit_note": "Need to correct something? Message us on WhatsApp."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "empty": "You have no notifications."
     }
   }
 }

@@ -28,7 +28,7 @@ export default async function CoursesPage({
 
   return (
     <div>
-      <PageHeader title={t('courses.title')} subtitle={t('courses.subtitle')} />
+      <PageHeader title={t('courses.title')} />
 
       {enrollments.length === 0 ? (
         <EmptyState

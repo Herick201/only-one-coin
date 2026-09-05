@@ -17,9 +17,12 @@ function isActive(pathname: string, href: string) {
 export function PortalNav({
   items,
   orientation,
+  collapsed = false,
 }: {
   items: NavItem[]
   orientation: 'sidebar' | 'bar'
+  /** Icon-only rendering for the collapsed sidebar; labels move to `title`. */
+  collapsed?: boolean
 }) {
   const pathname = usePathname()
 
@@ -57,14 +60,18 @@ export function PortalNav({
             key={item.href}
             href={item.href}
             aria-current={active ? 'page' : undefined}
-            className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition ${
+            title={collapsed ? item.label : undefined}
+            aria-label={collapsed ? item.label : undefined}
+            className={`flex items-center gap-3 rounded-xl text-sm font-semibold transition ${
+              collapsed ? 'justify-center px-0 py-2.5' : 'px-3.5 py-2.5'
+            } ${
               active
                 ? 'bg-brand-blue text-white shadow-card'
                 : 'text-muted-foreground hover:bg-sky hover:text-ink'
             }`}
           >
             <Icon name={item.icon} size={20} />
-            {item.label}
+            {!collapsed && item.label}
           </Link>
         )
       })}

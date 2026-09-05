@@ -21,7 +21,7 @@ export default async function ProfilePage({
 
   return (
     <div>
-      <PageHeader title={t('profile.title')} subtitle={t('profile.subtitle')} />
+      <PageHeader title={t('profile.title')} />
 
       <AutoGrid min="24rem" gap="gap-6">
         {/* Personal details */}
