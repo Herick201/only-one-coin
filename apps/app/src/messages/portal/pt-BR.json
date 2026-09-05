@@ -38,7 +38,6 @@
       "title": "Sua próxima aula",
       "none_title": "Você não tem aulas agendadas",
       "none_body": "Quando sua matrícula estiver ativa, sua próxima sessão aparecerá aqui.",
-      "with_teacher": "com {teacher}",
       "join": "Entrar na aula",
       "no_link_yet": "O link será publicado antes da aula",
       "locked": "Acesso pausado — regularizar pagamento"
@@ -132,10 +131,8 @@
       "title": "Meus cursos",
       "empty_title": "Você ainda não tem cursos",
       "empty_body": "Quando concluir sua matrícula, seus cursos aparecerão aqui.",
-      "seats_label": "Vagas",
-      "seats_value": "{taken} de {capacity}",
-      "materials_count": "{count} materiais",
-      "progress_label": "Progresso"
+      "progress_label": "Progresso",
+      "starts_on": "Início: {date}"
     },
     "course_detail": {
       "about_title": "Sobre o curso",

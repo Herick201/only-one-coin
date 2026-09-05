@@ -14,6 +14,11 @@ import { enrollmentTone } from '@/components/portal/status-tone'
 import { Icon } from '@/components/portal/icons'
 import { AutoGrid } from '@/components/layout/auto-grid'
 
+/**
+ * Course cards, kept to what the student acts on: name, schedule, progress
+ * and the way in. Active is the normal state and earns no badge; teacher,
+ * seats and material counts live in the detail, not here.
+ */
 export default async function CoursesPage({
   params,
 }: {
@@ -37,107 +42,70 @@ export default async function CoursesPage({
           icon={<Icon name="courses" size={24} />}
         />
       ) : (
-        <ul className="grid gap-4">
+        <AutoGrid as="ul" min="18rem">
           {enrollments.map((e) => {
-            const weekdays = e.classGroup.schedule
-              .map((s) => t(`weekday_short.${s.weekday}`))
+            const schedule = e.classGroup.schedule
+              .map(
+                (s) =>
+                  `${t(`weekday_short.${s.weekday}`)} ${s.startTime}–${s.endTime}`,
+              )
               .join(' · ')
-            const firstSlot = e.classGroup.schedule[0]
             return (
-              <Card key={e.id} as="li" className="p-5 sm:p-6">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-lg font-semibold text-ink">
-                        {e.course.name}
-                      </h2>
-                      <StatusBadge
-                        tone={enrollmentTone[e.status]}
-                        label={t(`enrollment_status.${e.status}`)}
-                      />
-                      <span className="rounded-full bg-sky px-2 py-0.5 text-[11px] font-semibold text-brand-blue-deep">
-                        {t('common.online_label')}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {e.classGroup.name}
-                    </p>
-                    {e.classAccessLock !== null && (
-                      <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 ring-1 ring-inset ring-red-600/15">
-                        <Icon name="lock" size={13} />
-                        {t(`access_lock.${e.classAccessLock}`)}
-                      </p>
-                    )}
-
-                    <AutoGrid as="dl" min="9rem" gap="gap-x-6 gap-y-3" className="mt-4 max-w-md text-sm">
-                      <div>
-                        <dt className="text-xs font-medium text-muted-foreground">
-                          {t('common.teacher')}
-                        </dt>
-                        <dd className="font-medium text-ink">
-                          {e.classGroup.teacherName}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-xs font-medium text-muted-foreground">
-                          {t('common.schedule')}
-                        </dt>
-                        <dd className="font-medium text-ink">
-                          {weekdays}
-                          {firstSlot ? ` — ${firstSlot.startTime}` : ''}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-xs font-medium text-muted-foreground">
-                          {t('common.starts')}
-                        </dt>
-                        <dd className="font-medium text-ink">
-                          {formatDate(e.classGroup.startDate, locale)}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-xs font-medium text-muted-foreground">
-                          {t('courses.seats_label')}
-                        </dt>
-                        <dd className="font-medium text-ink">
-                          {t('courses.seats_value', {
-                            taken: e.classGroup.seatsTaken,
-                            capacity: e.classGroup.capacity,
-                          })}
-                        </dd>
-                      </div>
-                    </AutoGrid>
-
-                    {e.progressPct !== null && (
-                      <div className="mt-4 sm:max-w-md">
-                        <ProgressBar
-                          value={e.progressPct}
-                          label={t('courses.progress_label')}
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex shrink-0 items-center justify-between gap-3 sm:flex-col sm:items-end">
-                    <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <Icon name="doc" size={15} />
-                      {t('courses.materials_count', {
-                        count: e.course.materials.length,
-                      })}
-                    </span>
-                    <Link
-                      href={`/portal/courses/${e.id}`}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-card transition hover:bg-brand-yellow hover:text-ink"
-                    >
-                      {t('common.view_detail')}
-                      <Icon name="arrow-right" size={16} />
-                    </Link>
-                  </div>
+              <Card key={e.id} as="li" className="flex flex-col gap-3 p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <h2 className="text-base font-semibold text-ink">
+                    {e.course.name}
+                  </h2>
+                  {e.status !== 'active' && (
+                    <StatusBadge
+                      tone={enrollmentTone[e.status]}
+                      label={t(`enrollment_status.${e.status}`)}
+                    />
+                  )}
                 </div>
+
+                {e.classAccessLock !== null && (
+                  <p className="flex items-center gap-1.5 text-xs font-semibold text-red-600">
+                    <Icon name="lock" size={13} className="shrink-0" />
+                    {t(`access_lock.${e.classAccessLock}`)}
+                  </p>
+                )}
+
+                <ul className="flex flex-col gap-1.5 text-sm text-muted-foreground">
+                  <li className="flex items-center gap-2">
+                    <span className="shrink-0 text-brand-blue">
+                      <Icon name="clock" size={15} />
+                    </span>
+                    {schedule}
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="shrink-0 text-brand-blue">
+                      <Icon name="calendar" size={15} />
+                    </span>
+                    {t('courses.starts_on', {
+                      date: formatDate(e.classGroup.startDate, locale),
+                    })}
+                  </li>
+                </ul>
+
+                {e.progressPct !== null && (
+                  <ProgressBar
+                    value={e.progressPct}
+                    label={t('courses.progress_label')}
+                  />
+                )}
+
+                <Link
+                  href={`/portal/courses/${e.id}`}
+                  className="mt-auto inline-flex items-center gap-1.5 self-start rounded-full bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-card transition hover:bg-brand-yellow hover:text-ink"
+                >
+                  {t('common.view_detail')}
+                  <Icon name="arrow-right" size={16} />
+                </Link>
               </Card>
             )
           })}
-        </ul>
+        </AutoGrid>
       )}
     </div>
   )

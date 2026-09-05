@@ -26,10 +26,11 @@ const dotClasses: Record<Tone, string> = {
 export function StatusBadge({
   tone,
   label,
-  dot = true,
+  dot = false,
 }: {
   tone: Tone
   label: string
+  /** Off by default — the colored pill already says it; the dot reads as boilerplate. */
   dot?: boolean
 }) {
   return (

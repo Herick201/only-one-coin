@@ -70,7 +70,7 @@ export default async function DashboardPage({
                     <span className="shrink-0 text-white/70">
                       <Icon name="profile" size={15} />
                     </span>
-                    {t('next_class.with_teacher', { teacher: nextClass.teacherName })}
+                    {nextClass.teacherName}
                   </li>
                 </ul>
               </div>
@@ -125,23 +125,22 @@ export default async function DashboardPage({
         <AutoGrid min="18rem">
           {current.map((e) => (
             <Card key={e.id} as="article" className="flex flex-col gap-3 p-5">
+              {/* Just the name. Active is the normal state, so it earns no
+                  badge — only the exceptions speak up below. */}
               <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="text-base font-semibold text-ink">
-                    {e.course.name}
-                  </h3>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {e.classGroup.teacherName}
-                  </p>
-                </div>
-                <StatusBadge
-                  tone={enrollmentTone[e.status]}
-                  label={t(`enrollment_status.${e.status}`)}
-                />
+                <h3 className="text-base font-semibold text-ink">
+                  {e.course.name}
+                </h3>
+                {e.status !== 'active' && (
+                  <StatusBadge
+                    tone={enrollmentTone[e.status]}
+                    label={t(`enrollment_status.${e.status}`)}
+                  />
+                )}
               </div>
               {e.classAccessLock !== null && (
-                <p className="inline-flex items-center gap-1.5 self-start rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 ring-1 ring-inset ring-red-600/15">
-                  <Icon name="lock" size={13} />
+                <p className="flex items-center gap-1.5 text-xs font-semibold text-red-600">
+                  <Icon name="lock" size={13} className="shrink-0" />
                   {t(`access_lock.${e.classAccessLock}`)}
                 </p>
               )}

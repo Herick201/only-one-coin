@@ -38,7 +38,6 @@
       "title": "Your next class",
       "none_title": "You have no scheduled classes",
       "none_body": "Once your enrollment is active, your next session will show up here.",
-      "with_teacher": "with {teacher}",
       "join": "Join the class",
       "no_link_yet": "The link will be posted before class",
       "locked": "Access paused — settle payment"
@@ -132,10 +131,8 @@
       "title": "My courses",
       "empty_title": "You don't have any courses yet",
       "empty_body": "Once you complete your enrollment, your courses will appear here.",
-      "seats_label": "Seats",
-      "seats_value": "{taken} of {capacity}",
-      "materials_count": "{count} materials",
-      "progress_label": "Progress"
+      "progress_label": "Progress",
+      "starts_on": "Starts: {date}"
     },
     "course_detail": {
       "about_title": "About the course",
