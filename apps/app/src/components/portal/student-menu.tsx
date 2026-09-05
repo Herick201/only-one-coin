@@ -10,6 +10,9 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Icon } from './icons'
@@ -106,26 +109,31 @@ export function StudentMenu({
           </Link>
         </DropdownMenuItem>
 
-        <DropdownMenuSeparator />
-
-        <DropdownMenuLabel className="px-3 pb-1 pt-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-          {tLang('label')}
-        </DropdownMenuLabel>
-        {routing.locales.map((code) => (
-          <DropdownMenuItem
-            key={code}
-            onSelect={() => switchLocale(code)}
-            className="gap-3 px-3 py-2.5 text-sm"
-          >
-            <Flag locale={code} />
-            {tLang(code)}
-            {code === locale && (
-              <span className="ml-auto text-brand-blue">
-                <Icon name="check" size={16} />
-              </span>
-            )}
-          </DropdownMenuItem>
-        ))}
+        {/* Language: one clean row — current flag + current language name —
+            that opens the list of the other two. */}
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger className="gap-3 px-3 py-2.5 text-sm">
+            <Flag locale={locale} />
+            {tLang(locale)}
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent className="w-44 p-1.5">
+            {routing.locales.map((code) => (
+              <DropdownMenuItem
+                key={code}
+                onSelect={() => switchLocale(code)}
+                className="gap-3 px-3 py-2.5 text-sm"
+              >
+                <Flag locale={code} />
+                {tLang(code)}
+                {code === locale && (
+                  <span className="ml-auto text-brand-blue">
+                    <Icon name="check" size={16} />
+                  </span>
+                )}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
 
         <DropdownMenuSeparator />
 
