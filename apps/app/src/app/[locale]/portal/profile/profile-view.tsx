@@ -85,6 +85,45 @@ function EditableField({
   )
 }
 
+function AddButton({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-blue transition hover:text-brand-blue-deep"
+    >
+      <Icon name="plus" size={15} />
+      {label}
+    </button>
+  )
+}
+
+/** A revealed optional input with its own way back out. */
+function RemovableField({
+  removeLabel,
+  onRemove,
+  children,
+}: {
+  removeLabel: string
+  onRemove: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <div className="flex items-end gap-2">
+      <div className="flex-1">{children}</div>
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label={removeLabel}
+        title={removeLabel}
+        className="mb-1 shrink-0 rounded-lg p-2 text-muted-foreground transition hover:bg-red-50 hover:text-red-600"
+      >
+        <Icon name="trash" size={16} />
+      </button>
+    </div>
+  )
+}
+
 const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export function ProfileView({ student }: { student: Student }) {
@@ -92,9 +131,22 @@ export function ProfileView({ student }: { student: Student }) {
   const locale = useLocale() as Locale
   const { guardian } = student
 
-  const [phone, setPhone] = useState(student.phone)
-  const [secondaryEmail, setSecondaryEmail] = useState(student.secondaryEmail ?? '')
-  const [secondaryPhone, setSecondaryPhone] = useState(student.secondaryPhone ?? '')
+  // What the record currently holds — the baseline "dirty" is measured
+  // against. Mock: saving just moves the baseline.
+  const [baseline, setBaseline] = useState({
+    phone: student.phone,
+    secondaryEmail: student.secondaryEmail ?? '',
+    secondaryPhone: student.secondaryPhone ?? '',
+  })
+  const [phone, setPhone] = useState(baseline.phone)
+  const [secondaryEmail, setSecondaryEmail] = useState(baseline.secondaryEmail)
+  const [secondaryPhone, setSecondaryPhone] = useState(baseline.secondaryPhone)
+  const [showSecondaryEmail, setShowSecondaryEmail] = useState(
+    baseline.secondaryEmail !== '',
+  )
+  const [showSecondaryPhone, setShowSecondaryPhone] = useState(
+    baseline.secondaryPhone !== '',
+  )
   const [touched, setTouched] = useState(false)
   const [saved, setSaved] = useState(false)
 
@@ -104,14 +156,34 @@ export function ProfileView({ student }: { student: Student }) {
       ? t('profile.error_email')
       : null
 
+  // Nothing changed → nothing to save; the record stays as it is.
+  const dirty =
+    phone !== baseline.phone ||
+    secondaryEmail !== baseline.secondaryEmail ||
+    secondaryPhone !== baseline.secondaryPhone
+
   function save() {
+    if (!dirty) return
     setTouched(true)
     if (phoneError || emailError) {
       setSaved(false)
       return
     }
     // Mock save — in production this hits the profile usecase in apps/api.
+    setBaseline({ phone, secondaryEmail, secondaryPhone })
+    setTouched(false)
     setSaved(true)
+  }
+
+  function hideSecondary(kind: 'email' | 'phone') {
+    if (kind === 'email') {
+      setSecondaryEmail('')
+      setShowSecondaryEmail(false)
+    } else {
+      setSecondaryPhone('')
+      setShowSecondaryPhone(false)
+    }
+    setSaved(false)
   }
 
   const lockedHint = t('profile.locked_hint')
@@ -149,9 +221,10 @@ export function ProfileView({ student }: { student: Student }) {
             </LockedField>
           </AutoGrid>
 
-          {/* Self-service contacts */}
-          <div className="mt-5 border-t border-line pt-4">
-            <AutoGrid min="13rem" gap="gap-4">
+          {/* Self-service contacts: the extras stay behind a "+ add" until
+              they are wanted — an empty optional input is just noise. */}
+          <div className="mt-5 flex flex-col gap-4 border-t border-line pt-4">
+            <div>
               <EditableField
                 id="profile-phone"
                 label={t('profile.phone_label')}
@@ -163,39 +236,71 @@ export function ProfileView({ student }: { student: Student }) {
                   setSaved(false)
                 }}
               />
-              <EditableField
-                id="profile-secondary-email"
-                label={t('profile.secondary_email_label')}
-                value={secondaryEmail}
-                inputMode="email"
-                error={touched ? emailError : null}
-                onChange={(next) => {
-                  setSecondaryEmail(next)
-                  setSaved(false)
-                }}
-              />
-              <EditableField
-                id="profile-secondary-phone"
-                label={t('profile.secondary_phone_label')}
-                value={secondaryPhone}
-                inputMode="tel"
-                onChange={(next) => {
-                  setSecondaryPhone(next)
-                  setSaved(false)
-                }}
-              />
-            </AutoGrid>
+              {!showSecondaryPhone && (
+                <AddButton
+                  label={t('profile.add_secondary_phone')}
+                  onClick={() => setShowSecondaryPhone(true)}
+                />
+              )}
+            </div>
 
-            <div className="mt-4 flex flex-wrap items-center gap-3">
+            {showSecondaryPhone && (
+              <RemovableField
+                removeLabel={t('profile.remove_secondary')}
+                onRemove={() => hideSecondary('phone')}
+              >
+                <EditableField
+                  id="profile-secondary-phone"
+                  label={t('profile.secondary_phone_label')}
+                  value={secondaryPhone}
+                  inputMode="tel"
+                  onChange={(next) => {
+                    setSecondaryPhone(next)
+                    setSaved(false)
+                  }}
+                />
+              </RemovableField>
+            )}
+
+            {showSecondaryEmail ? (
+              <RemovableField
+                removeLabel={t('profile.remove_secondary')}
+                onRemove={() => hideSecondary('email')}
+              >
+                <EditableField
+                  id="profile-secondary-email"
+                  label={t('profile.secondary_email_label')}
+                  value={secondaryEmail}
+                  inputMode="email"
+                  error={touched ? emailError : null}
+                  onChange={(next) => {
+                    setSecondaryEmail(next)
+                    setSaved(false)
+                  }}
+                />
+              </RemovableField>
+            ) : (
+              <AddButton
+                label={t('profile.add_secondary_email')}
+                onClick={() => setShowSecondaryEmail(true)}
+              />
+            )}
+
+            <div className="flex flex-wrap items-center gap-3">
               <button
                 type="button"
                 onClick={save}
-                className="inline-flex items-center gap-2 rounded-full bg-brand-blue px-5 py-2.5 text-sm font-bold text-white shadow-card transition hover:bg-brand-yellow hover:text-ink"
+                disabled={!dirty}
+                className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold shadow-card transition ${
+                  dirty
+                    ? 'bg-brand-blue text-white hover:bg-brand-yellow hover:text-ink'
+                    : 'cursor-not-allowed bg-sky text-muted-foreground shadow-none'
+                }`}
               >
                 <Icon name="check" size={16} />
                 {t('profile.save')}
               </button>
-              {saved && (
+              {saved && !dirty && (
                 <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700">
                   <Icon name="check" size={15} />
                   {t('profile.saved_note')}

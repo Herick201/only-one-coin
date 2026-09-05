@@ -100,11 +100,6 @@
       "next_level_invite": "Congratulations! You can now enroll in {course} from the portal.",
       "document_ready": "Your {course} certificate is ready to download."
     },
-    "notice_cta": {
-      "monthly_payment_due": "Go to Payments",
-      "next_level_invite": "See offer",
-      "document_ready": "View document"
-    },
     "relationship": {
       "mother": "Mother",
       "father": "Father",
@@ -131,7 +126,6 @@
       "action_requests": "Start a request",
       "action_documents": "View my documents",
       "action_profile": "Edit my profile",
-      "review_note": "You have an enrollment under review. We'll email you once it's approved.",
       "progress_label": "Course progress"
     },
     "courses": {
@@ -238,13 +232,17 @@
       "my_title": "My requests",
       "empty_title": "You don't have any requests yet",
       "empty_body": "Once you start a request, you'll see its status here.",
-      "requested_on": "requested on {date}",
       "desc": {
         "enrollment_certificate": "Official document proving your current enrollment.",
         "certification_exam": "Exam required for the Basic English certificate.",
         "makeup_exam": "If you missed the final exam, you can take it on an extra date.",
         "enrollment_freeze": "Pause your enrollment and come back later at the same module."
-      }
+      },
+      "col_name": "Request",
+      "col_course": "Course",
+      "col_date": "Date",
+      "col_price": "Price",
+      "col_status": "Status"
     },
     "continue_page": {
       "title": "Keep studying",
@@ -300,7 +298,10 @@
       "save": "Save changes",
       "saved_note": "Details updated.",
       "error_phone": "Enter your phone.",
-      "error_email": "That email doesn't look valid."
+      "error_email": "That email doesn't look valid.",
+      "add_secondary_email": "Add another email (optional)",
+      "add_secondary_phone": "Add another phone (optional)",
+      "remove_secondary": "Remove"
     },
     "notifications": {
       "title": "Notifications",

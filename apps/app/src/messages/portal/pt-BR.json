@@ -100,11 +100,6 @@
       "next_level_invite": "Parabéns! Você já pode se matricular em {course} pelo portal.",
       "document_ready": "Seu certificado de {course} está pronto para baixar."
     },
-    "notice_cta": {
-      "monthly_payment_due": "Ir a Pagamentos",
-      "next_level_invite": "Ver oferta",
-      "document_ready": "Ver documento"
-    },
     "relationship": {
       "mother": "Mãe",
       "father": "Pai",
@@ -131,7 +126,6 @@
       "action_requests": "Iniciar uma solicitação",
       "action_documents": "Ver meus documentos",
       "action_profile": "Editar meu perfil",
-      "review_note": "Você tem uma matrícula em análise. Avisaremos por e-mail quando for aprovada.",
       "progress_label": "Progresso do curso"
     },
     "courses": {
@@ -238,13 +232,17 @@
       "my_title": "Minhas solicitações",
       "empty_title": "Você ainda não tem solicitações",
       "empty_body": "Quando iniciar uma solicitação, verá aqui o estado dela.",
-      "requested_on": "solicitado em {date}",
       "desc": {
         "enrollment_certificate": "Documento oficial que comprova sua matrícula vigente.",
         "certification_exam": "Exame exigido para o certificado de Inglês Básico.",
         "makeup_exam": "Se você não fez o exame final, pode fazê-lo em data extraordinária.",
         "enrollment_freeze": "Pause sua matrícula e retome depois no mesmo módulo."
-      }
+      },
+      "col_name": "Solicitação",
+      "col_course": "Curso",
+      "col_date": "Data",
+      "col_price": "Preço",
+      "col_status": "Estado"
     },
     "continue_page": {
       "title": "Continue estudando",
@@ -300,7 +298,10 @@
       "save": "Salvar alterações",
       "saved_note": "Dados atualizados.",
       "error_phone": "Informe seu telefone.",
-      "error_email": "Esse e-mail não parece válido."
+      "error_email": "Esse e-mail não parece válido.",
+      "add_secondary_email": "Adicionar outro e-mail (opcional)",
+      "add_secondary_phone": "Adicionar outro telefone (opcional)",
+      "remove_secondary": "Remover"
     },
     "notifications": {
       "title": "Notificações",

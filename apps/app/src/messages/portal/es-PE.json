@@ -100,11 +100,6 @@
       "next_level_invite": "¡Felicitaciones! Ya puedes matricularte en {course} desde el portal.",
       "document_ready": "Tu certificado de {course} está listo para descargar."
     },
-    "notice_cta": {
-      "monthly_payment_due": "Ir a Pagos",
-      "next_level_invite": "Ver oferta",
-      "document_ready": "Ver documento"
-    },
     "relationship": {
       "mother": "Madre",
       "father": "Padre",
@@ -131,7 +126,6 @@
       "action_requests": "Iniciar un trámite",
       "action_documents": "Ver mis documentos",
       "action_profile": "Editar mi perfil",
-      "review_note": "Tienes una matrícula en revisión. Te avisaremos por correo cuando se apruebe.",
       "progress_label": "Progreso del curso"
     },
     "courses": {
@@ -238,13 +232,17 @@
       "my_title": "Mis solicitudes",
       "empty_title": "Todavía no tienes solicitudes",
       "empty_body": "Cuando inicies un trámite, verás aquí su estado.",
-      "requested_on": "solicitado el {date}",
       "desc": {
         "enrollment_certificate": "Documento oficial que acredita tu matrícula vigente.",
         "certification_exam": "Examen requerido para el certificado de Inglés Básico.",
         "makeup_exam": "Si no rendiste el examen final, puedes rendirlo en fecha extraordinaria.",
         "enrollment_freeze": "Pausa tu matrícula y retómala después en el mismo módulo."
-      }
+      },
+      "col_name": "Trámite",
+      "col_course": "Curso",
+      "col_date": "Fecha",
+      "col_price": "Precio",
+      "col_status": "Estado"
     },
     "continue_page": {
       "title": "Continúa estudiando",
@@ -300,7 +298,10 @@
       "save": "Guardar cambios",
       "saved_note": "Datos actualizados.",
       "error_phone": "Ingresa tu teléfono.",
-      "error_email": "Ese correo no parece válido."
+      "error_email": "Ese correo no parece válido.",
+      "add_secondary_email": "Agregar otro correo (opcional)",
+      "add_secondary_phone": "Agregar otro teléfono (opcional)",
+      "remove_secondary": "Quitar"
     },
     "notifications": {
       "title": "Notificaciones",

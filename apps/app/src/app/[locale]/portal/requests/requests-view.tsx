@@ -223,46 +223,69 @@ export function RequestsView({
           />
         ) : (
           <Card>
-            <ul className="divide-y divide-line">
-              {requests.map((r) => (
-                <li
-                  key={r.id}
-                  className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-5 py-4"
-                >
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-ink">
-                      {t(`request_type.${r.type}`)}
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {r.courseName}
-                      {' · '}
-                      {t('requests.requested_on', {
-                        date: formatDate(r.createdAt, locale),
-                      })}
-                      {' · '}
-                      {formatMoney(r.priceCents, r.currency, locale)}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-3">
-                    {r.resultUrl && (
-                      <a
-                        href={r.resultUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-blue transition hover:text-brand-blue-deep"
-                      >
-                        <Icon name="download" size={15} />
-                        {t('common.download')}
-                      </a>
-                    )}
-                    <StatusBadge
-                      tone={requestTone[r.status]}
-                      label={t(`request_status.${r.status}`)}
-                    />
-                  </div>
-                </li>
-              ))}
-            </ul>
+            {/* Horizontal scroll lives on this wrapper, never on the page
+                (CLAUDE.md §5, screen layout). */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-muted-foreground">
+                    <th className="px-5 py-3 font-medium">
+                      {t('requests.col_name')}
+                    </th>
+                    <th className="px-5 py-3 font-medium">
+                      {t('requests.col_course')}
+                    </th>
+                    <th className="px-5 py-3 font-medium">
+                      {t('requests.col_date')}
+                    </th>
+                    <th className="px-5 py-3 text-right font-medium">
+                      {t('requests.col_price')}
+                    </th>
+                    <th className="px-5 py-3 font-medium">
+                      {t('requests.col_status')}
+                    </th>
+                    <th className="px-5 py-3" />
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-line">
+                  {requests.map((r) => (
+                    <tr key={r.id}>
+                      <td className="whitespace-nowrap px-5 py-3.5 font-semibold text-ink">
+                        {t(`request_type.${r.type}`)}
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-3.5 text-muted-foreground">
+                        {r.courseName}
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-3.5 text-muted-foreground">
+                        {formatDate(r.createdAt, locale)}
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-3.5 text-right font-semibold text-ink">
+                        {formatMoney(r.priceCents, r.currency, locale)}
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-3.5">
+                        <StatusBadge
+                          tone={requestTone[r.status]}
+                          label={t(`request_status.${r.status}`)}
+                        />
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-3.5 text-right">
+                        {r.resultUrl && (
+                          <a
+                            href={r.resultUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-blue transition hover:text-brand-blue-deep"
+                          >
+                            <Icon name="download" size={15} />
+                            {t('common.download')}
+                          </a>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </Card>
         )}
       </section>

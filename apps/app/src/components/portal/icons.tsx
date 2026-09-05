@@ -34,6 +34,7 @@ export type IconName =
   | 'check'
   | 'freeze'
   | 'star'
+  | 'plus'
 
 const paths: Record<IconName, ReactElement> = {
   home: (
@@ -112,6 +113,7 @@ const paths: Record<IconName, ReactElement> = {
   star: (
     <path d="m12 4 2.35 4.76 5.25.76-3.8 3.7.9 5.23L12 16l-4.7 2.45.9-5.23-3.8-3.7 5.25-.76z" />
   ),
+  plus: <path d="M12 5v14M5 12h14" />,
 }
 
 export function Icon({
