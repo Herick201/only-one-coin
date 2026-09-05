@@ -460,10 +460,10 @@ export const content = {
       lead: "Beneficio de nuestros alumnos premium: los talleres gratuitos vienen con el paquete completo.",
       allCta: "Ver todos los beneficios",
       items: [
-        { title: "Excel", text: "Herramientas para el mundo laboral." },
-        { title: "Emprendimiento", text: "Desarrolla tus ideas." },
-        { title: "Liderazgo", text: "Potencia tus habilidades." },
-        { title: "Quechua", text: "Conoce y preserva nuestra cultura." },
+        { title: "Excel" },
+        { title: "Emprendimiento" },
+        { title: "Liderazgo" },
+        { title: "Quechua" },
       ],
     },
     steps: {
@@ -1011,10 +1011,10 @@ export const content = {
       lead: "A benefit for our premium students: the free workshops come with the full package.",
       allCta: "See all benefits",
       items: [
-        { title: "Excel", text: "Tools for the working world." },
-        { title: "Entrepreneurship", text: "Develop your ideas." },
-        { title: "Leadership", text: "Boost your skills." },
-        { title: "Quechua", text: "Discover and preserve our culture." },
+        { title: "Excel" },
+        { title: "Entrepreneurship" },
+        { title: "Leadership" },
+        { title: "Quechua" },
       ],
     },
     steps: {
@@ -1557,10 +1557,10 @@ export const content = {
       lead: "Benefício dos nossos alunos premium: as oficinas gratuitas vêm com o pacote completo.",
       allCta: "Ver todos os benefícios",
       items: [
-        { title: "Excel", text: "Ferramentas para o mundo do trabalho." },
-        { title: "Empreendedorismo", text: "Desenvolva suas ideias." },
-        { title: "Liderança", text: "Potencialize suas habilidades." },
-        { title: "Quíchua", text: "Conheça e preserve nossa cultura." },
+        { title: "Excel" },
+        { title: "Empreendedorismo" },
+        { title: "Liderança" },
+        { title: "Quíchua" },
       ],
     },
     steps: {
