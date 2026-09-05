@@ -293,7 +293,14 @@
       "consent_accepted": "Accepted on {date}",
       "consent_version": "Version {version}",
       "consent_none": "Registration pending.",
-      "edit_note": "Need to correct something? Message us on WhatsApp."
+      "edit_note": "Padlocked details are corrected by the coordination — message us on WhatsApp.",
+      "locked_hint": "Only the coordination can correct this.",
+      "secondary_email_label": "Another email (optional)",
+      "secondary_phone_label": "Another phone (optional)",
+      "save": "Save changes",
+      "saved_note": "Details updated.",
+      "error_phone": "Enter your phone.",
+      "error_email": "That email doesn't look valid."
     },
     "notifications": {
       "title": "Notifications",

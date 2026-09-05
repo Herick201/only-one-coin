@@ -49,29 +49,31 @@ export function NotificationsBell({
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label={t('notifications.title')}
-        className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted-foreground transition hover:bg-sky hover:text-brand-blue data-[state=open]:bg-sky data-[state=open]:text-brand-blue"
+        className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full text-muted-foreground transition hover:bg-sky hover:text-brand-blue data-[state=open]:bg-sky data-[state=open]:text-brand-blue"
       >
-        <Icon name="bell" size={18} />
+        <Icon name="bell" size={20} />
         {notifications.length > 0 && (
-          <span className="absolute right-0.5 top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white">
+          <span className="absolute right-0.5 top-0.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-red-500 px-1 text-[11px] font-bold leading-none text-white">
             {notifications.length}
           </span>
         )}
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align={align} className="w-80 max-w-[90vw]">
-        <DropdownMenuLabel>{t('notifications.title')}</DropdownMenuLabel>
+      <DropdownMenuContent align={align} className="w-96 max-w-[92vw] p-1.5">
+        <DropdownMenuLabel className="px-3 py-2.5 text-base font-semibold text-ink">
+          {t('notifications.title')}
+        </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {notifications.length === 0 ? (
-          <p className="px-2 py-3 text-sm text-muted-foreground">
+          <p className="px-3 py-4 text-sm text-muted-foreground">
             {t('notifications.empty')}
           </p>
         ) : (
           notifications.map((n) => (
-            <DropdownMenuItem key={n.id} asChild>
-              <Link href={noticeHref[n.kind]} className="flex items-start gap-2.5">
-                <span className="mt-0.5 shrink-0 text-brand-blue">
-                  <Icon name={noticeIcon[n.kind]} size={16} />
+            <DropdownMenuItem key={n.id} asChild className="px-3 py-3">
+              <Link href={noticeHref[n.kind]} className="flex items-start gap-3">
+                <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-sky text-brand-blue">
+                  <Icon name={noticeIcon[n.kind]} size={17} />
                 </span>
                 <span className="text-sm leading-snug">
                   {t(`notice.${n.kind}`, { course: n.courseName ?? '' })}

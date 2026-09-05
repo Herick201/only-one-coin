@@ -573,6 +573,8 @@ const session: PortalSession = {
     nationalId: '71234567',
     email: 'maria.quispe@gmail.com',
     phone: '+51 987 654 321',
+    secondaryEmail: null,
+    secondaryPhone: null,
     birthDate: '2010-02-14T00:00:00Z',
     isMinor: true,
     guardian: {

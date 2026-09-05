@@ -293,7 +293,14 @@
       "consent_accepted": "Aceptado el {date}",
       "consent_version": "Versión {version}",
       "consent_none": "Pendiente de registro.",
-      "edit_note": "¿Necesitas corregir un dato? Escríbenos por WhatsApp."
+      "edit_note": "Los datos con candado solo los corrige la coordinación — escríbenos por WhatsApp.",
+      "locked_hint": "Este dato solo lo corrige la coordinación.",
+      "secondary_email_label": "Otro correo (opcional)",
+      "secondary_phone_label": "Otro teléfono (opcional)",
+      "save": "Guardar cambios",
+      "saved_note": "Datos actualizados.",
+      "error_phone": "Ingresa tu teléfono.",
+      "error_email": "Ese correo no parece válido."
     },
     "notifications": {
       "title": "Notificaciones",

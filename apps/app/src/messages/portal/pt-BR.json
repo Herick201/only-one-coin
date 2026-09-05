@@ -293,7 +293,14 @@
       "consent_accepted": "Aceito em {date}",
       "consent_version": "Versão {version}",
       "consent_none": "Registro pendente.",
-      "edit_note": "Precisa corrigir um dado? Fale conosco pelo WhatsApp."
+      "edit_note": "Os dados com cadeado só são corrigidos pela coordenação — fale conosco pelo WhatsApp.",
+      "locked_hint": "Este dado só é corrigido pela coordenação.",
+      "secondary_email_label": "Outro e-mail (opcional)",
+      "secondary_phone_label": "Outro telefone (opcional)",
+      "save": "Salvar alterações",
+      "saved_note": "Dados atualizados.",
+      "error_phone": "Informe seu telefone.",
+      "error_email": "Esse e-mail não parece válido."
     },
     "notifications": {
       "title": "Notificações",

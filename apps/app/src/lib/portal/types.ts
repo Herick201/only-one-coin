@@ -131,8 +131,16 @@ export interface Student {
   lastName: string
   nationalIdType: NationalIdType
   nationalId: string
+  /**
+   * The Gmail that receives class access (CLAUDE.md §1) — locked on the
+   * profile screen; changing it is a coordination flow, never self-service.
+   */
   email: string
+  /** Self-service on the profile screen. */
   phone: string
+  /** Optional extra contacts the student adds themself. */
+  secondaryEmail: string | null
+  secondaryPhone: string | null
   birthDate: string
   /** Derived from birthDate; drives the guardian-consent flow (CLAUDE.md §1). */
   isMinor: boolean

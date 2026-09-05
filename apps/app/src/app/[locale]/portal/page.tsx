@@ -59,35 +59,34 @@ export default async function DashboardPage({
         </h1>
       </header>
 
-      {/* Next class — first thing on the page, and the one block in brand
-          yellow: everything else on screen is blue, so the bar the student
-          actually clicks to attend is the one that looks different. */}
+      {/* Next class — first thing on the page. Brand blue; the join button is
+          white and turns yellow under the cursor. */}
       <section className="-mt-2">
         <div className="mb-3">
           <SectionTitle>{t('next_class.title')}</SectionTitle>
         </div>
         {nextClass ? (
-          <Card className="overflow-hidden border-brand-yellow-deep/30">
-            <div className="flex flex-wrap items-center justify-between gap-4 bg-brand-yellow p-5 text-ink sm:p-6">
+          <Card className="overflow-hidden">
+            <div className="flex flex-wrap items-center justify-between gap-4 bg-brand-blue p-5 text-white sm:p-6">
               <div className="flex flex-col gap-1">
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink/70">
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/80">
                   <Icon name="calendar" size={16} />
                   {formatDateTime(nextClass.startsAt, locale)}
                 </span>
                 <span className="text-xl font-semibold">
                   {nextClass.courseName}
                 </span>
-                <span className="text-sm text-ink/80">
+                <span className="text-sm text-white/85">
                   {nextClass.classGroupName}
                 </span>
-                <span className="text-sm text-ink/60">
+                <span className="text-sm text-white/70">
                   {t('next_class.with_teacher', { teacher: nextClass.teacherName })}
                 </span>
               </div>
               {nextClass.classAccessLock !== null ? (
                 <Link
                   href="/portal/payments"
-                  className="inline-flex shrink-0 items-center gap-2 rounded-full bg-ink/10 px-4 py-2 text-xs font-semibold text-ink transition hover:bg-ink/20"
+                  className="inline-flex shrink-0 items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/25"
                 >
                   <Icon name="lock" size={16} />
                   {t('next_class.locked')}
@@ -97,13 +96,13 @@ export default async function DashboardPage({
                   href={nextClass.meetingUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-white shadow-card transition hover:bg-brand-blue-deep"
+                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-brand-blue-deep shadow-card transition hover:bg-brand-yellow hover:text-ink"
                 >
                   <Icon name="video" size={18} />
                   {t('next_class.join')}
                 </a>
               ) : (
-                <span className="inline-flex shrink-0 items-center gap-2 rounded-full bg-white/50 px-4 py-2 text-xs font-semibold text-ink/80">
+                <span className="inline-flex shrink-0 items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-xs font-semibold text-white/85">
                   <Icon name="clock" size={16} />
                   {t('next_class.no_link_yet')}
                 </span>
