@@ -107,8 +107,10 @@ export async function TeacherHome({
               <Card key={group.id} className="p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
+                    {/* Grades are entered on the working screen — the card
+                        opens that group's tab, not the certificate page. */}
                     <Link
-                      href={`/backoffice/class-groups/${group.id}`}
+                      href={`/backoffice/class-groups?group=${group.id}`}
                       className="truncate text-sm font-semibold text-ink transition hover:text-brand-blue"
                     >
                       {group.courseName}
@@ -206,8 +208,9 @@ export async function TeacherHome({
                 {classGroups.map((group) => (
                   <tr key={group.id}>
                     <td className={`${tdClass} whitespace-nowrap`}>
+                      {/* Opens the group's tab on the working screen. */}
                       <Link
-                        href={`/backoffice/class-groups/${group.id}`}
+                        href={`/backoffice/class-groups?group=${group.id}`}
                         className="font-semibold text-ink transition hover:text-brand-blue"
                       >
                         {group.courseName}

@@ -27,7 +27,8 @@
       "class_groups": "Aulas",
       "my_class_groups": "Mis aulas",
       "my_profile": "Mi ficha",
-      "account": "Mi cuenta"
+      "account": "Mi cuenta",
+      "profile": "Perfil"
     },
     "role": {
       "admin": "Administración",
@@ -99,7 +100,6 @@
       "sessions_closed_others_toast": "Las demás sesiones se cerraron solo en pantalla. Todavía no hay servidor conectado.",
       "sessions_only_current": "No hay ninguna otra sesión abierta además de esta.",
       "language_title": "Idioma del panel",
-      "language_hint": "Cambia el idioma de toda la interfaz. Se aplica al instante.",
       "audit_notice": "Cada cambio de contraseña, de verificación en dos pasos o de sesión queda registrado en la bitácora de auditoría."
     },
     "dashboard": {
@@ -1005,10 +1005,23 @@
       "manage": "Gestionar",
       "grades_hint": "Registra la nota final de 0 a 20; aprueba desde {min}. Si el alumno no rindió el examen final, márcalo con «No rindió».",
       "grades_da": "No rindió",
-      "grades_input_label": "Nota final de {name}",
-      "grades_save": "{count, plural, =0 {Guardar notas} one {Guardar # nota} other {Guardar # notas}}",
       "grades_saved_local_only": "Notas guardadas solo en pantalla ({time}). Aún no hay servidor conectado.",
       "grades_invalid": "Hay notas fuera de rango: van de 0 a 20, sin decimales."
+    },
+    "teacher_groups": {
+      "certificates_link": "Emisión de certificados",
+      "grades_title": "Notas",
+      "exam_grade_label": "Nota del examen final",
+      "final_grade_label": "Nota final del módulo",
+      "save": "Guardar notas",
+      "not_started": "El aula todavía no comienza — las notas se registran durante el módulo.",
+      "closed_readonly": "Aula cerrada: las notas quedan como historial.",
+      "locked_certificate": "Certificado ya emitido — la nota quedó cerrada con él.",
+      "locked_procedure": "El alumno salió del aula por un trámite; no se le registra nota.",
+      "notes_title": "Anotaciones",
+      "notes_placeholder": "Escribe una anotación sobre {name}…",
+      "notes_add": "Agregar anotación",
+      "notes_empty": "Sin anotaciones para este alumno."
     },
     "class_group_status": {
       "enrolling": "Matriculando",

@@ -2,10 +2,8 @@ import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 import Image from 'next/image'
 import { cookies } from 'next/headers'
-import { LogOut } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { logoutStaff } from '../actions'
-import { Link } from '@/i18n/navigation'
 import {
   canBrowseReports,
   canConfigureSettings,
@@ -21,12 +19,12 @@ import {
 import { getStaffSession } from '@/lib/backoffice/session'
 import { initials } from '@/lib/format'
 import { BoSidebar, type BoNavGroup } from '@/components/backoffice/bo-sidebar'
+import { BoUserMenu } from '@/components/backoffice/bo-user-menu'
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from '@/components/ui/sidebar'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
 import { TooltipProvider } from '@/components/ui/tooltip'
 
@@ -101,13 +99,9 @@ export default async function BackofficePanelLayout({
               label: t('nav.my_class_groups'),
               badge: pendingGrades,
             },
-            {
-              key: 'teachers',
-              href: staff.teacherId
-                ? `/backoffice/teachers/${staff.teacherId}`
-                : '/backoffice/teachers',
-              label: t('nav.my_profile'),
-            },
+            /* No "Minha ficha" here: what belongs to the reader — their ficha,
+               their account — lives in the user dropdown at the bottom of the
+               rail, not among the work modules. */
           ],
         },
       ]
@@ -259,47 +253,28 @@ export default async function BackofficePanelLayout({
   )
 
   const footer = (
-    <>
-      {/*
-        The person's own chip is the door to their own account — password,
-        second factor, open sessions. It lives here rather than in a module
-        group because it is the one screen of the panel that belongs to the
-        reader instead of to the institution, and because a teacher, whose menu
-        is narrowed to their own class groups, has to reach it too.
-      */}
-      <Link
-        href="/backoffice/account"
-        title={t('nav.account')}
-        className="flex items-center gap-2.5 rounded-lg px-1 py-1 transition hover:bg-white/5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
-      >
-        <Avatar className="size-8 shrink-0">
-          <AvatarFallback className="bg-white/10 text-xs font-semibold text-white">
-            {monogram}
-          </AvatarFallback>
-        </Avatar>
-        <span className="flex min-w-0 flex-col leading-tight group-data-[collapsible=icon]:hidden">
-          <span className="truncate text-[15px] font-semibold text-white">
-            {`${staff.firstName} ${staff.lastName}`}
-          </span>
-          <span className="truncate text-xs text-slate-400">
-            {t(`role.${staff.role}`)}
-          </span>
-        </span>
-      </Link>
-
-      <form action={logoutStaff}>
-        <button
-          type="submit"
-          title={t('nav.logout')}
-          className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-[15px] font-semibold text-slate-400 transition hover:bg-white/5 hover:text-red-300 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
-        >
-          <LogOut className="size-[18px] shrink-0" />
-          <span className="group-data-[collapsible=icon]:hidden">
-            {t('nav.logout')}
-          </span>
-        </button>
-      </form>
-    </>
+    /*
+      The person's own chip, folded into one dropdown: profile, the teacher's
+      own ficha when there is one, and the way out. It lives here rather than
+      in a module group because these are the screens of the panel that belong
+      to the reader instead of to the institution.
+    */
+    <BoUserMenu
+      name={`${staff.firstName} ${staff.lastName}`}
+      roleLabel={t(`role.${staff.role}`)}
+      monogram={monogram}
+      profileLabel={t('nav.profile')}
+      teacherFile={
+        restricted && staff.teacherId
+          ? {
+              href: `/backoffice/teachers/${staff.teacherId}`,
+              label: t('nav.my_profile'),
+            }
+          : null
+      }
+      logoutLabel={t('nav.logout')}
+      logout={logoutStaff}
+    />
   )
 
   return (

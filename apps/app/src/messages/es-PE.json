@@ -60,16 +60,11 @@
     "recover_sent_title": "Revisa tu correo",
     "recover_sent_body": "Si ese correo pertenece a una cuenta del panel, allí llegará el enlace para crear una nueva contraseña.",
     "back_to_login": "Volver al ingreso",
-    "brand_eyebrow": "Equipo Only One Coin",
     "brand_title": "Todo el ciclo, en un solo lugar.",
     "brand_body": "Matrículas, comprobantes, vacantes y alumnos de la Asociación Only One Coin Perú, en una sola pantalla.",
-    "brand_footer": "Asociación Only One Coin Perú · RUC 20610561463",
     "highlight_1_title": "Acceso por cargo",
-    "highlight_1_body": "Cada persona ve solo lo que su cargo permite.",
     "highlight_2_title": "Doble factor",
-    "highlight_2_body": "El ingreso al panel siempre pide un segundo paso.",
-    "highlight_3_title": "Todo queda registrado",
-    "highlight_3_body": "Cada acción guarda autor, fecha y valor anterior."
+    "highlight_3_title": "Todo queda registrado"
   },
   "loading": {
     "message": "Cargando…",
