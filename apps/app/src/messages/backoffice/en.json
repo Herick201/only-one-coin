@@ -27,7 +27,8 @@
       "class_groups": "Class groups",
       "my_class_groups": "My class groups",
       "my_profile": "My profile",
-      "account": "My account"
+      "account": "My account",
+      "profile": "Profile"
     },
     "role": {
       "admin": "Administration",
@@ -99,7 +100,6 @@
       "sessions_closed_others_toast": "The other sessions were closed on screen only. There is no server behind this yet.",
       "sessions_only_current": "There is no other session open besides this one.",
       "language_title": "Panel language",
-      "language_hint": "Changes the language of the whole interface. It applies right away.",
       "audit_notice": "Every password change, two-step verification change and closed session is written to the append-only audit log."
     },
     "dashboard": {
@@ -1002,7 +1002,26 @@
       "empty_roster_title": "No students",
       "empty_roster_body": "Nobody is enrolled in this class group yet.",
       "col_manage": "Manage",
-      "manage": "Manage"
+      "manage": "Manage",
+      "grades_hint": "Record the final grade from 0 to 20; {min} passes. If the student missed the final exam, mark them as “No-show”.",
+      "grades_da": "No-show",
+      "grades_saved_local_only": "Grades saved on screen only ({time}). No server connected yet.",
+      "grades_invalid": "Some grades are out of range: 0 to 20, whole numbers only."
+    },
+    "teacher_groups": {
+      "certificates_link": "Certificate issuing",
+      "grades_title": "Grades",
+      "exam_grade_label": "Final exam grade",
+      "final_grade_label": "Module final grade",
+      "save": "Save grades",
+      "not_started": "The class group has not started yet — grades are recorded during the module.",
+      "closed_readonly": "Class group closed: grades remain as history.",
+      "locked_certificate": "Certificate already issued — the grade closed with it.",
+      "locked_procedure": "The student left the class group through a procedure; no grade is recorded.",
+      "notes_title": "Notes",
+      "notes_placeholder": "Write a note about {name}…",
+      "notes_add": "Add note",
+      "notes_empty": "No notes for this student yet."
     },
     "class_group_status": {
       "enrolling": "Enrolling",
@@ -1280,7 +1299,9 @@
       "owing_subtitle": "They finished and still owe a certificate.",
       "class_groups_subtitle": "Everything you run, current and closed.",
       "no_class_groups_title": "No class groups",
-      "no_class_groups_body": "You have no class groups allocated this period."
+      "no_class_groups_body": "You have no class groups allocated this period.",
+      "grades_owing_title": "Class groups with pending grades",
+      "grades_owing_subtitle": "A certificate cannot go out while a final grade is missing."
     },
     "team": {
       "title": "Team",

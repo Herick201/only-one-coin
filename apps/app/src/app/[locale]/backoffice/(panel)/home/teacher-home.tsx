@@ -45,6 +45,7 @@ export async function TeacherHome({
     (group) => group.status === 'enrolling' || group.status === 'in_progress',
   )
   const owing = classGroups.filter((group) => group.pendingCertificates > 0)
+  const gradesOwed = classGroups.filter((group) => group.pendingGrades > 0)
 
   return (
     <div className="flex flex-col gap-6">
@@ -88,8 +89,51 @@ export async function TeacherHome({
         />
       </AutoGrid>
 
-      {/* What still owes a certificate comes first: it is the only thing here
-          with a deadline attached. */}
+      {/* Open grades come before everything: a certificate cannot go out over
+          a missing grade, so this queue is upstream of the one below it. */}
+      {gradesOwed.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <div>
+            <h2 className="flex items-center gap-2 text-base font-semibold text-ink">
+              <BoIcon name="edit" size={16} className="text-amber-500" />
+              {t('teacher_home.grades_owing_title')}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t('teacher_home.grades_owing_subtitle')}
+            </p>
+          </div>
+          <AutoGrid min="20rem" gap="gap-3">
+            {gradesOwed.map((group) => (
+              <Card key={group.id} className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    {/* Grades are entered on the working screen — the card
+                        opens that group's tab, not the certificate page. */}
+                    <Link
+                      href={`/backoffice/class-groups?group=${group.id}`}
+                      className="truncate text-sm font-semibold text-ink transition hover:text-brand-blue"
+                    >
+                      {group.courseName}
+                    </Link>
+                    <p className="truncate text-xs tabular-nums text-muted-foreground">
+                      {group.code}
+                    </p>
+                  </div>
+                  <StatusBadge
+                    tone="warning"
+                    label={t('teachers.pending_grades', {
+                      count: group.pendingGrades,
+                    })}
+                  />
+                </div>
+              </Card>
+            ))}
+          </AutoGrid>
+        </section>
+      )}
+
+      {/* Certificates second — they carry the 25-business-day deadline, but
+          they only become issuable once the grades above are closed. */}
       {owing.length > 0 && (
         <section className="flex flex-col gap-3">
           <div>
@@ -164,8 +208,9 @@ export async function TeacherHome({
                 {classGroups.map((group) => (
                   <tr key={group.id}>
                     <td className={`${tdClass} whitespace-nowrap`}>
+                      {/* Opens the group's tab on the working screen. */}
                       <Link
-                        href={`/backoffice/class-groups/${group.id}`}
+                        href={`/backoffice/class-groups?group=${group.id}`}
                         className="font-semibold text-ink transition hover:text-brand-blue"
                       >
                         {group.courseName}
