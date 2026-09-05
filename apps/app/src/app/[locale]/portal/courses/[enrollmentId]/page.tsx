@@ -116,7 +116,7 @@ export default async function CourseDetailPage({
                   {enrollment.classAccessLock === 'monthly_payment_due' && (
                     <Link
                       href="/portal/payments"
-                      className="inline-flex items-center gap-2 rounded-full bg-brand-blue px-4 py-2 text-sm font-bold text-white shadow-card transition hover:bg-brand-blue-deep"
+                      className="inline-flex items-center gap-2 rounded-full bg-brand-blue px-4 py-2 text-sm font-bold text-white shadow-card transition hover:bg-brand-yellow hover:text-ink"
                     >
                       <Icon name="card" size={16} />
                       {t('course_detail.locked_cta')}
@@ -128,7 +128,7 @@ export default async function CourseDetailPage({
                   href={classGroup.meetingUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-full bg-brand-blue px-5 py-2.5 text-sm font-bold text-white shadow-card transition hover:bg-brand-blue-deep"
+                  className="inline-flex items-center gap-2 rounded-full bg-brand-blue px-5 py-2.5 text-sm font-bold text-white shadow-card transition hover:bg-brand-yellow hover:text-ink"
                 >
                   <Icon name="video" size={18} />
                   {t('course_detail.join_class')}

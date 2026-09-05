@@ -190,7 +190,7 @@ export function ProfileView({ student }: { student: Student }) {
               <button
                 type="button"
                 onClick={save}
-                className="inline-flex items-center gap-2 rounded-full bg-brand-blue px-5 py-2.5 text-sm font-bold text-white shadow-card transition hover:bg-brand-blue-deep"
+                className="inline-flex items-center gap-2 rounded-full bg-brand-blue px-5 py-2.5 text-sm font-bold text-white shadow-card transition hover:bg-brand-yellow hover:text-ink"
               >
                 <Icon name="check" size={16} />
                 {t('profile.save')}

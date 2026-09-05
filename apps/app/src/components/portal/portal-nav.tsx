@@ -51,6 +51,8 @@ export function PortalNav({
     )
   }
 
+  // Sidebar rides a brand-blue panel, so the palette inverts: quiet items are
+  // translucent white, and the active one is the white pill.
   return (
     <nav className="flex flex-col gap-1">
       {items.map((item) => {
@@ -66,8 +68,8 @@ export function PortalNav({
               collapsed ? 'justify-center px-0 py-2.5' : 'px-3.5 py-2.5'
             } ${
               active
-                ? 'bg-brand-blue text-white shadow-card'
-                : 'text-muted-foreground hover:bg-sky hover:text-ink'
+                ? 'bg-white text-brand-blue-deep shadow-card'
+                : 'text-white/75 hover:bg-white/10 hover:text-white'
             }`}
           >
             <Icon name={item.icon} size={20} />

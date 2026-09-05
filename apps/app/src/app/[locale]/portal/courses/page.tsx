@@ -127,7 +127,7 @@ export default async function CoursesPage({
                     </span>
                     <Link
                       href={`/portal/courses/${e.id}`}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-card transition hover:bg-brand-blue-deep"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-card transition hover:bg-brand-yellow hover:text-ink"
                     >
                       {t('common.view_detail')}
                       <Icon name="arrow-right" size={16} />

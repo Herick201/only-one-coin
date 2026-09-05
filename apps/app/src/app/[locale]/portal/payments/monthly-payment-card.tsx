@@ -115,7 +115,7 @@ export function MonthlyPaymentCard({
           <button
             type="button"
             onClick={() => setPhase('form')}
-            className="inline-flex items-center justify-center gap-2 self-start rounded-full bg-brand-blue px-5 py-2.5 text-sm font-bold text-white shadow-card transition hover:bg-brand-blue-deep"
+            className="inline-flex items-center justify-center gap-2 self-start rounded-full bg-brand-blue px-5 py-2.5 text-sm font-bold text-white shadow-card transition hover:bg-brand-yellow hover:text-ink"
           >
             <Icon name="upload" size={16} />
             {t('payments.open_form')}

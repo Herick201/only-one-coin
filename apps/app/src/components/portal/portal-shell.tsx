@@ -18,9 +18,11 @@ import { Icon } from './icons'
 function BrandMark({
   portalLabel,
   mini = false,
+  onBlue = false,
 }: {
   portalLabel: string
   mini?: boolean
+  onBlue?: boolean
 }) {
   if (mini) {
     return (
@@ -42,7 +44,11 @@ function BrandMark({
         height={28}
         className="h-7 w-auto"
       />
-      <span className="whitespace-nowrap text-[11px] font-medium text-muted-foreground">
+      <span
+        className={`whitespace-nowrap text-[11px] font-medium ${
+          onBlue ? 'text-white/70' : 'text-muted-foreground'
+        }`}
+      >
         {portalLabel}
       </span>
     </div>
@@ -83,9 +89,10 @@ export function PortalShell({
 
   return (
     <div className="min-h-dvh bg-sky-soft text-ink">
-      {/* Sidebar — desktop */}
+      {/* Sidebar — desktop. Brand blue, so it reads as the one colored bar
+          on an otherwise light screen. */}
       <aside
-        className={`fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-line bg-white transition-[width] duration-200 ease-in-out lg:flex ${
+        className={`fixed inset-y-0 left-0 z-30 hidden flex-col bg-brand-blue transition-[width] duration-200 ease-in-out lg:flex ${
           collapsed ? 'w-14' : 'w-56'
         }`}
       >
@@ -106,11 +113,11 @@ export function PortalShell({
         </button>
 
         <div
-          className={`flex border-b border-line ${
+          className={`flex border-b border-white/15 ${
             collapsed ? 'justify-center px-2 py-4' : 'px-4 py-4'
           }`}
         >
-          <BrandMark portalLabel={portalLabel} mini={collapsed} />
+          <BrandMark portalLabel={portalLabel} mini={collapsed} onBlue />
         </div>
 
         <div

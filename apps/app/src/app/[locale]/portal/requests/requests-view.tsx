@@ -8,7 +8,6 @@ import { Card, EmptyState, SectionTitle, StatusBadge } from '@/components/portal
 import { requestTone } from '@/components/portal/status-tone'
 import { Icon, type IconName } from '@/components/portal/icons'
 import { ReceiptUploadForm } from '@/components/portal/receipt-upload'
-import { AutoGrid } from '@/components/layout/auto-grid'
 
 /**
  * Trámites — every paid procedure the student can start from the portal
@@ -97,121 +96,110 @@ export function RequestsView({
 
   return (
     <div className="flex flex-col gap-8">
-      {/* Catalog */}
+      {/* Catalog — one list, and the form opens right under the row that was
+          clicked instead of somewhere further down the page. */}
       <section>
         <div className="mb-3">
           <SectionTitle>{t('requests.catalog_title')}</SectionTitle>
         </div>
-        <AutoGrid min="16rem" gap="gap-4">
-          {procedures.map((p) => {
-            const active = openType === p.type
-            return (
-              <Card
-                key={p.type}
-                className={`flex flex-col gap-3 p-5 ${
-                  active ? 'ring-2 ring-brand-blue' : ''
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-sky text-brand-blue">
-                    <Icon name={procedureIcon[p.type]} size={20} />
-                  </span>
-                  <span className="rounded-full bg-sky px-2.5 py-1 text-xs font-bold text-brand-blue-deep">
-                    {formatMoney(p.priceCents, p.currency, locale)}
-                  </span>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-base font-semibold text-ink">
-                    {t(`request_type.${p.type}`)}
-                  </h3>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {t(`requests.desc.${p.type}`)}
-                  </p>
-                </div>
-                {p.eligible.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">
-                    {t('requests.not_eligible')}
-                  </p>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => startProcedure(p.type)}
-                    className="inline-flex items-center gap-1.5 self-start rounded-full border border-brand-blue px-4 py-2 text-sm font-semibold text-brand-blue transition hover:bg-brand-blue hover:text-white"
-                  >
-                    {t('requests.request_cta')}
-                    <Icon name="chevron-right" size={15} />
-                  </button>
-                )}
-              </Card>
-            )
-          })}
-        </AutoGrid>
+        <Card>
+          <ul className="divide-y divide-line">
+            {procedures.map((p) => {
+              const active = openType === p.type
+              const eligible = p.eligible.length > 0
+              return (
+                <li key={p.type}>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-4">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-sky text-brand-blue">
+                      <Icon name={procedureIcon[p.type]} size={20} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-ink">
+                        {t(`request_type.${p.type}`)}
+                      </p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {eligible
+                          ? t(`requests.desc.${p.type}`)
+                          : t('requests.not_eligible')}
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-sm font-bold text-ink">
+                      {formatMoney(p.priceCents, p.currency, locale)}
+                    </span>
+                    {eligible && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          active ? setOpenType(null) : startProcedure(p.type)
+                        }
+                        aria-expanded={active}
+                        className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                          active
+                            ? 'border-line bg-white text-muted-foreground hover:text-ink'
+                            : 'border-brand-blue text-brand-blue hover:border-brand-yellow hover:bg-brand-yellow hover:text-ink'
+                        }`}
+                      >
+                        {active ? t('requests.cancel') : t('requests.request_cta')}
+                        <Icon
+                          name="chevron-right"
+                          size={15}
+                          className={`transition-transform ${active ? 'rotate-90' : ''}`}
+                        />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Inline flow, right where the click happened. */}
+                  {active && open && (
+                    <div className="border-t border-line bg-sky-soft px-5 py-4">
+                      {open.type === 'enrollment_freeze' && (
+                        <p className="mb-4 rounded-xl bg-white px-4 py-3 text-sm text-muted-foreground">
+                          {t('requests.freeze_note')}
+                        </p>
+                      )}
+
+                      <p className="mb-2 text-sm font-semibold text-ink">
+                        {t('requests.choose_enrollment')}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {open.eligible.map((e) => {
+                          const selected = chosen?.enrollmentId === e.enrollmentId
+                          return (
+                            <button
+                              key={e.enrollmentId}
+                              type="button"
+                              onClick={() => setEnrollmentId(e.enrollmentId)}
+                              aria-pressed={selected}
+                              className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                                selected
+                                  ? 'border-brand-blue bg-brand-blue text-white'
+                                  : 'border-line bg-white text-muted-foreground hover:border-brand-blue hover:text-brand-blue'
+                              }`}
+                            >
+                              {e.courseName}
+                            </button>
+                          )
+                        })}
+                      </div>
+
+                      {chosen && (
+                        <div className="mt-4 rounded-xl border border-line bg-white p-4">
+                          <ReceiptUploadForm
+                            amountCents={open.priceCents}
+                            currency={open.currency}
+                            submitLabel={t('requests.submit')}
+                            onSubmit={submit}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        </Card>
       </section>
-
-      {/* New request flow */}
-      {open && (
-        <section>
-          <Card className="p-5 sm:p-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <SectionTitle>
-                {t('requests.new_title', {
-                  procedure: t(`request_type.${open.type}`),
-                })}
-              </SectionTitle>
-              <button
-                type="button"
-                onClick={() => setOpenType(null)}
-                className="text-sm font-semibold text-muted-foreground transition hover:text-ink"
-              >
-                {t('requests.cancel')}
-              </button>
-            </div>
-
-            {open.type === 'enrollment_freeze' && (
-              <p className="mt-3 rounded-xl bg-sky-soft px-4 py-3 text-sm text-muted-foreground">
-                {t('requests.freeze_note')}
-              </p>
-            )}
-
-            <div className="mt-4">
-              <p className="mb-2 text-sm font-semibold text-ink">
-                {t('requests.choose_enrollment')}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {open.eligible.map((e) => {
-                  const selected = chosen?.enrollmentId === e.enrollmentId
-                  return (
-                    <button
-                      key={e.enrollmentId}
-                      type="button"
-                      onClick={() => setEnrollmentId(e.enrollmentId)}
-                      aria-pressed={selected}
-                      className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                        selected
-                          ? 'border-brand-blue bg-brand-blue text-white'
-                          : 'border-line bg-white text-muted-foreground hover:border-brand-blue hover:text-brand-blue'
-                      }`}
-                    >
-                      {e.courseName}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            {chosen && (
-              <div className="mt-5 rounded-xl border border-line bg-sky-soft p-4">
-                <ReceiptUploadForm
-                  amountCents={open.priceCents}
-                  currency={open.currency}
-                  submitLabel={t('requests.submit')}
-                  onSubmit={submit}
-                />
-              </div>
-            )}
-          </Card>
-        </section>
-      )}
 
       {justSubmitted && (
         <div className="flex items-start gap-3 rounded-2xl border border-emerald-600/20 bg-emerald-50 px-4 py-3.5 text-sm text-emerald-800">

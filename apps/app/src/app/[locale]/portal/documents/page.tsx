@@ -86,7 +86,7 @@ export default async function DocumentsPage({
                     href={doc.fileUrl ?? '#'}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-full bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-card transition hover:bg-brand-blue-deep"
+                    className="inline-flex items-center gap-2 rounded-full bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-card transition hover:bg-brand-yellow hover:text-ink"
                   >
                     <Icon name="download" size={16} />
                     {t('common.download')}
