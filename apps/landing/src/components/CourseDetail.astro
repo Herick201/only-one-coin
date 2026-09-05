@@ -1016,12 +1016,16 @@ const courseJsonLd = {
      igual ao dos níveis — o mesmo peso, outro destino. */
   .kids-card {
     scroll-margin-top: calc(96 * var(--dp));
+    /* Centrado e estreito de propósito: é um desvio para quem chegou à
+       página errada, não a oferta desta página. Largo e à esquerda, ele
+       competia com os níveis logo abaixo. */
+    max-width: calc(520 * var(--dp));
+    margin-inline: auto;
     background: var(--paper);
     border: calc(1.5 * var(--dp)) solid var(--border);
     border-radius: var(--radius);
-    padding: calc(30 * var(--dp)) calc(28 * var(--dp));
+    padding: calc(24 * var(--dp)) calc(26 * var(--dp));
     box-shadow: var(--shadow-sm);
-    max-width: calc(760 * var(--dp));
   }
   .kids-card .tag {
     display: inline-block;
@@ -1045,8 +1049,9 @@ const courseJsonLd = {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: calc(20 * var(--dp));
-    margin-top: calc(20 * var(--dp));
+    justify-content: center;
+    gap: calc(18 * var(--dp));
+    margin-top: calc(18 * var(--dp));
   }
   .kids-wa {
     display: inline-flex;
@@ -1162,6 +1167,24 @@ const courseJsonLd = {
      documenta logo acima. A composição das páginas de curso no celular
      continua sendo trabalho à parte; isto é só o estouro. */
   @media (max-width: 900px) {
+    /* O CTA do rodapé é uma linha de duas colunas (texto | botão) que, ao
+       quebrar, deixava o botão encostado à esquerda embaixo de um texto
+       alinhado à esquerda — parecia solto. No celular ele vira uma coluna
+       centrada, e o respiro lateral encolhe para o botão caber numa linha. */
+    .course-cta {
+      padding: calc(40 * var(--dp)) calc(22 * var(--dp));
+      text-align: center;
+    }
+    .course-cta-inner {
+      justify-content: center;
+    }
+    .course-cta p {
+      margin-inline: auto;
+    }
+    .course-cta-actions {
+      width: 100%;
+      justify-content: center;
+    }
     .discount {
       position: static;
       top: auto;
