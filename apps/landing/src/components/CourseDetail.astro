@@ -326,7 +326,7 @@ const courseJsonLd = {
               {p.options.length > 0 && (
                 <div class="panel-options">
                   {p.options.map((o) => (
-                    <span class:list={["panel-option", { "panel-option-full": o.recommended }]}>
+                    <span class:list={["panel-option", { "panel-option-full": o.recommended, "panel-option-monthly": o.key === "monthly" }]}>
                       {o.recommended && (
                         <svg class="panel-option-star" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l2.9 6.26 6.6.72-4.9 4.55 1.34 6.47L12 16.77 6.06 20l1.34-6.47L2.5 8.98l6.6-.72L12 2z"/></svg>
                       )}
@@ -778,8 +778,15 @@ const courseJsonLd = {
     font-weight: 800;
     line-height: 1.4;
   }
-  .panel-option-full .option-note-price {
-    background: linear-gradient(135deg, var(--yellow-bright), var(--yellow));
+  /* O amarelo é do pagamento único — é ali que mora o S/0.60 que a landing
+     inteira anuncia. No mensual a pílula fica neutra: acesa, ela puxava o
+     olho para o valor por sessão MAIS CARO e vendia a opção errada.
+     A regra estava pendurada em `.panel-option-full` (o card recomendado), e
+     quebrou no dia em que o pacote de dois níveis entrou na fileira e virou o
+     recomendado: o S/0.60 do paquete ficou apagado e o card recomendado nem
+     tem valor por sessão para mostrar. */
+  .panel-option-monthly .option-note-price {
+    background: var(--sky);
   }
   .option-note-unit {
     font-size: calc(11.8 * var(--dp));
