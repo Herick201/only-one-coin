@@ -68,6 +68,18 @@ export function levelsOf(slug: CourseSlug): CourseSlug[] {
 // reaches the user). The homepage "Programas" cards link straight to them.
 export const audienceAnchors = ["kids", "teens-and-adults"] as const;
 
+// Idade de entrada, por curso. Todo idioma é de jovens e adultos — 13 anos em
+// diante; a faixa de 6 a 12 existe só no OOC Kids, que é inglês para crianças
+// (palavra do dono, 05/09/2026). A lista existe para o dia em que outro idioma
+// abrir turma de crianças: a página lê daqui, não de um `if` com "english"
+// escrito no meio do componente.
+const kidsCourses: CourseSlug[] = ["english"];
+
+/** O curso tem faixa de crianças (6 a 12) além da de jovens e adultos? */
+export function hasKidsProgram(slug: CourseSlug): boolean {
+  return kidsCourses.includes(slug);
+}
+
 // Full-package ("paquete completo", pago único) price per course, in PEN.
 // Source: the merchant e-commerce catalog.
 //
@@ -624,11 +636,12 @@ export const content = {
       leadPre: "Un programa completo de ",
       leadPost: " para todas las edades, con enfoque conversacional y docentes comprometidos con tu aprendizaje real.",
       exampleNote: "Contenido de ejemplo — la información detallada de cada curso se completará con los datos reales del periodo.",
-      audiencesTitle: "¿Para quién es?",
-      audiences: [
-        { tag: "6 a 12 años", title: "Niños", text: "Primer contacto con el idioma a través del juego, la música y actividades diseñadas para su edad." },
-        { tag: "13 años en adelante", title: "Jóvenes y Adultos", text: "Programa estructurado por niveles para lograr fluidez real, con foco en la conversación." },
-      ],
+      ageBadge: "Jóvenes y adultos · desde los 13 años",
+      kidsTitle: "¿El alumno tiene menos de 13 años?",
+      kidsTag: "Curso aparte · 6 a 12 años",
+      kidsName: "OOC Kids",
+      kidsText: "Inglés para niños es un curso propio, con su propia matrícula, sus aulas y su docente — no es un nivel de esta página. El idioma entra por el juego, la música y actividades pensadas para su edad.",
+      kidsCta: "Matricular en OOC Kids",
       featuresTitle: "Qué incluye",
       features: [
         { title: "Pago único del paquete", text: "Un solo pago por todo el curso, sin costos ocultos. En inglés también puedes pagar por módulo." },
@@ -1170,11 +1183,12 @@ export const content = {
       leadPre: "A complete ",
       leadPost: " program for all ages, with a conversational focus and teachers committed to your real learning.",
       exampleNote: "Sample content — the detailed information for each course will be completed with the real data for the term.",
-      audiencesTitle: "Who is it for?",
-      audiences: [
-        { tag: "Ages 6 to 12", title: "Children", text: "A first contact with the language through play, music and age-appropriate activities." },
-        { tag: "13 and up", title: "Teens & Adults", text: "A leveled program to reach real fluency, focused on conversation." },
-      ],
+      ageBadge: "Teens and adults · from age 13",
+      kidsTitle: "Is the student under 13?",
+      kidsTag: "A separate course · ages 6 to 12",
+      kidsName: "OOC Kids",
+      kidsText: "English for children is a course of its own, with its own enrollment, its own classes and its own teacher — it is not a level of this page. The language comes in through play, music and age-appropriate activities.",
+      kidsCta: "Enroll in OOC Kids",
       featuresTitle: "What's included",
       features: [
         { title: "Single package payment", text: "One payment for the whole course, no hidden costs. English can also be paid per module." },
@@ -1715,11 +1729,12 @@ export const content = {
       leadPre: "Um programa completo de ",
       leadPost: " para todas as idades, com foco conversacional e professores comprometidos com o seu aprendizado real.",
       exampleNote: "Conteúdo de exemplo — a informação detalhada de cada curso será preenchida com os dados reais do período.",
-      audiencesTitle: "Para quem é?",
-      audiences: [
-        { tag: "6 a 12 anos", title: "Crianças", text: "Primeiro contato com o idioma por meio de brincadeiras, música e atividades pensadas para a idade." },
-        { tag: "13 anos ou mais", title: "Jovens e Adultos", text: "Programa estruturado por níveis para alcançar fluência real, com foco na conversação." },
-      ],
+      ageBadge: "Jovens e adultos · a partir dos 13 anos",
+      kidsTitle: "O aluno tem menos de 13 anos?",
+      kidsTag: "Curso à parte · 6 a 12 anos",
+      kidsName: "OOC Kids",
+      kidsText: "Inglês para crianças é um curso próprio, com matrícula, turmas e docente próprios — não é um nível desta página. O idioma entra pela brincadeira, pela música e por atividades pensadas para a idade.",
+      kidsCta: "Matricular no OOC Kids",
       featuresTitle: "O que inclui",
       features: [
         { title: "Pagamento único do pacote", text: "Um único pagamento por todo o curso, sem custos ocultos. O inglês também pode ser pago por módulo." },
