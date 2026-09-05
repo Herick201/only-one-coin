@@ -57,12 +57,22 @@ export default async function DashboardPage({
                 <span className="text-xl font-semibold">
                   {nextClass.courseName}
                 </span>
-                <span className="text-sm text-white/85">
-                  {nextClass.classGroupName}
-                </span>
-                <span className="text-sm text-white/70">
-                  {t('next_class.with_teacher', { teacher: nextClass.teacherName })}
-                </span>
+                {/* Topics, not running text: one line per fact, each with its
+                    own icon bullet. */}
+                <ul className="mt-1 flex flex-col gap-1.5 text-sm text-white/85">
+                  <li className="flex items-center gap-2">
+                    <span className="shrink-0 text-white/70">
+                      <Icon name="clock" size={15} />
+                    </span>
+                    {nextClass.classGroupName}
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="shrink-0 text-white/70">
+                      <Icon name="profile" size={15} />
+                    </span>
+                    {t('next_class.with_teacher', { teacher: nextClass.teacherName })}
+                  </li>
+                </ul>
               </div>
               {nextClass.classAccessLock !== null ? (
                 <Link
