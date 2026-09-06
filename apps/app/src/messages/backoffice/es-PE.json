@@ -1117,6 +1117,7 @@
       "field_language": "Idioma",
       "field_name": "Nombre",
       "field_level": "Nivel",
+      "field_summary": "Sobre el curso",
       "name_placeholder": "Inglés Básico A1",
       "level_placeholder": "A1",
       "create": "Crear curso",
