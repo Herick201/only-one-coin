@@ -1,9 +1,9 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { getPortalSession } from '@/lib/portal/mock-data'
 import { PageHeader } from '@/components/portal/ui'
-import { ProfileView } from './profile-view'
+import { ContinueView } from './continue-view'
 
-export default async function ProfilePage({
+export default async function ContinuePage({
   params,
 }: {
   params: Promise<{ locale: string }>
@@ -12,12 +12,12 @@ export default async function ProfilePage({
   setRequestLocale(locale)
   const t = await getTranslations('portal')
 
-  const { student } = getPortalSession()
+  const { offers } = getPortalSession()
 
   return (
     <div>
-      <PageHeader title={t('profile.title')} />
-      <ProfileView student={student} />
+      <PageHeader title={t('continue_page.title')} />
+      <ContinueView offers={offers} />
     </div>
   )
 }

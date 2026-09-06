@@ -8,6 +8,10 @@ import { enrollmentTone } from '@/components/portal/status-tone'
 import { Icon, type IconName } from '@/components/portal/icons'
 import { AutoGrid } from '@/components/layout/auto-grid'
 
+/**
+ * Dashboard: greeting, the blue next-class bar, the courses right under it,
+ * then quick actions. Notices live in the bell (top right), not here.
+ */
 export default async function DashboardPage({
   params,
 }: {
@@ -20,11 +24,11 @@ export default async function DashboardPage({
 
   const { student, enrollments, nextClass } = getPortalSession()
   const current = enrollments.filter((e) => e.status !== 'completed')
-  const hasUnderReview = enrollments.some((e) => e.status === 'under_review')
 
   const quickActions: { href: string; label: string; icon: IconName }[] = [
+    { href: '/portal/payments', label: t('dashboard.action_payments'), icon: 'card' },
+    { href: '/portal/requests', label: t('dashboard.action_requests'), icon: 'clipboard' },
     { href: '/portal/documents', label: t('dashboard.action_documents'), icon: 'documents' },
-    { href: '/portal/enrollment', label: t('dashboard.action_enrollments'), icon: 'enrollment' },
     { href: '/portal/profile', label: t('dashboard.action_profile'), icon: 'profile' },
   ]
 
@@ -34,22 +38,11 @@ export default async function DashboardPage({
         <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
           {t('greeting.hello', { name: student.firstName })}
         </h1>
-        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          {t('greeting.subtitle')}
-        </p>
       </header>
 
-      {hasUnderReview && (
-        <div className="flex items-start gap-3 rounded-2xl border border-brand-yellow-deep/25 bg-brand-yellow/10 px-4 py-3.5 text-sm text-ink">
-          <span className="mt-0.5 text-brand-yellow-deep">
-            <Icon name="clock" size={18} />
-          </span>
-          <p>{t('dashboard.review_note')}</p>
-        </div>
-      )}
-
-      {/* Next class */}
-      <section>
+      {/* Next class — first thing on the page. Brand blue; the join button is
+          white and turns yellow under the cursor. */}
+      <section className="-mt-2">
         <div className="mb-3">
           <SectionTitle>{t('next_class.title')}</SectionTitle>
         </div>
@@ -64,14 +57,32 @@ export default async function DashboardPage({
                 <span className="text-xl font-semibold">
                   {nextClass.courseName}
                 </span>
-                <span className="text-sm text-white/85">
-                  {nextClass.classGroupName}
-                </span>
-                <span className="text-sm text-white/70">
-                  {t('next_class.with_teacher', { teacher: nextClass.teacherName })}
-                </span>
+                {/* Topics, not running text: one line per fact, each with its
+                    own icon bullet. */}
+                <ul className="mt-1 flex flex-col gap-1.5 text-sm text-white/85">
+                  <li className="flex items-center gap-2">
+                    <span className="shrink-0 text-white/70">
+                      <Icon name="clock" size={15} />
+                    </span>
+                    {nextClass.classGroupName}
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="shrink-0 text-white/70">
+                      <Icon name="profile" size={15} />
+                    </span>
+                    {nextClass.teacherName}
+                  </li>
+                </ul>
               </div>
-              {nextClass.meetingUrl ? (
+              {nextClass.classAccessLock !== null ? (
+                <Link
+                  href="/portal/payments"
+                  className="inline-flex shrink-0 items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/25"
+                >
+                  <Icon name="lock" size={16} />
+                  {t('next_class.locked')}
+                </Link>
+              ) : nextClass.meetingUrl ? (
                 <a
                   href={nextClass.meetingUrl}
                   target="_blank"
@@ -99,7 +110,7 @@ export default async function DashboardPage({
         )}
       </section>
 
-      {/* My courses */}
+      {/* My courses — right under the blue bar. */}
       <section>
         <div className="mb-3 flex items-center justify-between">
           <SectionTitle>{t('dashboard.my_courses_title')}</SectionTitle>
@@ -114,25 +125,48 @@ export default async function DashboardPage({
         <AutoGrid min="18rem">
           {current.map((e) => (
             <Card key={e.id} as="article" className="flex flex-col gap-3 p-5">
+              {/* Just the name. Active is the normal state, so it earns no
+                  badge — only the exceptions speak up below. */}
               <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="text-base font-semibold text-ink">
-                    {e.course.name}
-                  </h3>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {e.classGroup.teacherName}
+                <h3 className="text-base font-semibold text-ink">
+                  {e.course.name}
+                </h3>
+                {e.status !== 'active' && e.status !== 'under_review' && (
+                  <StatusBadge
+                    tone={enrollmentTone[e.status]}
+                    label={t(`enrollment_status.${e.status}`)}
+                  />
+                )}
+              </div>
+              {e.classAccessLock !== null && (
+                <p className="flex items-center gap-1.5 text-xs font-semibold text-red-600">
+                  <Icon name="lock" size={13} className="shrink-0" />
+                  {t(`access_lock.${e.classAccessLock}`)}
+                </p>
+              )}
+              {e.status === 'under_review' ? (
+                <div className="flex flex-col gap-1.5">
+                  <ProgressBar
+                    value={100}
+                    tone="warning"
+                    locked
+                    label={t('dashboard.progress_label')}
+                  />
+                  {/* The state lives with the bar, not as a badge upstairs. */}
+                  <p className="flex items-center gap-1.5 text-xs font-medium text-brand-yellow-deep">
+                    <Icon name="clock" size={13} className="shrink-0" />
+                    {t('enrollment_status.under_review')}
                   </p>
                 </div>
-                <StatusBadge
-                  tone={enrollmentTone[e.status]}
-                  label={t(`enrollment_status.${e.status}`)}
-                />
-              </div>
-              {e.progressPct !== null && (
-                <ProgressBar
-                  value={e.progressPct}
-                  label={t('dashboard.progress_label')}
-                />
+              ) : (
+                e.progressPct !== null && (
+                  <ProgressBar
+                    value={e.progressPct}
+                    tone={e.classAccessLock !== null ? 'danger' : 'default'}
+                    locked={e.classAccessLock !== null}
+                    label={t('dashboard.progress_label')}
+                  />
+                )
               )}
               <Link
                 href={`/portal/courses/${e.id}`}

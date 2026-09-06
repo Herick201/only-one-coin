@@ -2,7 +2,9 @@ import type { Tone } from './ui'
 import type {
   DocumentStatus,
   EnrollmentStatus,
+  ModuleStatus,
   PaymentStatus,
+  RequestStatus,
   SeatStatus,
 } from '@/lib/portal/types'
 
@@ -11,6 +13,7 @@ import type {
 export const enrollmentTone: Record<EnrollmentStatus, Tone> = {
   under_review: 'warning',
   active: 'success',
+  frozen: 'info',
   completed: 'neutral',
   rejected: 'danger',
 }
@@ -32,4 +35,17 @@ export const documentTone: Record<DocumentStatus, Tone> = {
   available: 'success',
   pending: 'warning',
   locked: 'neutral',
+}
+
+export const requestTone: Record<RequestStatus, Tone> = {
+  under_review: 'warning',
+  in_progress: 'info',
+  completed: 'success',
+  rejected: 'danger',
+}
+
+export const moduleTone: Record<ModuleStatus, Tone> = {
+  completed: 'success',
+  current: 'info',
+  upcoming: 'neutral',
 }

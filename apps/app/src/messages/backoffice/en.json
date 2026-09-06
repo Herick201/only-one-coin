@@ -341,6 +341,7 @@
     "enrollment_status": {
       "under_review": "In review",
       "active": "Active",
+      "frozen": "Frozen",
       "completed": "Completed",
       "rejected": "Rejected"
     },
