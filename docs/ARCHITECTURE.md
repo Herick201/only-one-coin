@@ -434,3 +434,22 @@ No checkout público (`/enrollment`) e nas telas de login — não há shell rou
 largura, então `sm:` quer dizer o que diz. Dentro de `portal/` e
 `backoffice/(panel)/` vale a §7: container query.
 
+### Verificação (06/09/2026)
+
+- **Portal e checkout a 375px**, rota por rota (`/portal` e suas seis seções,
+  `/enrollment`, as duas telas de login): **zero** com
+  `documentElement.scrollWidth > viewport`.
+- **Painel**: a lista empilhada foi conferida com sessão real de `admin`,
+  estreitando a coluna para 390px — que é o que um telefone produz, já que a
+  regra é container query e não media query. Conferidas alunos, turmas, equipe,
+  docentes, fila de revisão e certificados da turma: `thead` some, `<tr>` vira
+  bloco, a primeira célula vira o título sem etiqueta e as demais casam rótulo
+  com valor.
+- **Os dois lados de cada coluna condicional** foram exercidos, que é onde o
+  mecanismo erraria em silêncio: docentes com e sem o quadro ativo (coluna
+  "Contrato"), e turma que certifica com exame (`cg_01`, 5 colunas) contra uma
+  que não certifica (`cg_03`, 4 colunas) — rótulo e célula alinhados nos dois.
+- **Não exercido**: a tabela de `/backoffice/reports` não renderiza com o seed
+  atual (a quebra por dimensão sai vazia), então o `columns` dela passou só por
+  `tsc`. Mesma coisa para `teacher-home`, que pede sessão de docente.
+
