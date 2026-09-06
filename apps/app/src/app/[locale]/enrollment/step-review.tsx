@@ -12,6 +12,7 @@ import {
   GhostButton,
   Note,
   PrimaryButton,
+  StepNav,
   StepHeading,
   SummaryRow,
 } from '@/components/enrollment/ui'
@@ -197,16 +198,19 @@ export function StepReview({
 
       {submitFailed && <Note tone="danger">{t('step.review.submit_failed')}</Note>}
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <GhostButton onClick={onBack}>
-          <CheckoutIcon name="arrow-left" size={16} />
-          {t('action.back')}
-        </GhostButton>
+      <StepNav
+        back={
+          <GhostButton onClick={onBack}>
+            <CheckoutIcon name="arrow-left" size={16} />
+            {t('action.back')}
+          </GhostButton>
+        }
+      >
         <PrimaryButton onClick={send} disabled={sending}>
           <CheckoutIcon name="check" size={16} />
           {t('action.submit')}
         </PrimaryButton>
-      </div>
+      </StepNav>
     </div>
   )
 }

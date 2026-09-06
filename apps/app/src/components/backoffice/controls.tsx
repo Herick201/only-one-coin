@@ -82,7 +82,10 @@ export function Toast({
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-lg bg-ink px-3.5 py-2.5 text-sm font-medium text-white shadow-lg"
+      /* Num telefone o canto inferior direito é onde vive o polegar e, no
+         portal, a barra de abas — o aviso atravessa a tela inteira acima da
+         safe area em vez de disputar aquele canto. */
+      className="fixed inset-x-4 bottom-[calc(var(--spacing-safe-b)+1rem)] z-50 flex items-center gap-2 rounded-lg bg-ink px-3.5 py-2.5 text-sm font-medium text-white shadow-lg sm:inset-x-auto sm:right-5 sm:bottom-5"
     >
       <BoIcon name="check" size={16} className="text-emerald-300" />
       {message}

@@ -16,7 +16,15 @@
       "back_to_site": "Ir ao site",
       "menu": "Menu",
       "collapse": "Esconder menu",
-      "expand": "Mostrar menu"
+      "expand": "Mostrar menu",
+      "more": "Mais",
+      "more_title": "Mais opções",
+      "close_menu": "Fechar menu",
+      "language": "Idioma",
+      "tab_courses": "Cursos",
+      "tab_requests": "Solicitações",
+      "tab_payments": "Pagamentos",
+      "tab_dashboard": "Início"
     },
     "greeting": {
       "hello": "Olá, {name}"

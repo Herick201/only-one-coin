@@ -237,7 +237,16 @@ export function EmailsView({
             />
           </div>
         ) : (
-          <TableShell>
+          <TableShell
+            columns={[
+              t('emails.col_flow'),
+              t('emails.col_audience'),
+              t('emails.col_state'),
+              t('emails.col_sent'),
+              t('emails.col_delivered'),
+              '',
+            ]}
+          >
             <thead>
               <tr>
                 <th className={thClass}>{t('emails.col_flow')}</th>

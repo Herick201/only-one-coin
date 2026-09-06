@@ -282,7 +282,16 @@ export function PaymentsView({
           </div>
         ) : (
           <>
-            <TableShell>
+            <TableShell
+              columns={[
+                t('payments.col_student'),
+                t('payments.col_concept'),
+                t('payments.col_amount'),
+                t('payments.col_status'),
+                t('payments.col_operation'),
+                t('payments.col_submitted'),
+              ]}
+            >
               <thead>
                 <tr>
                   <th className={thClass}>{t('payments.col_student')}</th>

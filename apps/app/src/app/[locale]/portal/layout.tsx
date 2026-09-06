@@ -22,11 +22,40 @@ export default async function PortalLayout({
   const fullName = `${student.firstName} ${student.lastName}`
   const monogram = initials(student.firstName, student.lastName)
 
+  /**
+   * A ordem manda em duas telas ao mesmo tempo: é a sequência da sidebar no
+   * desktop e, no celular, decide o que fica fixo na barra de abas — as quatro
+   * primeiras — e o que vai para a folha de "mais" (`portal-tabbar.tsx`). As
+   * quatro da frente são as que o aluno abre no dia a dia; matrícula e
+   * documentos são visitas de começo e de fim de curso.
+   *
+   * `shortLabel` só onde o nome longo não cabe numa coluna de ~72px.
+   */
   const navItems: NavItem[] = [
-    { href: '/portal', label: t('nav.dashboard'), icon: 'home' },
-    { href: '/portal/courses', label: t('nav.courses'), icon: 'courses' },
-    { href: '/portal/payments', label: t('nav.payments'), icon: 'card' },
-    { href: '/portal/requests', label: t('nav.requests'), icon: 'clipboard' },
+    {
+      href: '/portal',
+      label: t('nav.dashboard'),
+      shortLabel: t('nav.tab_dashboard'),
+      icon: 'home',
+    },
+    {
+      href: '/portal/courses',
+      label: t('nav.courses'),
+      shortLabel: t('nav.tab_courses'),
+      icon: 'courses',
+    },
+    {
+      href: '/portal/payments',
+      label: t('nav.payments'),
+      shortLabel: t('nav.tab_payments'),
+      icon: 'card',
+    },
+    {
+      href: '/portal/requests',
+      label: t('nav.requests'),
+      shortLabel: t('nav.tab_requests'),
+      icon: 'clipboard',
+    },
     { href: '/portal/enrollment', label: t('nav.enrollments'), icon: 'enrollment' },
     { href: '/portal/documents', label: t('nav.documents'), icon: 'documents' },
   ]

@@ -94,7 +94,11 @@ export function ReceiptUploadForm({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    /* `@container/receipt` nomeia a largura que este formulário realmente
+       recebeu. Ele aparece dentro de um cartão que já é filho da coluna do
+       portal, e a janela não sabe quanto sobrou dela (CLAUDE.md §5) — um
+       `sm:` aqui abriria duas colunas num cartão de 380px. */
+    <div className="@container/receipt flex flex-col gap-4">
       {/* Amount — read-only by design. */}
       <div className="rounded-xl border-l-4 border-brand-yellow bg-sky px-4 py-3">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-blue-deep">
@@ -135,8 +139,9 @@ export function ReceiptUploadForm({
         )}
       </div>
 
-      {/* Operation number + file */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      {/* Operation number + file — empilhados no telefone, lado a lado quando
+          o cartão dá largura. */}
+      <div className="grid gap-4 @md/receipt:grid-cols-2">
         <div>
           <label
             htmlFor="portal-operation-number"

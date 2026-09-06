@@ -250,7 +250,15 @@ export function StudentsTable({
           </div>
         ) : (
           <>
-            <TableShell>
+            <TableShell
+              columns={[
+                t('students.col_student'),
+                t('students.col_document'),
+                t('students.col_status'),
+                t('students.col_courses'),
+                t('students.col_last_activity'),
+              ]}
+            >
               <thead>
                 <tr>
                   <th className={thClass}>{t('students.col_student')}</th>

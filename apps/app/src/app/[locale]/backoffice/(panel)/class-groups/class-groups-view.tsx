@@ -406,7 +406,16 @@ export function ClassGroupsView({
           </Card>
         ) : (
           <Card>
-            <TableShell>
+            <TableShell
+              columns={[
+                t('class_groups.col_class_group'),
+                t('class_groups.col_schedule'),
+                t('class_groups.col_teacher'),
+                t('class_groups.col_dates'),
+                t('class_groups.col_seats'),
+                t('class_groups.col_status'),
+              ]}
+            >
               <thead>
                 <tr>
                   <th className={thClass}>{t('class_groups.col_class_group')}</th>
@@ -542,7 +551,16 @@ export function ClassGroupsView({
               </div>
             ) : (
               <>
-                <TableShell>
+                <TableShell
+                  columns={[
+                    t('class_groups.col_class_group'),
+                    t('class_groups.col_period'),
+                    t('class_groups.col_teacher'),
+                    t('class_groups.col_dates'),
+                    t('class_groups.col_status'),
+                    t('class_groups.col_pending'),
+                  ]}
+                >
                   <thead>
                     <tr>
                       <th className={thClass}>{t('class_groups.col_class_group')}</th>

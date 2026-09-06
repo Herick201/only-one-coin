@@ -49,7 +49,15 @@ export function DeliveriesView({ rows }: { rows: EmailDeliveryIssue[] }) {
   return (
     <div className="flex flex-col gap-3">
       <Card>
-        <TableShell>
+        <TableShell
+          columns={[
+            t('deliveries.col_student'),
+            t('deliveries.col_email'),
+            t('deliveries.col_reason'),
+            t('deliveries.col_when'),
+            '',
+          ]}
+        >
           <thead>
             <tr>
               <th className={thClass}>{t('deliveries.col_student')}</th>

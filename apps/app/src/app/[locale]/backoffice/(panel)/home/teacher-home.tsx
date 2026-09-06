@@ -194,7 +194,15 @@ export async function TeacherHome({
               />
             </div>
           ) : (
-            <TableShell>
+            <TableShell
+              columns={[
+                t('teacher_file.col_class_group'),
+                t('teacher_file.col_schedule'),
+                t('teacher_file.col_period'),
+                t('teacher_file.col_seats'),
+                t('teacher_file.col_status'),
+              ]}
+            >
               <thead>
                 <tr>
                   <th className={thClass}>{t('teacher_file.col_class_group')}</th>

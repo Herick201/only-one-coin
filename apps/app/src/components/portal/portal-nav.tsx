@@ -7,6 +7,12 @@ export interface NavItem {
   href: string
   label: string
   icon: IconName
+  /**
+   * Rótulo para a barra de abas do celular, onde cada coluna tem ~72px:
+   * "Mis cursos" não cabe em nenhum dos três idiomas. Só as seções cujo nome
+   * longo estoura precisam dele — o resto cai no `label`.
+   */
+  shortLabel?: string
 }
 
 function isActive(pathname: string, href: string) {
@@ -16,40 +22,13 @@ function isActive(pathname: string, href: string) {
 
 export function PortalNav({
   items,
-  orientation,
   collapsed = false,
 }: {
   items: NavItem[]
-  orientation: 'sidebar' | 'bar'
   /** Icon-only rendering for the collapsed sidebar; labels move to `title`. */
   collapsed?: boolean
 }) {
   const pathname = usePathname()
-
-  if (orientation === 'bar') {
-    return (
-      <nav className="flex gap-1 overflow-x-auto px-4 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {items.map((item) => {
-          const active = isActive(pathname, item.href)
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={active ? 'page' : undefined}
-              className={`flex shrink-0 items-center gap-2 rounded-full px-3.5 py-2 text-sm font-semibold transition ${
-                active
-                  ? 'bg-brand-blue text-white'
-                  : 'text-muted-foreground hover:bg-sky hover:text-ink'
-              }`}
-            >
-              <Icon name={item.icon} size={18} />
-              {item.label}
-            </Link>
-          )
-        })}
-      </nav>
-    )
-  }
 
   // Sidebar rides a brand-blue panel, so the palette inverts: quiet items are
   // translucent white, and the active one is the white pill.

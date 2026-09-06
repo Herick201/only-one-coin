@@ -35,6 +35,7 @@ export type IconName =
   | 'freeze'
   | 'star'
   | 'plus'
+  | 'menu'
 
 const paths: Record<IconName, ReactElement> = {
   home: (
@@ -114,6 +115,14 @@ const paths: Record<IconName, ReactElement> = {
     <path d="m12 4 2.35 4.76 5.25.76-3.8 3.7.9 5.23L12 16l-4.7 2.45.9-5.23-3.8-3.7 5.25-.76z" />
   ),
   plus: <path d="M12 5v14M5 12h14" />,
+  /* Três pontos, não três traços: é a aba do resto do menu, e o hambúrguer
+     prometeria o menu inteiro. */
+  menu: (
+    <path
+      d="M5 12h.01M12 12h.01M19 12h.01"
+      strokeWidth={2.75}
+    />
+  ),
 }
 
 export function Icon({

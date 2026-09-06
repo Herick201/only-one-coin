@@ -351,3 +351,72 @@ quebrar em monitor diferente.
 Varredura das 18 rotas de `apps/app` (13 do painel, 5 do portal) em 1920, 1600,
 1440, 1280, 1024, 820 e 500px — 126 combinações, **zero** com
 `documentElement.scrollWidth > viewport`.
+
+## 7.1 Celular (`apps/app`) — fechado 06/09/2026
+
+A §7 acertou a régua (container em vez de janela) e matou a rolagem horizontal
+de página. O que ela não resolveu é o outro lado: **o app é operado no celular
+de ponta a ponta** — o aluno vive no portal pelo telefone, e a coordenação
+aprova pagamento e abre matrícula de onde estiver. Uma tela que só não estoura
+ainda não é uma tela de celular.
+
+### O que quebrava
+
+1. **A tabela do painel.** Cinco a oito colunas com `min-width: 46rem` num
+   telefone de 375px é rolagem lateral dentro de rolagem vertical — é assim que
+   se perde uma linha no meio de uma fila de revisão.
+2. **O menu do portal ficava no topo, numa tira que rolava de lado.** O que não
+   coubesse era invisível (ninguém arrasta uma tira que não parece arrastável),
+   e o topo de um celular grande é o canto mais longe do polegar.
+3. **Campo de 14px.** O Safari do iPhone dá zoom ao focar qualquer campo com
+   menos de 16px, e o zoom não volta sozinho: a pessoa termina o formulário com
+   a página cortada de lado.
+4. **Modal centralizado.** Num telefone ele desperdiça margem dos dois lados,
+   põe as ações no meio da tela e — o que de fato quebra — pula quando o teclado
+   abre, porque um elemento centrado se recentra contra o viewport encolhido.
+5. **Sem safe area.** Nada previa notch nem barra de gestos.
+6. **Alvos de toque de 30–36px.** Abaixo dos 44px que Apple e Google publicam.
+
+### O que passou a valer
+
+- **`viewport` no layout raiz** (`app/[locale]/layout.tsx`) com
+  `viewportFit: 'cover'`, e os tokens `--spacing-safe-*` derivados de
+  `env(safe-area-inset-*)` (`globals.css`). Todo elemento fixo numa borda soma a
+  faixa do sistema: `pb-safe-b`, `pt-safe-t`. `maximumScale`/`userScalable`
+  ficam de fora de propósito — boa parte do público é apoderado lendo termo de
+  consentimento no celular.
+- **Tabela vira lista** abaixo de **48rem de coluna** (container query em
+  `page`, não breakpoint de janela — a sidebar rouba largura). Cada `<tr>` vira
+  um item com o nome da coluna como etiqueta; a primeira célula vira o título do
+  item, sem etiqueta e na linha inteira. A regra é CSS
+  (`globals.css`, "Tabela densa vira lista"); o que o CSS não sabe é o nome da
+  coluna, porque o `<thead>` está escondido nessa largura — então quem monta a
+  tabela passa os mesmos títulos que já imprime no cabeçalho
+  (`TableShell columns={[...]}` no painel, `stackLabels()` fora dele) e eles
+  viajam na `<table>` como `--stack-col-N`. **Coluna condicional entra na lista
+  sob a mesma condição**, ou o rótulo cai na célula errada.
+- **Barra de abas no portal** (`components/portal/portal-tabbar.tsx`): as quatro
+  seções do dia a dia fixas embaixo, e a quinta aba abre uma folha com o resto
+  **mais** o canto da pessoa — perfil, idioma e saída, que no desktop moram no
+  avatar do topo. A ordem de `navItems` no layout do portal é o que decide o que
+  fica na barra e o que vai para a folha.
+- **Campo com 16px abaixo de 768px** (`globals.css`). É o único lugar em que a
+  régua do toque ganha da régua do desenho.
+- **Modal vira folha de baixo** no telefone (`components/ui/dialog.tsx`), e a
+  folha lateral passa a ocupar a largura toda (`components/ui/sheet.tsx`) — 75%
+  de 375px são 281px, que não é painel de detalhe.
+- **Ação principal com largura inteira** no checkout público, com o botão de
+  voltar embaixo dela (`StepNav`, `components/enrollment/ui.tsx`). O
+  `flex-col-reverse` inverte só o desenho: na ordem do documento "voltar"
+  continua vindo antes.
+- **`--spacing-tap` (44px)** como utilitário (`min-h-tap`), em vez de número
+  mágico espalhado.
+- **Hover não gruda**: sob `@media (hover: none)` a transição é zerada, porque
+  no toque o `:hover` fica preso até o próximo toque em outro lugar.
+
+### Onde a janela continua sendo a régua
+
+No checkout público (`/enrollment`) e nas telas de login — não há shell roubando
+largura, então `sm:` quer dizer o que diz. Dentro de `portal/` e
+`backoffice/(panel)/` vale a §7: container query.
+

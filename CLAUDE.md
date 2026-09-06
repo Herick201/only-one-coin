@@ -291,6 +291,36 @@ monitor do lado.
 
 Detalhe e histórico da decisão: `docs/ARCHITECTURE.md` §7.
 
+### Celular (`apps/app`) — decisão 06/09/2026
+
+**O app é operado no celular de ponta a ponta.** O aluno vive no portal pelo
+telefone; a coordenação aprova pagamento e abre matrícula de onde estiver. Uma
+tela que apenas não estoura na horizontal ainda não é uma tela de celular.
+
+- **Tabela densa não rola de lado num telefone: vira lista.** Abaixo de **48rem
+  de coluna** cada `<tr>` vira um item, o `<thead>` some e cada célula mostra o
+  nome da própria coluna. Passe os títulos: `<TableShell columns={[...]}>` no
+  painel, `stackLabels()` (`lib/table-stack.ts`) + as classes `table-scroll` /
+  `table-stack` fora dele. **Coluna que só existe sob condição entra na lista
+  sob a mesma condição** — o rótulo casa com a célula por posição.
+- **O menu do portal fica embaixo**, na barra de abas
+  (`components/portal/portal-tabbar.tsx`). A ordem de `navItems` no layout do
+  portal decide o que fica fixo (as quatro primeiras) e o que vai para a folha
+  de "mais", junto do perfil, do idioma e da saída.
+- **Toda borda fixa soma a safe area** — `pb-safe-b`, `pt-safe-t`. O layout raiz
+  declara `viewportFit: 'cover'`, então a página pinta sob o notch e sob a barra
+  de gestos. **Nunca bloquear zoom** (`maximumScale`/`userScalable`).
+- **Alvo de toque: `min-h-tap`** (44px), nunca um número solto.
+- **Campo de formulário tem 16px abaixo de 768px** — já é regra global em
+  `globals.css`, não repita por componente. Menos que isso e o Safari do iPhone
+  dá zoom ao focar, e não volta.
+- **Modal vira folha de baixo** e folha lateral ocupa a largura toda — já vem
+  pronto nos primitivos (`components/ui/dialog.tsx`, `sheet.tsx`).
+- **Ação principal com largura inteira** no celular; "voltar" embaixo dela, não
+  ao lado (`StepNav`, `components/enrollment/ui.tsx`).
+
+Detalhe e histórico: `docs/ARCHITECTURE.md` §7.1.
+
 ### Layout da landing (`apps/landing`) — duas larguras de desenho, uma régua em cada
 
 **Decisão 04/09/2026.** A landing tinha os tamanhos presos a breakpoints: dentro

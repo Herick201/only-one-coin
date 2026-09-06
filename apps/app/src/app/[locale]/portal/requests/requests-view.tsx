@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import type { RequestStatus, RequestType } from '@/lib/portal/types'
 import { formatDate, formatMoney, type Locale } from '@/lib/format'
+import { stackLabels } from '@/lib/table-stack'
 import { Card, EmptyState, SectionTitle, StatusBadge } from '@/components/portal/ui'
 import { requestTone } from '@/components/portal/status-tone'
 import { Icon, type IconName } from '@/components/portal/icons'
@@ -109,11 +110,17 @@ export function RequestsView({
               const eligible = p.eligible.length > 0
               return (
                 <li key={p.type}>
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-4">
+                  {/* Quatro peças numa linha só cabem numa coluna larga. Num
+                      telefone o `flex-wrap` sozinho não salvava: com
+                      `min-w-0` o bloco de texto encolhia até uma palavra por
+                      linha em vez de empurrar preço e botão para baixo. Então
+                      o preço e o botão andam juntos num bloco que ocupa a
+                      linha inteira até a coluna dar 32rem. */}
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-3 px-4 py-4 sm:px-5">
                     <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-sky text-brand-blue">
                       <Icon name={procedureIcon[p.type]} size={20} />
                     </span>
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-40 flex-1">
                       <p className="text-sm font-semibold text-ink">
                         {t(`request_type.${p.type}`)}
                       </p>
@@ -123,30 +130,32 @@ export function RequestsView({
                           : t('requests.not_eligible')}
                       </p>
                     </div>
-                    <span className="shrink-0 text-sm font-bold text-ink">
-                      {formatMoney(p.priceCents, p.currency, locale)}
-                    </span>
-                    {eligible && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          active ? setOpenType(null) : startProcedure(p.type)
-                        }
-                        aria-expanded={active}
-                        className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                          active
-                            ? 'border-line bg-white text-muted-foreground hover:text-ink'
-                            : 'border-brand-blue text-brand-blue hover:border-brand-yellow hover:bg-brand-yellow hover:text-ink'
-                        }`}
-                      >
-                        {active ? t('requests.cancel') : t('requests.request_cta')}
-                        <Icon
-                          name="chevron-right"
-                          size={15}
-                          className={`transition-transform ${active ? 'rotate-90' : ''}`}
-                        />
-                      </button>
-                    )}
+                    <div className="flex w-full items-center justify-between gap-3 @lg/page:w-auto">
+                      <span className="shrink-0 text-sm font-bold text-ink">
+                        {formatMoney(p.priceCents, p.currency, locale)}
+                      </span>
+                      {eligible && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            active ? setOpenType(null) : startProcedure(p.type)
+                          }
+                          aria-expanded={active}
+                          className={`inline-flex min-h-tap shrink-0 items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                            active
+                              ? 'border-line bg-white text-muted-foreground hover:text-ink'
+                              : 'border-brand-blue text-brand-blue hover:border-brand-yellow hover:bg-brand-yellow hover:text-ink'
+                          }`}
+                        >
+                          {active ? t('requests.cancel') : t('requests.request_cta')}
+                          <Icon
+                            name="chevron-right"
+                            size={15}
+                            className={`transition-transform ${active ? 'rotate-90' : ''}`}
+                          />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Inline flow, right where the click happened. */}
@@ -224,9 +233,21 @@ export function RequestsView({
         ) : (
           <Card>
             {/* Horizontal scroll lives on this wrapper, never on the page
-                (CLAUDE.md §5, screen layout). */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+                (CLAUDE.md §5, screen layout) — and no phone should have to use
+                it: abaixo de 48rem de coluna a tabela vira lista, com o nome
+                da coluna virando etiqueta da linha (`lib/table-stack.ts`). */}
+            <div className="table-scroll overflow-x-auto">
+              <table
+                className="table-stack w-full text-sm"
+                style={stackLabels([
+                  t('requests.col_name'),
+                  t('requests.col_course'),
+                  t('requests.col_date'),
+                  t('requests.col_price'),
+                  t('requests.col_status'),
+                  '',
+                ])}
+              >
                 <thead>
                   <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-muted-foreground">
                     <th className="px-5 py-3 font-medium">

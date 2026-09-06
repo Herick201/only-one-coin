@@ -332,7 +332,19 @@ export function TeachersView({
           </div>
         ) : (
           <>
-            <TableShell>
+            <TableShell
+              /* A última coluna só existe no quadro ativo, e a lista do
+                 celular lê os rótulos por posição — se ela entrasse aqui
+                 sempre, fora do quadro a etiqueta de "Contrato" cairia na
+                 célula errada. */
+              columns={[
+                t('teachers.col_teacher'),
+                t('teachers.col_languages'),
+                t('teachers.col_class_groups'),
+                t('teachers.col_pending'),
+                ...(onRoster ? [t('teachers.col_contract')] : []),
+              ]}
+            >
               <thead>
                 <tr>
                   <th className={thClass}>{t('teachers.col_teacher')}</th>

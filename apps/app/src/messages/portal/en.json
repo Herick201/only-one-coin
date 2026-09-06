@@ -16,7 +16,15 @@
       "back_to_site": "Go to site",
       "menu": "Menu",
       "collapse": "Hide menu",
-      "expand": "Show menu"
+      "expand": "Show menu",
+      "more": "More",
+      "more_title": "More options",
+      "close_menu": "Close menu",
+      "language": "Language",
+      "tab_courses": "Courses",
+      "tab_requests": "Requests",
+      "tab_payments": "Payments",
+      "tab_dashboard": "Home"
     },
     "greeting": {
       "hello": "Hi, {name}"
