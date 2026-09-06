@@ -27,17 +27,101 @@
 
   /* Lines / shadow */
   --border: #e4eaf7;
-  --shadow-sm: 0 6px 18px -10px rgba(19, 34, 75, 0.28);
-  --shadow-md: 0 20px 45px -22px rgba(19, 34, 75, 0.35);
-  --shadow-blue: 0 22px 45px -18px rgba(47, 107, 255, 0.5);
-  --shadow-yellow: 0 18px 38px -16px rgba(245, 166, 35, 0.55);
+  --shadow-sm: 0 calc(6 * var(--dp)) calc(18 * var(--dp)) calc(-10 * var(--dp)) rgba(19, 34, 75, 0.28);
+  --shadow-md: 0 calc(20 * var(--dp)) calc(45 * var(--dp)) calc(-22 * var(--dp)) rgba(19, 34, 75, 0.35);
+  --shadow-blue: 0 calc(22 * var(--dp)) calc(45 * var(--dp)) calc(-18 * var(--dp)) rgba(47, 107, 255, 0.5);
+  --shadow-yellow: 0 calc(18 * var(--dp)) calc(38 * var(--dp)) calc(-16 * var(--dp)) rgba(245, 166, 35, 0.55);
 
-  --radius: 20px;
-  --radius-lg: 30px;
-  --maxw: 1180px;
+  /* A LARGURA DE DESENHO e a unidade que sai dela.
+
+     Todo tamanho da landing — fonte, padding, gap, ícone, raio, sombra — é
+     um múltiplo de `--dp`, que vale 1px em 1180px de janela e encolhe na
+     mesma proporção abaixo disso. A consequência é que a página é o MESMO
+     desenho em qualquer largura: nada congela dentro de uma faixa e nada
+     salta ao cruzar um número. Acima de 1180px a unidade trava em 1px,
+     porque o container também para de crescer ali.
+
+     0.084745vw = 1/1180 da janela. Se um dia a largura de desenho mudar,
+     mude os dois números juntos.
+
+     O TETO (1.5px) é o único ponto em que a régua para de crescer. Antes ele
+     era 1px, e a consequência aparecia em monitor grande: a partir de 1180px
+     a página inteira congelava numa coluna de 1180px no meio da tela, com
+     texto de 16px, enquanto as faixas que sangram (hero, propósito, CTA)
+     continuavam ocupando a janela toda — foto gigante ao lado de letra
+     miúda. Com o teto em 1.5, a mesma página cresce até 1770px de desenho
+     (texto base de 24px) e só então centraliza. Abaixo de 1180 nada muda. */
+  --dp: min(1.5px, 0.084745vw);
+
+  /* A LARGURA DE DESENHO DO CELULAR.
+
+     O bloco acima descreve UM desenho fluido de 1180px. Abaixo de 900px ele
+     deixa de ser um desenho e vira uma miniatura dele: num aparelho de 375px
+     o texto corrido saía com 5px — ilegível em mão, não "pequeno". Composição
+     sozinha não conserta isso, porque quem define tamanho de fonte aqui é o
+     `--dp`.
+
+     Então o celular ganha a SEGUNDA largura de desenho: 390px. A régua
+     continua uma só dentro de cada faixa — o que muda ao cruzar 900px não é
+     o tamanho de um desenho, é qual desenho está na tela. 900px porque é
+     exatamente onde a composição já trocava (Header, WhyUs, StepsFaq,
+     Testimonials): nenhuma faixa fica sem dono.
+
+     0.25641vw = 1/390 da janela. O teto aqui é 1px, e não os 1.5px da faixa
+     larga: aquele teto existe para o desenho de 1180 crescer até 1770 num
+     monitor grande, coisa que não acontece embaixo de 900px. A régua trava a
+     partir de 390px e daí em diante quem cresce é a largura útil, não a
+     fonte — por isso o container ganha um teto próprio logo abaixo. */
+
+  --radius: calc(20 * var(--dp));
+  --radius-lg: calc(30 * var(--dp));
+  /* A largura de desenho anda presa à régua: o container cresce junto com a
+     fonte, em vez de travar em 1180px e deixar o resto crescer sozinho. */
+  --maxw: calc(1180 * var(--dp));
 
   --font: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-display: "Fredoka", "Poppins", system-ui, sans-serif;
+  --font-script: "Caveat", "Segoe Script", cursive;
+}
+
+@media (max-width: 900px) {
+  :root {
+    --dp: min(1px, 0.25641vw);
+    /* O container para de crescer bem antes da janela: uma coluna única de
+       900px com texto de 16px dá linha longa demais para ler. 560 é a coluna
+       de leitura do desenho do celular; acima disso sobra respiro nas laterais,
+       de propósito. */
+    --maxw: calc(560 * var(--dp));
+  }
+
+  .container {
+    padding-inline: calc(20 * var(--dp));
+  }
+
+  /* Respiro vertical do celular: 92 vinha da página larga, onde a seção
+     tem 1180 de largura para equilibrar. Empilhado, vira buraco. */
+  .section {
+    padding-block: calc(56 * var(--dp));
+  }
+
+  .section-title {
+    font-size: calc(29 * var(--dp));
+  }
+
+  /* Alvo de toque: 44px é o mínimo da Apple HIG e do WCAG 2.5.8. Com o
+     padding do desenho largo o botão saía com 36px de altura. */
+  .btn {
+    padding: calc(13 * var(--dp)) calc(22 * var(--dp));
+    font-size: calc(15 * var(--dp));
+    min-height: calc(46 * var(--dp));
+  }
+
+  .wa-float {
+    width: calc(52 * var(--dp));
+    height: calc(52 * var(--dp));
+    right: calc(16 * var(--dp));
+    bottom: calc(16 * var(--dp));
+  }
 }
 
 *,
@@ -55,6 +139,10 @@ body {
   background: var(--paper);
   color: var(--text);
   font-family: var(--font);
+  /* A base entra na mesma régua de `--dp`. Sem isto, todo texto que não
+     declara tamanho herda os 16px fixos do navegador e fica gigante ao lado
+     do resto da página quando ela encolhe. */
+  font-size: calc(16 * var(--dp));
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
@@ -85,33 +173,23 @@ img {
   width: 100%;
   max-width: var(--maxw);
   margin-inline: auto;
-  padding-inline: 24px;
+  padding-inline: calc(24 * var(--dp));
 }
 
 .section {
-  padding-block: 92px;
+  padding-block: calc(92 * var(--dp));
   position: relative;
 }
 
 /* Section header bits */
+/* Título de seção no formato dos mockups web: menor, sem o sublinhado
+   amarelo desenhado — o destaque é só a palavra em azul. */
 .section-title {
-  font-size: clamp(2rem, 4.4vw, 3.1rem);
+  font-size: calc(36.8 * var(--dp));
   color: var(--ink);
 }
 .section-title .accent {
   color: var(--blue);
-  position: relative;
-}
-/* Hand-drawn underline under the accent word */
-.section-title .accent::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -0.14em;
-  height: 0.16em;
-  border-radius: 999px;
-  background: var(--yellow);
 }
 
 .text-muted {
@@ -123,14 +201,14 @@ img {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
-  padding: 14px 28px;
-  border-radius: 999px;
+  gap: calc(9 * var(--dp));
+  padding: calc(14 * var(--dp)) calc(28 * var(--dp));
+  border-radius: calc(999 * var(--dp));
   font-family: var(--font);
   font-weight: 700;
-  font-size: 0.98rem;
+  font-size: calc(15.68 * var(--dp));
   cursor: pointer;
-  border: 2px solid transparent;
+  border: calc(2 * var(--dp)) solid transparent;
   transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease,
     color 0.16s ease;
 }
@@ -146,7 +224,7 @@ img {
   background: var(--yellow);
   color: var(--ink);
   box-shadow: var(--shadow-yellow);
-  transform: translateY(-2px);
+  transform: translateY(calc(-2 * var(--dp)));
 }
 .btn-yellow {
   background: linear-gradient(135deg, var(--yellow-bright), var(--yellow));
@@ -154,8 +232,8 @@ img {
   box-shadow: var(--shadow-yellow);
 }
 .btn-yellow:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 24px 46px -14px rgba(245, 166, 35, 0.7);
+  transform: translateY(calc(-2 * var(--dp)));
+  box-shadow: 0 calc(24 * var(--dp)) calc(46 * var(--dp)) calc(-14 * var(--dp)) rgba(245, 166, 35, 0.7);
 }
 .btn-outline {
   border-color: var(--blue);
@@ -165,7 +243,7 @@ img {
 .btn-outline:hover {
   background: var(--blue);
   color: var(--on-blue);
-  transform: translateY(-2px);
+  transform: translateY(calc(-2 * var(--dp)));
 }
 /* Link secundário ao lado de um botão: mesma ação disponível, peso menor.
    Existe porque a página só pode ter um CTA gritando por dobra — o resto
@@ -173,10 +251,10 @@ img {
    `-on-blue` é a variante para fundo escuro. */
 .link-quiet {
   font-weight: 700;
-  font-size: 1rem;
+  font-size: calc(16 * var(--dp));
   color: var(--blue-deep);
-  border-bottom: 2px solid rgba(47, 107, 255, 0.35);
-  padding-bottom: 2px;
+  border-bottom: calc(2 * var(--dp)) solid rgba(47, 107, 255, 0.35);
+  padding-bottom: calc(2 * var(--dp));
   transition: border-color 0.16s ease, color 0.16s ease, opacity 0.16s ease;
 }
 .link-quiet:hover {
@@ -208,7 +286,7 @@ img {
 .blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(2px);
+  filter: blur(calc(2 * var(--dp)));
   opacity: 0.5;
   pointer-events: none;
   z-index: 0;
@@ -217,24 +295,19 @@ img {
 /* WhatsApp float */
 .wa-float {
   position: fixed;
-  right: 22px;
-  bottom: 22px;
-  width: 58px;
-  height: 58px;
+  right: calc(22 * var(--dp));
+  bottom: calc(22 * var(--dp));
+  width: calc(58 * var(--dp));
+  height: calc(58 * var(--dp));
   border-radius: 50%;
   background: #25d366;
   display: grid;
   place-items: center;
   z-index: 50;
-  box-shadow: 0 14px 32px -8px rgba(37, 211, 102, 0.65);
+  box-shadow: 0 calc(14 * var(--dp)) calc(32 * var(--dp)) calc(-8 * var(--dp)) rgba(37, 211, 102, 0.65);
   transition: transform 0.15s ease;
 }
 .wa-float:hover {
   transform: scale(1.08) rotate(-6deg);
 }
 
-@media (max-width: 720px) {
-  .section {
-    padding-block: 60px;
-  }
-}

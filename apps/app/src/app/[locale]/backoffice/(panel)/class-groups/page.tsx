@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import {
+  listClassGroupRostersFor,
   listClassGroupsFor,
   listCourses,
 } from '@/lib/backoffice/mock-data'
@@ -11,6 +12,7 @@ import {
 import { MockNotice, PageHeader } from '@/components/backoffice/ui'
 import { SectionTabs } from '@/components/backoffice/section-tabs'
 import { ClassGroupsView } from './class-groups-view'
+import { TeacherClassGroups } from './teacher-class-groups'
 
 /**
  * Class group directory. The list is a client component so search, filters and
@@ -21,38 +23,50 @@ import { ClassGroupsView } from './class-groups-view'
  */
 export default async function ClassGroupsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>
+  searchParams: Promise<{ group?: string }>
 }) {
   const { locale } = await params
+  const { group } = await searchParams
   setRequestLocale(locale)
   const t = await getTranslations('bo')
 
   const staff = await getStaffSession()
-  /* A teacher gets their own class groups and nothing else. The filter is
-     built from the session, never from anything the client sent
-     (CLAUDE.md §8) — and the check that enforces it is the usecase in
-     `apps/api`, not this line. */
-  const rows = listClassGroupsFor(staff)
   const restricted = isRestrictedToOwnClassGroups(staff.role)
+
+  /* The teacher's half of the section is a different screen, not a filtered
+     copy of the directory: their few turmas as tabs, and under the open tab
+     the whole management of that group, student by student. The rosters come
+     scoped by the session's `teacherId` (CLAUDE.md §8) — and the check that
+     enforces it is the usecase in `apps/api`, not this line. */
+  if (restricted) {
+    return (
+      <div className="flex flex-col gap-5">
+        <PageHeader title={t('nav.my_class_groups')} />
+        <MockNotice label={t('common.mock_notice')} />
+        <TeacherClassGroups
+          groups={listClassGroupRostersFor(staff)}
+          teacherName={`${staff.firstName} ${staff.lastName}`}
+          initialGroupId={group ?? null}
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-5">
-      <PageHeader title={restricted ? t('nav.my_class_groups') : t('nav.academic')} />
-      {/* The catalog tab is coordination's half of the section; a teacher has
-          no course to configure, so the strip would be one live tab and one
-          dead end. */}
-      {!restricted && (
-        <SectionTabs
-          tabs={[
-            { href: '/backoffice/class-groups', label: t('class_groups.title') },
-            { href: '/backoffice/courses', label: t('courses.title') },
-          ]}
-        />
-      )}
+      <PageHeader title={t('nav.academic')} />
+      <SectionTabs
+        tabs={[
+          { href: '/backoffice/class-groups', label: t('class_groups.title') },
+          { href: '/backoffice/courses', label: t('courses.title') },
+        ]}
+      />
       <MockNotice label={t('common.mock_notice')} />
       <ClassGroupsView
-        rows={rows}
+        rows={listClassGroupsFor(staff)}
         courses={listCourses()}
         canCreate={canCreateClassGroup(staff.role)}
       />

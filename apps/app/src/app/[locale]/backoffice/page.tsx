@@ -27,13 +27,9 @@ export default async function BackofficePage({
   const t = await getTranslations('backoffice')
 
   const highlights = [
-    { icon: ShieldIcon, title: t('highlight_1_title'), body: t('highlight_1_body') },
-    { icon: KeyIcon, title: t('highlight_2_title'), body: t('highlight_2_body') },
-    {
-      icon: CheckCircleIcon,
-      title: t('highlight_3_title'),
-      body: t('highlight_3_body'),
-    },
+    { icon: ShieldIcon, title: t('highlight_1_title') },
+    { icon: KeyIcon, title: t('highlight_2_title') },
+    { icon: CheckCircleIcon, title: t('highlight_3_title') },
   ]
 
   return (
@@ -41,7 +37,7 @@ export default async function BackofficePage({
       className="grid min-h-dvh bg-sky-soft lg:grid-cols-[1.05fr_0.95fr]"
     >
       {/* Brand panel — desktop only; the phone gets the compact header below. */}
-      <aside className="relative hidden overflow-hidden bg-ink px-12 py-14 lg:flex lg:flex-col lg:justify-between">
+      <aside className="relative hidden overflow-hidden bg-ink px-12 py-14 lg:flex lg:flex-col">
         {/* Decorations borrowed from the landing hero: soft blobs + dot grid. */}
         <span
           aria-hidden="true"
@@ -80,10 +76,9 @@ export default async function BackofficePage({
           />
         </div>
 
-        <div className="relative max-w-md">
-          <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-brand-yellow">
-            {t('brand_eyebrow')}
-          </p>
+        {/* `my-auto` centers the block in what the logo left over — the panel
+            lost its footer, so justify-between would pin this to the bottom. */}
+        <div className="relative my-auto max-w-md">
           <h2 className="text-4xl font-semibold leading-tight text-white">
             {t('brand_title')}
           </h2>
@@ -92,21 +87,16 @@ export default async function BackofficePage({
           </p>
 
           <ul className="mt-8 flex flex-col gap-4">
-            {highlights.map(({ icon: Icon, title, body }) => (
-              <li key={title} className="flex gap-3">
-                <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/10 text-brand-yellow">
+            {highlights.map(({ icon: Icon, title }) => (
+              <li key={title} className="flex items-center gap-3">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/10 text-brand-yellow">
                   <Icon size={18} />
                 </span>
-                <span className="flex flex-col">
-                  <span className="text-sm font-semibold text-white">{title}</span>
-                  <span className="text-xs leading-relaxed text-slate-400">{body}</span>
-                </span>
+                <span className="text-sm font-semibold text-white">{title}</span>
               </li>
             ))}
           </ul>
         </div>
-
-        <p className="relative text-xs text-slate-400">{t('brand_footer')}</p>
       </aside>
 
       {/* Form side */}

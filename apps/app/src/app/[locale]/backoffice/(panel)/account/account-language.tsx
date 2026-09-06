@@ -27,9 +27,6 @@ export function AccountLanguage() {
   return (
     <Card className="flex flex-col p-5">
       <SectionTitle icon="globe">{t('account.language_title')}</SectionTitle>
-      <p className="mt-3 text-sm text-muted-foreground">
-        {t('account.language_hint')}
-      </p>
 
       <ul className="mt-4 flex flex-col gap-1.5">
         {routing.locales.map((code) => {

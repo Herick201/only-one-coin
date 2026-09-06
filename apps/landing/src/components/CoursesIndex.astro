@@ -1,18 +1,24 @@
 ---
-import { languageSlugs, coursePrices } from "../i18n/ui";
+import { languageSlugs, sessionPrices } from "../i18n/ui";
 import { getLangFromUrl, useTranslations, withLang, formatPEN } from "../i18n/utils";
+import LanguageFlag from "./LanguageFlag.astro";
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const c = t.courses;
 
-const courses = languageSlugs.map((slug) => ({
-  slug,
-  name: t.courses.list[slug],
-  href: withLang(lang, `/courses/${slug}`),
-  // Curso sem preço definido ainda não mostra badge de valor.
-  price: coursePrices[slug] === null ? null : formatPEN(coursePrices[slug] as number, lang),
-}));
+// O card anuncia o preço da SESSÃO — que é de cada curso, não um valor único
+// do site (tabela do dono, 04/09/2026): vai de S/0.60 no inglés a S/5 no
+// japonês. O total do paquete saiu da lista e mora só na página do curso.
+const courses = languageSlugs.map((slug) => {
+  const perSession = sessionPrices[slug];
+  return {
+    slug,
+    name: t.courses.list[slug],
+    href: withLang(lang, `/courses/${slug}`),
+    price: perSession === null ? null : formatPEN(perSession, lang),
+  };
+});
 ---
 
 <section class="section courses-index">
@@ -24,8 +30,18 @@ const courses = languageSlugs.map((slug) => ({
       {
         courses.map((course) => (
           <a class="ci-card" href={course.href}>
-            {course.price && <span class="ci-badge">{course.price} · {c.payOnce}</span>}
-            <h2>{course.name}</h2>
+            {/* Sem valor anunciado, a pílula fica no lugar mas vazia: o
+                título de um card sem preço subia uma linha e desalinhava a
+                fileira inteira. */}
+            {course.price ? (
+              <span class="ci-badge">{course.price} · {c.priceUnit}</span>
+            ) : (
+              <span class="ci-badge ci-badge-empty" aria-hidden="true">&nbsp;</span>
+            )}
+            <h2 class="ci-name">
+              <LanguageFlag slug={course.slug} />
+              <span>{course.name}</span>
+            </h2>
             <span class="ci-link">
               {c.viewCourse}
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
@@ -44,65 +60,73 @@ const courses = languageSlugs.map((slug) => ({
       var(--sky-soft);
   }
   .ci-lead {
-    margin-top: 16px;
+    margin-top: calc(16 * var(--dp));
     max-width: 60ch;
-    font-size: 1.08rem;
+    font-size: calc(17.28 * var(--dp));
   }
   .ci-grid {
-    margin-top: 42px;
+    margin-top: calc(42 * var(--dp));
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-    gap: 22px;
+    grid-template-columns: repeat(auto-fill, minmax(calc(230 * var(--dp)), 1fr));
+    gap: calc(22 * var(--dp));
   }
   .ci-card {
     position: relative;
     background: var(--paper);
-    border: 1.5px solid var(--border);
+    border: calc(1.5 * var(--dp)) solid var(--border);
     border-radius: var(--radius);
-    padding: 30px 28px;
+    padding: calc(30 * var(--dp)) calc(28 * var(--dp));
     box-shadow: var(--shadow-sm);
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: calc(14 * var(--dp));
     transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
   }
   .ci-card:hover {
-    transform: translateY(-6px);
+    transform: translateY(calc(-6 * var(--dp)));
     box-shadow: var(--shadow-md);
     border-color: transparent;
   }
   .ci-badge {
     align-self: flex-start;
-    font-size: 0.74rem;
+    font-size: calc(11.84 * var(--dp));
     font-weight: 800;
     letter-spacing: 0.03em;
     color: var(--yellow-deep);
     background: var(--cream);
-    padding: 6px 12px;
-    border-radius: 999px;
+    padding: calc(6 * var(--dp)) calc(12 * var(--dp));
+    border-radius: calc(999 * var(--dp));
+  }
+  .ci-badge-empty {
+    visibility: hidden;
   }
   .ci-card h2 {
-    font-size: 1.5rem;
+    font-size: calc(24 * var(--dp));
+  }
+  .ci-name {
+    display: flex;
+    align-items: center;
+    gap: calc(12 * var(--dp));
+  }
+  .ci-name :global(.lang-flag) {
+    width: calc(34 * var(--dp));
+    height: calc(34 * var(--dp));
+    border-width: calc(1.5 * var(--dp));
   }
   .ci-link {
     margin-top: auto;
     display: inline-flex;
     align-items: center;
-    gap: 7px;
+    gap: calc(7 * var(--dp));
     font-weight: 700;
     color: var(--blue);
   }
   .ci-link svg {
-    width: 17px;
-    height: 17px;
+    width: calc(17 * var(--dp));
+    height: calc(17 * var(--dp));
     transition: transform 0.18s ease;
   }
   .ci-card:hover .ci-link svg {
-    transform: translateX(5px);
-  }
-  @media (max-width: 480px) {
-    .ci-grid {
-      grid-template-columns: 1fr;
-    }
+    transform: translateX(calc(5 * var(--dp)));
   }
 </style>

@@ -1,13 +1,20 @@
 ---
-import { languageSlugs, org } from "../i18n/ui";
-import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
+import { languageSlugs, org, whatsappUrl } from "../i18n/ui";
+import { fillOrgTokens, getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
+import LanguageFlag from "./LanguageFlag.astro";
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const f = t.footer;
 const year = new Date().getFullYear();
 
+// A razão social e o RUC não são digitados no locale: vêm de `org` pelos
+// mesmos placeholders das páginas legais, para que rodapé e Términos nunca
+// discordem sobre quem responde pelo site.
+const orgHtml = fillOrgTokens(f.orgHtml);
+
 const courseLangs = languageSlugs.map((slug) => ({
+  slug,
   name: t.courses.list[slug],
   href: withLang(lang, `/courses/${slug}`),
 }));
@@ -40,7 +47,7 @@ const socials = [
     <div class="col brand-col">
       <img src="/brand/logo.png" alt="Only One Coin" width="230" height="38" class="footer-logo" />
       <p class="tagline">{f.tagline}</p>
-      <p class="org" set:html={f.orgHtml} />
+      <p class="org" set:html={orgHtml} />
       <div class="socials" aria-label={f.followTitle}>
         {
           socials.map((s) => (
@@ -53,32 +60,55 @@ const socials = [
     </div>
 
     <div class="col">
-      <h3>{f.col1Title}</h3>
+      <h3>{f.colAbout}</h3>
       <ul>
-        <li><a href={withLang(lang, "/about")}>{f.about}</a></li>
-        <li><a href={withLang(lang, "/courses")}>{f.courses}</a></li>
+        <li><a href={withLang(lang, "/about")}>{f.aboutHistory}</a></li>
+        <li><a href={withLang(lang, "/about")}>{f.aboutMission}</a></li>
+        <li><a href={withLang(lang, "/about")}>{f.aboutImpact}</a></li>
       </ul>
     </div>
 
     <div class="col">
       <h3>{f.langsTitle}</h3>
       <ul>
-        {courseLangs.map((c) => <li><a href={c.href}>{c.name}</a></li>)}
+        {courseLangs.map((c) => (
+          <li>
+            <a href={c.href} class="lang-link">
+              <LanguageFlag slug={c.slug} />
+              <span>{c.name}</span>
+            </a>
+          </li>
+        ))}
       </ul>
     </div>
 
     <div class="col">
-      <h3>{f.col2Title}</h3>
+      <h3>{f.colStudents}</h3>
       <ul>
-        <li><a href={withLang(lang, "/contact")}>{f.contact}</a></li>
+        <li><a href={withLang(lang, "/login")}>{f.studentsPortal}</a></li>
+        <li><a href={withLang(lang, "/courses")}>{f.studentsCourses}</a></li>
+        <li><a href={withLang(lang, "/faq")}>{f.studentsCertificates}</a></li>
+        <li><a href={withLang(lang, "/faq")}>{f.studentsFaq}</a></li>
+      </ul>
+      <h3 class="legal-title">{f.colResources}</h3>
+      <ul>
+        <li><a href={withLang(lang, "/blog")}>{f.resBlog}</a></li>
+        <li><a href={withLang(lang, "/#benefits")}>{f.resWorkshops}</a></li>
+        <li><a href={withLang(lang, "/community")}>{f.resCommunity}</a></li>
+      </ul>
+    </div>
+
+    <div class="col">
+      <h3>{f.colHelp}</h3>
+      <ul>
+        <li><a href={withLang(lang, "/contact")}>{f.helpContact}</a></li>
+        <li><a href={whatsappUrl} target="_blank" rel="noopener">{f.helpWhatsapp}</a></li>
+        <li><a href={withLang(lang, "/terms-and-conditions")}>{f.terms}</a></li>
+        <li><a href={withLang(lang, "/privacy-policy")}>{f.privacy}</a></li>
         <li class="muted">{f.hoursLabel}</li>
         <li class="muted">{f.hours}</li>
       </ul>
-      <h3 class="legal-title">{f.legalTitle}</h3>
-      <ul>
-        <li><a href={withLang(lang, "/privacy-policy")}>{f.privacy}</a></li>
-        <li><a href={withLang(lang, "/terms-and-conditions")}>{f.terms}</a></li>
-      </ul>
+      <p class="footer-script" aria-hidden="true">{f.script}</p>
     </div>
   </div>
 
@@ -110,13 +140,13 @@ const socials = [
     overflow: hidden;
     background: var(--ink);
     color: rgba(255, 255, 255, 0.72);
-    padding-top: 64px;
+    padding-top: calc(64 * var(--dp));
   }
   .footer-blob {
-    width: 340px;
-    height: 340px;
-    top: -160px;
-    right: -80px;
+    width: calc(340 * var(--dp));
+    height: calc(340 * var(--dp));
+    top: calc(-160 * var(--dp));
+    right: calc(-80 * var(--dp));
     background: var(--blue);
     opacity: 0.18;
   }
@@ -124,36 +154,45 @@ const socials = [
     position: relative;
     z-index: 1;
     display: grid;
-    grid-template-columns: 1.6fr 1fr 1fr 1.2fr;
-    gap: 40px;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr 1.1fr;
+    gap: calc(36 * var(--dp));
+  }
+  .footer-script {
+    margin: calc(26 * var(--dp)) 0 0;
+    font-family: var(--font-script);
+    font-weight: 700;
+    font-size: calc(25.6 * var(--dp));
+    line-height: 1.1;
+    color: var(--yellow-bright);
+    transform: rotate(-4deg);
   }
   .footer-logo {
-    height: 38px;
+    height: calc(38 * var(--dp));
     width: auto;
-    margin-bottom: 16px;
+    margin-bottom: calc(16 * var(--dp));
     /* Logo art is gold-on-dark; keep it bright on the navy footer */
   }
   .tagline {
     max-width: 34ch;
-    margin: 0 0 14px;
+    margin: 0 0 calc(14 * var(--dp));
     color: rgba(255, 255, 255, 0.82);
   }
   .org {
-    font-size: 0.9rem;
+    font-size: calc(14.4 * var(--dp));
     color: rgba(255, 255, 255, 0.6);
-    margin: 0 0 20px;
+    margin: 0 0 calc(20 * var(--dp));
   }
   .col h3 {
     color: #fff;
     font-family: var(--font);
-    font-size: 0.82rem;
+    font-size: calc(13.12 * var(--dp));
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    margin-bottom: 16px;
+    margin-bottom: calc(16 * var(--dp));
   }
   .legal-title {
-    margin-top: 26px;
+    margin-top: calc(26 * var(--dp));
   }
   .col ul {
     list-style: none;
@@ -161,8 +200,8 @@ const socials = [
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 11px;
-    font-size: 0.95rem;
+    gap: calc(11 * var(--dp));
+    font-size: calc(15.2 * var(--dp));
   }
   .col a {
     transition: color 0.15s ease;
@@ -170,47 +209,57 @@ const socials = [
   .col a:hover {
     color: var(--yellow-bright);
   }
+  .lang-link {
+    display: inline-flex;
+    align-items: center;
+    gap: calc(9 * var(--dp));
+  }
+  .lang-link :global(.lang-flag) {
+    width: calc(17 * var(--dp));
+    height: calc(17 * var(--dp));
+    border-color: rgba(255, 255, 255, 0.25);
+  }
   .muted {
     color: rgba(255, 255, 255, 0.5);
   }
   .socials {
     display: flex;
-    gap: 10px;
+    gap: calc(10 * var(--dp));
   }
   .social {
-    width: 40px;
-    height: 40px;
+    width: calc(40 * var(--dp));
+    height: calc(40 * var(--dp));
     display: grid;
     place-items: center;
-    border-radius: 12px;
+    border-radius: calc(12 * var(--dp));
     background: rgba(255, 255, 255, 0.08);
     color: #fff;
     transition: background 0.16s ease, transform 0.16s ease, color 0.16s ease;
   }
   .social :global(svg) {
-    width: 19px;
-    height: 19px;
+    width: calc(19 * var(--dp));
+    height: calc(19 * var(--dp));
   }
   .social:hover {
     background: var(--yellow);
     color: var(--ink);
-    transform: translateY(-3px);
+    transform: translateY(calc(-3 * var(--dp)));
   }
   .footer-partner {
     position: relative;
     z-index: 1;
-    margin-top: 44px;
-    padding-block: 20px;
-    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    margin-top: calc(44 * var(--dp));
+    padding-block: calc(20 * var(--dp));
+    border-top: calc(1 * var(--dp)) solid rgba(255, 255, 255, 0.12);
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 16px;
+    gap: calc(16 * var(--dp));
     flex-wrap: wrap;
     text-align: center;
   }
   .partner-label {
-    font-size: 0.82rem;
+    font-size: calc(13.12 * var(--dp));
     letter-spacing: 0.04em;
     color: rgba(255, 255, 255, 0.5);
   }
@@ -222,40 +271,79 @@ const socials = [
   }
   .partner-link:hover {
     opacity: 1;
-    transform: translateY(-2px);
+    transform: translateY(calc(-2 * var(--dp)));
   }
   .partner-link img {
     /* Cream-on-transparent lockup: sized by height so the 318x112 art keeps
        its ratio next to the label. */
-    height: 30px;
+    height: calc(30 * var(--dp));
     width: auto;
     display: block;
   }
   .footer-bottom {
     position: relative;
     z-index: 1;
-    padding-block: 22px;
-    border-top: 1px solid rgba(255, 255, 255, 0.12);
-    font-size: 0.85rem;
+    padding-block: calc(22 * var(--dp));
+    border-top: calc(1 * var(--dp)) solid rgba(255, 255, 255, 0.12);
+    font-size: calc(13.6 * var(--dp));
     color: rgba(255, 255, 255, 0.55);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
+    gap: calc(16 * var(--dp));
     flex-wrap: wrap;
   }
-  @media (max-width: 860px) {
+
+  /* ——— Celular: a segunda largura de desenho (390px, global.css). ———
+     Abaixo de 900px não é esta seção encolhida — é outra composição para a
+     mesma seção. As cinco colunas viram duas, com a coluna
+     da marca ocupando a linha inteira em cima. */
+  @media (max-width: 900px) {
+    .site-footer {
+      padding-top: calc(40 * var(--dp));
+    }
     .footer-grid {
-      grid-template-columns: 1fr 1fr;
-      gap: 34px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: calc(26 * var(--dp)) calc(16 * var(--dp));
     }
     .brand-col {
       grid-column: 1 / -1;
     }
-  }
-  @media (max-width: 520px) {
-    .footer-grid {
-      grid-template-columns: 1fr;
+    .footer-logo {
+      height: calc(30 * var(--dp));
+      margin-bottom: calc(12 * var(--dp));
+    }
+    .tagline {
+      max-width: none;
+      font-size: calc(14.5 * var(--dp));
+    }
+    .org {
+      font-size: calc(13 * var(--dp));
+      margin-bottom: calc(16 * var(--dp));
+    }
+    .footer-script {
+      margin-top: calc(18 * var(--dp));
+      font-size: calc(20 * var(--dp));
+    }
+    .col h3 {
+      font-size: calc(12 * var(--dp));
+      margin-bottom: calc(12 * var(--dp));
+    }
+    .col ul {
+      font-size: calc(13.6 * var(--dp));
+      gap: calc(9 * var(--dp));
+    }
+    .social {
+      width: calc(36 * var(--dp));
+      height: calc(36 * var(--dp));
+    }
+    .footer-partner {
+      margin-top: calc(28 * var(--dp));
+    }
+    .footer-bottom {
+      justify-content: center;
+      text-align: center;
+      font-size: calc(12.5 * var(--dp));
     }
   }
 </style>

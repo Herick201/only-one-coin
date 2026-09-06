@@ -4,6 +4,7 @@ import type {
   AvailabilitySlot,
   ClassGroupDetail,
   ClassGroupRow,
+  ClassGroupStudent,
   CourseLanguage,
   CourseRow,
   DashboardMetrics,
@@ -1532,7 +1533,32 @@ const LANGUAGES = {
  * which certifies only after the student sits the certification exam
  * (`docs/REGRAS-NEGOCIO.md` §6), so it never goes out in a blind batch.
  */
-const classGroups: ClassGroupDetail[] = [
+/**
+ * The seed rows carry everything but `pendingGrades`, which is derived from the
+ * roster by `pendingGradesOf` — a stored copy of a count the students already
+ * answer would be a number that drifts.
+ */
+/**
+ * Student seeds may leave the newer per-student fields out — `examGrade` and
+ * `notes` default when served, so forty existing roster literals did not have
+ * to grow two lines each.
+ */
+type ClassGroupStudentSeed = Omit<ClassGroupStudent, 'examGrade' | 'notes'> &
+  Partial<Pick<ClassGroupStudent, 'examGrade' | 'notes'>>
+
+type ClassGroupSeed = Omit<ClassGroupDetail, 'pendingGrades' | 'students'> & {
+  students: ClassGroupStudentSeed[]
+}
+
+function serveStudents(students: ClassGroupStudentSeed[]): ClassGroupStudent[] {
+  return students.map((student) => ({
+    ...student,
+    examGrade: student.examGrade ?? null,
+    notes: student.notes ?? [],
+  }))
+}
+
+const classGroups: ClassGroupSeed[] = [
   {
     id: 'cg_05',
     courseName: 'Italiano Inicial',
@@ -1687,12 +1713,21 @@ const classGroups: ClassGroupDetail[] = [
         enrollmentId: 'enr_0801',
         enrollmentStatus: 'completed',
         paymentStatus: 'approved',
+        examGrade: 19,
         finalGrade: 18,
         gradeStatus: 'approved',
         certificationExam: 'approved',
         certificateIssuedAt: null,
         delivery: null,
         procedure: null,
+        notes: [
+          {
+            id: 'note_0001',
+            at: '2026-07-18T21:10:00Z',
+            authorName: 'Carlos Meza',
+            text: 'Participa en todas las clases y ayuda a sus compañeros en los breakout rooms.',
+          },
+        ],
       },
       {
         studentId: 'stu_0006',
@@ -1700,12 +1735,27 @@ const classGroups: ClassGroupDetail[] = [
         enrollmentId: 'enr_0802',
         enrollmentStatus: 'completed',
         paymentStatus: 'approved',
+        examGrade: 16,
         finalGrade: 17,
         gradeStatus: 'approved',
         certificationExam: 'pending',
         certificateIssuedAt: null,
         delivery: null,
         procedure: null,
+        notes: [
+          {
+            id: 'note_0002',
+            at: '2026-06-06T15:30:00Z',
+            authorName: 'Carlos Meza',
+            text: 'Faltó dos sábados seguidos por trabajo; se puso al día con las grabaciones.',
+          },
+          {
+            id: 'note_0003',
+            at: '2026-08-01T14:05:00Z',
+            authorName: 'Carlos Meza',
+            text: 'Le cuesta el listening — recomendé práctica con los audios del módulo.',
+          },
+        ],
       },
       {
         studentId: 'stu_0007',
@@ -1713,6 +1763,7 @@ const classGroups: ClassGroupDetail[] = [
         enrollmentId: 'enr_0803',
         enrollmentStatus: 'completed',
         paymentStatus: 'approved',
+        examGrade: 14,
         finalGrade: 15,
         gradeStatus: 'approved',
         certificationExam: 'not_requested',
@@ -2353,15 +2404,36 @@ export function listCourses(): CourseRow[] {
     )
 }
 
+/**
+ * Final grades still open on a roster — what the teacher owes the class group.
+ * Only while there is something to owe: an enrolling group has not taught
+ * anything yet and a closed one is history, so both count zero. A student
+ * moved out by a procedure (frozen, transferred, withdrawn) is not counted
+ * either: they left the roster, not a grade behind.
+ */
+function pendingGradesOf(group: ClassGroupSeed): number {
+  if (group.status !== 'in_progress' && group.status !== 'finished') return 0
+  return group.students.filter(
+    (student) => student.gradeStatus === 'pending' && student.procedure === null,
+  ).length
+}
+
 export function listClassGroups(): ClassGroupRow[] {
-  return classGroups.map(({ students, ...row }) => {
+  return classGroups.map((group) => {
+    const { students, ...row } = group
     void students
-    return row
+    return { ...row, pendingGrades: pendingGradesOf(group) }
   })
 }
 
 export function getClassGroup(id: string): ClassGroupDetail | undefined {
-  return classGroups.find((group) => group.id === id)
+  const group = classGroups.find((item) => item.id === id)
+  if (!group) return undefined
+  return {
+    ...group,
+    students: serveStudents(group.students),
+    pendingGrades: pendingGradesOf(group),
+  }
 }
 
 /**
@@ -2371,7 +2443,11 @@ export function getClassGroup(id: string): ClassGroupDetail | undefined {
  * directory has no business carrying every student of every class group.
  */
 export function listClassGroupRosters(): ClassGroupDetail[] {
-  return classGroups
+  return classGroups.map((group) => ({
+    ...group,
+    students: serveStudents(group.students),
+    pendingGrades: pendingGradesOf(group),
+  }))
 }
 
 /* -------------------------------------------------------------------------- */
@@ -2736,11 +2812,7 @@ function teacherLoad(teacherId: string) {
   return {
     activeClassGroups: running.length,
     studentCount: running.reduce((sum, group) => sum + group.seatsTaken, 0),
-    pendingGrades: own.reduce(
-      (sum, group) =>
-        sum + group.students.filter((student) => student.gradeStatus === 'pending').length,
-      0,
-    ),
+    pendingGrades: own.reduce((sum, group) => sum + pendingGradesOf(group), 0),
     pendingCertificates: own.reduce((sum, group) => sum + group.pendingCertificates, 0),
   }
 }
@@ -2790,9 +2862,10 @@ export function getTeacher(
        the last one. */
     classGroups: classGroups
       .filter((group) => group.teacherId === id)
-      .map(({ students, ...row }) => {
+      .map((group) => {
+        const { students, ...row } = group
         void students
-        return row
+        return { ...row, pendingGrades: pendingGradesOf(group) }
       })
       .sort(
         (a, b) =>
@@ -2834,6 +2907,18 @@ export function getClassGroupFor(
   if (!group) return undefined
   if (staff.role === 'teacher' && group.teacherId !== staff.teacherId) return undefined
   return group
+}
+
+/**
+ * The rosters a staff member may read whole — the teacher's working screen
+ * needs every student of every one of their class groups at once. Same rule
+ * as the two reads above: the filter comes from the session, and the check
+ * that counts is the usecase in `apps/api` (CLAUDE.md §8).
+ */
+export function listClassGroupRostersFor(staff: StaffUser): ClassGroupDetail[] {
+  const rosters = listClassGroupRosters()
+  if (staff.role !== 'teacher') return rosters
+  return rosters.filter((group) => group.teacherId === staff.teacherId)
 }
 
 /* -------------------------------------------------------------------------- */
@@ -3162,7 +3247,7 @@ function languageOf(courseName: string): CourseLanguage | null {
  * because two class groups of the same course share a course name and would
  * otherwise be told apart by a label.
  */
-function classGroupOf(enrollmentId: string): ClassGroupDetail | undefined {
+function classGroupOf(enrollmentId: string): ClassGroupSeed | undefined {
   return classGroups.find((group) =>
     group.students.some((student) => student.enrollmentId === enrollmentId),
   )

@@ -38,6 +38,16 @@
       "port": 3007
     },
     {
+      "name": "api",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@ooc/api",
+        "dev"
+      ],
+      "port": 3333
+    },
+    {
       "name": "app-wt",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": [
@@ -63,6 +73,19 @@
       ],
       "port": 3009,
       "autoPort": true
+    },
+    {
+      "name": "landing-wt-lan",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@ooc/landing",
+        "dev",
+        "--host",
+        "--port",
+        "4324"
+      ],
+      "port": 4324
     }
   ]
 }

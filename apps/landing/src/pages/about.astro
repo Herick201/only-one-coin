@@ -1,7 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
 import About from "../components/About.astro";
-import CtaConsulta from "../components/CtaConsulta.astro";
+import CtaEnroll from "../components/CtaEnroll.astro";
 import { content, defaultLang } from "../i18n/ui";
 
 const m = content[defaultLang].meta.about;
@@ -9,5 +9,5 @@ const m = content[defaultLang].meta.about;
 
 <Base title={m.title} description={m.description}>
   <About />
-  <CtaConsulta />
+  <CtaEnroll />
 </Base>

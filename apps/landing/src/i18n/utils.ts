@@ -1,4 +1,4 @@
-import { content, courseSlugs, defaultLang, type CourseSlug, type Lang } from "./ui";
+import { content, courseSlugs, defaultLang, org, type CourseSlug, type Lang } from "./ui";
 import { legalContent } from "./legal";
 
 const PREFIXED: Lang[] = ["en", "pt"];
@@ -19,6 +19,27 @@ export function withLang(lang: Lang, path: string): string {
   const clean = "/" + path.replace(/^\/+/, "");
   if (lang === defaultLang) return clean;
   return clean === "/" ? `/${lang}/` : `/${lang}${clean}`;
+}
+
+/**
+ * Resolve the {legalName} / {ruc} / {address} / {site} / {phones} / {email}
+ * placeholders that carry the company's identity into localized copy. The
+ * identity lives once in `org`: a change of razão social or RUC is one edit,
+ * never a hunt through three dictionaries and two legal documents.
+ */
+export function fillOrgTokens(text: string): string {
+  const tokens: Record<string, string> = {
+    "{legalName}": org.legalName,
+    "{ruc}": org.ruc,
+    "{address}": org.address,
+    "{site}": org.site,
+    "{phones}": org.phones.join(" / "),
+    "{email}": org.email,
+  };
+  return Object.entries(tokens).reduce(
+    (out, [token, value]) => out.replaceAll(token, value),
+    text,
+  );
 }
 
 /** Format a PEN amount for display: "S/80", "S/69.90" (pt uses a comma). */

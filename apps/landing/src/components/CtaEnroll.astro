@@ -1,0 +1,161 @@
+---
+import { Image } from "astro:assets";
+import ctaPhoto from "../assets/photos/teacher-desk.jpg";
+import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const c = t.cta;
+---
+
+<section class="cta">
+  <div class="cta-photo">
+    <Image
+      src={ctaPhoto}
+      alt={c.imgAlt}
+      widths={[480, 768]}
+      sizes="24vw"
+      format="webp"
+      quality={72}
+    />
+  </div>
+  <div class="cta-inner">
+    <div class="cta-copy">
+      <h2 class="cta-title">{c.title}</h2>
+      <p>{c.sub}</p>
+    </div>
+    <p class="cta-price">
+      {c.pricePre} <strong>{c.price}</strong> {c.priceUnit}
+    </p>
+    <a href={withLang(lang, "/enrollment")} class="btn btn-yellow cta-btn">
+      <span>{t.hero.ctaEnroll}</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+    </a>
+  </div>
+</section>
+
+<style>
+  /* Formato web do mockup: faixa azul de borda a borda, colada no footer,
+     com a foto sangrando na esquerda. */
+  .cta {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(105deg, var(--blue-deep), var(--blue) 55%, var(--blue-deep));
+    margin-top: calc(24 * var(--dp));
+  }
+  .cta-photo {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: min(24%, calc(320 * var(--dp)));
+  }
+  /* :global porque o <img> sai do componente <Image> — o escopo do Astro
+     não alcança elemento renderizado por componente filho. */
+  .cta-photo :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Janela mais baixa do recorte: menos céu, rosto centrado. */
+    object-position: 50% 62%;
+    display: block;
+  }
+  .cta-photo::after {
+    /* Funde a borda da foto no azul da faixa. */
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 55%, rgba(27, 70, 201, 0.85));
+  }
+  .cta-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: calc(36 * var(--dp));
+    flex-wrap: wrap;
+    padding-block: calc(34 * var(--dp));
+    padding-left: max(calc(min(24%, calc(320 * var(--dp))) + calc(44 * var(--dp))), calc((100% - var(--maxw)) / 2 + calc(24 * var(--dp))));
+    padding-right: max(calc(24 * var(--dp)), calc((100% - var(--maxw)) / 2 + calc(24 * var(--dp))));
+  }
+  .cta-copy {
+    flex: 1 1 calc(300 * var(--dp));
+  }
+  .cta-title {
+    font-size: calc(33.04 * var(--dp));
+    color: #fff;
+  }
+  .cta-copy p {
+    margin-top: calc(6 * var(--dp));
+    color: rgba(255, 255, 255, 0.85);
+  }
+  .cta-price {
+    margin: 0;
+    color: #fff;
+    font-weight: 600;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .cta-price strong {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: calc(32 * var(--dp));
+    line-height: 1.05;
+    color: var(--yellow-bright);
+  }
+  .cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: calc(10 * var(--dp));
+    white-space: nowrap;
+  }
+  .cta-btn svg {
+    width: calc(17 * var(--dp));
+    height: calc(17 * var(--dp));
+  }
+
+  /* ——— Celular: a segunda largura de desenho (390px, global.css). ———
+     Abaixo de 900px não é esta seção encolhida — é outra composição para a
+     mesma seção. A foto sai da lateral e vira a faixa do
+     topo: com 390px de desenho ela ocupava um quarto da largura e deixava de
+     se ler como foto. */
+  @media (max-width: 900px) {
+    .cta-photo {
+      position: relative;
+      width: 100%;
+      height: calc(140 * var(--dp));
+    }
+    /* Faixa larga e baixa: o recorte precisa descer para pegar o rosto, que
+       na coluna vertical do desenho largo já vinha enquadrado. */
+    .cta-photo :global(img) {
+      object-position: 50% 58%;
+    }
+    .cta-photo::after {
+      background: linear-gradient(180deg, transparent 35%, rgba(27, 70, 201, 0.92));
+    }
+    .cta-inner {
+      display: block;
+      width: 100%;
+      max-width: var(--maxw);
+      margin-inline: auto;
+      padding: calc(22 * var(--dp)) calc(20 * var(--dp)) calc(30 * var(--dp));
+      text-align: center;
+    }
+    .cta-title {
+      font-size: calc(25 * var(--dp));
+    }
+    .cta-copy p {
+      font-size: calc(14.5 * var(--dp));
+    }
+    .cta-price {
+      margin-top: calc(14 * var(--dp));
+    }
+    .cta-price strong {
+      font-size: calc(26 * var(--dp));
+    }
+    .cta-btn {
+      margin-top: calc(16 * var(--dp));
+      width: 100%;
+    }
+  }
+</style>

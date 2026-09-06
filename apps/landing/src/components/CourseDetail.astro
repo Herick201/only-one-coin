@@ -1,10 +1,12 @@
 ---
 import type { CourseSlug } from "../i18n/ui";
-import { audienceAnchors, courseParent, coursePrices, htmlLang, levelsOf, monthlyPrices, whatsappUrl } from "../i18n/ui";
+import { audienceAnchors, bundles, courseParent, coursePrices, hasKidsProgram, htmlLang, levelsOf, monthlyPrices, monthlySessionPrices, org, sessionPrices, whatsappUrl } from "../i18n/ui";
+import type { BundleId } from "../i18n/ui";
 import { getLangFromUrl, useTranslations, withLang, formatPEN } from "../i18n/utils";
-import { courseIdBySlug, enrollmentHref } from "../data/checkout";
+import { courseIdBySlug, englishKidsCourseId, enrollmentHref } from "../data/checkout";
 import { courseContent } from "../i18n/courses-content";
 import CourseProgramDetail from "./CourseProgramDetail.astro";
+import LanguageFlag from "./LanguageFlag.astro";
 
 interface Props {
   slug: CourseSlug;
@@ -15,15 +17,90 @@ const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const d = t.courseDetail;
 const name = t.courses.list[slug];
-const rawPrice = coursePrices[slug];
-const price = rawPrice === null ? null : formatPEN(rawPrice, lang);
-// Mensual só existe para inglês (CLAUDE.md §1, decisão 02/09/2026) — entra
-// no painel do nível e na oferta do JSON-LD; nos demais cursos nem aparece.
-const rawMonthly = monthlyPrices[slug] ?? null;
+// As formas de pagar o nível, com valor. Mensual entra só onde existe —
+// inglês (CLAUDE.md §1, decisão 02/09/2026) — e só onde a coordenação já deu
+// o valor. O paquete fecha a fileira e é sempre o recomendado (pedido do
+// dono, 04/09/2026).
+//
+// O preço por sessão NÃO é uma opção de compra: ninguém paga uma aula avulsa
+// (CLAUDE.md §1). Como card solto ele prometia exatamente isso, então virou
+// a equivalência pendurada no paquete — o argumento de pagar tudo de uma vez.
+//
+// Modalidade sem preço não vira card: nunca anunciamos uma forma de pagar sem
+// dizer quanto custa (CLAUDE.md §9).
+const paymentOptions = (levelSlug: CourseSlug) => {
+  const monthly = monthlyPrices[levelSlug] ?? null;
+  const full = coursePrices[levelSlug];
+  // O que o paquete entrega, dito com dado que já existe: as sessões vêm do
+  // programa do próprio nível (80, 60 ou 16, conforme o curso) e a contagem
+  // de talleres vem da lista de benefícios — nada de número escrito à mão que
+  // envelhece quando um taller entra ou sai.
+  const sessions = courseContent[lang][levelSlug]?.sessions ?? null;
+  const perSession = sessionPrices[levelSlug];
+  const monthlyPerSession = monthlySessionPrices[levelSlug] ?? null;
+  const shortName = (levelId: CourseSlug) => d.levelShortNames[levelId] ?? t.courses.list[levelId];
+  const noteOf = (value: number | null) =>
+    value === null ? null : { price: formatPEN(value, lang), unit: t.hero.priceUnit };
+  const workshops = d.paymentWorkshops.replace("{count}", String(t.perks.items.length));
+  const perks = [
+    ...(sessions === null ? [] : [d.paymentSessionsWith.replace("{sessions}", sessions)]),
+    workshops,
+  ];
+  // Os pacotes que cobrem este nível junto com outro. A linha que os descreve
+  // sai dos nomes curtos dos níveis cobertos — a combinação nunca é escrita à
+  // mão, em nenhum dos três idiomas.
+  const levelBundles = (Object.entries(bundles) as [BundleId, (typeof bundles)[BundleId]][])
+    .filter(([, bundle]) => bundle.covers.includes(levelSlug))
+    .map(([id, bundle]) => ({
+      key: id,
+      name: d.paymentBundleNames[id],
+      price: formatPEN(bundle.price, lang),
+      note: noteOf(bundle.perSession),
+      perks: [bundle.covers.map(shortName).join(" + "), workshops],
+      recommended: false,
+    }));
+  const options = [
+    ...(monthly === null
+      ? []
+      : [
+          {
+            key: "monthly",
+            name: d.paymentMonthlyName,
+            price: formatPEN(monthly, lang),
+            note: noteOf(monthlyPerSession),
+            perks: [] as string[],
+            recommended: false,
+          },
+        ]),
+    ...(full === null
+      ? []
+      : [
+          {
+            key: "full",
+            name: d.paymentFullName,
+            price: formatPEN(full, lang),
+            // Só a pílula e a unidade: "equivale a" era preâmbulo, e o que
+            // importa é o número.
+            note: noteOf(perSession),
+            perks,
+            recommended: false,
+          },
+        ]),
+    ...levelBundles,
+  ];
+  // Em ordem do mais curto ao mais completo, e o ÚLTIMO é o recomendado — que
+  // é o mais completo disponível ali, seja o paquete do nível ou o pacote que
+  // cobre dois. Um card sozinho não é o recomendado de nada, é o preço.
+  if (options.length > 1) options[options.length - 1].recommended = true;
+  return options;
+};
 // Matrícula desta página já cai no checkout com ESTE curso escolhido.
 // Programa real deste curso, quando a coordenação já entregou o documento.
 // Sem ele a página segue no texto genérico, com o aviso de exemplo.
 const program = courseContent[lang][slug] ?? null;
+// O gancho do topo é o preço por sessão DESTE curso. Antes vinha do herói,
+// que carrega o mínimo do site (S/0.60): japonês, a S/5, anunciava 0.60.
+const hookPrice = sessionPrices[slug];
 
 // Idioma e seus níveis. A página de um idioma vira o hub da família: um
 // seletor de níveis em quadradinhos, e UM painel de detalhe que troca com a
@@ -32,6 +109,18 @@ const program = courseContent[lang][slug] ?? null;
 // caindo no lugar certo.
 const parentSlug = courseParent[slug] ?? null;
 const familyRoot = parentSlug ?? slug;
+// Quem entra neste curso, por idade: o OOC Kids (6 a 12) existe só no inglês,
+// e é a página do idioma que o hospeda. Todo o resto — os outros idiomas e os
+// níveis acima do básico — é de 13 anos em diante e diz isso num selo.
+const showsKids = hasKidsProgram(slug);
+// O OOC Kids não é um nível desta página: é OUTRO curso, com id próprio no
+// catálogo do checkout. Quem sai daqui matriculando uma criança tem que cair
+// no curso dela — o mesmo botão dos níveis levaria ao curso de jovens e
+// adultos, que é justamente o engano que esta seção existe para desfazer.
+const kidsEnrollHref = enrollmentHref(withLang(lang, "/enrollment"), {
+  courseId: englishKidsCourseId,
+  content: "course_page_kids",
+});
 const siblings = [familyRoot, ...levelsOf(familyRoot)];
 // Um curso sem níveis é uma família de um: mesmo hub, mesma cara — um único
 // quadradinho já selecionado sobre o seu painel (pedido do dono, 03/09/2026).
@@ -57,9 +146,7 @@ const levelPanels = siblings.map((levelSlug) => {
     shortName: d.levelShortNames[levelSlug] ?? t.courses.list[levelSlug],
     highlights: d.levelHighlights[levelSlug] ?? fallbackHighlights(levelProgram),
     program: levelProgram,
-    // O hub não mostra valores (pedido do dono, 03/09/2026) — mensal aqui
-    // é só o gatilho das pílulas de modalidade no painel.
-    hasMonthly: (monthlyPrices[levelSlug] ?? null) !== null,
+    options: paymentOptions(levelSlug),
     enrollHref: enrollmentHref(withLang(lang, "/enrollment"), {
       courseId: courseIdBySlug[levelSlug],
       content: "course_page",
@@ -111,7 +198,7 @@ const courseJsonLd = {
   provider: {
     "@type": "EducationalOrganization",
     name: "Only One Coin Perú",
-    legalName: "Asociación Only One Coin Perú",
+    legalName: org.legalName,
     url: new URL("/", Astro.site).href,
   },
   isAccessibleForFree: false,
@@ -122,26 +209,10 @@ const courseJsonLd = {
     courseMode: "Online",
     inLanguage: htmlLang[lang],
   },
-  offers: [
-    {
-      "@type": "Offer",
-      category: "Paid",
-      price: (rawPrice ?? 0).toFixed(2),
-      priceCurrency: "PEN",
-      availability: "https://schema.org/InStock",
-    },
-    ...(rawMonthly !== null
-      ? [
-          {
-            "@type": "Offer",
-            category: "Paid",
-            price: rawMonthly.toFixed(2),
-            priceCurrency: "PEN",
-            availability: "https://schema.org/InStock",
-          },
-        ]
-      : []),
-  ],
+  // Sem `offers`: a página não anuncia mais o total do paquete (pedido do
+  // dono, 04/09/2026), e dado estruturado que declara um preço invisível na
+  // página é exatamente o que o Google trata como marcação enganosa. O preço
+  // por sessão não é o preço do curso, então também não entra aqui.
 };
 ---
 
@@ -167,10 +238,12 @@ const courseJsonLd = {
           (o preço do plano segue sendo o vigente, `CLAUDE.md` §1). */}
       <p class="badges">
         <span class="urgency">{d.urgency}</span>
+        <span class="age">{d.ageBadge}</span>
       </p>
       <h1>
         {d.titlePre}
         <span class="accent name-wrap">
+          <LanguageFlag slug={familyRoot} />
           {name}
           {slug === "english" && (
             <span class="discount">
@@ -196,20 +269,44 @@ const courseJsonLd = {
         <p class="lead text-muted">{d.leadPre}{name}{d.leadPost}</p>
       )}
 
-      {/* O que a página grita é o sol por sessão; o total do paquete continua
-          logo abaixo, menor — quem decide precisa dele à vista. */}
-      {/* Renderização condicional, não `hidden`: o atributo perde para o
-          `display: flex` da regra e o bloco reaparecia num curso sem preço. */}
-      {price && (
+      {/* O único preço da página é o da sessão — o total do paquete saiu de
+          toda a landing (pedido do dono, 04/09/2026). Vale para todo curso,
+          então não há mais ramo condicional. */}
+      {hookPrice !== null && (
         <p class="price-hook">
           <span class="hook-pre">{d.priceHookPre}</span>
           <span class="hook-amount">
-            {t.hero.price}<span class="hook-unit">{t.hero.priceUnit}</span>
+            {formatPEN(hookPrice, lang)}<span class="hook-unit">{t.hero.priceUnit}</span>
           </span>
         </p>
       )}
       {!program && <p class="example-note">{d.exampleNote}</p>}
     </header>
+
+    {/* O OOC Kids é um CURSO à parte — não a faixa de baixo do mesmo curso.
+        Enquanto ele morava num bloco "¿Para quién es?" ao lado dos níveis,
+        quem chegava pelo card da home lia a página inteira como um curso só e
+        acabava matriculando a criança no curso de jovens e adultos. Por isso
+        ele tem card próprio, dito com todas as letras ("curso aparte"), e um
+        botão que leva ao SEU curso no checkout. A âncora `#kids` é a que o
+        card da home aponta. */}
+    {showsKids && (
+      <section class="block block-center kids-block" id={audienceAnchors[0]}>
+        <h2 class="block-title">{d.kidsTitle}</h2>
+        <article class="kids-card">
+          <span class="tag">{d.kidsTag}</span>
+          <h3>{d.kidsName}</h3>
+          <p class="text-muted">{d.kidsText}</p>
+          <div class="kids-actions">
+            <a class="btn btn-yellow" href={kidsEnrollHref}>{d.kidsCta}</a>
+            <a class="kids-wa" href={whatsappUrl} target="_blank" rel="noopener">
+              {d.ctaWhatsApp}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+            </a>
+          </div>
+        </article>
+      </section>
+    )}
 
     {/* O hub de níveis: quadradinhos em cima, UM painel embaixo. Clicar num
         nível troca só o painel — radio + CSS, sem JavaScript e sem recarregar.
@@ -217,7 +314,7 @@ const courseJsonLd = {
         programa inteiro fica atrás do "Ver detalles" dele. Curso sem níveis
         rende o mesmo painel, sem quadradinhos. */}
     {levelPanels.length > 0 && (
-      <section class="block block-center level-tabs">
+      <section class="block block-center level-tabs" id={audienceAnchors[1]}>
         <h2 class="block-title">{d.levelsTitle}</h2>
         {levelPanels.map((p) => (
           <input
@@ -263,19 +360,36 @@ const courseJsonLd = {
                   {p.highlights.map((item) => <li>{item}</li>)}
                 </ul>
               )}
-              {/* As duas modalidades, sem valores — o preço já mora no
-                  quadradinho do nível. O paquete leva o selo: é o que carrega
-                  os talleres. Só aparece onde a escolha existe (mensual). */}
-              {p.hasMonthly && (
+              {/* Como pagar, com o valor de cada forma. */}
+              {p.options.length > 0 && (
                 <div class="panel-options">
-                  <span class="panel-option">{d.paymentMonthlyName}</span>
-                  {/* A recomendação é a estrela em cima da pílula; a palavra
-                      fica só para leitor de tela. */}
-                  <span class="panel-option panel-option-full">
-                    <svg class="panel-option-star" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l2.9 6.26 6.6.72-4.9 4.55 1.34 6.47L12 16.77 6.06 20l1.34-6.47L2.5 8.98l6.6-.72L12 2z"/></svg>
-                    {d.paymentFullName}
-                    <span class="visually-hidden">{d.paymentRecommended}</span>
-                  </span>
+                  {p.options.map((o) => (
+                    <span class:list={["panel-option", { "panel-option-full": o.recommended, "panel-option-monthly": o.key === "monthly" }]}>
+                      {o.recommended && (
+                        <svg class="panel-option-star" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l2.9 6.26 6.6.72-4.9 4.55 1.34 6.47L12 16.77 6.06 20l1.34-6.47L2.5 8.98l6.6-.72L12 2z"/></svg>
+                      )}
+                      <span class="option-name">{o.name}</span>
+                      <span class="option-price">{o.price}</span>
+                      {/* Equivalência e selo existem em TODOS os cards, vazios
+                          onde não se aplicam: sem isso o card do paquete ganha
+                          duas linhas a mais e o valor dele sai do alinhamento
+                          com o vizinho — justo numa fileira feita pra
+                          comparar. A altura vazia vem do `min-height` em `em`
+                          das duas classes. */}
+                      {o.note && (
+                        <span class="option-note">
+                          <strong class="option-note-price">{o.note.price}</strong>
+                          <span class="option-note-unit">{o.note.unit}</span>
+                        </span>
+                      )}
+                      {o.perks.length > 0 && (
+                        <ul class="option-perks">
+                          {o.perks.map((perk) => <li>{perk}</li>)}
+                        </ul>
+                      )}
+                      {o.recommended && <span class="option-flag">{d.paymentRecommended}</span>}
+                    </span>
+                  ))}
                 </div>
               )}
               <a class="btn btn-yellow panel-enroll" href={p.enrollHref}>{t.hero.ctaEnroll}</a>
@@ -310,7 +424,7 @@ const courseJsonLd = {
 
 <style>
   .course {
-    padding-block: 48px 88px;
+    padding-block: calc(48 * var(--dp)) calc(88 * var(--dp));
     background:
       radial-gradient(50% 60% at 90% 0%, rgba(255, 201, 60, 0.14), transparent 60%),
       var(--sky-soft);
@@ -318,28 +432,28 @@ const courseJsonLd = {
   .back {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: calc(6 * var(--dp));
     font-weight: 600;
     color: var(--blue);
-    margin-bottom: 26px;
+    margin-bottom: calc(26 * var(--dp));
   }
   .back svg {
-    width: 18px;
-    height: 18px;
+    width: calc(18 * var(--dp));
+    height: calc(18 * var(--dp));
     transition: transform 0.16s ease;
   }
   .back:hover svg {
-    transform: translateX(-3px);
+    transform: translateX(calc(-3 * var(--dp)));
   }
   .course-head {
-    max-width: 720px;
+    max-width: calc(720 * var(--dp));
   }
   .badges {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 10px;
-    margin: 0 0 16px;
+    gap: calc(10 * var(--dp));
+    margin: 0 0 calc(16 * var(--dp));
   }
   /* Etiqueta de preço, a de pendurar: bico à esquerda, furo do barbante e o
      pontilhado costurado por dentro — colada meio torta, como na vitrine.
@@ -350,44 +464,52 @@ const courseJsonLd = {
     position: relative;
     display: inline-block;
   }
+  .name-wrap :global(.lang-flag) {
+    width: 0.7em;
+    height: 0.7em;
+    display: inline-block;
+    vertical-align: baseline;
+    margin-right: calc(4 * var(--dp));
+    border-width: calc(2 * var(--dp));
+  }
   /* O barbante, saindo da última letra até o furo da etiqueta. */
   .tag-string {
     position: absolute;
-    left: -15px;
+    left: calc(-15 * var(--dp));
     top: 50%;
-    width: 17px;
-    height: 2px;
+    width: calc(17 * var(--dp));
+    height: calc(2 * var(--dp));
     background: #c9101f;
     transform: rotate(12deg);
-    border-radius: 2px;
+    border-radius: calc(2 * var(--dp));
   }
   .discount {
     position: absolute;
-    left: calc(100% + 16px);
+    left: calc(100% + calc(16 * var(--dp)));
     top: 26%;
     /* A etiqueta nunca quebra em duas linhas: ela é um objeto, não um
        parágrafo — e o título é grande demais para ela crescer em altura. */
     white-space: nowrap;
     display: inline-flex;
     align-items: center;
-    gap: 9px;
-    padding: 13px 24px 13px 46px;
+    gap: calc(9 * var(--dp));
+    padding: calc(13 * var(--dp)) calc(24 * var(--dp)) calc(13 * var(--dp)) calc(46 * var(--dp));
     background: linear-gradient(145deg, #ee2a36, #c9101f);
     color: #fff;
     transform: rotate(-7deg);
-    clip-path: polygon(0% 50%, 24px 0%, 100% 0%, 100% 100%, 24px 100%);
+    clip-path: polygon(0% 50%, calc(24 * var(--dp)) 0%, 100% 0%, 100% 100%, calc(24 * var(--dp)) 100%);
     z-index: 1;
-    filter: drop-shadow(0 8px 14px rgba(201, 16, 31, 0.34));
+    filter: drop-shadow(0 calc(8 * var(--dp)) calc(14 * var(--dp)) rgba(201, 16, 31, 0.34));
   }
   /* Furo do barbante. Pintado da cor do fundo da seção: clip-path já recortou
      a peça, e não dá para recortar de novo por dentro. */
   .discount::before {
     content: "";
     position: absolute;
-    left: 28px;
+    left: calc(28 * var(--dp));
     top: 50%;
-    width: 10px;
-    height: 10px;
+    width: calc(10 * var(--dp));
+    height: calc(10 * var(--dp));
     border-radius: 50%;
     background: var(--sky-soft);
     transform: translateY(-50%);
@@ -396,111 +518,110 @@ const courseJsonLd = {
   .discount::after {
     content: "";
     position: absolute;
-    inset: 5px 7px 5px 42px;
-    border: 2px dashed rgba(255, 255, 255, 0.7);
-    border-radius: 5px;
+    inset: calc(5 * var(--dp)) calc(7 * var(--dp)) calc(5 * var(--dp)) calc(42 * var(--dp));
+    border: calc(2 * var(--dp)) dashed rgba(255, 255, 255, 0.7);
+    border-radius: calc(5 * var(--dp));
     pointer-events: none;
   }
   .discount-amount {
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 1.5rem;
+    font-size: calc(24 * var(--dp));
     line-height: 1;
     letter-spacing: -0.01em;
   }
   .discount-label {
     font-weight: 800;
-    font-size: 0.78rem;
+    font-size: calc(12.48 * var(--dp));
     letter-spacing: 0.06em;
     text-transform: uppercase;
   }
   /* Sem largura para pendurar ao lado, a etiqueta desce e vira um selo comum:
      melhor abaixo do título do que empurrando a página para o lado. */
-  @media (max-width: 700px) {
-    .name-wrap {
-      display: inline;
-    }
-    .discount {
-      position: static;
-      margin-top: 14px;
-      transform: rotate(-3deg);
-    }
-    .tag-string {
-      display: none;
-    }
-  }
   .price-hook {
-    margin-top: 24px;
+    margin-top: calc(24 * var(--dp));
     display: flex;
     align-items: baseline;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: calc(12 * var(--dp));
   }
   .hook-pre {
     font-family: var(--font-display);
-    font-size: clamp(1.2rem, 2.4vw, 1.7rem);
+    font-size: calc(27.2 * var(--dp));
     font-weight: 600;
     color: var(--ink);
   }
   .hook-amount {
     display: inline-flex;
     align-items: baseline;
-    gap: 8px;
+    gap: calc(8 * var(--dp));
     background: linear-gradient(135deg, var(--yellow-bright), var(--yellow));
     color: var(--ink);
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: clamp(2rem, 4.4vw, 3rem);
+    font-size: calc(48 * var(--dp));
     line-height: 1;
-    padding: 10px 24px;
-    border-radius: 18px;
+    padding: calc(10 * var(--dp)) calc(24 * var(--dp));
+    border-radius: calc(18 * var(--dp));
     box-shadow: var(--shadow-yellow);
   }
   .hook-unit {
     font-family: var(--font);
-    font-size: 0.8rem;
+    font-size: calc(12.8 * var(--dp));
     font-weight: 700;
   }
   .urgency {
     display: inline-flex;
     align-items: center;
-    padding: 8px 18px;
-    border-radius: 999px;
+    padding: calc(8 * var(--dp)) calc(18 * var(--dp));
+    border-radius: calc(999 * var(--dp));
     background: linear-gradient(135deg, var(--yellow-bright), var(--yellow));
     color: var(--ink);
     font-weight: 700;
-    font-size: 0.9rem;
+    font-size: calc(14.4 * var(--dp));
     box-shadow: var(--shadow-yellow);
   }
+  /* O selo de idade anda ao lado da urgência, mas não disputa com ela: a
+     urgência é o amarelo da marca, este é o azul claro das etiquetas. */
+  .age {
+    display: inline-flex;
+    align-items: center;
+    padding: calc(8 * var(--dp)) calc(18 * var(--dp));
+    border-radius: calc(999 * var(--dp));
+    background: var(--sky);
+    color: var(--blue-deep);
+    font-weight: 700;
+    font-size: calc(14.4 * var(--dp));
+  }
   .course-head h1 {
-    margin-top: 10px;
-    font-size: clamp(2.2rem, 6vw, 3.6rem);
+    margin-top: calc(10 * var(--dp));
+    font-size: calc(57.6 * var(--dp));
   }
   .course-head h1 .accent {
     color: var(--blue);
   }
   .lead {
-    margin-top: 18px;
-    font-size: 1.15rem;
+    margin-top: calc(18 * var(--dp));
+    font-size: calc(18.4 * var(--dp));
   }
   /* As quatro coisas que decidem a matrícula: quantas clases, que son en
      vivo, cuándo, y qué viene incluido. O resto do programa está mais abaixo
      para quem quiser — aqui em cima não cabe um texto. */
   .pitch {
-    margin-top: 20px;
+    margin-top: calc(20 * var(--dp));
   }
   .perks {
     list-style: none;
     margin: 0;
     padding: 0;
     display: grid;
-    gap: 10px;
+    gap: calc(10 * var(--dp));
     max-width: 62ch;
   }
   .perks li {
     position: relative;
-    padding-left: 30px;
-    font-size: 1.02rem;
+    padding-left: calc(30 * var(--dp));
+    font-size: calc(16.32 * var(--dp));
     font-weight: 600;
     color: var(--text);
   }
@@ -509,10 +630,10 @@ const courseJsonLd = {
     position: absolute;
     left: 0;
     top: 0.35em;
-    width: 16px;
-    height: 9px;
-    border-left: 3px solid var(--yellow-deep);
-    border-bottom: 3px solid var(--yellow-deep);
+    width: calc(16 * var(--dp));
+    height: calc(9 * var(--dp));
+    border-left: calc(3 * var(--dp)) solid var(--yellow-deep);
+    border-bottom: calc(3 * var(--dp)) solid var(--yellow-deep);
     transform: rotate(-45deg);
   }
   /* Duração, nível e modalidade: os três números que a pessoa procura antes de
@@ -532,9 +653,9 @@ const courseJsonLd = {
      geradas no frontmatter (`levelTabsCss`); aqui fica só o visual. */
   .level-radio {
     position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
+    width: calc(1 * var(--dp));
+    height: calc(1 * var(--dp));
+    margin: calc(-1 * var(--dp));
     clip-path: inset(50%);
     overflow: hidden;
   }
@@ -542,26 +663,26 @@ const courseJsonLd = {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 12px;
-    max-width: 860px;
+    gap: calc(12 * var(--dp));
+    max-width: calc(860 * var(--dp));
     margin-inline: auto;
   }
   .tab-square {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
-    min-width: 150px;
-    padding: 18px 24px;
+    gap: calc(10 * var(--dp));
+    min-width: calc(150 * var(--dp));
+    padding: calc(18 * var(--dp)) calc(24 * var(--dp));
     background: var(--paper);
-    border: 1.5px solid var(--border);
+    border: calc(1.5 * var(--dp)) solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow-sm);
     cursor: pointer;
     transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
   }
   .tab-square:hover {
-    transform: translateY(-2px);
+    transform: translateY(calc(-2 * var(--dp)));
     border-color: var(--blue);
   }
   /* As barras sobem como sinal de celular: alinhadas pela base, cada uma um
@@ -569,12 +690,12 @@ const courseJsonLd = {
   .tab-steps {
     display: flex;
     align-items: flex-end;
-    gap: 4px;
-    height: 24px;
+    gap: calc(4 * var(--dp));
+    height: calc(24 * var(--dp));
   }
   .step {
-    width: 7px;
-    border-radius: 4px;
+    width: calc(7 * var(--dp));
+    border-radius: calc(4 * var(--dp));
     background: var(--sky);
     transition: background 0.16s ease;
   }
@@ -584,12 +705,12 @@ const courseJsonLd = {
   .tab-name {
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 1rem;
+    font-size: calc(16 * var(--dp));
     color: var(--ink);
   }
   .level-panels {
-    max-width: 860px;
-    margin: 26px auto 0;
+    max-width: calc(860 * var(--dp));
+    margin: calc(26 * var(--dp)) auto 0;
   }
   .level-panel {
     display: none;
@@ -597,90 +718,212 @@ const courseJsonLd = {
     overflow: hidden;
     text-align: center;
     background: var(--paper);
-    border: 1.5px solid var(--border);
+    border: calc(1.5 * var(--dp)) solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow-sm);
-    padding: 30px 32px;
+    padding: calc(30 * var(--dp)) calc(32 * var(--dp));
   }
   .panel-watermark {
     position: absolute;
-    right: -20px;
-    bottom: 14px;
-    width: 340px;
+    right: calc(-20 * var(--dp));
+    bottom: calc(14 * var(--dp));
+    width: calc(340 * var(--dp));
     opacity: 0.07;
     transform: rotate(-8deg);
     pointer-events: none;
   }
   .panel-title {
-    font-size: 1.2rem;
-    margin-bottom: 14px;
+    font-size: calc(19.2 * var(--dp));
+    margin-bottom: calc(14 * var(--dp));
   }
   /* Checks centrados como bloco, texto alinhado dentro: o conjunto fica no
      meio do card sem cada linha começar num ponto diferente. */
   .panel-ticks {
-    font-size: 0.96rem;
+    font-size: calc(15.36 * var(--dp));
     display: inline-grid;
     text-align: left;
   }
   /* As duas modalidades como etiquetas, sem valores — pílulas informativas,
      não botões: a escolha de verdade acontece no checkout. */
+  /* As formas de pagar, lado a lado e centradas. Base fixa em vez de `1fr`:
+     com duas opções, `1fr` esticava cada card para meio painel (420dp) e o
+     valor sumia no meio da caixa. Todos com a mesma base, então os números
+     continuam alinhados um sob o outro — é a comparação que a pessoa veio
+     fazer — e o bloco quebra sozinho quando a coluna aperta. */
   .panel-options {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    align-items: center;
-    gap: 12px;
-    margin-top: 20px;
+    /* Cada card com a PRÓPRIA altura, não esticado até o mais alto: o paquete
+       lista o que entrega e o mensual não, então esticar deixava o mensual
+       como uma caixa vazia de 300px. Alinhados pelo topo, nome e valor
+       continuam na mesma linha e o card maior é o recomendado — o tamanho
+       passa a dizer a mesma coisa que a estrela. */
+    align-items: flex-start;
+    gap: calc(12 * var(--dp));
+    margin-top: calc(26 * var(--dp));
   }
   .panel-option {
-    display: inline-flex;
+    /* 250, não 230: a linha da equivalência (com a pílula dentro) pede ~215px
+       de conteúdo e sobrava 214 — quebrava por um pixel. */
+    flex: 0 1 calc(250 * var(--dp));
+    position: relative;
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 8px;
-    padding: 9px 18px;
-    border: 1.5px solid var(--border);
-    border-radius: 999px;
-    font-weight: 700;
-    font-size: 0.92rem;
-    color: var(--text-muted);
+    /* Do topo para baixo, não centrado: assim nome e valor de um card ficam
+       na mesma linha do vizinho mesmo quando a equivalência quebra em duas
+       (no celular, ou noutro idioma). Centrar empurrava tudo para cima no
+       card mais alto. */
+    justify-content: flex-start;
+    gap: calc(2 * var(--dp));
+    padding: calc(16 * var(--dp)) calc(16 * var(--dp)) calc(14 * var(--dp));
+    border: calc(1.5 * var(--dp)) solid var(--border);
+    border-radius: calc(16 * var(--dp));
     background: var(--paper);
   }
+  .option-name {
+    font-weight: 600;
+    font-size: calc(13.6 * var(--dp));
+    color: var(--text-muted);
+  }
+  .option-price {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: calc(26 * var(--dp));
+    line-height: 1.15;
+    color: var(--ink);
+  }
+  /* O recomendado é o único com fundo: numa fileira de três, cor é o que
+     diz "este" antes de qualquer palavra. */
   .panel-option-full {
-    position: relative;
     border-color: var(--yellow);
     background: var(--cream);
-    color: var(--ink);
     box-shadow: var(--shadow-yellow);
+  }
+  .panel-option-full .option-name,
+  .panel-option-full .option-price {
+    color: var(--ink);
+  }
+  /* O preço por sessão: a pílula amarela — a mesma que o herói usa — e a
+     unidade embaixo. Amarelo como COR DE TEXTO sobre o creme do card dava
+     ~2:1 de contraste: lavado de longe e reprovado de perto. Como fundo, com
+     a tinta por cima, ele vira o ponto mais brilhante do card. */
+  .option-note {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: calc(2 * var(--dp));
+    margin-top: calc(8 * var(--dp));
+  }
+  .option-note-price {
+    display: inline-block;
+    padding: calc(2 * var(--dp)) calc(10 * var(--dp));
+    border-radius: calc(8 * var(--dp));
+    background: linear-gradient(135deg, var(--yellow-bright), var(--yellow));
+    color: var(--ink);
+    font-size: calc(15.2 * var(--dp));
+    font-weight: 800;
+    line-height: 1.4;
+  }
+  /* O amarelo é do pagamento único — é ali que mora o S/0.60 que a landing
+     inteira anuncia. No mensual a pílula fica neutra: acesa, ela puxava o
+     olho para o valor por sessão MAIS CARO e vendia a opção errada.
+     A regra estava pendurada em `.panel-option-full` (o card recomendado), e
+     quebrou no dia em que o pacote de dois níveis entrou na fileira e virou o
+     recomendado: o S/0.60 do paquete ficou apagado e o card recomendado nem
+     tem valor por sessão para mostrar. */
+  .panel-option-monthly .option-note-price {
+    background: var(--sky);
+  }
+  .option-note-unit {
+    font-size: calc(11.8 * var(--dp));
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--text-muted);
+  }
+  /* O que o paquete entrega. Alinhado à esquerda mesmo num card centrado: uma
+     lista de itens centrada vira uma pilha de linhas soltas, sem margem comum
+     por onde o olho desça. */
+  .option-perks {
+    list-style: none;
+    margin-top: calc(12 * var(--dp));
+    padding-top: calc(12 * var(--dp));
+    border-top: calc(1 * var(--dp)) solid rgba(19, 34, 75, 0.1);
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: calc(6 * var(--dp));
+    text-align: left;
+    font-size: calc(12.8 * var(--dp));
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--ink);
+  }
+  .option-perks li {
+    position: relative;
+    padding-left: calc(20 * var(--dp));
+  }
+  /* O tique é desenhado em CSS, não é texto: duas bordas e uma rotação. Não
+     entra no conteúdo lido em voz alta nem depende de fonte de ícone. */
+  .option-perks li::before {
+    content: "";
+    position: absolute;
+    left: calc(4 * var(--dp));
+    top: calc(3 * var(--dp));
+    width: calc(5 * var(--dp));
+    height: calc(9 * var(--dp));
+    border-right: calc(2 * var(--dp)) solid var(--yellow-deep);
+    border-bottom: calc(2 * var(--dp)) solid var(--yellow-deep);
+    transform: rotate(42deg);
+  }
+  /* Nem o selo nem a equivalência reservam altura vazia: os cards alinham
+     pelo topo, então nome e valor já batem entre si sem precisar disso — e o
+     card sem equivalência (o intensivo, que não tem valor por sessão na
+     tabela) abria um buraco entre o preço e a lista. */
+  .option-flag {
+    margin-top: calc(4 * var(--dp));
+    line-height: 1.6;
+    font-size: calc(10.4 * var(--dp));
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    /* Mesma razão da nota: o amarelo escuro sumia sobre o creme. A estrela e
+       o próprio fundo do card já dizem "este"; a palavra só precisa ser
+       legível. */
+    color: var(--ink);
+    opacity: 0.62;
   }
   /* A estrela cavalga a borda de cima da pílula, no centro — é o selo. */
   .panel-option-star {
     position: absolute;
-    top: -11px;
+    top: calc(-11 * var(--dp));
     left: 50%;
     transform: translateX(-50%);
-    width: 18px;
-    height: 18px;
+    width: calc(18 * var(--dp));
+    height: calc(18 * var(--dp));
     color: var(--yellow);
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.18));
+    filter: drop-shadow(0 calc(1 * var(--dp)) calc(2 * var(--dp)) rgba(0, 0, 0, 0.18));
   }
   .visually-hidden {
     position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
+    width: calc(1 * var(--dp));
+    height: calc(1 * var(--dp));
+    margin: calc(-1 * var(--dp));
     clip-path: inset(50%);
     overflow: hidden;
   }
   .panel-enroll {
-    margin-top: 20px;
+    margin-top: calc(20 * var(--dp));
   }
   /* O toggle do programa dentro do painel: alinhado à esquerda com o resto
      do conteúdo, separado do CTA por um respiro. */
   .panel-toggle {
-    margin-top: 22px;
+    margin-top: calc(22 * var(--dp));
   }
   .panel-toggle > summary {
-    padding: 12px 26px;
-    font-size: 0.95rem;
+    padding: calc(12 * var(--dp)) calc(26 * var(--dp));
+    font-size: calc(15.2 * var(--dp));
   }
   /* O programa inteiro atrás de um único botão. `<details>` nativo — abre sem
      JavaScript, que esta página não carrega. O summary é o botão "Ver
@@ -690,13 +933,13 @@ const courseJsonLd = {
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 12px;
-    padding: 15px 36px;
+    gap: calc(12 * var(--dp));
+    padding: calc(15 * var(--dp)) calc(36 * var(--dp));
     background: var(--paper);
-    border: 1.5px solid var(--border);
-    border-radius: 999px;
+    border: calc(1.5 * var(--dp)) solid var(--border);
+    border-radius: calc(999 * var(--dp));
     font-weight: 700;
-    font-size: 1.02rem;
+    font-size: calc(16.32 * var(--dp));
     color: var(--blue-deep);
     box-shadow: var(--shadow-sm);
     transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
@@ -704,7 +947,7 @@ const courseJsonLd = {
   .program-toggle > summary:hover {
     border-color: var(--blue);
     box-shadow: var(--shadow-blue);
-    transform: translateY(-2px);
+    transform: translateY(calc(-2 * var(--dp)));
   }
   .program-toggle > summary::-webkit-details-marker {
     display: none;
@@ -713,122 +956,150 @@ const courseJsonLd = {
   .program-toggle > summary::after {
     content: "";
     flex: none;
-    width: 9px;
-    height: 9px;
-    margin-top: -4px;
-    border-right: 2.5px solid var(--blue);
-    border-bottom: 2.5px solid var(--blue);
+    width: calc(9 * var(--dp));
+    height: calc(9 * var(--dp));
+    margin-top: calc(-4 * var(--dp));
+    border-right: calc(2.5 * var(--dp)) solid var(--blue);
+    border-bottom: calc(2.5 * var(--dp)) solid var(--blue);
     transform: rotate(45deg);
     transition: transform 0.16s ease;
   }
   .program-toggle[open] > summary::after {
     transform: rotate(225deg);
-    margin-top: 4px;
+    margin-top: calc(4 * var(--dp));
   }
   .ticks {
     list-style: none;
     margin: 0;
     padding: 0;
     display: grid;
-    gap: 10px;
+    gap: calc(10 * var(--dp));
     color: var(--text-muted);
   }
   .ticks li {
     position: relative;
-    padding-left: 26px;
+    padding-left: calc(26 * var(--dp));
   }
   .ticks li::before {
     content: "";
     position: absolute;
     left: 0;
     top: 0.45em;
-    width: 14px;
-    height: 8px;
-    border-left: 2.5px solid var(--blue);
-    border-bottom: 2.5px solid var(--blue);
+    width: calc(14 * var(--dp));
+    height: calc(8 * var(--dp));
+    border-left: calc(2.5 * var(--dp)) solid var(--blue);
+    border-bottom: calc(2.5 * var(--dp)) solid var(--blue);
     transform: rotate(-45deg);
   }
   .example-note {
-    margin-top: 16px;
+    margin-top: calc(16 * var(--dp));
     display: inline-block;
-    font-size: 0.82rem;
+    font-size: calc(13.12 * var(--dp));
     font-style: italic;
     color: var(--text-muted);
     background: var(--cream);
-    border: 1px solid var(--border);
-    padding: 7px 13px;
-    border-radius: 10px;
+    border: calc(1 * var(--dp)) solid var(--border);
+    padding: calc(7 * var(--dp)) calc(13 * var(--dp));
+    border-radius: calc(10 * var(--dp));
   }
 
   .block {
-    margin-top: 56px;
+    margin-top: calc(56 * var(--dp));
   }
   .block-title {
-    font-size: clamp(1.5rem, 3.4vw, 2rem);
-    margin-bottom: 24px;
+    font-size: calc(32 * var(--dp));
+    margin-bottom: calc(24 * var(--dp));
   }
 
-  .audiences {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 22px;
-  }
-  .audience {
-    /* The header is sticky; without this it covers the card we just jumped to. */
-    scroll-margin-top: 96px;
+  /* O card do curso de crianças. Fica claro que é outro produto: título
+     próprio, etiqueta dizendo "curso aparte" e o botão amarelo da matrícula,
+     igual ao dos níveis — o mesmo peso, outro destino. */
+  .kids-card {
+    scroll-margin-top: calc(96 * var(--dp));
+    /* Centrado e estreito de propósito: é um desvio para quem chegou à
+       página errada, não a oferta desta página. Largo e à esquerda, ele
+       competia com os níveis logo abaixo. */
+    max-width: calc(520 * var(--dp));
+    margin-inline: auto;
     background: var(--paper);
-    border: 1.5px solid var(--border);
+    border: calc(1.5 * var(--dp)) solid var(--border);
     border-radius: var(--radius);
-    padding: 30px 28px;
+    padding: calc(24 * var(--dp)) calc(26 * var(--dp));
     box-shadow: var(--shadow-sm);
   }
-  .audience .tag {
+  .kids-card .tag {
     display: inline-block;
-    font-size: 0.74rem;
+    font-size: calc(11.84 * var(--dp));
     font-weight: 700;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     color: var(--blue-deep);
     background: var(--sky);
-    padding: 6px 12px;
-    border-radius: 999px;
+    padding: calc(6 * var(--dp)) calc(12 * var(--dp));
+    border-radius: calc(999 * var(--dp));
   }
-  .audience h3 {
-    margin: 14px 0 8px;
-    font-size: 1.4rem;
+  .kids-card h3 {
+    margin: calc(12 * var(--dp)) 0 calc(8 * var(--dp));
+    font-size: calc(23 * var(--dp));
+  }
+  .kids-card p {
+    font-size: calc(14.8 * var(--dp));
+  }
+  .kids-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: calc(18 * var(--dp));
+    margin-top: calc(18 * var(--dp));
+  }
+  .kids-wa {
+    display: inline-flex;
+    align-items: center;
+    gap: calc(6 * var(--dp));
+    font-weight: 700;
+    color: var(--blue);
+  }
+  .kids-wa svg {
+    width: calc(16 * var(--dp));
+    height: calc(16 * var(--dp));
+    transition: transform 0.16s ease;
+  }
+  .kids-wa:hover svg {
+    transform: translateX(calc(3 * var(--dp)));
   }
 
   .features {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
+    gap: calc(20 * var(--dp));
   }
   .feature {
     display: flex;
-    gap: 16px;
+    gap: calc(16 * var(--dp));
     background: var(--paper);
-    border: 1.5px solid var(--border);
+    border: calc(1.5 * var(--dp)) solid var(--border);
     border-radius: var(--radius);
-    padding: 24px 24px;
+    padding: calc(24 * var(--dp)) calc(24 * var(--dp));
     box-shadow: var(--shadow-sm);
   }
   .feature-icon {
-    width: 50px;
-    height: 50px;
+    width: calc(50 * var(--dp));
+    height: calc(50 * var(--dp));
     flex: none;
     display: grid;
     place-items: center;
-    border-radius: 14px;
+    border-radius: calc(14 * var(--dp));
     background: var(--sky);
     color: var(--blue);
   }
   .feature-icon :global(svg) {
-    width: 26px;
-    height: 26px;
+    width: calc(26 * var(--dp));
+    height: calc(26 * var(--dp));
   }
   .feature h3 {
-    font-size: 1.12rem;
-    margin-bottom: 6px;
+    font-size: calc(17.92 * var(--dp));
+    margin-bottom: calc(6 * var(--dp));
   }
 
   /* O mesmo cartão do "¿Tienes alguna consulta?" da home: gradiente azul,
@@ -837,26 +1108,26 @@ const courseJsonLd = {
   .course-cta {
     position: relative;
     overflow: hidden;
-    margin-top: 64px;
+    margin-top: calc(64 * var(--dp));
     background: linear-gradient(135deg, var(--blue), var(--blue-deep));
     color: #fff;
     border-radius: var(--radius-lg);
-    padding: 52px 48px;
+    padding: calc(52 * var(--dp)) calc(48 * var(--dp));
     box-shadow: var(--shadow-blue);
   }
   .course-cta-blob-a {
-    width: 240px;
-    height: 240px;
-    top: -110px;
+    width: calc(240 * var(--dp));
+    height: calc(240 * var(--dp));
+    top: calc(-110 * var(--dp));
     right: 8%;
     background: var(--yellow);
     opacity: 0.35;
   }
   .course-cta-blob-b {
-    width: 180px;
-    height: 180px;
-    bottom: -100px;
-    left: -40px;
+    width: calc(180 * var(--dp));
+    height: calc(180 * var(--dp));
+    bottom: calc(-100 * var(--dp));
+    left: calc(-40 * var(--dp));
     background: #fff;
     opacity: 0.14;
   }
@@ -867,30 +1138,77 @@ const courseJsonLd = {
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 26px;
+    gap: calc(26 * var(--dp));
   }
   .course-cta h2 {
     color: #fff;
-    font-size: clamp(1.9rem, 4vw, 2.6rem);
+    font-size: calc(41.6 * var(--dp));
   }
   .course-cta h2 .accent {
     color: var(--yellow-bright);
   }
   .course-cta p {
-    margin-top: 10px;
-    max-width: 560px;
+    margin-top: calc(10 * var(--dp));
+    max-width: calc(560 * var(--dp));
     color: rgba(255, 255, 255, 0.85);
   }
   .course-cta-actions {
     display: flex;
-    gap: 12px;
+    gap: calc(12 * var(--dp));
     flex-wrap: wrap;
   }
 
-  @media (max-width: 760px) {
-    .audiences,
-    .features {
-      grid-template-columns: 1fr;
+
+  /* ——— Celular: a segunda largura de desenho (390px, global.css). ———
+     A etiqueta é pendurada em `left: 100% + 16dp`, ou seja, na margem à
+     direita do título. Com 390px de desenho essa margem não existe: a peça
+     saía 77dp para fora da janela e empurrava o documento inteiro. Aqui ela
+     desce e vira um selo em linha — a mesma saída que `.price-hook` já
+     documenta logo acima. A composição das páginas de curso no celular
+     continua sendo trabalho à parte; isto é só o estouro. */
+  @media (max-width: 900px) {
+    /* O CTA do rodapé é uma linha de duas colunas (texto | botão) que, ao
+       quebrar, deixava o botão encostado à esquerda embaixo de um texto
+       alinhado à esquerda — parecia solto. No celular ele vira uma coluna
+       centrada, e o respiro lateral encolhe para o botão caber numa linha. */
+    .course-cta {
+      padding: calc(40 * var(--dp)) calc(22 * var(--dp));
+      text-align: center;
+    }
+    .course-cta-inner {
+      justify-content: center;
+    }
+    .course-cta p {
+      margin-inline: auto;
+    }
+    .course-cta-actions {
+      width: 100%;
+      justify-content: center;
+    }
+    .discount {
+      position: static;
+      top: auto;
+      left: auto;
+      margin-top: calc(10 * var(--dp));
+      padding: calc(9 * var(--dp)) calc(16 * var(--dp)) calc(9 * var(--dp)) calc(34 * var(--dp));
+      transform: rotate(-3deg);
+      clip-path: polygon(0% 50%, calc(18 * var(--dp)) 0%, 100% 0%, 100% 100%, calc(18 * var(--dp)) 100%);
+    }
+    .discount::before {
+      left: calc(21 * var(--dp));
+      width: calc(8 * var(--dp));
+      height: calc(8 * var(--dp));
+    }
+    .discount::after {
+      inset: calc(4 * var(--dp)) calc(6 * var(--dp)) calc(4 * var(--dp)) calc(31 * var(--dp));
+    }
+    .discount-amount {
+      font-size: calc(19 * var(--dp));
+    }
+    /* O barbante saía da letra do título; sem a etiqueta pendurada, não há
+       de onde ele sair. */
+    .tag-string {
+      display: none;
     }
   }
 </style>
