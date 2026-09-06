@@ -180,14 +180,28 @@ Domínio e fila já existem, independentes dessa escolha:
   dias de validade da reserva) — estes últimos vieram de `/backoffice/payments/settings`,
   que deixou de existir: um número com duas telas donas é um número que diverge.
   O papel `teacher` já entra numa
-  **visão restrita**: menu reduzido,
-  home própria (turmas, alunos, notas e certificados pendentes dele), só as
-  próprias turmas na lista e na ficha da turma, e alunos/pagamentos bloqueados —
-  tudo escopado pelo `teacherId` da sessão, nunca por dado vindo do cliente. A
-  sessão do mockup é fixa em `getStaffSession()`; trocar o papel ali é o que
-  mostra essa visão, de propósito não há seletor de papel na tela (`CLAUDE.md`
-  §8). Cada pessoa do staff, em qualquer papel, gerencia a própria conta em
-  `/backoffice/account` (aberta pelo chip do usuário no rodapé do menu): senha
+  **visão restrita**: menu reduzido com o contador de notas abertas,
+  home própria (turmas, alunos, notas e certificados pendentes dele, com a fila
+  de notas antes da de certificados — certificado não sai sobre nota aberta), e
+  alunos/pagamentos bloqueados — tudo escopado pelo `teacherId` da sessão,
+  nunca por dado vindo do cliente. Para o docente, `/backoffice/class-groups` é
+  uma **tela de trabalho própria**: cada turma dele é uma aba no estilo
+  navegador (com o contador de notas abertas na aba), e sob a aba aberta a
+  gestão da turma **aluno por aluno** — a lista de um lado e, do outro, o aluno
+  selecionado com **nota do exame final, nota final do módulo** (0–20, aprova a
+  partir da nota mínima configurada), a marca de quem não rendeu o exame (DA,
+  `docs/REGRAS-NEGOCIO.md` §3) e **anotações datadas do docente** sobre o
+  aluno. Estado local como todo o resto, e a escrita só existe para o docente
+  da turma: admin e coordenação seguem lendo (se a coordenação pode corrigir
+  nota é questão em aberto, não construída). A emissão de certificados continua
+  na página da turma, linkada do cabeçalho da aba. Como `/me` ainda responde
+  `teacherId: null` (não há tabela de docentes), uma conta com cargo `teacher`
+  é apontada pela ponte de demonstração em `getStaffSession()` para a ficha
+  `tea_01` do mock — a ponte morre com a camada de mock. De propósito não há
+  seletor de papel na tela (`CLAUDE.md` §8). Cada pessoa do staff, em qualquer
+  papel, gerencia a própria conta em `/backoffice/account` (aberta pelo
+  dropdown do usuário no rodapé do menu, que junta perfil, a ficha do docente e
+  a saída): senha
   com as exigências listadas enquanto se digita, verificação em dois passos —
   obrigatória e sem botão de desligar para `admin`, `treasury` e
   `mass_approver` (`CLAUDE.md` §8), opcional para os demais —, códigos de

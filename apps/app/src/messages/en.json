@@ -60,16 +60,11 @@
     "recover_sent_title": "Check your email",
     "recover_sent_body": "If that address belongs to a panel account, the link to set a new password is on its way.",
     "back_to_login": "Back to sign in",
-    "brand_eyebrow": "Only One Coin team",
     "brand_title": "The whole cycle, in one place.",
     "brand_body": "Enrollments, receipts, seats and students of Asociación Only One Coin Perú, on a single screen.",
-    "brand_footer": "Asociación Only One Coin Perú · RUC 20610561463",
     "highlight_1_title": "Role-based access",
-    "highlight_1_body": "Everyone sees only what their role allows.",
     "highlight_2_title": "Two-factor",
-    "highlight_2_body": "Signing into the panel always asks for a second step.",
-    "highlight_3_title": "Everything is logged",
-    "highlight_3_body": "Every action records author, timestamp and previous value."
+    "highlight_3_title": "Everything is logged"
   },
   "loading": {
     "message": "Loading…",

@@ -27,7 +27,8 @@
       "class_groups": "Turmas",
       "my_class_groups": "Minhas turmas",
       "my_profile": "Minha ficha",
-      "account": "Minha conta"
+      "account": "Minha conta",
+      "profile": "Perfil"
     },
     "role": {
       "admin": "Administração",
@@ -99,7 +100,6 @@
       "sessions_closed_others_toast": "As demais sessões foram fechadas só na tela. Ainda não há servidor conectado.",
       "sessions_only_current": "Não há nenhuma outra sessão aberta além desta.",
       "language_title": "Idioma do painel",
-      "language_hint": "Muda o idioma de toda a interface. Vale na hora.",
       "audit_notice": "Toda troca de senha, de verificação em duas etapas ou de sessão fica registrada no log de auditoria."
     },
     "dashboard": {
@@ -1002,7 +1002,26 @@
       "empty_roster_title": "Sem alunos",
       "empty_roster_body": "Ninguém está matriculado nesta turma ainda.",
       "col_manage": "Gerenciar",
-      "manage": "Gerenciar"
+      "manage": "Gerenciar",
+      "grades_hint": "Registre a nota final de 0 a 20; aprova a partir de {min}. Se o aluno não fez o exame final, marque «Não fez».",
+      "grades_da": "Não fez",
+      "grades_saved_local_only": "Notas salvas só na tela ({time}). Ainda não há servidor conectado.",
+      "grades_invalid": "Há notas fora do intervalo: vão de 0 a 20, sem decimais."
+    },
+    "teacher_groups": {
+      "certificates_link": "Emissão de certificados",
+      "grades_title": "Notas",
+      "exam_grade_label": "Nota do exame final",
+      "final_grade_label": "Nota final do módulo",
+      "save": "Salvar notas",
+      "not_started": "A turma ainda não começou — as notas são registradas durante o módulo.",
+      "closed_readonly": "Turma encerrada: as notas ficam como histórico.",
+      "locked_certificate": "Certificado já emitido — a nota fechou com ele.",
+      "locked_procedure": "O aluno saiu da turma por um trâmite; não recebe nota.",
+      "notes_title": "Anotações",
+      "notes_placeholder": "Escreva uma anotação sobre {name}…",
+      "notes_add": "Adicionar anotação",
+      "notes_empty": "Sem anotações para este aluno."
     },
     "class_group_status": {
       "enrolling": "Matriculando",
@@ -1280,7 +1299,9 @@
       "owing_subtitle": "Terminaram e ainda devem certificado.",
       "class_groups_subtitle": "Tudo o que você dá, em andamento e fechado.",
       "no_class_groups_title": "Sem turmas",
-      "no_class_groups_body": "Você ainda não tem turmas atribuídas neste período."
+      "no_class_groups_body": "Você ainda não tem turmas atribuídas neste período.",
+      "grades_owing_title": "Turmas com notas pendentes",
+      "grades_owing_subtitle": "O certificado não sai enquanto faltar nota final."
     },
     "team": {
       "title": "Equipe",

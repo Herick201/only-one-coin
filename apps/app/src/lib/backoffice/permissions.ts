@@ -1,4 +1,4 @@
-import type { StaffRole } from './types'
+import type { StaffRole, StaffUser } from './types'
 
 /**
  * Screen-level gates. These decide what a staff member *sees*, never what they
@@ -93,6 +93,23 @@ export function canBrowseStudents(role: StaffRole): boolean {
  */
 export function canCreateStudent(role: StaffRole): boolean {
   return role === 'admin' || role === 'coordinator'
+}
+
+/**
+ * Who records a final grade — the teacher of that class group, nobody else.
+ * The grade is what the docente signs, and everything downstream reads it: the
+ * certificate (grade ≥ 14, `docs/REGRAS-NEGOCIO.md` §3) and the module
+ * progression both hang off it. Whether coordination may *correct* a recorded
+ * grade is an open question — not offered until it is answered. As everywhere
+ * else this only decides whether the roster draws inputs: the enforcing check
+ * compares the authenticated `teacher_id` against the class group inside the
+ * usecase in `apps/api` (CLAUDE.md §8).
+ */
+export function canRecordGrades(
+  staff: Pick<StaffUser, 'role' | 'teacherId'>,
+  group: { teacherId: string },
+): boolean {
+  return staff.role === 'teacher' && staff.teacherId === group.teacherId
 }
 
 /**

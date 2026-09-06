@@ -485,6 +485,12 @@ export interface ClassGroupRow {
   allowsTransfer: boolean
   /** Students who finished and are still waiting for their certificate. */
   pendingCertificates: number
+  /**
+   * Final grades still open on the roster — what the teacher owes this class
+   * group. A student moved out by a procedure (frozen, transferred, withdrawn)
+   * is not counted: they left the roster, not a grade behind.
+   */
+  pendingGrades: number
 }
 
 /**
@@ -528,6 +534,20 @@ export type CourseOptions = Pick<
   | 'active'
 >
 
+/**
+ * One dated observation the teacher leaves on a student of their class group —
+ * "llegó tarde tres veces", "necesita refuerzo en listening". Free text, per
+ * student per class group, teacher-authored. Append-only on screen: an
+ * observation is a record, and records are corrected by writing another one.
+ */
+export interface StudentNote {
+  id: string
+  /** ISO 8601 UTC, rendered in America/Lima. */
+  at: string
+  authorName: string
+  text: string
+}
+
 /** One student as seen from the class group — grade first, money second. */
 export interface ClassGroupStudent {
   studentId: string
@@ -535,9 +555,18 @@ export interface ClassGroupStudent {
   enrollmentId: string
   enrollmentStatus: EnrollmentStatus
   paymentStatus: PaymentStatus
+  /**
+   * The final exam's grade, 0–20 — what the module's prueba gave, kept apart
+   * from the closing grade. Null while not taken (a DA is exactly this exam
+   * missed, `docs/REGRAS-NEGOCIO.md` §3) — and the rezagados exam later
+   * replaces the final grade, not this record of the first sitting.
+   */
+  examGrade: number | null
   /** 0–20, the Peruvian scale. Null while the teacher has not closed it. */
   finalGrade: number | null
   gradeStatus: GradeStatus
+  /** The teacher's observations on this student, newest first. */
+  notes: StudentNote[]
   /** Null unless the course certifies through an exam. */
   certificationExam: CertificationExamStatus | null
   certificateIssuedAt: string | null
