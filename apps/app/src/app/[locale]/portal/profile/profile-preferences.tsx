@@ -46,40 +46,45 @@ export function ProfilePreferences() {
         {t('profile.language_label')}
       </p>
 
-      <ul role="radiogroup" aria-labelledby="profile-language-label" className="mt-2 flex flex-col gap-1.5">
+      {/* `div`, não `ul`: um `radiogroup` precisa ter os rádios como filhos
+          diretos, e o `listitem` do `<li>` entra no meio da relação. */}
+      <div
+        role="radiogroup"
+        aria-labelledby="profile-language-label"
+        className="mt-2 flex flex-col gap-1.5"
+      >
         {routing.locales.map((code) => {
           const active = code === locale
           return (
-            <li key={code}>
-              <button
-                type="button"
-                role="radio"
-                aria-checked={active}
-                disabled={pending}
-                onClick={() => {
-                  if (active) return
-                  startTransition(() => {
-                    router.replace(pathname, { locale: code })
-                  })
-                }}
-                className={`flex min-h-tap w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition disabled:opacity-60 ${
-                  active
-                    ? 'border-brand-blue bg-sky text-brand-blue-deep'
-                    : 'border-line text-muted-foreground hover:border-brand-blue hover:text-ink'
-                }`}
-              >
-                <Flag locale={code} />
-                <span className="flex-1">{languages(code)}</span>
-                {active && (
-                  <span className="text-brand-blue">
-                    <Icon name="check" size={16} />
-                  </span>
-                )}
-              </button>
-            </li>
+            <button
+              key={code}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              disabled={pending}
+              onClick={() => {
+                if (active) return
+                startTransition(() => {
+                  router.replace(pathname, { locale: code })
+                })
+              }}
+              className={`flex min-h-tap w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition disabled:opacity-60 ${
+                active
+                  ? 'border-brand-blue bg-sky text-brand-blue-deep'
+                  : 'border-line text-muted-foreground hover:border-brand-blue hover:text-ink'
+              }`}
+            >
+              <Flag locale={code} />
+              <span className="flex-1">{languages(code)}</span>
+              {active && (
+                <span className="text-brand-blue">
+                  <Icon name="check" size={16} />
+                </span>
+              )}
+            </button>
           )
         })}
-      </ul>
+      </div>
     </Card>
   )
 }

@@ -185,6 +185,14 @@ export function PortalTabBar({
               </div>
             ))}
 
+          </div>
+
+          {/* Fora do laço e atrás de uma linha: o perfil é o canto da pessoa,
+              não uma seção do portal. Sem o separador ele encostava no último
+              grupo — e um grupo com título reivindica tudo o que vem abaixo
+              dele até o próximo, então "Meu perfil" lia como parte da área do
+              aluno. */}
+          <div className="border-t border-line py-2">
             <Link
               href="/portal/profile"
               onClick={() => setOpen(false)}

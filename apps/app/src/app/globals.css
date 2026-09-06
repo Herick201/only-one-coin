@@ -6,6 +6,26 @@
 @custom-variant dark (&:is(.dark *));
 
 /**
+ * `:hover` no toque gruda: o dedo deixa o elemento em estado de hover até o
+ * próximo toque em outro lugar, então a linha que a pessoa acabou de abrir
+ * fica pintada para sempre — e num painel de tabelas isso lê como "esta é a
+ * linha selecionada".
+ *
+ * Quem resolve é não aplicar a regra onde não há ponteiro fino. Zerar a
+ * transição não resolve: tira a suavização e mantém o estado. O Tailwind v4
+ * traz esse portão por padrão, mas esta configuração emite `:hover` puro
+ * (verificado no CSS compilado, `.hover\:bg-sky:hover`), então a variante é
+ * redefinida aqui, e vale para todo utilitário `hover:` do app.
+ */
+@custom-variant hover {
+  @media (hover: hover) {
+    &:hover {
+      @slot;
+    }
+  }
+}
+
+/**
  * Only One Coin — brand palette espelhando apps/landing (blue + white + yellow
  * sobre navy). Registrado como tokens do Tailwind v4, então vira utilitário:
  * bg-brand-blue, text-ink, border-line, bg-sky, etc.
@@ -242,17 +262,6 @@
     }
   }
 
-  /**
-   * `:hover` no celular gruda: o toque deixa o elemento em estado de hover até
-   * o próximo toque em outro lugar, então a linha que a pessoa acabou de abrir
-   * fica pintada para sempre. Vale só onde o ponteiro é grosseiro (dedo) — o
-   * mouse e o trackpad continuam com hover.
-   */
-  @media (hover: none) {
-    *:hover {
-      transition-duration: 0ms;
-    }
-  }
 }
 
 /**
@@ -359,6 +368,13 @@
   /* Célula vazia não vira uma linha em branco no cartão. */
   table.table-stack > tbody > tr > td:empty {
     display: none;
+  }
+
+  /* Piso de toque só aqui. Numa tabela de verdade o botão da linha é apertado
+     com o mouse e 44px de altura engordariam toda linha do painel no desktop —
+     ~14px cada, que numa página de 15 é meia tela a mais de rolagem. */
+  table.table-stack > tbody > tr > td :is(a, button) {
+    min-height: var(--spacing-tap);
   }
 
   table.table-stack > tbody > tr > td:nth-child(1) { --stack-col: var(--stack-col-1, ''); }
