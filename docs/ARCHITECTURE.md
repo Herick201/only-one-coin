@@ -351,3 +351,135 @@ quebrar em monitor diferente.
 Varredura das 18 rotas de `apps/app` (13 do painel, 5 do portal) em 1920, 1600,
 1440, 1280, 1024, 820 e 500px — 126 combinações, **zero** com
 `documentElement.scrollWidth > viewport`.
+
+---
+
+## 8. Feature flags — o que está no ar em produção (fechado 06/09/2026)
+
+As três superfícies de `apps/app` — **portal do aluno**, **backoffice** e o
+**painel do docente** — são geridas por feature flag. A semântica é uma só:
+
+> **Ligada:** a seção aparece em produção, para quem tem o papel.
+> **Desligada:** a seção não existe em produção — some da navegação e a URL
+> responde **404** — e continua inteira para nós: local, deploy de preview da
+> Vercel e, em produção, para quem abriu o destravamento interno.
+
+Flag **não é controle de acesso.** O que uma pessoa *pode fazer* continua sendo
+o papel declarado na rota em `apps/api` (`CLAUDE.md` §8). A flag decide se a
+funcionalidade está no ar; o papel decide para quem ela responde.
+
+### 8.1 Onde vive o interruptor
+
+Registro único em código, com override por variável de ambiente:
+
+| Peça | Arquivo |
+| --- | --- |
+| Declaração de toda flag | `apps/app/src/lib/feature-flags/registry.ts` |
+| Ambiente + overrides (zod no boot) | `apps/app/src/lib/feature-flags/env.ts` |
+| Destravamento interno | `apps/app/src/lib/feature-flags/preview.ts` + `src/app/api/preview/route.ts` |
+| Leitura (server-only) | `apps/app/src/lib/feature-flags/server.ts` |
+
+Banco + tela de gestão no backoffice foi a alternativa considerada e **não**
+escolhida agora: `apps/app` não fala com o banco (`CLAUDE.md` §8, tudo passa
+pela API), então uma flag em tabela exigiria migration, usecase e rota antes de
+a primeira flag existir. O registro em código entrega a gestão hoje; a tela
+continua possível depois, lendo a mesma chave.
+
+### 8.2 Ordem de resolução
+
+Para cada flag, nesta ordem:
+
+1. **Override de ambiente** — `OOC_FLAG_<CHAVE>` valendo `on` ou `off`
+   (`portal.payments` → `OOC_FLAG_PORTAL_PAYMENTS`). Qualquer outro valor é
+   erro de boot, não um encolher de ombros. Na Vercel a variável é *scoped* por
+   ambiente, que é o que permite ligar algo em produção sem mexer no código.
+2. **Ambiente** — fora de produção **toda flag está ligada**, sempre. Ramo
+   nenhum é demonstrado com meio painel faltando.
+3. **Padrão do registro** — o campo `production` da flag.
+4. **Pai** — filha nunca fica mais ligada que a mãe (`portal.payments` depende
+   de `portal`; `teacher` depende de `backoffice`).
+5. **Destravamento interno** — com o cookie válido, tudo resolve ligado.
+
+`APP_ENV` diz qual é o ambiente. É derivada (`APP_ENV` explícita →
+`VERCEL_ENV` → `NODE_ENV`) e **falha fechada**: processo sem rótulo rodando
+build de produção é tratado como produção, porque chutar "development" ali
+colocaria toda tela pela metade no ar.
+
+### 8.3 O destravamento interno ("fica só pra nós")
+
+```
+/api/preview?token=<segredo>&next=/portal/payments   abre
+/api/preview?off=1                                   fecha
+```
+
+- O segredo é `FEATURE_PREVIEW_TOKEN` (≥ 24 caracteres), configurado por
+  ambiente na Vercel. **Sem token configurado não há destravamento** — a rota
+  responde 404.
+- Token errado responde **404**, nunca "token inválido": quem chuta não pode
+  descobrir que havia algo a chutar (anti-enumeração, `CLAUDE.md` §8).
+- O cookie é `httpOnly`, `secure`, `SameSite=Lax`, **12 h** — um dia de
+  trabalho, e ele mesmo expira. A rota redireciona na hora, então o segredo não
+  fica na barra de endereço nem vaza no referrer.
+- Enquanto está aberto, **uma tarja aparece em toda tela do app** dizendo que o
+  que está sendo visto não está ativo para mais ninguém, com o botão de sair.
+  Ela não é opcional: ver uma tela interna em produção sem saber que ela é
+  interna é exatamente como nasce a caçada do "o aluno diz que não aparece".
+
+Nada disso chega ao cliente: a resolução é server-only e componente de cliente
+recebe o booleano já resolvido por prop — a lista do que existe mas está
+desligado não vai no bundle.
+
+### 8.4 Onde a flag é aplicada
+
+- **Rota:** `layout.tsx` da seção chama `requireFeature('<chave>')`, que faz
+  `notFound()`. Fica no layout, e não em cada página, para que uma tela nova
+  criada ali amanhã **herde** o portão em vez de precisar lembrar dele.
+- **Navegação:** o item some do menu. Não vira cadeado — cadeado é o vocabulário
+  de "anunciado, não construído" (a Área do aluno do portal), que é uma
+  afirmação diferente e pública.
+- **Portas internas:** entrada de dashboard, ação de linha e CTA que levam a uma
+  seção desligada não são desenhadas. O fato continua dito (o cadeado da aula, o
+  "pendente" da mensalidade); o que some é a porta.
+
+### 8.5 As flags de hoje
+
+| Chave | Superfície | O que governa |
+| --- | --- | --- |
+| `portal` | portal | O portal inteiro (shell, dashboard, perfil) |
+| `portal.courses` | portal | Meus cursos + detalhe do curso |
+| `portal.payments` | portal | Pagos (mensalidade, comprovante, histórico) |
+| `portal.procedures` | portal | Trámites pagos (`/portal/enrollment`) |
+| `portal.documents` | portal | Constancias e certificados |
+| `portal.continue` | portal | Continuar estudando (próximo nível, re-matrícula) |
+| `backoffice` | backoffice | O painel inteiro |
+| `backoffice.students` | backoffice | Diretório de alunos e ficha |
+| `backoffice.enrollments` | backoffice | Matrículas + reservas |
+| `backoffice.payments` | backoffice | Pagamentos, fila de revisão, parâmetros |
+| `backoffice.academic` | backoffice | Turmas + cursos |
+| `backoffice.teachers` | backoffice | Docentes e fichas |
+| `backoffice.email` | backoffice | Módulo de e-mail |
+| `backoffice.reports` | backoffice | Relatórios |
+| `backoffice.staff` | backoffice | Equipe (cargos, MFA) |
+| `backoffice.settings` | backoffice | Configuração da plataforma |
+| `teacher` | docente | O painel do docente (mesma app, rail estreita) |
+
+Todas nascem aqui com `production: true` porque **todas já estão no ar**: o
+registro chegou para gerir o que se expõe, não para aposentar tela sem aviso.
+Desligar qualquer uma é uma linha — decisão de quem toca o produto, não efeito
+colateral desta sessão.
+
+**Flag nova nasce `production: false`**, e é ligada no mesmo PR que torna a
+seção real. Quando a seção deixa de ser novidade, a flag sai do registro junto
+com o `layout.tsx` que a checava — flag eterna vira ruído que ninguém confia.
+
+### 8.6 Limitação conhecida
+
+Links profundos **entre seções do backoffice** ainda não consultam a flag do
+destino: abrir a ficha de um aluno a partir de Pagamentos, de Matrículas, de
+Reservas, de Envios de e-mail ou da lista de certificados de uma turma; abrir
+uma turma a partir da ficha do docente ou do detalhe de matrícula; abrir a ficha
+do docente a partir de Equipe. Com a seção de destino desligada e a de origem
+ligada, esses links dão 404 para quem trabalha no painel. As portas das telas de
+entrada (dashboard de coordenação e dashboard do docente) e **todo o portal do
+aluno** já respeitam a flag. Fechar o resto exige levar o booleano como prop até
+os componentes de cliente dessas telas — trabalho mecânico, ainda não feito.

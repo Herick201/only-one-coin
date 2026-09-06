@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
 import { getEnrollment } from '@/lib/portal/mock-data'
+import { getFeatureFlags } from '@/lib/feature-flags/server'
 import { formatDate, formatMoney } from '@/lib/portal/format'
 import type { CourseMaterial, Locale } from '@/lib/portal/types'
 import { Card, Field, SectionTitle, StatusBadge } from '@/components/portal/ui'
@@ -25,6 +26,7 @@ export default async function CourseDetailPage({
   setRequestLocale(raw)
   const t = await getTranslations('portal')
 
+  const flags = await getFeatureFlags()
   const enrollment = getEnrollment(enrollmentId)
   if (!enrollment) notFound()
 
@@ -101,15 +103,18 @@ export default async function CourseDetailPage({
                     </span>
                     {t(`course_detail.locked.${enrollment.classAccessLock}`)}
                   </p>
-                  {enrollment.classAccessLock === 'monthly_payment_due' && (
-                    <Link
-                      href="/portal/payments"
-                      className="inline-flex items-center gap-2 rounded-full bg-brand-blue px-4 py-2 text-sm font-bold text-white shadow-card transition hover:bg-brand-yellow hover:text-ink"
-                    >
-                      <Icon name="card" size={16} />
-                      {t('course_detail.locked_cta')}
-                    </Link>
-                  )}
+                  {/* The reason for the padlock is told either way; the
+                      button only exists while Pagos does (CLAUDE.md §5). */}
+                  {enrollment.classAccessLock === 'monthly_payment_due' &&
+                    flags['portal.payments'] && (
+                      <Link
+                        href="/portal/payments"
+                        className="inline-flex items-center gap-2 rounded-full bg-brand-blue px-4 py-2 text-sm font-bold text-white shadow-card transition hover:bg-brand-yellow hover:text-ink"
+                      >
+                        <Icon name="card" size={16} />
+                        {t('course_detail.locked_cta')}
+                      </Link>
+                    )}
                 </div>
               ) : classGroup.meetingUrl ? (
                 <a

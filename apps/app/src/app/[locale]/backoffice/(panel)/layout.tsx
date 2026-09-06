@@ -17,6 +17,7 @@ import {
   getTeacher,
 } from '@/lib/backoffice/mock-data'
 import { getStaffSession } from '@/lib/backoffice/session'
+import { getFeatureFlags, requireFeature } from '@/lib/feature-flags/server'
 import { initials } from '@/lib/format'
 import { BoSidebar, type BoNavGroup } from '@/components/backoffice/bo-sidebar'
 import { BoUserMenu } from '@/components/backoffice/bo-user-menu'
@@ -52,6 +53,10 @@ export default async function BackofficePanelLayout({
   setRequestLocale(locale)
   const t = await getTranslations('bo')
 
+  // The panel as a whole, before anything is read: off, the backoffice is not
+  // on the air and no URL under it answers (CLAUDE.md §5).
+  await requireFeature('backoffice')
+
   const staff = await getStaffSession()
   const { pendingReview } = getDashboardMetrics()
   const { expiringSoon: expiringReservations } = getEnrollmentMetrics()
@@ -73,6 +78,14 @@ export default async function BackofficePanelLayout({
    */
   const restricted = isRestrictedToOwnClassGroups(staff.role)
 
+  /* The docente panel is a surface of its own — the same app with the rail
+     narrowed — and it can be off while the rest of the backoffice is on. A
+     teacher then meets a 404 like anyone reaching a section that does not
+     exist yet; every other cargo is untouched. */
+  if (restricted) await requireFeature('teacher')
+
+  const flags = await getFeatureFlags()
+
   /* The teacher's badge is their own queue — the final grades still open
      across their class groups. Same role as the review-queue badge below:
      it is what the panel gets opened for. */
@@ -81,7 +94,9 @@ export default async function BackofficePanelLayout({
       ? (getTeacher(staff.teacherId)?.pendingGrades ?? 0)
       : 0
 
-  const groups: BoNavGroup[] = restricted
+  /* A group whose every section is off is not an empty dropdown — it is not a
+     group. Only `home` is unconditional: it is where the panel starts. */
+  const allGroups: BoNavGroup[] = restricted
     ? [
         {
           key: 'home',
@@ -92,17 +107,22 @@ export default async function BackofficePanelLayout({
         {
           key: 'academic',
           label: t('nav.group_academic'),
-          items: [
-            {
-              key: 'class_groups',
-              href: '/backoffice/class-groups',
-              label: t('nav.my_class_groups'),
-              badge: pendingGrades,
-            },
-            /* No "Minha ficha" here: what belongs to the reader — their ficha,
-               their account — lives in the user dropdown at the bottom of the
-               rail, not among the work modules. */
-          ],
+          /* The teacher's class groups are the academic section, seen through
+             their own scope — so they answer to the same flag as everyone
+             else's. Off, the docente panel keeps only its dashboard. */
+          items: flags['backoffice.academic']
+            ? [
+                {
+                  key: 'class_groups' as const,
+                  href: '/backoffice/class-groups',
+                  label: t('nav.my_class_groups'),
+                  badge: pendingGrades,
+                },
+                /* No "Minha ficha" here: what belongs to the reader — their
+                   ficha, their account — lives in the user dropdown at the
+                   bottom of the rail, not among the work modules. */
+              ]
+            : [],
         },
       ]
     : [
@@ -118,48 +138,60 @@ export default async function BackofficePanelLayout({
       key: 'operations',
       label: t('nav.group_operations'),
       items: [
-        { key: 'students', href: '/backoffice/students', label: t('nav.students') },
-        {
+        ...(flags['backoffice.students']
+          ? [
+              {
+                key: 'students' as const,
+                href: '/backoffice/students',
+                label: t('nav.students'),
+              },
+            ]
+          : []),
+        ...(flags['backoffice.enrollments'] ? [{
           /* One entry for the two screens of the section — the ledger and the
              seats still held by an open payment. The badge is the reservations
              about to expire: a seat nobody chased is a seat the cron hands
              back with the money already paid. */
-          key: 'enrollments',
+          key: 'enrollments' as const,
           href: '/backoffice/enrollments',
           label: t('nav.enrollments'),
           badge: expiringReservations,
-        },
-        {
+        }] : []),
+        ...(flags['backoffice.payments'] ? [{
           /* One entry for the three screens of the section — the ledger, the
              review queue and the validation parameters. The badge is the queue
              count: what the panel is opened for on a busy day. */
-          key: 'payments',
+          key: 'payments' as const,
           href: '/backoffice/payments',
           label: t('nav.payments'),
           badge: pendingReview,
-        },
+        }] : []),
       ],
     },
     {
       key: 'academic',
       label: t('nav.group_academic'),
       items: [
-        {
+        ...(flags['backoffice.academic'] ? [{
           /* One entry for the two screens the section is made of. They are
              read together — a course is what a class group is an instance of —
              and two sibling items reading "Turmas" and "Cursos" looked like
              the same destination twice. The tab strip on the pages carries
              the split. */
-          key: 'class_groups',
+          key: 'class_groups' as const,
           href: '/backoffice/class-groups',
           alsoMatches: ['/backoffice/courses'],
           label: t('nav.academic'),
-        },
-        {
-          key: 'teachers',
-          href: '/backoffice/teachers',
-          label: t('nav.teachers'),
-        },
+        }] : []),
+        ...(flags['backoffice.teachers']
+          ? [
+              {
+                key: 'teachers' as const,
+                href: '/backoffice/teachers',
+                label: t('nav.teachers'),
+              },
+            ]
+          : []),
       ],
     },
     {
@@ -172,7 +204,7 @@ export default async function BackofficePanelLayout({
            funnel; tesorería settles money and a teacher runs a class group.
            Whoever arrives by URL still meets the locked screen, and the role
            on the route in `apps/api` is what enforces it (CLAUDE.md §8). */
-        ...(canManageEmail(staff.role)
+        ...(canManageEmail(staff.role) && flags['backoffice.email']
           ? [
               {
                 key: 'email' as const,
@@ -187,7 +219,7 @@ export default async function BackofficePanelLayout({
            narrowed rail never had this group. Whoever arrives by URL still
            meets the locked screen, and the role on the route in `apps/api` is
            what enforces it (CLAUDE.md §8). */
-        ...(canBrowseReports(staff.role)
+        ...(canBrowseReports(staff.role) && flags['backoffice.reports']
           ? [
               {
                 key: 'reports' as const,
@@ -201,7 +233,7 @@ export default async function BackofficePanelLayout({
            (CLAUDE.md §8). Coordination runs the academic side and never
            promotes anybody, so it is not shown a roster whose only actions it
            may not take. */
-        ...(canManageStaff(staff.role)
+        ...(canManageStaff(staff.role) && flags['backoffice.staff']
           ? [
               {
                 key: 'staff' as const,
@@ -217,7 +249,7 @@ export default async function BackofficePanelLayout({
            opens for coordination or tesorería. The locked state on the page
            stays for whoever arrives by URL, and the role on the route in
            `apps/api` is what actually enforces it (CLAUDE.md §8). */
-        ...(canConfigureSettings(staff.role)
+        ...(canConfigureSettings(staff.role) && flags['backoffice.settings']
           ? [
               {
                 key: 'settings' as const,
@@ -229,6 +261,8 @@ export default async function BackofficePanelLayout({
       ],
     },
   ]
+
+  const groups = allGroups.filter((group) => group.items.length > 0)
 
   const brand = (
     <div className="flex h-14 items-center gap-2.5 px-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">

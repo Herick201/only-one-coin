@@ -79,5 +79,10 @@
     "es": "Español",
     "en": "English",
     "pt": "Português"
+  },
+  "preview": {
+    "badge": "Modo interno",
+    "description": "Você está vendo funcionalidades que ainda não estão ativas para mais ninguém.",
+    "exit": "Sair"
   }
 }

@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
 import { getPortalSession } from '@/lib/portal/mock-data'
+import { getFeatureFlags } from '@/lib/feature-flags/server'
 import { formatDateTime } from '@/lib/portal/format'
 import type { Locale } from '@/lib/portal/types'
 import { Card, ProgressBar, SectionTitle, StatusBadge } from '@/components/portal/ui'
@@ -22,13 +23,30 @@ export default async function DashboardPage({
   setRequestLocale(raw)
   const t = await getTranslations('portal')
 
+  const flags = await getFeatureFlags()
   const { student, enrollments, nextClass } = getPortalSession()
   const current = enrollments.filter((e) => e.status !== 'completed')
 
+  /* An action whose section is off is not a greyed card — it is not an
+     action. The dashboard only ever offers doors that open. */
   const quickActions: { href: string; label: string; icon: IconName }[] = [
-    { href: '/portal/payments', label: t('dashboard.action_payments'), icon: 'card' },
-    { href: '/portal/documents', label: t('dashboard.action_requests'), icon: 'clipboard' },
-    { href: '/portal/documents', label: t('dashboard.action_documents'), icon: 'documents' },
+    ...(flags['portal.payments']
+      ? [{ href: '/portal/payments', label: t('dashboard.action_payments'), icon: 'card' as const }]
+      : []),
+    ...(flags['portal.documents']
+      ? [
+          {
+            href: '/portal/documents',
+            label: t('dashboard.action_requests'),
+            icon: 'clipboard' as const,
+          },
+          {
+            href: '/portal/documents',
+            label: t('dashboard.action_documents'),
+            icon: 'documents' as const,
+          },
+        ]
+      : []),
     { href: '/portal/profile', label: t('dashboard.action_profile'), icon: 'profile' },
   ]
 
@@ -75,13 +93,22 @@ export default async function DashboardPage({
                 </ul>
               </div>
               {nextClass.classAccessLock !== null ? (
-                <Link
-                  href="/portal/payments"
-                  className="inline-flex shrink-0 items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/25"
-                >
-                  <Icon name="lock" size={16} />
-                  {t('next_class.locked')}
-                </Link>
+                /* The padlock is the truth either way — what changes with the
+                   flag is whether there is a Pagos to send the student to. */
+                flags['portal.payments'] ? (
+                  <Link
+                    href="/portal/payments"
+                    className="inline-flex shrink-0 items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/25"
+                  >
+                    <Icon name="lock" size={16} />
+                    {t('next_class.locked')}
+                  </Link>
+                ) : (
+                  <span className="inline-flex shrink-0 items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-xs font-semibold text-white">
+                    <Icon name="lock" size={16} />
+                    {t('next_class.locked')}
+                  </span>
+                )
               ) : nextClass.meetingUrl ? (
                 <a
                   href={nextClass.meetingUrl}
@@ -114,13 +141,15 @@ export default async function DashboardPage({
       <section>
         <div className="mb-3 flex items-center justify-between">
           <SectionTitle>{t('dashboard.my_courses_title')}</SectionTitle>
-          <Link
-            href="/portal/courses"
-            className="inline-flex items-center gap-1 text-sm font-semibold text-brand-blue transition hover:text-brand-blue-deep"
-          >
-            {t('common.see_all')}
-            <Icon name="chevron-right" size={16} />
-          </Link>
+          {flags['portal.courses'] && (
+            <Link
+              href="/portal/courses"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-brand-blue transition hover:text-brand-blue-deep"
+            >
+              {t('common.see_all')}
+              <Icon name="chevron-right" size={16} />
+            </Link>
+          )}
         </div>
         <AutoGrid min="18rem">
           {current.map((e) => (
@@ -168,13 +197,17 @@ export default async function DashboardPage({
                   />
                 )
               )}
-              <Link
-                href={`/portal/courses/${e.id}`}
-                className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-brand-blue transition hover:text-brand-blue-deep"
-              >
-                {t('common.view_detail')}
-                <Icon name="arrow-right" size={16} />
-              </Link>
+              {/* The card stays — it is the student's own course. What the
+                  flag governs is whether there is a detail screen behind it. */}
+              {flags['portal.courses'] && (
+                <Link
+                  href={`/portal/courses/${e.id}`}
+                  className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-brand-blue transition hover:text-brand-blue-deep"
+                >
+                  {t('common.view_detail')}
+                  <Icon name="arrow-right" size={16} />
+                </Link>
+              )}
             </Card>
           ))}
         </AutoGrid>

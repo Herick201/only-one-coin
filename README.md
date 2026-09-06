@@ -7,7 +7,7 @@ backoffice administrativo e módulo de e-mail.
 ## Documentos
 
 - [`CLAUDE.md`](CLAUDE.md) — contexto permanente: stack fechada, convenções, regras proibidas.
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — estrutura do monorepo, modelo de autorização (Caminho A vs. B), RBAC, custo mensal estimado e o shell/layout responsivo de `apps/app`.
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — estrutura do monorepo, modelo de autorização (Caminho A vs. B), RBAC, custo mensal estimado, o shell/layout responsivo de `apps/app` e as **feature flags** das três superfícies (§8).
 - [`docs/MATRICULA-CHECKOUT.md`](docs/MATRICULA-CHECKOUT.md) — o funil público de matrícula: wizard de 4 passos com dois modos de entrada (landing e link do vendedor), os dois relógios da vaga e a atribuição de canal.
 - [`docs/DOCUMENTOS-E-CERTIFICADOS.md`](docs/DOCUMENTOS-E-CERTIFICADOS.md) — emissão de constancia e certificado, lote por turma, e-mail pela outbox.
 - [`docs/INFRAESTRUTURA.md`](docs/INFRAESTRUTURA.md) — base de conhecimento: levantamento de mercado (preços, specs, latência) que baseou as escolhas de hospedagem.
@@ -230,6 +230,14 @@ Domínio e fila já existem, independentes dessa escolha:
   de tipografia no meio de um clique é o que faz a pessoa duvidar se ainda está
   no lugar certo para digitar a senha. O resto do painel (portal e backoffice)
   segue em Inter — é ferramenta de trabalho, não peça de marca.
+  As três superfícies são geridas por **feature flag** (`CLAUDE.md` §5,
+  `docs/ARCHITECTURE.md` §8): ligada, a seção aparece em produção; desligada,
+  ela some do menu, a URL dá 404 e continua inteira para nós — local, preview e,
+  em produção, atrás do destravamento interno (`/api/preview?token=…`, com tarja
+  em toda tela enquanto está aberto). O interruptor é um registro em código
+  (`src/lib/feature-flags/registry.ts`) com override por ambiente
+  (`OOC_FLAG_<CHAVE>=on|off`). Hoje **todas as flags estão ligadas** — o registro
+  chegou para gerir o que se expõe, não para aposentar tela.
 - `packages/domain` — domínio DDD puro (entidades, usecases, portas de
   repositório), sem framework nem provedor de banco. Já inclui a porta de
   identidade/auth (`identity/`, ver `packages/domain/README.md`) e um
