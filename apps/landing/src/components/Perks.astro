@@ -30,7 +30,6 @@ const icons = [
             <span class="perk-icon" set:html={icons[i]} />
             <div class="perk-txt">
               <h3>{item.title}</h3>
-              <p class="text-muted">{item.text}</p>
             </div>
           </article>
         ))
@@ -105,14 +104,11 @@ const icons = [
   .perk-txt {
     min-width: 0;
   }
+  /* Só o nome da oficina: a frase de apoio embaixo dizia o óbvio e dobrava a
+     altura da fileira (pedido do dono, 05/09/2026). */
   .perk-txt h3 {
     font-size: calc(16.8 * var(--dp));
-    margin-bottom: calc(2 * var(--dp));
-  }
-  .perk-txt p {
     margin: 0;
-    font-size: calc(14.08 * var(--dp));
-    line-height: 1.4;
   }
   .btn-outline {
     background: var(--paper);

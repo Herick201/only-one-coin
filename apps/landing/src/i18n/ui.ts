@@ -68,6 +68,18 @@ export function levelsOf(slug: CourseSlug): CourseSlug[] {
 // reaches the user). The homepage "Programas" cards link straight to them.
 export const audienceAnchors = ["kids", "teens-and-adults"] as const;
 
+// Idade de entrada, por curso. Todo idioma é de jovens e adultos — 13 anos em
+// diante; a faixa de 6 a 12 existe só no OOC Kids, que é inglês para crianças
+// (palavra do dono, 05/09/2026). A lista existe para o dia em que outro idioma
+// abrir turma de crianças: a página lê daqui, não de um `if` com "english"
+// escrito no meio do componente.
+const kidsCourses: CourseSlug[] = ["english"];
+
+/** O curso tem faixa de crianças (6 a 12) além da de jovens e adultos? */
+export function hasKidsProgram(slug: CourseSlug): boolean {
+  return kidsCourses.includes(slug);
+}
+
 // Full-package ("paquete completo", pago único) price per course, in PEN.
 // Source: the merchant e-commerce catalog.
 //
@@ -267,7 +279,7 @@ export const content = {
       courses: {
         title: "Cursos de idiomas online: precios y paquetes — Only One Coin",
         description:
-          "Elige inglés, francés, italiano, alemán, portugués, chino mandarín, coreano, japonés o ruso. Clases online desde los 6 años, desde S/0.60 por sesión y sin mensualidades.",
+          "Elige inglés, francés, italiano, alemán, portugués, chino mandarín, coreano, japonés o ruso. Clases online para jóvenes y adultos desde los 13 años, desde S/0.60 por sesión y sin mensualidades.",
       },
       course: {
         titlePre: "Curso de ",
@@ -276,7 +288,7 @@ export const content = {
         // com o título inteiro em vez de terminar num "·" pendurado.
         titlePost: " · {price} por sesión",
         descPre: "Aprende ",
-        descPost: " online con Only One Coin Perú: desde los 6 años, con certificado digital y talleres gratis.",
+        descPost: " online con Only One Coin Perú: para jóvenes y adultos desde los 13 años, con certificado digital y talleres incluidos en el paquete.",
         descPrice: " Clases desde {price} por sesión.",
       },
       faq: {
@@ -395,7 +407,7 @@ export const content = {
       items: [
         {
           title: "OOC Kids",
-          text: "Para niños desde 6 años.",
+          text: "Inglés para niños de 6 a 12 años.",
           href: "/courses/english#kids",
         },
         {
@@ -445,13 +457,13 @@ export const content = {
       titlePre: "Tu matrícula te ",
       titleAccent: "abre más oportunidades",
       titlePost: "",
-      lead: "Talleres gratuitos que potencian tu aprendizaje y tu futuro.",
+      lead: "Beneficio de nuestros alumnos premium: los talleres gratuitos vienen con el paquete completo.",
       allCta: "Ver todos los beneficios",
       items: [
-        { title: "Excel", text: "Herramientas para el mundo laboral." },
-        { title: "Emprendimiento", text: "Desarrolla tus ideas." },
-        { title: "Liderazgo", text: "Potencia tus habilidades." },
-        { title: "Quechua", text: "Conoce y preserva nuestra cultura." },
+        { title: "Excel" },
+        { title: "Emprendimiento" },
+        { title: "Liderazgo" },
+        { title: "Quechua" },
       ],
     },
     steps: {
@@ -504,11 +516,11 @@ export const content = {
       ctaText: "Escríbenos por WhatsApp y te ayudamos con la matrícula, los horarios y todo lo demás.",
       ctaButton: "Escríbenos por WhatsApp",
       items: [
-        { q: "¿Cuánto cuesta y cómo funciona el pago?", a: "Estudias desde S/0.60 por sesión, con matrícula, material, certificado y talleres incluidos. Consúltanos por WhatsApp el detalle del curso que te interesa. Sin mensualidades ocultas ni cobros sorpresa." },
-        { q: "¿Desde qué edad puedo matricularme?", a: "Recibimos alumnos desde los 6 años en adelante. Hay grupos pensados para niños y grupos para jóvenes y adultos." },
+        { q: "¿Cuánto cuesta y cómo funciona el pago?", a: "Estudias desde S/0.60 por sesión, con matrícula, material y certificado incluidos; los talleres gratuitos vienen con el paquete completo. Consúltanos por WhatsApp el detalle del curso que te interesa. Sin mensualidades ocultas ni cobros sorpresa." },
+        { q: "¿Desde qué edad puedo matricularme?", a: "Los cursos de idiomas son para jóvenes y adultos, desde los 13 años. Para niños de 6 a 12 años tenemos OOC Kids, nuestro programa de inglés para niños." },
         { q: "¿Cómo me matriculo?", a: "Escríbenos por WhatsApp para reservar tu cupo. Luego completas el formulario de matrícula, subes tu comprobante y recibes tus credenciales de acceso." },
         { q: "¿Las clases son presenciales o virtuales?", a: "Todas nuestras clases son 100% online, en vivo con un docente. Puedes estudiar desde cualquier parte del mundo sin moverte de casa. Consúltanos por WhatsApp los horarios disponibles del periodo." },
-        { q: "¿Qué incluye la matrícula?", a: "El acceso a tu curso de idioma, la plataforma del alumno y los talleres gratuitos de Excel, Emprendimiento, Liderazgo y Quechua." },
+        { q: "¿Qué incluye la matrícula?", a: "El acceso a tu curso de idioma y la plataforma del alumno. Los talleres gratuitos de Excel, Emprendimiento, Liderazgo y Quechua son el beneficio de nuestros alumnos premium: los que estudian con el paquete completo." },
         { q: "¿Recibo algún certificado?", a: "Sí. Al culminar tu curso recibes un certificado digital que valida tu aprendizaje." },
       ],
     },
@@ -541,7 +553,7 @@ export const content = {
       indexTitlePre: "Elige el idioma que ",
       indexTitleAccent: "quieres aprender",
       indexTitlePost: "",
-      indexText: "Todos los cursos están abiertos desde los 6 años, desde S/0.60 por sesión. Elige un idioma para ver el precio y el detalle.",
+      indexText: "Cursos para jóvenes y adultos desde los 13 años, desde S/0.60 por sesión. Para niños de 6 a 12 años tenemos OOC Kids, en inglés. Elige un idioma para ver el precio y el detalle.",
       priceUnit: "por sesión",
       viewCourse: "Ver curso",
     },
@@ -624,11 +636,12 @@ export const content = {
       leadPre: "Un programa completo de ",
       leadPost: " para todas las edades, con enfoque conversacional y docentes comprometidos con tu aprendizaje real.",
       exampleNote: "Contenido de ejemplo — la información detallada de cada curso se completará con los datos reales del periodo.",
-      audiencesTitle: "¿Para quién es?",
-      audiences: [
-        { tag: "6 a 12 años", title: "Niños", text: "Primer contacto con el idioma a través del juego, la música y actividades diseñadas para su edad." },
-        { tag: "13 años en adelante", title: "Jóvenes y Adultos", text: "Programa estructurado por niveles para lograr fluidez real, con foco en la conversación." },
-      ],
+      ageBadge: "Jóvenes y adultos · desde los 13 años",
+      kidsTitle: "¿El alumno tiene menos de 13 años?",
+      kidsTag: "Curso aparte · 6 a 12 años",
+      kidsName: "OOC Kids",
+      kidsText: "Inglés para niños es un curso propio, con su propia matrícula, sus aulas y su docente — no es un nivel de esta página. El idioma entra por el juego, la música y actividades pensadas para su edad.",
+      kidsCta: "Matricular en OOC Kids",
       featuresTitle: "Qué incluye",
       features: [
         { title: "Pago único del paquete", text: "Un solo pago por todo el curso, sin costos ocultos. En inglés también puedes pagar por módulo." },
@@ -795,7 +808,7 @@ export const content = {
       privacy: "Política de privacidad",
       terms: "Términos y condiciones",
       hoursLabel: "Horario de atención",
-      hours: "Lunes a viernes · 9:00 AM – 10:00 PM",
+      hours: "Lunes a viernes · 9:00 AM – 6:00 PM",
       script: "Más idiomas, más oportunidades",
       followTitle: "Síguenos",
       copyOrg: "Only One Coin",
@@ -813,20 +826,20 @@ export const content = {
     meta: {
       title: "Online language courses in Peru — Only One Coin",
       description:
-        "100% online classes across Peru: English, French, Italian, German, Portuguese, Chinese, Korean, Japanese and Russian. Classes from S/0.60 per session, certificate and free workshops from age 6.",
+        "100% online classes across Peru: English, French, Italian, German, Portuguese, Chinese, Korean, Japanese and Russian. Classes from S/0.60 per session, certificate and workshops included in the package.",
       siteName: "Only One Coin",
       imageAlt: "Only One Coin Perú — online language courses",
       courses: {
         title: "Online language courses: prices and packages — Only One Coin",
         description:
-          "Choose English, French, Italian, German, Portuguese, Mandarin Chinese, Korean, Japanese or Russian. Online classes from age 6, from S/0.60 per session and no monthly fees.",
+          "Choose English, French, Italian, German, Portuguese, Mandarin Chinese, Korean, Japanese or Russian. Online classes for teens and adults from age 13, from S/0.60 per session and no monthly fees.",
       },
       course: {
         titlePre: "Online ",
         titleMid: " course in Peru",
         titlePost: " · {price} per session",
         descPre: "Learn ",
-        descPost: " online with Only One Coin Perú: from age 6, with a digital certificate and free workshops.",
+        descPost: " online with Only One Coin Perú: for teens and adults from age 13, with a digital certificate and workshops included in the package.",
         descPrice: " Classes from {price} per session.",
       },
       faq: {
@@ -945,7 +958,7 @@ export const content = {
       items: [
         {
           title: "OOC Kids",
-          text: "For children from age 6.",
+          text: "English for children ages 6 to 12.",
           href: "/courses/english#kids",
         },
         {
@@ -995,13 +1008,13 @@ export const content = {
       titlePre: "Your enrollment ",
       titleAccent: "opens more opportunities",
       titlePost: "",
-      lead: "Free workshops that boost your learning and your future.",
+      lead: "A benefit for our premium students: the free workshops come with the full package.",
       allCta: "See all benefits",
       items: [
-        { title: "Excel", text: "Tools for the working world." },
-        { title: "Entrepreneurship", text: "Develop your ideas." },
-        { title: "Leadership", text: "Boost your skills." },
-        { title: "Quechua", text: "Discover and preserve our culture." },
+        { title: "Excel" },
+        { title: "Entrepreneurship" },
+        { title: "Leadership" },
+        { title: "Quechua" },
       ],
     },
     steps: {
@@ -1054,11 +1067,11 @@ export const content = {
       ctaText: "Message us on WhatsApp and we'll help you with enrolment, schedules and anything else.",
       ctaButton: "Message us on WhatsApp",
       items: [
-        { q: "How much does it cost and how does payment work?", a: "You study from S/0.60 per session, with enrollment, materials, certificate and workshops included. Ask us on WhatsApp for the details of the course you are interested in. No hidden monthly fees or surprise charges." },
-        { q: "From what age can I enroll?", a: "We welcome students from 6 years old and up. There are groups designed for children and groups for teens and adults." },
+        { q: "How much does it cost and how does payment work?", a: "You study from S/0.60 per session, with enrollment, materials and certificate included; the free workshops come with the full package. Ask us on WhatsApp for the details of the course you are interested in. No hidden monthly fees or surprise charges." },
+        { q: "From what age can I enroll?", a: "Our language courses are for teens and adults, from age 13. For children ages 6 to 12 we have OOC Kids, our English program for children." },
         { q: "How do I enroll?", a: "Message us on WhatsApp to reserve your spot. Then you fill out the enrollment form, upload your receipt and receive your access credentials." },
         { q: "Are classes in-person or online?", a: "All our classes are 100% online and live with a teacher. You can study from anywhere in the world without leaving home. Ask us on WhatsApp about the available schedules for the term." },
-        { q: "What does enrollment include?", a: "Access to your language course, the student platform and the free Excel, Entrepreneurship, Leadership and Quechua workshops." },
+        { q: "What does enrollment include?", a: "Access to your language course and the student platform. The free Excel, Entrepreneurship, Leadership and Quechua workshops are a benefit for our premium students: the ones studying with the full package." },
         { q: "Do I get a certificate?", a: "Yes. When you complete your course you receive a digital certificate that validates your learning." },
       ],
     },
@@ -1091,7 +1104,7 @@ export const content = {
       indexTitlePre: "Choose the language you ",
       indexTitleAccent: "want to learn",
       indexTitlePost: "",
-      indexText: "Every course is open from age 6, from S/0.60 per session. Pick a language to see the price and the details.",
+      indexText: "Courses for teens and adults from age 13, from S/0.60 per session. For children ages 6 to 12 we have OOC Kids, in English. Pick a language to see the price and the details.",
       priceUnit: "per session",
       viewCourse: "View course",
     },
@@ -1170,11 +1183,12 @@ export const content = {
       leadPre: "A complete ",
       leadPost: " program for all ages, with a conversational focus and teachers committed to your real learning.",
       exampleNote: "Sample content — the detailed information for each course will be completed with the real data for the term.",
-      audiencesTitle: "Who is it for?",
-      audiences: [
-        { tag: "Ages 6 to 12", title: "Children", text: "A first contact with the language through play, music and age-appropriate activities." },
-        { tag: "13 and up", title: "Teens & Adults", text: "A leveled program to reach real fluency, focused on conversation." },
-      ],
+      ageBadge: "Teens and adults · from age 13",
+      kidsTitle: "Is the student under 13?",
+      kidsTag: "A separate course · ages 6 to 12",
+      kidsName: "OOC Kids",
+      kidsText: "English for children is a course of its own, with its own enrollment, its own classes and its own teacher — it is not a level of this page. The language comes in through play, music and age-appropriate activities.",
+      kidsCta: "Enroll in OOC Kids",
       featuresTitle: "What's included",
       features: [
         { title: "Single package payment", text: "One payment for the whole course, no hidden costs. English can also be paid per module." },
@@ -1340,7 +1354,7 @@ export const content = {
       privacy: "Privacy policy",
       terms: "Terms & conditions",
       hoursLabel: "Business hours",
-      hours: "Monday to Friday · 9:00 AM – 10:00 PM",
+      hours: "Monday to Friday · 9:00 AM – 6:00 PM",
       script: "More languages, more opportunities",
       followTitle: "Follow us",
       copyOrg: "Only One Coin",
@@ -1364,14 +1378,14 @@ export const content = {
       courses: {
         title: "Cursos de idiomas online: preços e pacotes — Only One Coin",
         description:
-          "Escolha inglês, francês, italiano, alemão, português, chinês mandarim, coreano, japonês ou russo. Aulas online a partir dos 6 anos, a partir de S/0,60 por sessão e sem mensalidades.",
+          "Escolha inglês, francês, italiano, alemão, português, chinês mandarim, coreano, japonês ou russo. Aulas online para jovens e adultos a partir dos 13 anos, a partir de S/0,60 por sessão e sem mensalidades.",
       },
       course: {
         titlePre: "Curso de ",
         titleMid: " online no Peru",
         titlePost: " · {price} por sessão",
         descPre: "Aprenda ",
-        descPost: " online com a Only One Coin Peru: a partir dos 6 anos, com certificado digital e oficinas grátis.",
+        descPost: " online com a Only One Coin Peru: para jovens e adultos a partir dos 13 anos, com certificado digital e oficinas incluídas no pacote.",
         descPrice: " Aulas a partir de {price} por sessão.",
       },
       faq: {
@@ -1490,7 +1504,7 @@ export const content = {
       items: [
         {
           title: "OOC Kids",
-          text: "Para crianças a partir dos 6 anos.",
+          text: "Inglês para crianças de 6 a 12 anos.",
           href: "/courses/english#kids",
         },
         {
@@ -1540,13 +1554,13 @@ export const content = {
       titlePre: "Sua matrícula ",
       titleAccent: "abre mais oportunidades",
       titlePost: "",
-      lead: "Oficinas gratuitas que potencializam seu aprendizado e seu futuro.",
+      lead: "Benefício dos nossos alunos premium: as oficinas gratuitas vêm com o pacote completo.",
       allCta: "Ver todos os benefícios",
       items: [
-        { title: "Excel", text: "Ferramentas para o mundo do trabalho." },
-        { title: "Empreendedorismo", text: "Desenvolva suas ideias." },
-        { title: "Liderança", text: "Potencialize suas habilidades." },
-        { title: "Quíchua", text: "Conheça e preserve nossa cultura." },
+        { title: "Excel" },
+        { title: "Empreendedorismo" },
+        { title: "Liderança" },
+        { title: "Quíchua" },
       ],
     },
     steps: {
@@ -1599,11 +1613,11 @@ export const content = {
       ctaText: "Fale com a gente no WhatsApp: ajudamos com matrícula, horários e o que mais precisar.",
       ctaButton: "Falar no WhatsApp",
       items: [
-        { q: "Quanto custa e como funciona o pagamento?", a: "Você estuda a partir de S/0,60 por sessão, com matrícula, material, certificado e oficinas incluídos. Consulte no WhatsApp o detalhe do curso que você quer. Sem mensalidades ocultas nem cobranças-surpresa." },
-        { q: "A partir de que idade posso me matricular?", a: "Recebemos alunos a partir dos 6 anos. Há turmas pensadas para crianças e turmas para jovens e adultos." },
+        { q: "Quanto custa e como funciona o pagamento?", a: "Você estuda a partir de S/0,60 por sessão, com matrícula, material e certificado incluídos; as oficinas gratuitas vêm com o pacote completo. Consulte no WhatsApp o detalhe do curso que você quer. Sem mensalidades ocultas nem cobranças-surpresa." },
+        { q: "A partir de que idade posso me matricular?", a: "Os cursos de idiomas são para jovens e adultos, a partir dos 13 anos. Para crianças de 6 a 12 anos temos o OOC Kids, nosso programa de inglês para crianças." },
         { q: "Como me matriculo?", a: "Fale com a gente no WhatsApp para reservar sua vaga. Depois você preenche o formulário de matrícula, envia seu comprovante e recebe suas credenciais de acesso." },
         { q: "As aulas são presenciais ou online?", a: "Todas as nossas aulas são 100% online e ao vivo com um professor. Você pode estudar de qualquer parte do mundo sem sair de casa. Consulte no WhatsApp os horários disponíveis do período." },
-        { q: "O que a matrícula inclui?", a: "O acesso ao seu curso de idioma, a plataforma do aluno e as oficinas gratuitas de Excel, Empreendedorismo, Liderança e Quíchua." },
+        { q: "O que a matrícula inclui?", a: "O acesso ao seu curso de idioma e a plataforma do aluno. As oficinas gratuitas de Excel, Empreendedorismo, Liderança e Quíchua são o benefício dos nossos alunos premium: os que estudam com o pacote completo." },
         { q: "Recebo algum certificado?", a: "Sim. Ao concluir seu curso você recebe um certificado digital que valida seu aprendizado." },
       ],
     },
@@ -1636,7 +1650,7 @@ export const content = {
       indexTitlePre: "Escolha o idioma que ",
       indexTitleAccent: "você quer aprender",
       indexTitlePost: "",
-      indexText: "Todos os cursos são abertos a partir dos 6 anos, a partir de S/0,60 por sessão. Escolha um idioma para ver o preço e o detalhe.",
+      indexText: "Cursos para jovens e adultos a partir dos 13 anos, a partir de S/0,60 por sessão. Para crianças de 6 a 12 anos temos o OOC Kids, em inglês. Escolha um idioma para ver o preço e o detalhe.",
       priceUnit: "por sessão",
       viewCourse: "Ver curso",
     },
@@ -1715,11 +1729,12 @@ export const content = {
       leadPre: "Um programa completo de ",
       leadPost: " para todas as idades, com foco conversacional e professores comprometidos com o seu aprendizado real.",
       exampleNote: "Conteúdo de exemplo — a informação detalhada de cada curso será preenchida com os dados reais do período.",
-      audiencesTitle: "Para quem é?",
-      audiences: [
-        { tag: "6 a 12 anos", title: "Crianças", text: "Primeiro contato com o idioma por meio de brincadeiras, música e atividades pensadas para a idade." },
-        { tag: "13 anos ou mais", title: "Jovens e Adultos", text: "Programa estruturado por níveis para alcançar fluência real, com foco na conversação." },
-      ],
+      ageBadge: "Jovens e adultos · a partir dos 13 anos",
+      kidsTitle: "O aluno tem menos de 13 anos?",
+      kidsTag: "Curso à parte · 6 a 12 anos",
+      kidsName: "OOC Kids",
+      kidsText: "Inglês para crianças é um curso próprio, com matrícula, turmas e docente próprios — não é um nível desta página. O idioma entra pela brincadeira, pela música e por atividades pensadas para a idade.",
+      kidsCta: "Matricular no OOC Kids",
       featuresTitle: "O que inclui",
       features: [
         { title: "Pagamento único do pacote", text: "Um único pagamento por todo o curso, sem custos ocultos. O inglês também pode ser pago por módulo." },
@@ -1885,7 +1900,7 @@ export const content = {
       privacy: "Política de privacidade",
       terms: "Termos e condições",
       hoursLabel: "Horário de atendimento",
-      hours: "Segunda a sexta · 9:00 – 22:00",
+      hours: "Segunda a sexta · 9:00 – 18:00",
       script: "Mais idiomas, mais oportunidades",
       followTitle: "Siga a gente",
       copyOrg: "Only One Coin",

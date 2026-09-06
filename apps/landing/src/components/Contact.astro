@@ -1,6 +1,6 @@
 ---
 import { org, whatsappUrl } from "../i18n/ui";
-import { getLangFromUrl, useTranslations } from "../i18n/utils";
+import { fillOrgTokens, getLangFromUrl, useTranslations } from "../i18n/utils";
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
@@ -81,7 +81,9 @@ const icons = {
       </article>
     </div>
 
-    <p class="contact-org" set:html={t.footer.orgHtml} />
+    {/* Razão social e RUC vêm de `org` pelos tokens {legalName}/{ruc}, como no
+        rodapé: sem passar por `fillOrgTokens`, a página imprimia os tokens. */}
+    <p class="contact-org" set:html={fillOrgTokens(t.footer.orgHtml)} />
   </div>
 </section>
 

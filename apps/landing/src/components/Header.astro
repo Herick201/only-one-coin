@@ -7,11 +7,6 @@ import { getLangFromUrl, useTranslations, withLang } from "../i18n/utils";
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 
-// Top-level links only. The logo already goes home, and contact is reachable
-// from the footer and from the CTA at the bottom of every page, so neither
-// needs a slot up here.
-const nav = [{ label: t.nav.about, href: withLang(lang, "/about") }];
-
 const courses = languageSlugs.map((slug) => ({
   slug,
   label: t.courses.list[slug],
@@ -19,16 +14,21 @@ const courses = languageSlugs.map((slug) => ({
 }));
 const coursesHref = withLang(lang, "/courses");
 
-// "Recursos" dropdown — community / blog / FAQ / contact, one page each.
-// Rendered by both the desktop dropdown and the mobile drawer, so this array
-// is the only place an entry has to be added.
+// "Recursos" dropdown — quem somos / community / blog / FAQ / contact, one
+// page each. Rendered by both the desktop dropdown and the mobile drawer, so
+// this array is the only place an entry has to be added.
+//
+// "Nosotros" era o único link solto da barra e voltou para cá a pedido do
+// dono (05/09/2026): a barra de cima fica com o que leva à matrícula —
+// idiomas, cursos, beneficios —, e quem quer conhecer a asociación abre o
+// menu. O logo continua indo para a home, então nada some do caminho.
 const resources = [
+  { label: t.nav.about, href: withLang(lang, "/about") },
   { label: t.nav.community, href: withLang(lang, "/community") },
   { label: t.nav.blog, href: withLang(lang, "/blog") },
   { label: t.nav.faq, href: withLang(lang, "/faq") },
   { label: t.nav.contact, href: withLang(lang, "/contact") },
 ];
-const resourcesHref = resources[0].href;
 
 // "Cursos" — o que não é idioma. Hoje só o preuniversitario, ainda sem
 // matrícula aberta: entra com selo em vez de sumir do menu, porque o "em
@@ -42,11 +42,15 @@ const programs = [
 ];
 ---
 
-<header class="site-header">
-  <!-- Mobile drawer state (CSS checkbox toggle — CSP-safe, no inline JS).
-       Kept at header level so the `~` sibling selectors reach the drawer. -->
-  <input type="checkbox" id="menu-toggle" class="menu-toggle" hidden />
+<!-- Mobile drawer state (CSS checkbox toggle — CSP-safe, no inline JS).
+     Vive FORA do <header> de propósito: o header tem `backdrop-filter`, e um
+     ancestral com filtro vira bloco de contenção de qualquer `position: fixed`
+     dentro dele — o painel lateral ficaria preso à faixa de 62dp da barra em
+     vez de ocupar a altura da janela. Aqui input, header, véu e painel são
+     irmãos, e os seletores `~` alcançam os três. -->
+<input type="checkbox" id="menu-toggle" class="menu-toggle" hidden />
 
+<header class="site-header">
   <div class="container header-inner">
     <a href={withLang(lang, "/")} class="brand" aria-label="Only One Coin">
       <img src="/brand/logo.png" alt="Only One Coin" width="200" height="33" />
@@ -54,8 +58,6 @@ const programs = [
 
     <!-- Desktop navigation -->
     <nav class="nav" aria-label="Principal">
-      {nav.map((n) => <a href={n.href}>{n.label}</a>)}
-
       <details class="nav-dd">
         <summary>
           {t.nav.courses}
@@ -124,61 +126,71 @@ const programs = [
     </div>
   </div>
 
-  <!-- Mobile drawer -->
-  <div class="mobile-drawer">
-    <nav class="mobile-nav" aria-label="Principal (móvil)">
-      <div class="m-lang"><LanguageSwitcher /></div>
-
-      {nav.map((n) => <a href={n.href}>{n.label}</a>)}
-
-      <details class="m-dd">
-        <summary>
-          {t.nav.courses}
-          <svg class="dd-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
-        </summary>
-        <div class="m-dd-panel">
-          {courses.map((c) => (
-            <a href={c.href} class="dd-lang">
-              <LanguageFlag slug={c.slug} />
-              <span>{c.label}</span>
-            </a>
-          ))}
-          <a href={coursesHref} class="m-dd-all">{t.nav.coursesAll}</a>
-        </div>
-      </details>
-
-      <details class="m-dd">
-        <summary>
-          {t.nav.programs}
-          <svg class="dd-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
-        </summary>
-        <div class="m-dd-panel">
-          {programs.map((p) => (
-            <a href={p.href} class="dd-with-badge">
-              <span>{p.label}</span>
-              {p.soon && <span class="soon">{t.nav.soon}</span>}
-            </a>
-          ))}
-        </div>
-      </details>
-
-      <details class="m-dd">
-        <summary>
-          {t.nav.resources}
-          <svg class="dd-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
-        </summary>
-        <div class="m-dd-panel">
-          {resources.map((r) => <a href={r.href}>{r.label}</a>)}
-        </div>
-      </details>
-
-      <a href={withLang(lang, "/#benefits")}>{t.nav.benefits}</a>
-
-      <a href={withLang(lang, "/enrollment")} class="btn btn-yellow m-enroll">{t.hero.ctaEnroll}</a>
-      <a href={withLang(lang, "/login")} class="btn btn-primary m-portal">{t.nav.portal}</a>
-    </nav>
-  </div>
 </header>
+
+<!-- Toque fora fecha: o véu é um <label> do mesmo checkbox. -->
+<label class="drawer-scrim" for="menu-toggle" aria-hidden="true"></label>
+
+<!-- Menu do celular: painel que entra pela lateral. O portal do aluno abre a
+     lista (é serviço de quem já entrou, e é o que essa pessoa vem buscar) e o
+     resto do menu vive em dropdowns; a matrícula fecha, em amarelo. -->
+<div class="mobile-drawer">
+  <nav class="mobile-nav" aria-label="Principal (móvil)">
+    <div class="m-top">
+      <div class="m-lang"><LanguageSwitcher /></div>
+      <label for="menu-toggle" class="m-close" aria-label={t.nav.closeMenu}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6 18 18M18 6 6 18"></path></svg>
+      </label>
+    </div>
+
+    <a href={withLang(lang, "/login")} class="btn btn-primary m-portal">{t.nav.portal}</a>
+
+    <details class="m-dd">
+      <summary>
+        {t.nav.courses}
+        <svg class="dd-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+      </summary>
+      <div class="m-dd-panel">
+        {courses.map((c) => (
+          <a href={c.href} class="dd-lang">
+            <LanguageFlag slug={c.slug} />
+            <span>{c.label}</span>
+          </a>
+        ))}
+        <a href={coursesHref} class="m-dd-all">{t.nav.coursesAll}</a>
+      </div>
+    </details>
+
+    <details class="m-dd">
+      <summary>
+        {t.nav.programs}
+        <svg class="dd-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+      </summary>
+      <div class="m-dd-panel">
+        {programs.map((p) => (
+          <a href={p.href} class="dd-with-badge">
+            <span>{p.label}</span>
+            {p.soon && <span class="soon">{t.nav.soon}</span>}
+          </a>
+        ))}
+      </div>
+    </details>
+
+    <details class="m-dd">
+      <summary>
+        {t.nav.resources}
+        <svg class="dd-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+      </summary>
+      <div class="m-dd-panel">
+        {resources.map((r) => <a href={r.href}>{r.label}</a>)}
+      </div>
+    </details>
+
+    <a href={withLang(lang, "/#benefits")}>{t.nav.benefits}</a>
+
+    <a href={withLang(lang, "/enrollment")} class="btn btn-yellow m-enroll">{t.hero.ctaEnroll}</a>
+  </nav>
+</div>
 
 <script>
   // Open the desktop dropdowns (courses, resources, language) on hover for a
@@ -404,7 +416,7 @@ const programs = [
   }
   .m-enroll {
     width: 100%;
-    margin-top: calc(6 * var(--dp));
+    margin-top: calc(14 * var(--dp));
   }
   /* O portal é para quem já é aluno — serviço, não venda. Fica leve e menor
      para que o amarelo da matrícula seja a única coisa gritando no header. */
@@ -473,17 +485,73 @@ const programs = [
     transition: transform 0.22s ease, opacity 0.18s ease;
   }
 
-  /* Mobile drawer */
+  /* Menu do celular: painel lateral.
+     Era uma faixa que aparecia embaixo da barra com um `display: block` —
+     nascia pronta, sem passagem nenhuma, e cobria a página inteira. Agora
+     entra deslizando pela direita sobre um véu; a página continua atrás,
+     visível, e o toque fora fecha. */
+  .drawer-scrim {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: rgba(19, 34, 75, 0.4);
+    opacity: 0;
+    visibility: hidden;
+    cursor: pointer;
+    transition: opacity 0.28s ease, visibility 0s linear 0.28s;
+  }
   .mobile-drawer {
     display: none;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 61;
+    width: min(86vw, calc(330 * var(--dp)));
     background: var(--paper);
-    border-top: calc(1 * var(--dp)) solid var(--border);
+    box-shadow: calc(-18 * var(--dp)) 0 calc(48 * var(--dp)) rgba(19, 34, 75, 0.16);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    /* Fechado ele fica fora da janela E invisível: só `translateX` deixaria
+       os links tabuláveis e lidos por leitor de tela com o menu fechado. A
+       `visibility` espera o fim do deslize para sumir, e volta na hora. */
+    transform: translateX(100%);
+    visibility: hidden;
+    transition:
+      transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1),
+      visibility 0s linear 0.34s;
   }
   .mobile-nav {
     display: flex;
     flex-direction: column;
     gap: calc(4 * var(--dp));
-    padding: calc(14 * var(--dp)) calc(24 * var(--dp)) calc(22 * var(--dp));
+    padding: calc(14 * var(--dp)) calc(20 * var(--dp)) calc(24 * var(--dp));
+  }
+  /* Topo do painel: o idioma de um lado, o X do outro. O hambúrguer da barra
+     fica atrás do painel, então o fechar precisa morar aqui dentro. */
+  .m-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: calc(12 * var(--dp));
+  }
+  .m-close {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: calc(38 * var(--dp));
+    height: calc(38 * var(--dp));
+    border-radius: calc(12 * var(--dp));
+    border: calc(1.5 * var(--dp)) solid var(--border);
+    background: var(--paper);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .m-close svg {
+    width: calc(18 * var(--dp));
+    height: calc(18 * var(--dp));
   }
   .mobile-nav > a {
     padding: calc(13 * var(--dp)) calc(6 * var(--dp));
@@ -492,8 +560,11 @@ const programs = [
     color: var(--ink);
     border-bottom: calc(1 * var(--dp)) solid var(--border);
   }
+  /* O portal abre a lista: quem já é aluno vem por ele, e é o único item que
+     não é navegação de venda. */
   .m-portal {
-    margin-top: calc(14 * var(--dp));
+    width: 100%;
+    margin: calc(14 * var(--dp)) 0 calc(10 * var(--dp));
     justify-content: center;
     border-bottom: 0 !important;
   }
@@ -555,9 +626,6 @@ const programs = [
     }
     .m-lang {
       display: block;
-      padding-bottom: calc(12 * var(--dp));
-      margin-bottom: calc(4 * var(--dp));
-      border-bottom: calc(1 * var(--dp)) solid var(--border);
     }
     /* A barra tinha os três elementos encostados: o botão ocupava 43 de 56px
        de altura (77% dela — no desenho largo são 51%) e sobravam 8px até o
@@ -596,21 +664,41 @@ const programs = [
     .burger {
       display: inline-flex;
     }
-    /* Reliable open/close via the checkbox: a plain display toggle can't be
-       dropped by the cascade (unlike an animated max-height). */
-    .menu-toggle:checked ~ .mobile-drawer {
+    /* O painel e o véu existem o tempo todo no celular; quem abre e fecha é
+       a `transform`, que é o que dá o deslize. */
+    .drawer-scrim,
+    .mobile-drawer {
       display: block;
-      max-height: 80vh;
-      overflow-y: auto;
     }
-    .menu-toggle:checked ~ .header-inner .burger span:nth-child(1) {
+    .menu-toggle:checked ~ .mobile-drawer {
+      transform: translateX(0);
+      visibility: visible;
+      transition:
+        transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1),
+        visibility 0s;
+    }
+    .menu-toggle:checked ~ .drawer-scrim {
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.28s ease, visibility 0s;
+    }
+    .menu-toggle:checked ~ .site-header .burger span:nth-child(1) {
       transform: translateY(calc(7.4 * var(--dp))) rotate(45deg);
     }
-    .menu-toggle:checked ~ .header-inner .burger span:nth-child(2) {
+    .menu-toggle:checked ~ .site-header .burger span:nth-child(2) {
       opacity: 0;
     }
-    .menu-toggle:checked ~ .header-inner .burger span:nth-child(3) {
+    .menu-toggle:checked ~ .site-header .burger span:nth-child(3) {
       transform: translateY(calc(-7.4 * var(--dp))) rotate(-45deg);
+    }
+  }
+
+  /* Quem pediu menos movimento no sistema recebe o painel já no lugar. */
+  @media (prefers-reduced-motion: reduce) {
+    .mobile-drawer,
+    .drawer-scrim,
+    .burger span {
+      transition-duration: 0.01ms;
     }
   }
 </style>
