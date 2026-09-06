@@ -51,18 +51,6 @@ export default async function CourseDetailPage({
             label={t(`enrollment_status.${enrollment.status}`)}
           />
         </div>
-        <div className="flex flex-wrap gap-2 text-xs font-semibold">
-          <span className="rounded-full bg-sky px-2.5 py-1 text-brand-blue-deep">
-            {t('common.online_label')}
-          </span>
-          <span className="rounded-full bg-sky px-2.5 py-1 text-brand-blue-deep">
-            {t('course_detail.level_label')}: {course.level}
-          </span>
-          <span className="rounded-full bg-sky px-2.5 py-1 text-brand-blue-deep">
-            {t('course_detail.min_age_label')}:{' '}
-            {t('course_detail.min_age_value', { age: course.minAge })}
-          </span>
-        </div>
       </header>
 
       <div className="grid gap-6 @4xl/page:grid-cols-3">
@@ -297,12 +285,17 @@ export default async function CourseDetailPage({
                 </Field>
               )}
               <Field label={t('common.period')}>{academicPeriod.name}</Field>
+              {/* The course's own facts — how it runs, which level, who it is
+                  for. They were chips beside the title, where they read as
+                  decoration; here they sit with the rest of what was bought. */}
+              <Field label={t('course_detail.level_label')}>{course.level}</Field>
+              <Field label={t('course_detail.min_age_label')}>
+                {t('course_detail.min_age_value', { age: course.minAge })}
+              </Field>
+              <Field label={t('course_detail.mode_label')}>
+                {t('common.online_label')}
+              </Field>
             </dl>
-            {monthly !== null && (
-              <p className="mt-3 rounded-xl bg-sky-soft px-3.5 py-2.5 text-xs text-muted-foreground">
-                {t('course_detail.monthly_note')}
-              </p>
-            )}
             <p className="mt-3 border-t border-line pt-3 text-xs text-muted-foreground">
               {t('course_detail.enrolled_on', {
                 date: formatDate(enrollment.createdAt, locale),

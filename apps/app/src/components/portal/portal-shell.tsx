@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from 'react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
-import { PortalNav, type NavItem } from './portal-nav'
+import { PortalNav, type NavGroup } from './portal-nav'
 import { StudentMenu } from './student-menu'
 import { NotificationsBell, type NoticeItem } from './notifications-bell'
 import { Icon } from './icons'
@@ -57,7 +57,7 @@ function BrandMark({
 
 export function PortalShell({
   portalLabel,
-  navItems,
+  navGroups,
   studentName,
   monogram,
   notifications,
@@ -65,7 +65,7 @@ export function PortalShell({
   children,
 }: {
   portalLabel: string
-  navItems: NavItem[]
+  navGroups: NavGroup[]
   studentName: string
   monogram: string
   notifications: NoticeItem[]
@@ -103,7 +103,7 @@ export function PortalShell({
           onClick={() => setCollapsed((prev) => !prev)}
           aria-label={toggleLabel}
           title={toggleLabel}
-          className="absolute -right-3 top-7 z-40 grid h-6 w-6 place-items-center rounded-full border border-line bg-white text-muted-foreground shadow-card transition hover:border-brand-blue hover:text-brand-blue"
+          className="absolute -right-3 top-5 z-40 grid h-6 w-6 place-items-center rounded-full border border-line bg-white text-muted-foreground shadow-card transition hover:border-brand-blue hover:text-brand-blue"
         >
           <Icon
             name="chevron-right"
@@ -112,9 +112,12 @@ export function PortalShell({
           />
         </button>
 
+        {/* Same height as the content top bar (h-16): the two rules sit side
+            by side at the top of the screen, and 17px apart they read as a
+            mistake. Change one, change the other. */}
         <div
-          className={`flex border-b border-white/15 ${
-            collapsed ? 'justify-center px-2 py-4' : 'px-4 py-4'
+          className={`flex h-16 shrink-0 items-center border-b border-white/15 ${
+            collapsed ? 'justify-center px-2' : 'px-4'
           }`}
         >
           <BrandMark portalLabel={portalLabel} mini={collapsed} onBlue />
@@ -123,7 +126,7 @@ export function PortalShell({
         <div
           className={`flex-1 overflow-y-auto py-4 ${collapsed ? 'px-2' : 'px-3'}`}
         >
-          <PortalNav items={navItems} orientation="sidebar" collapsed={collapsed} />
+          <PortalNav groups={navGroups} orientation="sidebar" collapsed={collapsed} />
         </div>
       </aside>
 
@@ -133,7 +136,7 @@ export function PortalShell({
           <BrandMark portalLabel={portalLabel} />
           {accountStrip}
         </div>
-        <PortalNav items={navItems} orientation="bar" />
+        <PortalNav groups={navGroups} orientation="bar" />
       </div>
 
       {/* Content */}
@@ -144,7 +147,7 @@ export function PortalShell({
       >
         {/* Desktop top bar: language, bell and the student's own menu at the
             page's top right — not buried in the sidebar. */}
-        <div className="sticky top-0 z-20 hidden justify-end border-b border-line/60 bg-sky-soft/80 px-6 py-3 backdrop-blur lg:flex">
+        <div className="sticky top-0 z-20 hidden h-16 items-center justify-end border-b border-line/60 bg-sky-soft/80 px-6 backdrop-blur lg:flex">
           {accountStrip}
         </div>
         {/* `@container/page` names the reading column. The viewport is the
