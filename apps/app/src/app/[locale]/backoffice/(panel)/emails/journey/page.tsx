@@ -144,39 +144,57 @@ export default async function EmailJourneyPage({
                     {t('emails.journey_empty')}
                   </p>
                 ) : (
-                  step.flows.map((flow) => (
-                    <div key={flow.template} className="flex items-center">
-                      {/* The branch: solid for what always leaves, dashed and
-                          labelled for what leaves only sometimes. The slot is
-                          a fixed width so every box starts on the same line —
-                          a ragged left edge is what made this read as a pile
-                          of cards instead of a flow. */}
-                      <span className="flex w-52 shrink-0 items-center gap-1.5">
-                        <span
-                          aria-hidden="true"
-                          className={`h-0 flex-1 border-t-2 ${
-                            flow.conditional
-                              ? 'border-dashed border-slate-300'
-                              : 'border-line'
-                          }`}
-                        />
-                        {flow.conditional && (
-                          <span className="truncate rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
-                            {t(`email_condition.${flow.template}`)}
-                          </span>
-                        )}
-                        <span
-                          aria-hidden="true"
-                          className={`h-0 w-3 border-t-2 ${
-                            flow.conditional
-                              ? 'border-dashed border-slate-300'
-                              : 'border-line'
-                          }`}
-                        />
+                  step.flows.map((flow) => {
+                    /* The condition is information, not decoration: it says
+                       when this e-mail leaves at all. It rides the branch on a
+                       wide column and sits above the box on a narrow one. */
+                    const condition = flow.conditional ? (
+                      <span className="truncate rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+                        {t(`email_condition.${flow.template}`)}
                       </span>
-                      {node(flow)}
-                    </div>
-                  ))
+                    ) : null
+                    const rail = (
+                      <span
+                        aria-hidden="true"
+                        className={`h-0 flex-1 border-t-2 ${
+                          flow.conditional
+                            ? 'border-dashed border-slate-300'
+                            : 'border-line'
+                        }`}
+                      />
+                    )
+                    return (
+                      <div
+                        key={flow.template}
+                        className="flex flex-col gap-1.5 @2xl/page:flex-row @2xl/page:items-center @2xl/page:gap-0"
+                      >
+                        {/* The branch: solid for what always leaves, dashed
+                            and labelled for what leaves only sometimes. The
+                            slot is a fixed width so every box starts on the
+                            same line — a ragged left edge is what made this
+                            read as a pile of cards instead of a flow.
+                            Num telefone os trilhos somem: 208px de linha
+                            horizontal mais a caixa não cabem em 343px, e a
+                            linha vertical da timeline já diz a sequência. */}
+                        <span className="hidden w-52 shrink-0 items-center gap-1.5 @2xl/page:flex">
+                          {rail}
+                          {condition}
+                          <span
+                            aria-hidden="true"
+                            className={`h-0 w-3 border-t-2 ${
+                              flow.conditional
+                                ? 'border-dashed border-slate-300'
+                                : 'border-line'
+                            }`}
+                          />
+                        </span>
+                        {condition && (
+                          <span className="@2xl/page:hidden">{condition}</span>
+                        )}
+                        {node(flow)}
+                      </div>
+                    )
+                  })
                 )}
               </div>
             </li>
