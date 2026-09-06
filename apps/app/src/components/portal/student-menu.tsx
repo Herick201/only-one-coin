@@ -1,29 +1,27 @@
 'use client'
 
-import { useTransition } from 'react'
-import { useLocale, useTranslations } from 'next-intl'
-import { Link, usePathname, useRouter } from '@/i18n/navigation'
-import { routing } from '@/i18n/routing'
+import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n/navigation'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Icon } from './icons'
-import { Flag } from './flag'
 
 /**
  * The student's own corner — top right, next to the bell. Trigger is the
- * avatar; inside live the profile link, the language submenu (flag before
- * each name) and the logout.
+ * avatar; inside live the profile link and the logout.
  *
- * Desktop only. On a phone the same three live at the bottom of the screen,
+ * The language used to be a submenu here. It is a once-a-year choice, and a
+ * submenu made it permanent chrome on every screen — so it moved into the
+ * profile, with the rest of what a person sets about themselves. Same move the
+ * panel had already made when it left the header for `/backoffice/account`.
+ *
+ * Desktop only. On a phone the same two live at the bottom of the screen,
  * inside the tab bar's "more" sheet (`portal-tabbar.tsx`) — a menu anchored to
  * the top-right corner is the one spot a thumb cannot reach.
  */
@@ -39,18 +37,6 @@ export function StudentMenu({
   logoutAction: () => Promise<void>
 }) {
   const t = useTranslations('portal')
-  const tLang = useTranslations('language')
-  const locale = useLocale()
-  const pathname = usePathname()
-  const router = useRouter()
-  const [pending, startTransition] = useTransition()
-
-  function switchLocale(next: string) {
-    if (pending || next === locale) return
-    startTransition(() => {
-      router.replace(pathname, { locale: next })
-    })
-  }
 
   return (
     <DropdownMenu>
@@ -74,32 +60,6 @@ export function StudentMenu({
             {t('nav.profile')}
           </Link>
         </DropdownMenuItem>
-
-        {/* Language: one clean row — current flag + current language name —
-            that opens the list of the other two. */}
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger className="gap-3 px-3 py-2.5 text-sm">
-            <Flag locale={locale} />
-            {tLang(locale)}
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent className="w-44 p-1.5">
-            {routing.locales.map((code) => (
-              <DropdownMenuItem
-                key={code}
-                onSelect={() => switchLocale(code)}
-                className="gap-3 px-3 py-2.5 text-sm"
-              >
-                <Flag locale={code} />
-                {tLang(code)}
-                {code === locale && (
-                  <span className="ml-auto text-brand-blue">
-                    <Icon name="check" size={16} />
-                  </span>
-                )}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
 
         <DropdownMenuSeparator />
 

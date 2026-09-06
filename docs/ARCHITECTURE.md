@@ -397,8 +397,8 @@ ainda não é uma tela de celular.
   sob a mesma condição**, ou o rótulo cai na célula errada.
 - **Barra de abas no portal** (`components/portal/portal-tabbar.tsx`): as seções
   que o aluno abre sem motivo ficam fixas embaixo, e a última aba abre uma folha
-  com o resto **mais** o canto da pessoa — perfil, idioma e saída, que no
-  desktop moram no avatar do topo. Quem fica fixo é declarado item a item
+  com o resto **mais** o canto da pessoa — perfil e saída, que no desktop moram
+  no avatar do topo. Quem fica fixo é declarado item a item
   (`tabBar: true` em `navItems`), não recortado por posição: a ordem da sidebar
   responde outra pergunta, e um `slice` faria a barra mudar sozinha assim que
   alguém inserisse uma seção no meio da lista. Hoje: início, cursos, trâmites.
@@ -406,6 +406,14 @@ ainda não é uma tela de celular.
   mensalidade e comprovante são visita com hora marcada, não navegação de todo
   dia, e uma coluna permanente para o dinheiro faz o portal parecer uma
   cobrança; quem precisa chegar lá chega pelo sino e pelo cadeado no curso.
+- **O idioma saiu do chrome do portal** (06/09/2026) — estava no menu do avatar
+  no desktop e na folha de "mais" no celular, dois lugares permanentes para uma
+  escolha que se faz uma vez. Foi para `/portal/profile`, num cartão
+  "Preferências" que já nasce nomeado no plural porque o próximo ajuste (aviso
+  por e-mail, fuso) entra ali em vez de virar seção solta. É o mesmo movimento
+  que o painel tinha feito antes, quando o globo deixou o cabeçalho e foi para
+  `/backoffice/account`. As telas de login mantêm o seletor: antes de entrar não
+  há perfil para abrir.
 - **Campo com 16px abaixo de 768px** (`globals.css`). É o único lugar em que a
   régua do toque ganha da régua do desenho.
 - **Modal vira folha de baixo** no telefone (`components/ui/dialog.tsx`), e a

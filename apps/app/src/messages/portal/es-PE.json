@@ -20,7 +20,6 @@
       "more": "Más",
       "more_title": "Más opciones",
       "close_menu": "Cerrar menú",
-      "language": "Idioma",
       "tab_courses": "Cursos",
       "tab_requests": "Trámites",
       "tab_dashboard": "Inicio"
@@ -305,7 +304,9 @@
       "error_email": "Ese correo no parece válido.",
       "add_secondary_email": "Agregar otro correo (opcional)",
       "add_secondary_phone": "Agregar otro teléfono (opcional)",
-      "remove_secondary": "Quitar"
+      "remove_secondary": "Quitar",
+      "preferences_title": "Preferencias",
+      "language_label": "Idioma"
     },
     "notifications": {
       "title": "Notificaciones",

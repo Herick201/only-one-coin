@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { useLocale, useTranslations } from 'next-intl'
-import { Link, usePathname, useRouter } from '@/i18n/navigation'
-import { routing } from '@/i18n/routing'
+import { useState } from 'react'
+import { useTranslations } from 'next-intl'
+import { Link, usePathname } from '@/i18n/navigation'
 import {
   Sheet,
   SheetContent,
@@ -12,7 +11,6 @@ import {
   SheetDescription,
 } from '@/components/ui/sheet'
 import { Icon } from './icons'
-import { Flag } from './flag'
 import type { NavItem } from './portal-nav'
 
 /**
@@ -25,8 +23,9 @@ import type { NavItem } from './portal-nav'
  * sem motivo, e a última aba abre uma folha com o resto.
  *
  * A folha não é só o excedente do menu: ela é também o canto da pessoa — o
- * perfil, o idioma e a saída, que no desktop moram no avatar do topo. É o
- * mesmo conteúdo do `StudentMenu`, colocado onde a mão está.
+ * perfil e a saída, que no desktop moram no avatar do topo, colocados onde a
+ * mão está. O idioma não: é escolha que se faz uma vez, e mora com o resto do
+ * que a pessoa define sobre si, em `/portal/profile`.
  *
  * `pb-safe-b` em toda a barra: com `viewportFit: 'cover'` (layout raiz) a
  * página pinta sob a barra de gestos do sistema, e sem a safe area a última
@@ -45,12 +44,8 @@ export function PortalTabBar({
   logoutAction: () => Promise<void>
 }) {
   const t = useTranslations('portal')
-  const tLang = useTranslations('language')
-  const locale = useLocale()
   const pathname = usePathname()
-  const router = useRouter()
   const [open, setOpen] = useState(false)
-  const [, startTransition] = useTransition()
 
   /* Quem fica fixo embaixo é declarado item a item no layout do portal, não
      recortado por posição: a ordem da sidebar responde outra pergunta, e um
@@ -67,14 +62,6 @@ export function PortalTabBar({
   /* A aba "mais" acende quando a tela aberta é uma das que ela guarda —
      senão a barra diz que a pessoa não está em lugar nenhum. */
   const overflowActive = overflow.some((item) => isActive(item.href))
-
-  function switchLocale(next: string) {
-    if (next === locale) return
-    setOpen(false)
-    startTransition(() => {
-      router.replace(pathname, { locale: next })
-    })
-  }
 
   const tabClass =
     'flex min-h-tap flex-1 flex-col items-center justify-center gap-1 px-1 py-1.5 text-[11px] font-semibold leading-tight transition'
@@ -173,29 +160,6 @@ export function PortalTabBar({
               <Icon name="profile" size={20} />
               {t('nav.profile')}
             </Link>
-          </div>
-
-          <div className="border-t border-line py-2">
-            <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              {t('nav.language')}
-            </p>
-            {routing.locales.map((code) => (
-              <button
-                key={code}
-                type="button"
-                onClick={() => switchLocale(code)}
-                aria-current={code === locale ? 'true' : undefined}
-                className={`${sheetRowClass} w-full`}
-              >
-                <Flag locale={code} />
-                {tLang(code)}
-                {code === locale && (
-                  <span className="ml-auto text-brand-blue">
-                    <Icon name="check" size={18} />
-                  </span>
-                )}
-              </button>
-            ))}
           </div>
 
           <form action={logoutAction} className="border-t border-line py-2">

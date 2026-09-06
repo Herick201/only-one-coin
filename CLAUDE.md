@@ -306,10 +306,15 @@ tela que apenas não estoura na horizontal ainda não é uma tela de celular.
 - **O menu do portal fica embaixo**, na barra de abas
   (`components/portal/portal-tabbar.tsx`). Quem fica fixo é marcado item a item
   (`tabBar: true` em `navItems`), nunca recortado por posição — hoje início,
-  cursos e trâmites. O resto vai para a folha de "mais", junto do perfil, do
-  idioma e da saída. **Pagamentos fica na folha**: mensalidade e comprovante são
-  visita com hora marcada, e uma coluna permanente para o dinheiro faz o portal
-  parecer uma cobrança.
+  cursos e trâmites. O resto vai para a folha de "mais", junto do perfil e da
+  saída. **Pagamentos fica na folha**: mensalidade e comprovante são visita com
+  hora marcada, e uma coluna permanente para o dinheiro faz o portal parecer uma
+  cobrança.
+- **Idioma mora no perfil**, nunca no chrome. No portal é
+  `/portal/profile` (cartão "Preferências"); no painel, `/backoffice/account`.
+  Escolha que se faz uma vez não ocupa espaço permanente em toda tela. As telas
+  de login são a exceção: antes de entrar não há perfil para abrir, e quem não
+  lê espanhol precisa trocar ali.
 - **Toda borda fixa soma a safe area** — `pb-safe-b`, `pt-safe-t`. O layout raiz
   declara `viewportFit: 'cover'`, então a página pinta sob o notch e sob a barra
   de gestos. **Nunca bloquear zoom** (`maximumScale`/`userScalable`).
