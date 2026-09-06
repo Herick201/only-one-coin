@@ -35,13 +35,15 @@ export type IconName =
   | 'freeze'
   | 'star'
   | 'plus'
+  | 'pencil'
 
 const paths: Record<IconName, ReactElement> = {
   home: (
     <path d="M3 10.5 12 4l9 6.5M5 9.5V20h14V9.5" />
   ),
   courses: (
-    <path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H19v14H5.5A1.5 1.5 0 0 0 4 19.5zM19 18v2H6" />
+    /* Open book. The old glyph read as a monitor at nav size. */
+    <path d="M3 5h5a4 4 0 0 1 4 4v10a3 3 0 0 0-3-3H3zM21 5h-5a4 4 0 0 0-4 4v10a3 3 0 0 1 3-3h6z" />
   ),
   enrollment: (
     <path d="M4 5h16v6a2 2 0 0 0 0 4v4H4v-4a2 2 0 0 0 0-4zM9 9h6M9 13h4" />
@@ -114,6 +116,9 @@ const paths: Record<IconName, ReactElement> = {
     <path d="m12 4 2.35 4.76 5.25.76-3.8 3.7.9 5.23L12 16l-4.7 2.45.9-5.23-3.8-3.7 5.25-.76z" />
   ),
   plus: <path d="M12 5v14M5 12h14" />,
+  pencil: (
+    <path d="m4 20 4.5-1 10-10a2.12 2.12 0 0 0-3-3l-10 10zM14 6l4 4" />
+  ),
 }
 
 export function Icon({

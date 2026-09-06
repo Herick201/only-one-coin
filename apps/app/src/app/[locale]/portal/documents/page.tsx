@@ -1,17 +1,56 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { Link } from '@/i18n/navigation'
 import { getPortalSession } from '@/lib/portal/mock-data'
 import { formatDate } from '@/lib/portal/format'
-import type { Locale } from '@/lib/portal/types'
+import type { Enrollment, Locale, RequestType } from '@/lib/portal/types'
 import {
   Card,
   EmptyState,
   PageHeader,
+  SectionTitle,
   StatusBadge,
 } from '@/components/portal/ui'
 import { documentTone } from '@/components/portal/status-tone'
 import { Icon } from '@/components/portal/icons'
 import { AutoGrid } from '@/components/layout/auto-grid'
+import {
+  RequestsView,
+  type ProcedureView,
+  type RequestView,
+} from './requests-view'
+
+/**
+ * Which enrollments a procedure can act on. In production this is a domain
+ * rule evaluated server-side; the mock mirrors the confirmed pieces:
+ * — constancia / makeup exam: any enrollment that actually ran;
+ * — certification exam: only courses that demand it (Inglés Básico);
+ * — freeze: only active enrollments, and never intermedio/avanzado
+ *   (docs/REGRAS-NEGOCIO.md §5 — current rule).
+ */
+function eligibleFor(type: RequestType, enrollments: Enrollment[]): Enrollment[] {
+  switch (type) {
+    case 'enrollment_certificate':
+    case 'makeup_exam':
+      return enrollments.filter(
+        (e) => e.status === 'active' || e.status === 'completed',
+      )
+    case 'certification_exam':
+      return enrollments.filter(
+        (e) =>
+          e.course.requiresCertificationExam &&
+          (e.status === 'active' || e.status === 'completed'),
+      )
+    case 'enrollment_freeze':
+      return enrollments.filter((e) => e.status === 'active')
+  }
+}
+
+/**
+ * Documentos — everything the student's paperwork lives in, in one place: the
+ * documents already issued (or waiting to be) and the paid procedures that
+ * produce them. They were two screens, and a student looking for a constancia
+ * had to know that "Solicitações" was where you buy the document that
+ * "Documentos" would later hand you.
+ */
 
 export default async function DocumentsPage({
   params,
@@ -23,27 +62,41 @@ export default async function DocumentsPage({
   setRequestLocale(raw)
   const t = await getTranslations('portal')
 
-  const { enrollments, documents } = getPortalSession()
+  const { enrollments, documents, procedures, requests } = getPortalSession()
   const enrollmentOf = (enrollmentId: string) =>
     enrollments.find((e) => e.id === enrollmentId)
   const courseName = (enrollmentId: string) =>
     enrollmentOf(enrollmentId)?.course.name ?? ''
 
-  /**
-   * Why a certificate is still locked: course completion with grade ≥ 14, and
-   * — for Inglés Básico — also the separately-requested certification exam
-   * (CLAUDE.md §1, docs/DOCUMENTOS-E-CERTIFICADOS.md).
-   */
-  const lockedNote = (doc: (typeof documents)[number]) => {
-    if (doc.type !== 'certificate') return t('documents.locked_note')
-    return enrollmentOf(doc.enrollmentId)?.course.requiresCertificationExam
-      ? t('documents.locked_cert_exam_note')
-      : t('documents.locked_cert_note')
-  }
+  const procedureViews: ProcedureView[] = procedures.map((p) => ({
+    type: p.type,
+    priceCents: p.priceCents,
+    currency: p.currency,
+    eligible: eligibleFor(p.type, enrollments).map((e) => ({
+      enrollmentId: e.id,
+      courseName: e.course.name,
+    })),
+  }))
+
+  const requestViews: RequestView[] = requests.map((r) => ({
+    id: r.id,
+    type: r.type,
+    status: r.status,
+    courseName:
+      enrollments.find((e) => e.id === r.enrollmentId)?.course.name ?? '',
+    createdAt: r.createdAt,
+    priceCents: r.priceCents,
+    currency: r.currency,
+    resultUrl: r.resultUrl,
+  }))
 
   return (
     <div>
       <PageHeader title={t('documents.title')} />
+
+      <div className="mb-3">
+        <SectionTitle>{t('documents.mine_title')}</SectionTitle>
+      </div>
 
       {documents.length === 0 ? (
         <EmptyState
@@ -92,39 +145,16 @@ export default async function DocumentsPage({
                     {t('common.download')}
                   </a>
                 </div>
-              ) : (
-                <p className="rounded-xl bg-sky-soft px-3.5 py-2.5 text-xs text-muted-foreground">
-                  {doc.status === 'pending'
-                    ? t('documents.pending_note')
-                    : lockedNote(doc)}
-                </p>
-              )}
+              ) : null}
             </Card>
           ))}
         </AutoGrid>
       )}
 
-      <div className="mt-6 flex flex-col gap-2 text-xs text-muted-foreground">
-        <p className="flex items-start gap-2">
-          <span className="mt-0.5 shrink-0 text-brand-blue">
-            <Icon name="alert" size={14} />
-          </span>
-          {t('documents.rules_note')}
-        </p>
-        <p className="flex items-start gap-2">
-          <span className="mt-0.5 shrink-0 text-brand-blue">
-            <Icon name="clipboard" size={14} />
-          </span>
-          <span>
-            {t('documents.constancia_note')}{' '}
-            <Link
-              href="/portal/requests"
-              className="font-semibold text-brand-blue transition hover:text-brand-blue-deep"
-            >
-              {t('documents.constancia_cta')}
-            </Link>
-          </span>
-        </p>
+      {/* The procedures that produce those documents, on the same page: the
+          student asks for the constancia here and picks it up above. */}
+      <div className="mt-8">
+        <RequestsView procedures={procedureViews} initialRequests={requestViews} />
       </div>
     </div>
   )

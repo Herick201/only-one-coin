@@ -6,6 +6,7 @@
 export {
   formatMoney,
   formatDate,
+  formatDateNumeric,
   formatDateTime,
   formatWeekdayTime,
   initials,

@@ -27,7 +27,7 @@ export default async function DashboardPage({
 
   const quickActions: { href: string; label: string; icon: IconName }[] = [
     { href: '/portal/payments', label: t('dashboard.action_payments'), icon: 'card' },
-    { href: '/portal/requests', label: t('dashboard.action_requests'), icon: 'clipboard' },
+    { href: '/portal/documents', label: t('dashboard.action_requests'), icon: 'clipboard' },
     { href: '/portal/documents', label: t('dashboard.action_documents'), icon: 'documents' },
     { href: '/portal/profile', label: t('dashboard.action_profile'), icon: 'profile' },
   ]
