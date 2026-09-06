@@ -38,7 +38,6 @@ const RAILS: PaymentRail[] = ['yape', 'plin', 'bcp', 'interbank']
 
 export interface ReceiptSubmission {
   method: PaymentRail
-  operationNumber: string
   fileName: string
 }
 
@@ -58,15 +57,13 @@ export function ReceiptUploadForm({
   const fileInput = useRef<HTMLInputElement>(null)
 
   const [method, setMethod] = useState<PaymentRail | null>(null)
-  const [operationNumber, setOperationNumber] = useState('')
   const [file, setFile] = useState<{ name: string; sizeBytes: number } | null>(null)
   const [fileError, setFileError] = useState<'type' | 'size' | null>(null)
   const [touched, setTouched] = useState(false)
 
   const missingMethod = method === null
-  const missingOperation = operationNumber.trim() === ''
   const missingFile = file === null
-  const ready = !missingMethod && !missingOperation && !missingFile
+  const ready = !missingMethod && !missingFile
 
   function pickFile(picked: File | null) {
     if (!picked) return
@@ -90,15 +87,11 @@ export function ReceiptUploadForm({
   function submit() {
     setTouched(true)
     if (!ready || method === null || file === null) return
-    onSubmit({ method, operationNumber: operationNumber.trim(), fileName: file.name })
+    onSubmit({ method, fileName: file.name })
   }
 
   return (
-    /* `@container/receipt` nomeia a largura que este formulário realmente
-       recebeu. Ele aparece dentro de um cartão que já é filho da coluna do
-       portal, e a janela não sabe quanto sobrou dela (CLAUDE.md §5) — um
-       `sm:` aqui abriria duas colunas num cartão de 380px. */
-    <div className="@container/receipt flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
       {/* Amount — read-only by design. */}
       <div className="rounded-xl border-l-4 border-brand-yellow bg-sky px-4 py-3">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-blue-deep">
@@ -106,9 +99,6 @@ export function ReceiptUploadForm({
         </p>
         <p className="text-2xl font-bold tracking-tight text-ink">
           {formatMoney(amountCents, currency, locale)}
-        </p>
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          {t('receipt_form.amount_hint')}
         </p>
       </div>
 
@@ -139,90 +129,66 @@ export function ReceiptUploadForm({
         )}
       </div>
 
-      {/* Operation number + file — empilhados no telefone, lado a lado quando
-          o cartão dá largura. */}
-      <div className="grid gap-4 @md/receipt:grid-cols-2">
-        <div>
-          <label
-            htmlFor="portal-operation-number"
-            className="mb-1.5 block text-sm font-semibold text-ink"
-          >
-            {t('receipt_form.operation_label')}
-          </label>
-          <input
-            id="portal-operation-number"
-            value={operationNumber}
-            onChange={(e) => setOperationNumber(e.target.value)}
-            inputMode="numeric"
-            className={`w-full rounded-lg border bg-white px-3 py-2.5 text-sm text-ink outline-none transition focus:border-brand-blue ${
-              touched && missingOperation ? 'border-red-400' : 'border-line'
-            }`}
-          />
-          <p className="mt-1 text-xs text-muted-foreground">
-            {t('receipt_form.operation_hint')}
-          </p>
-          {touched && missingOperation && (
-            <FieldError>{t('receipt_form.error_operation')}</FieldError>
-          )}
-        </div>
-
-        <div>
-          <p className="mb-1.5 text-sm font-semibold text-ink">
-            {t('receipt_form.file_label')}
-          </p>
-          <input
-            ref={fileInput}
-            type="file"
-            accept={ACCEPTED}
-            className="sr-only"
-            onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
-          />
-          {file ? (
-            <div className="flex items-center gap-3 rounded-lg border border-emerald-600/25 bg-emerald-50 px-3 py-2.5">
-              <Icon name="doc" size={18} className="shrink-0 text-emerald-700" />
-              <span className="flex min-w-0 flex-col leading-tight">
-                <span className="truncate text-sm font-semibold text-emerald-900">
-                  {file.name}
-                </span>
-                <span className="text-xs text-emerald-800">
-                  {formatFileSize(file.sizeBytes, locale)}
-                </span>
+      {/* Receipt. The operation number is not asked for: the OCR reads it off
+          the image, and a number typed by hand is one more thing that can
+          disagree with the receipt and send the payment to the human queue
+          (CLAUDE.md §5). */}
+      <div>
+        <p className="mb-1.5 text-sm font-semibold text-ink">
+          {t('receipt_form.file_label')}
+        </p>
+        <input
+          ref={fileInput}
+          type="file"
+          accept={ACCEPTED}
+          className="sr-only"
+          onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
+        />
+        {file ? (
+          <div className="flex items-center gap-3 rounded-lg border border-emerald-600/25 bg-emerald-50 px-3 py-2.5">
+            <Icon name="doc" size={18} className="shrink-0 text-emerald-700" />
+            <span className="flex min-w-0 flex-col leading-tight">
+              <span className="truncate text-sm font-semibold text-emerald-900">
+                {file.name}
               </span>
-              <button
-                type="button"
-                onClick={dropFile}
-                aria-label={t('receipt_form.remove')}
-                className="ml-auto shrink-0 rounded-lg p-1.5 text-red-600 transition hover:bg-red-100"
-              >
-                <Icon name="trash" size={16} />
-              </button>
-            </div>
-          ) : (
+              <span className="text-xs text-emerald-800">
+                {formatFileSize(file.sizeBytes, locale)}
+              </span>
+            </span>
             <button
               type="button"
-              onClick={() => fileInput.current?.click()}
-              className={`flex w-full items-center justify-center gap-2 rounded-lg border border-dashed px-3 py-3 text-sm font-semibold transition ${
-                fileError || (touched && missingFile)
-                  ? 'border-red-400 bg-red-50 text-red-700'
-                  : 'border-line bg-sky-soft text-brand-blue hover:border-brand-blue hover:bg-sky'
-              }`}
+              onClick={dropFile}
+              aria-label={t('receipt_form.remove')}
+              className="ml-auto shrink-0 rounded-lg p-1.5 text-red-600 transition hover:bg-red-100"
             >
-              <Icon name="upload" size={16} />
-              {t('receipt_form.attach')}
+              <Icon name="trash" size={16} />
             </button>
-          )}
-          <p className="mt-1 text-xs text-muted-foreground">
-            {t('receipt_form.file_hint', {
-              size: formatFileSize(MAX_RECEIPT_BYTES, locale),
-            })}
-          </p>
-          {fileError && (
-            <FieldError>{t(`receipt_form.error_${fileError}`)}</FieldError>
-          )}
-          {!fileError && touched && missingFile && (
-            <FieldError>{t('receipt_form.error_file')}</FieldError>
-          )}
-        </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => fileInput.current?.click()}
+            className={`flex w-full items-center justify-center gap-2 rounded-lg border border-dashed px-3 py-3 text-sm font-semibold transition ${
+              fileError || (touched && missingFile)
+                ? 'border-red-400 bg-red-50 text-red-700'
+                : 'border-line bg-sky-soft text-brand-blue hover:border-brand-blue hover:bg-sky'
+            }`}
+          >
+            <Icon name="upload" size={16} />
+            {t('receipt_form.attach')}
+          </button>
+        )}
+        <p className="mt-1 text-xs text-muted-foreground">
+          {t('receipt_form.file_hint', {
+            size: formatFileSize(MAX_RECEIPT_BYTES, locale),
+          })}
+        </p>
+        {fileError && (
+          <FieldError>{t(`receipt_form.error_${fileError}`)}</FieldError>
+        )}
+        {!fileError && touched && missingFile && (
+          <FieldError>{t('receipt_form.error_file')}</FieldError>
+        )}
       </div>
 
       <button

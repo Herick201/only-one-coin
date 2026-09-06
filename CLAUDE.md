@@ -33,6 +33,7 @@ Venda por WhatsApp (humano, fora do sistema)
 ### Regras de negócio confirmadas
 
 - **Pagamento único é a regra; inglês é a exceção mensual (decisão 02/09/2026).** Todo curso vende o paquete com pagamento único. Só os cursos de **inglês** (qualquer nível — básico, kids, intermedio/avanzado, Cambridge) têm também a modalidade **mensual**: o aluno escolhe no formulário de matrícula entre *mensual* e *paquete completo*. Mensual **não é parcelamento** do paquete — é compra pré-paga de um módulo por vez. Não existe juros, multa nem cobrança de dívida: quem não paga o módulo seguinte simplesmente **perde o acesso à aula no portal** (ver progressão de módulo, abaixo) e recebe lembrete por e-mail + notificação no portal. O aluno sobe o comprovante mensal sozinho pelo portal (mesma escada de OCR); o backoffice tem visão dos pagamentos mensais pendentes por turma.
+- **O aluno pode adiantar módulos seguintes (decisão 06/09/2026).** No portal, a tela de Pagamentos lista os módulos ainda não pagos daquela matrícula mensal: o módulo vigente vem marcado e não se desmarca, e o aluno pode marcar os seguintes para pagar mais de um de uma vez, num comprovante só. A seleção é **um prefixo, nunca escolha livre** — módulo roda em ordem, então pagar o 4 com o 3 em aberto não existe. Adiantar **não vira desconto** (o valor é sempre `n × preço vigente do módulo`) e **não vira dívida**: continua sendo compra antecipada, e quem não adianta nada não deve nada.
 - **Sem descontos.** Nunca. O preço vigente do plano é o valor esperado, sempre.
 - O aluno compra um **paquete** (ex.: conjunto de módulos) ou o **curso completo**. Nunca aula avulsa.
 - **Vários idiomas** (~10) e várias turmas por idioma. Nada específico de idioma no código.
@@ -60,7 +61,7 @@ Venda por WhatsApp (humano, fora do sistema)
 
 ## 2. Fora do escopo — não construir, não sugerir
 
-- ❌ Pasarela de pago / cobrança dentro da plataforma
+- ❌ Pasarela de pago / cobrança dentro da plataforma — **continua fora de escopo como implementação**, mas desde 06/09/2026 o portal **anuncia** a intenção: a tela de Pagamentos mostra um botão "Pagar" desabilitado, com cadeado, ao lado de "Enviar comprovante", com a legenda de que o pagamento pelo portal chega em breve e que por ora se paga por Yape/Plin/transferência. É um cartaz, não um caminho: nada clica, nada integra.
 - ❌ Integração com WhatsApp
 - ❌ Apps nativos iOS/Android
 - ❌ Hospedagem, upload ou streaming de vídeo (só link externo)
@@ -68,7 +69,7 @@ Venda por WhatsApp (humano, fora do sistema)
 - ❌ Descontos, bolsas, promoções
 - ❌ Parcelamento de paquete, juros, multa, cobrança de dívida — a modalidade mensual do inglês (§1) é compra pré-paga módulo a módulo, nunca dívida: atraso bloqueia acesso, não gera cobrança
 - ❌ Integração com Google Classroom (API) — em estudo; hoje aula é link externo e o bloqueio de acesso vive no portal do aluno
-- ❌ Aula virtual / videoconferência própria
+- ❌ Aula virtual / videoconferência própria — mesmo caso da pasarela: desde 06/09/2026 o menu do portal tem o grupo **"Área do aluno"** (Tarefas · Provas · Sala de aula · Estudar) como **dropdown fechado, com os quatro itens travados** (cadeado, sem link, `aria-disabled`). Anuncia o que vem; não constrói nem promete data. Hoje a aula continua sendo link externo (Meet/Classroom).
 - ❌ Faturamento eletrônico / SUNAT
 
 Se algo parecer exigir um desses, **pare e pergunte**.

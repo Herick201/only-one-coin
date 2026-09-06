@@ -230,6 +230,13 @@ export interface Payment {
   operationNumber: string | null
   /** Date on the receipt — when the student says they paid. */
   paidAt: string | null
+  /**
+   * The receipt the student sent, so they can open it again. Null while none
+   * was uploaded. In production this is never a public link: the bucket is
+   * private and the portal mints a signed URL of 5 minutes scoped to the
+   * student, and the access is logged (CLAUDE.md §8).
+   */
+  receiptUrl: string | null
 }
 
 /**

@@ -44,9 +44,14 @@ export function NewCourseForm({
   const [name, setName] = useState('')
   const [languageId, setLanguageId] = useState(languages[0]?.id ?? '')
   const [level, setLevel] = useState('')
+  const [summary, setSummary] = useState('')
   const [options, setOptions] = useState<CourseOptions>(DEFAULT_COURSE_OPTIONS)
 
-  const ready = name.trim() !== '' && level.trim() !== '' && languageId !== ''
+  const ready =
+    name.trim() !== '' &&
+    level.trim() !== '' &&
+    summary.trim() !== '' &&
+    languageId !== ''
 
   function submit() {
     const language = languages.find((item) => item.id === languageId)
@@ -56,6 +61,7 @@ export function NewCourseForm({
       name: name.trim(),
       language,
       level: level.trim(),
+      summary: summary.trim(),
       ...options,
       classGroupCount: 0,
     })
@@ -98,6 +104,17 @@ export function NewCourseForm({
             onChange={(event) => setLevel(event.target.value)}
             placeholder={t('courses.level_placeholder')}
             className={fieldClass}
+          />
+        </label>
+
+        {/* Full width: it is a paragraph, not a token. */}
+        <label className="flex flex-col gap-1" style={{ gridColumn: '1 / -1' }}>
+          <span className={labelClass}>{t('courses.field_summary')}</span>
+          <textarea
+            value={summary}
+            onChange={(e) => setSummary(e.target.value)}
+            rows={3}
+            className={`${fieldClass} resize-y`}
           />
         </label>
       </AutoGrid>

@@ -11,7 +11,7 @@ import {
   SheetDescription,
 } from '@/components/ui/sheet'
 import { Icon } from './icons'
-import type { NavItem } from './portal-nav'
+import type { NavGroup } from './portal-nav'
 
 /**
  * Barra de abas do celular — o menu do portal ao alcance do polegar.
@@ -33,12 +33,12 @@ import type { NavItem } from './portal-nav'
  */
 
 export function PortalTabBar({
-  items,
+  groups,
   studentName,
   monogram,
   logoutAction,
 }: {
-  items: NavItem[]
+  groups: NavGroup[]
   studentName: string
   monogram: string
   logoutAction: () => Promise<void>
@@ -50,9 +50,21 @@ export function PortalTabBar({
   /* Quem fica fixo embaixo é declarado item a item no layout do portal, não
      recortado por posição: a ordem da sidebar responde outra pergunta, e um
      `slice` faz a barra mudar sozinha assim que alguém insere uma seção no
-     meio da lista. */
-  const tabs = items.filter((item) => item.tabBar)
-  const overflow = items.filter((item) => !item.tabBar)
+     meio da lista.
+
+     A folha guarda os grupos inteiros, título e tudo — é a mesma leitura da
+     sidebar, e o grupo travado ("área do aluno") só faz sentido com o título
+     que diz o que ele é. Um item travado nunca sobe para a barra: ele existe
+     para anunciar uma tela que ainda não há. */
+  const tabs = groups.flatMap((group) =>
+    group.items.filter((item) => item.tabBar && !item.locked),
+  )
+  const overflowGroups = groups
+    .map((group) => ({
+      title: group.title,
+      items: group.items.filter((item) => !item.tabBar || item.locked),
+    }))
+    .filter((group) => group.items.length > 0)
 
   function isActive(href: string) {
     if (href === '/portal') return pathname === '/portal'
@@ -61,7 +73,9 @@ export function PortalTabBar({
 
   /* A aba "mais" acende quando a tela aberta é uma das que ela guarda —
      senão a barra diz que a pessoa não está em lugar nenhum. */
-  const overflowActive = overflow.some((item) => isActive(item.href))
+  const overflowActive = overflowGroups.some((group) =>
+    group.items.some((item) => !item.locked && isActive(item.href)),
+  )
 
   const tabClass =
     'flex min-h-tap flex-1 flex-col items-center justify-center gap-1 px-1 py-1.5 text-[11px] font-semibold leading-tight transition'
@@ -133,21 +147,43 @@ export function PortalTabBar({
           </SheetHeader>
 
           <div className="flex flex-col pb-2">
-            {overflow.map((item) => {
-              const active = isActive(item.href)
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setOpen(false)}
-                  aria-current={active ? 'page' : undefined}
-                  className={`${sheetRowClass} ${active ? 'bg-sky text-brand-blue-deep' : ''}`}
-                >
-                  <Icon name={item.icon} size={20} />
-                  {item.label}
-                </Link>
-              )
-            })}
+            {overflowGroups.map((group, index) => (
+              <div key={group.title ?? index} className="flex flex-col">
+                {group.title && (
+                  <p className="px-3 pb-1 pt-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {group.title}
+                  </p>
+                )}
+                {group.items.map((item) =>
+                  /* Travado é anúncio, não destino: linha com cadeado, sem
+                     link e fora da ordem de tabulação — igual à sidebar. */
+                  item.locked ? (
+                    <span
+                      key={item.href}
+                      aria-disabled="true"
+                      className={`${sheetRowClass} cursor-not-allowed text-muted-foreground/60`}
+                    >
+                      <Icon name={item.icon} size={20} />
+                      {item.label}
+                      <Icon name="lock" size={15} className="ml-auto" />
+                    </span>
+                  ) : (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setOpen(false)}
+                      aria-current={isActive(item.href) ? 'page' : undefined}
+                      className={`${sheetRowClass} ${
+                        isActive(item.href) ? 'bg-sky text-brand-blue-deep' : ''
+                      }`}
+                    >
+                      <Icon name={item.icon} size={20} />
+                      {item.label}
+                    </Link>
+                  ),
+                )}
+              </div>
+            ))}
 
             <Link
               href="/portal/profile"

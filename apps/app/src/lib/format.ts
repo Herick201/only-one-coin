@@ -77,6 +77,23 @@ export function formatDate(iso: string, locale: Locale): string {
   }).format(new Date(iso))
 }
 
+/**
+ * The same date as digits — `30/08/2026`. For a table column, where the reader
+ * scans dates against each other instead of reading one out loud.
+ *
+ * The order is day/month/year in every locale, `en-GB` standing in for `en`:
+ * `en-US` would print `08/30/2026` and a payment date that flips its order
+ * between two tabs of the same portal is a date nobody can trust.
+ */
+export function formatDateNumeric(iso: string, locale: Locale): string {
+  return new Intl.DateTimeFormat(locale === 'en' ? 'en-GB' : intlLocale[locale], {
+    timeZone: DATE_ONLY.test(iso) ? 'UTC' : LIMA_TZ,
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(new Date(iso))
+}
+
 export function formatDateTime(iso: string, locale: Locale): string {
   return new Intl.DateTimeFormat(intlLocale[locale], {
     timeZone: LIMA_TZ,

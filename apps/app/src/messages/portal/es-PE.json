@@ -8,9 +8,13 @@
       "dashboard": "Inicio",
       "courses": "Mis cursos",
       "payments": "Pagos",
-      "requests": "Trámites",
       "enrollments": "Mi matrícula",
       "documents": "Documentos",
+      "student_area": "Área del alumno",
+      "tasks": "Tareas",
+      "exams": "Exámenes",
+      "classroom": "Sala de clase",
+      "study": "Estudiar",
       "profile": "Mi perfil",
       "logout": "Cerrar sesión",
       "back_to_site": "Ir al sitio",
@@ -21,7 +25,6 @@
       "more_title": "Más opciones",
       "close_menu": "Cerrar menú",
       "tab_courses": "Cursos",
-      "tab_requests": "Trámites",
       "tab_dashboard": "Inicio"
     },
     "greeting": {
@@ -61,15 +64,10 @@
       "approved": "Aprobado",
       "rejected": "Rechazado"
     },
-    "seat_status": {
-      "reserved": "Reservada",
-      "confirmed": "Confirmada",
-      "released": "Liberada"
-    },
     "document_status": {
       "available": "Disponible",
       "pending": "En proceso",
-      "locked": "Aún no disponible"
+      "locked": "No disponible"
     },
     "document_type": {
       "enrollment_certificate": "Constancia de matrícula",
@@ -79,6 +77,7 @@
       "package": "Paquete completo",
       "monthly": "Mensual (por módulo)"
     },
+    "module_label": "Módulo {n}",
     "module_status": {
       "completed": "Completado",
       "current": "En curso",
@@ -137,12 +136,12 @@
       "title": "Mis cursos",
       "empty_title": "Todavía no tienes cursos",
       "empty_body": "Cuando completes tu matrícula, tus cursos aparecerán aquí.",
-      "progress_label": "Progreso",
       "starts_on": "Inicio: {date}"
     },
     "course_detail": {
       "about_title": "Sobre el curso",
       "level_label": "Nivel",
+      "mode_label": "Modalidad",
       "min_age_label": "Edad mínima",
       "min_age_value": "{age} años",
       "schedule_title": "Horario y acceso a clase",
@@ -161,7 +160,6 @@
       "plan_title": "Tu plan",
       "plan_price": "Precio del plan",
       "module_price": "Precio por módulo",
-      "monthly_note": "Modalidad mensual: pagas cada módulo por adelantado. Sin pago aprobado, el acceso a la clase se pausa — nunca se genera deuda.",
       "result_title": "Tu resultado",
       "result_pass_note": "Nota aprobatoria (mínimo 14): tu certificado gratuito se emite en un máximo de 25 días hábiles.",
       "result_fail_note": "El certificado requiere nota mínima de 14.",
@@ -173,29 +171,24 @@
       "title": "Mi matrícula",
       "empty_title": "No tienes matrículas registradas",
       "empty_body": "Cuando te matricules, verás aquí el estado de cada curso.",
+      "course_label": "Curso",
+      "group_label": "Aula",
+      "days_label": "Días de clase",
       "code_label": "Código de matrícula",
       "plan_label": "Plan",
       "billing_label": "Modalidad de pago",
-      "price_label": "Monto",
-      "payment_title": "Comprobante de pago",
-      "operation_number": "N.º de operación",
-      "paid_on": "Pagado el {date}",
-      "seat_label": "Vacante",
-      "monthly_title": "Pagos mensuales por módulo",
-      "month_due": "vence el {date}",
-      "month_pay_cta": "Subir comprobante",
+      "payments_title": "Pagos",
+      "state_paid": "Pagado",
+      "state_pending": "Pendiente",
+      "view_receipt": "Ver comprobante",
+      "month_pay_cta": "Pagar",
       "review_note": "Estamos verificando tu comprobante. Este paso puede tomar unas horas.",
-      "rejected_note": "No pudimos validar este pago. Escríbenos por WhatsApp para resolverlo.",
-      "approved_note": "Pago aprobado. Tu vacante está confirmada."
+      "rejected_note": "No pudimos validar este pago. Escríbenos por WhatsApp para resolverlo."
     },
     "receipt_form": {
       "amount_label": "Monto a pagar",
-      "amount_hint": "Transfiere el monto exacto. No aplican descuentos.",
       "method_label": "¿Por dónde pagaste?",
       "error_method": "Elige el medio de pago.",
-      "operation_label": "N.º de operación",
-      "operation_hint": "Aparece en el voucher de tu app.",
-      "error_operation": "Ingresa el número de operación.",
       "file_label": "Comprobante",
       "attach": "Adjuntar comprobante",
       "remove": "Quitar archivo",
@@ -206,20 +199,31 @@
     },
     "payments": {
       "title": "Pagos",
-      "due_title": "Pago del módulo",
-      "due_label": "Fecha de pago",
-      "due_note": "Paga antes del {date} para mantener tu acceso a la clase.",
-      "locked_note": "Tu acceso a la clase de {course} está pausado hasta validar el pago de este módulo. No es una deuda: no hay intereses ni moras.",
+      "due_title": "Pago mensual",
+      "status_pending": "Pago pendiente",
+      "status_upcoming": "Próximo pago",
+      "modules_title": "Módulos",
+      "select_prompt": "Selecciona los módulos que vas a pagar.",
+      "due_short": "Vence {date}",
+      "summary_title": "Descripción del pago",
+      "summary_modules": "{count, plural, =1 {# módulo} other {# módulos}}",
+      "total_label": "Total a pagar",
+      "pay_online": "Pagar",
+      "pay_online_soon": "El pago por el portal llega pronto. Por ahora paga con Yape, Plin o transferencia y envía tu comprobante.",
       "open_form": "Subir comprobante",
       "submit": "Enviar comprobante",
       "submitted_title": "Comprobante enviado",
       "submitted_body": "Estamos validando tu pago. Este paso puede tomar unas horas; tu acceso a la clase se reactiva apenas se apruebe.",
-      "monthly_explainer": "La modalidad mensual es una compra por módulo, por adelantado. No genera deuda, intereses ni moras: sin pago, el acceso a la clase simplemente se pausa hasta regularizar.",
       "history_title": "Historial de pagos",
       "history_empty": "Todavía no registras pagos.",
-      "concept_package": "{course} — Paquete completo",
-      "concept_module": "{course} — {module}",
-      "concept_procedure": "{procedure} — {course}"
+      "col_name": "Nombre",
+      "col_type": "Tipo",
+      "col_date": "Fecha",
+      "col_amount": "Monto",
+      "col_status": "Estado",
+      "type_package": "Paquete completo",
+      "type_monthly": "Mensual",
+      "type_procedure": "Trámite"
     },
     "requests": {
       "title": "Trámites",
@@ -270,13 +274,7 @@
       "empty_title": "Todavía no tienes documentos",
       "empty_body": "Tus constancias y certificados aparecerán aquí cuando estén listos.",
       "issued_on": "Emitido el {date}",
-      "pending_note": "Se generará automáticamente. Vuelve a revisar pronto.",
-      "locked_note": "Estará disponible cuando finalices el curso.",
-      "locked_cert_note": "Se emite al finalizar el curso con nota mínima de 14.",
-      "locked_cert_exam_note": "Requiere finalizar el curso con nota mínima de 14 y aprobar el examen de certificación (se solicita en Trámites).",
-      "rules_note": "El certificado de finalización es gratuito y se emite en un máximo de 25 días hábiles desde el término del curso. Requiere nota mínima de 14; quien no rinde el examen final (DA) no lo recibe.",
-      "constancia_note": "¿Necesitas una constancia de matrícula? Es un trámite con costo.",
-      "constancia_cta": "Solicitar en Trámites"
+      "mine_title": "Mis documentos"
     },
     "profile": {
       "title": "Mi perfil",

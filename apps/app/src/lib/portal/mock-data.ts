@@ -109,7 +109,7 @@ const italianCourse: Course = {
 const englishGroup: ClassGroup = {
   id: 'cg_en_a1_ago',
   courseId: englishCourse.id,
-  name: 'Inglés A1 — Turno Tarde (Lun/Mié)',
+  name: 'Turno Tarde',
   teacherName: 'Prof. Carla Ríos',
   schedule: [
     { weekday: 1, startTime: '18:00', endTime: '19:30' },
@@ -125,7 +125,7 @@ const englishGroup: ClassGroup = {
 const quechuaGroup: ClassGroup = {
   id: 'cg_qu_basico_sab',
   courseId: quechuaCourse.id,
-  name: 'Quechua Básico — Turno Mañana (Sáb)',
+  name: 'Turno Mañana',
   teacherName: 'Prof. Elmer Ccahuana',
   schedule: [{ weekday: 6, startTime: '09:00', endTime: '11:00' }],
   startDate: '2026-08-01T14:00:00Z',
@@ -138,7 +138,7 @@ const quechuaGroup: ClassGroup = {
 const portugueseGroup: ClassGroup = {
   id: 'cg_pt_a1_noc',
   courseId: portugueseCourse.id,
-  name: 'Portugués Inicial — Turno Noche (Mar/Jue)',
+  name: 'Turno Noche',
   teacherName: 'Prof. Bruno Antunes',
   schedule: [
     { weekday: 2, startTime: '20:00', endTime: '21:30' },
@@ -154,7 +154,7 @@ const portugueseGroup: ClassGroup = {
 const italianGroup: ClassGroup = {
   id: 'cg_it_a1_prev',
   courseId: italianCourse.id,
-  name: 'Italiano Inicial — Turno Noche (Lun/Mié)',
+  name: 'Turno Noche',
   teacherName: 'Prof. Lucía Baresi',
   schedule: [
     { weekday: 1, startTime: '20:00', endTime: '21:30' },
@@ -178,8 +178,8 @@ const enrollments: Enrollment[] = [
     classGroup: englishGroup,
     plan: {
       id: 'plan_en_a1',
-      name: 'Inglés Básico A1 — Nivel completo',
-      priceCents: 23960,
+      name: 'Inglés Básico A1',
+      priceCents: 2000,
       currency: 'PEN',
     },
     planPriceId: 'pp_en_a1_2026s2',
@@ -191,7 +191,7 @@ const enrollments: Enrollment[] = [
     },
     billingMode: 'monthly',
     monthly: {
-      modulePriceCents: 5990,
+      modulePriceCents: 2000,
       currency: 'PEN',
       payments: [
         {
@@ -199,12 +199,13 @@ const enrollments: Enrollment[] = [
           dueDate: '2026-06-01',
           payment: {
             id: 'pay_en_m1',
-            amountCents: 5990,
+            amountCents: 2000,
             currency: 'PEN',
             method: 'yape',
             status: 'approved',
             operationNumber: '00483920',
             paidAt: '2026-05-25T15:10:00Z',
+            receiptUrl: 'https://storage.example/receipt/pay_en_m1.jpg',
           },
         },
         {
@@ -212,12 +213,13 @@ const enrollments: Enrollment[] = [
           dueDate: '2026-07-15',
           payment: {
             id: 'pay_en_m2',
-            amountCents: 5990,
+            amountCents: 2000,
             currency: 'PEN',
             method: 'yape',
             status: 'approved',
             operationNumber: '00512244',
             paidAt: '2026-07-12T13:02:00Z',
+            receiptUrl: 'https://storage.example/receipt/pay_en_m2.jpg',
           },
         },
         // The unpaid month: due date passed, no receipt yet. This null is what
@@ -225,6 +227,13 @@ const enrollments: Enrollment[] = [
         {
           moduleId: 'mod_en_3',
           dueDate: '2026-09-01',
+          payment: null,
+        },
+        // The month after it — still ahead of its due date. It is what the
+        // student may pay in advance from the portal, never a debt.
+        {
+          moduleId: 'mod_en_4',
+          dueDate: '2026-10-20',
           payment: null,
         },
       ],
@@ -265,12 +274,13 @@ const enrollments: Enrollment[] = [
     ],
     payment: {
       id: 'pay_en_m1',
-      amountCents: 5990,
+      amountCents: 2000,
       currency: 'PEN',
       method: 'yape',
       status: 'approved',
       operationNumber: '00483920',
       paidAt: '2026-05-25T15:10:00Z',
+      receiptUrl: 'https://storage.example/receipt/pay_en_m1.jpg',
     },
     classAccessLock: 'monthly_payment_due',
     finalGrade: null,
@@ -286,7 +296,7 @@ const enrollments: Enrollment[] = [
     classGroup: quechuaGroup,
     plan: {
       id: 'plan_qu_basico',
-      name: 'Quechua Básico — Taller completo',
+      name: 'Quechua Básico',
       priceCents: 4990,
       currency: 'PEN',
     },
@@ -325,6 +335,7 @@ const enrollments: Enrollment[] = [
       status: 'approved',
       operationNumber: '77045512',
       paidAt: '2026-07-20T16:35:00Z',
+      receiptUrl: 'https://storage.example/receipt/pay_qu.jpg',
     },
     classAccessLock: null,
     finalGrade: null,
@@ -340,7 +351,7 @@ const enrollments: Enrollment[] = [
     classGroup: portugueseGroup,
     plan: {
       id: 'plan_pt_a1',
-      name: 'Portugués Inicial — Nivel completo',
+      name: 'Portugués Inicial',
       priceCents: 6990,
       currency: 'PEN',
     },
@@ -379,6 +390,7 @@ const enrollments: Enrollment[] = [
       status: 'under_review',
       operationNumber: '77120045',
       paidAt: '2026-08-30T22:38:00Z',
+      receiptUrl: 'https://storage.example/receipt/pay_pt_a1.jpg',
     },
     classAccessLock: null,
     finalGrade: null,
@@ -394,7 +406,7 @@ const enrollments: Enrollment[] = [
     classGroup: italianGroup,
     plan: {
       id: 'plan_it_a1',
-      name: 'Italiano Inicial — Nivel completo',
+      name: 'Italiano Inicial',
       priceCents: 4990,
       currency: 'PEN',
     },
@@ -433,6 +445,7 @@ const enrollments: Enrollment[] = [
       status: 'approved',
       operationNumber: '10553218',
       paidAt: '2026-03-02T10:55:00Z',
+      receiptUrl: 'https://storage.example/receipt/pay_it_a1.jpg',
     },
     classAccessLock: null,
     finalGrade: 16,
@@ -506,6 +519,7 @@ const requests: StudentRequest[] = [
       status: 'approved',
       operationNumber: '00497731',
       paidAt: '2026-06-28T18:15:00Z',
+      receiptUrl: 'https://storage.example/receipt/pay_req_const.jpg',
     },
     resultUrl: 'https://storage.example/enrollment-certificate/enr_en_a1.pdf',
   },

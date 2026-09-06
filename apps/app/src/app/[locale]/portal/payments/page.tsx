@@ -1,11 +1,9 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { getPortalSession } from '@/lib/portal/mock-data'
-import { formatDate, formatMoney } from '@/lib/portal/format'
+import { formatDateNumeric, formatMoney } from '@/lib/portal/format'
 import type { Locale, Payment } from '@/lib/portal/types'
 import { Card, PageHeader, SectionTitle, StatusBadge } from '@/components/portal/ui'
 import { paymentTone } from '@/components/portal/status-tone'
-import { Icon } from '@/components/portal/icons'
-import { formatPaymentMethod } from '@/lib/payment-method'
 import { MonthlyPaymentCard } from './monthly-payment-card'
 
 /**
@@ -26,33 +24,59 @@ export default async function PaymentsPage({
 
   const { enrollments, requests } = getPortalSession()
 
-  // Months waiting for their receipt.
-  const dueMonths = enrollments.flatMap((e) => {
+  /**
+   * Monthly enrollments with something still to pay, one card each. The card
+   * carries the whole module ledger of that enrollment — the ones already
+   * settled and the ones still open — because a student checking what to pay
+   * is also checking what they already paid.
+   */
+  const duePlans = enrollments.flatMap((e) => {
     if (e.monthly === null) return []
-    return e.monthly.payments
+    const sequenceOf = (moduleId: string) =>
+      e.modules.find((m) => m.id === moduleId)?.sequence ?? 0
+    const settled = e.monthly.payments
+      .filter((mp) => mp.payment !== null)
+      .map((mp) => ({
+        moduleId: mp.moduleId,
+        sequence: sequenceOf(mp.moduleId),
+        // Non-null by the filter above; narrowed here for the card's props.
+        status: mp.payment!.status,
+      }))
+      .sort((a, b) => a.sequence - b.sequence)
+    const pending = e.monthly.payments
       .filter((mp) => mp.payment === null)
       .map((mp) => ({
-        enrollment: e,
-        modulePayment: mp,
-        module: e.modules.find((m) => m.id === mp.moduleId) ?? null,
+        moduleId: mp.moduleId,
+        sequence: sequenceOf(mp.moduleId),
+        dueDate: mp.dueDate,
       }))
+      .sort((a, b) => a.sequence - b.sequence)
+    if (pending.length === 0) return []
+    return [{ enrollment: e, settled, pending }]
   })
 
-  // Everything already paid (or being validated), newest first.
-  const history: { id: string; concept: string; payment: Payment }[] = [
-    ...enrollments.flatMap((e) => {
+  /**
+   * Everything already paid (or being validated), newest first. The row keeps
+   * the course and what was bought apart — one column each — instead of gluing
+   * them into a sentence: a column of names is what the eye scans down.
+   */
+  type HistoryRow = {
+    id: string
+    name: string
+    type: 'package' | 'monthly' | 'procedure'
+    payment: Payment
+  }
+
+  const history: HistoryRow[] = [
+    ...enrollments.flatMap<HistoryRow>((e) => {
       if (e.monthly !== null) {
-        return e.monthly.payments.flatMap((mp) => {
+        return e.monthly.payments.flatMap<HistoryRow>((mp) => {
           if (mp.payment === null) return []
-          const moduleName =
-            e.modules.find((m) => m.id === mp.moduleId)?.name ?? ''
           return [
             {
               id: mp.payment.id,
-              concept: t('payments.concept_module', {
-                course: e.course.name,
-                module: moduleName,
-              }),
+              name: e.course.name,
+              type: 'monthly',
               payment: mp.payment,
             },
           ]
@@ -61,53 +85,42 @@ export default async function PaymentsPage({
       return [
         {
           id: e.payment.id,
-          concept: t('payments.concept_package', { course: e.course.name }),
+          name: e.course.name,
+          type: 'package',
           payment: e.payment,
         },
       ]
     }),
-    ...requests.map((r) => {
-      const course =
-        enrollments.find((e) => e.id === r.enrollmentId)?.course.name ?? ''
-      return {
-        id: r.payment.id,
-        concept: t('payments.concept_procedure', {
-          procedure: t(`request_type.${r.type}`),
-          course,
-        }),
-        payment: r.payment,
-      }
-    }),
+    ...requests.map<HistoryRow>((r) => ({
+      id: r.payment.id,
+      name: t(`request_type.${r.type}`),
+      type: 'procedure',
+      payment: r.payment,
+    })),
   ].sort((a, b) => (b.payment.paidAt ?? '').localeCompare(a.payment.paidAt ?? ''))
 
   return (
     <div className="flex flex-col gap-8">
       <PageHeader title={t('payments.title')} />
 
-      {dueMonths.length > 0 && (
+      {duePlans.length > 0 && (
         <section className="-mt-4">
           <div className="mb-3">
             <SectionTitle>{t('payments.due_title')}</SectionTitle>
           </div>
           <div className="flex flex-col gap-4">
-            {dueMonths.map(({ enrollment, modulePayment, module }) => (
+            {duePlans.map(({ enrollment, settled, pending }) => (
               <MonthlyPaymentCard
-                key={`${enrollment.id}-${modulePayment.moduleId}`}
+                key={enrollment.id}
                 courseName={enrollment.course.name}
-                moduleName={module?.name ?? ''}
-                dueDate={modulePayment.dueDate}
-                amountCents={enrollment.monthly?.modulePriceCents ?? 0}
+                settledModules={settled}
+                modules={pending}
+                modulePriceCents={enrollment.monthly?.modulePriceCents ?? 0}
                 currency={enrollment.monthly?.currency ?? 'PEN'}
                 locked={enrollment.classAccessLock === 'monthly_payment_due'}
               />
             ))}
           </div>
-          <p className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
-            <span className="mt-0.5 shrink-0 text-brand-blue">
-              <Icon name="alert" size={14} />
-            </span>
-            {t('payments.monthly_explainer')}
-          </p>
         </section>
       )}
 
@@ -123,44 +136,63 @@ export default async function PaymentsPage({
           </Card>
         ) : (
           <Card>
-            <ul className="divide-y divide-line">
-              {history.map(({ id, concept, payment }) => (
-                <li
-                  key={id}
-                  className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-5 py-4"
-                >
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-ink">{concept}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {payment.paidAt && formatDate(payment.paidAt, locale)}
-                      {' · '}
-                      {formatPaymentMethod(
-                        payment.method,
-                        null,
-                        t('payment_method.other'),
-                      )}
-                      {payment.operationNumber && (
-                        <>
-                          {' · '}
-                          <span className="font-mono">
-                            {payment.operationNumber}
-                          </span>
-                        </>
-                      )}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-3">
-                    <span className="text-sm font-bold text-ink">
-                      {formatMoney(payment.amountCents, payment.currency, locale)}
-                    </span>
-                    <StatusBadge
-                      tone={paymentTone[payment.status]}
-                      label={t(`payment_status.${payment.status}`)}
-                    />
-                  </div>
-                </li>
-              ))}
-            </ul>
+            {/* Horizontal scroll lives on this wrapper, never on the page
+                (CLAUDE.md §5, screen layout) — same table idiom as Solicitudes. */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-line text-xs uppercase tracking-wide text-muted-foreground">
+                    <th className="px-5 py-3 text-left font-medium">
+                      {t('payments.col_name')}
+                    </th>
+                    <th className="px-5 py-3 text-center font-medium">
+                      {t('payments.col_type')}
+                    </th>
+                    <th className="px-5 py-3 text-center font-medium">
+                      {t('payments.col_date')}
+                    </th>
+                    <th className="px-5 py-3 text-right font-medium">
+                      {t('payments.col_amount')}
+                    </th>
+                    <th className="px-5 py-3 text-center font-medium">
+                      {t('payments.col_status')}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-line">
+                  {history.map((row) => (
+                    <tr key={row.id}>
+                      {/* The only cell allowed to wrap: holding the name on one
+                          line pushes Estado off the wrapper on a normal column,
+                          and it is the one text with room to break. */}
+                      <td className="min-w-48 px-5 py-3.5 text-left font-semibold text-ink">
+                        {row.name}
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-3.5 text-center text-muted-foreground">
+                        {t(`payments.type_${row.type}`)}
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-3.5 text-center tabular-nums text-muted-foreground">
+                        {row.payment.paidAt &&
+                          formatDateNumeric(row.payment.paidAt, locale)}
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-3.5 text-right tabular-nums font-semibold text-ink">
+                        {formatMoney(
+                          row.payment.amountCents,
+                          row.payment.currency,
+                          locale,
+                        )}
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-3.5 text-center">
+                        <StatusBadge
+                          tone={paymentTone[row.payment.status]}
+                          label={t(`payment_status.${row.payment.status}`)}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </Card>
         )}
       </section>
