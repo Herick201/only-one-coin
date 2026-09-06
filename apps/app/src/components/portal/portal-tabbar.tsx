@@ -21,8 +21,8 @@ import type { NavItem } from './portal-nav'
  * A tira de pílulas que rolava de lado no topo tinha dois problemas de
  * telefone, não de desenho: o que não coube fica invisível (ninguém arrasta
  * uma tira que não parece arrastável), e o topo de um celular grande é o canto
- * mais longe do polegar. Aqui as quatro seções que o aluno abre todo dia ficam
- * fixas embaixo, e a quinta aba abre uma folha com o resto.
+ * mais longe do polegar. Aqui ficam fixas embaixo só as seções que o aluno abre
+ * sem motivo, e a última aba abre uma folha com o resto.
  *
  * A folha não é só o excedente do menu: ela é também o canto da pessoa — o
  * perfil, o idioma e a saída, que no desktop moram no avatar do topo. É o
@@ -32,9 +32,6 @@ import type { NavItem } from './portal-nav'
  * página pinta sob a barra de gestos do sistema, e sem a safe area a última
  * aba fica debaixo dela.
  */
-
-/** Quantas abas cabem antes da de "mais". Cinco colunas é o teto a 360px. */
-const VISIBLE_TABS = 4
 
 export function PortalTabBar({
   items,
@@ -55,8 +52,12 @@ export function PortalTabBar({
   const [open, setOpen] = useState(false)
   const [, startTransition] = useTransition()
 
-  const tabs = items.slice(0, VISIBLE_TABS)
-  const overflow = items.slice(VISIBLE_TABS)
+  /* Quem fica fixo embaixo é declarado item a item no layout do portal, não
+     recortado por posição: a ordem da sidebar responde outra pergunta, e um
+     `slice` faz a barra mudar sozinha assim que alguém insere uma seção no
+     meio da lista. */
+  const tabs = items.filter((item) => item.tabBar)
+  const overflow = items.filter((item) => !item.tabBar)
 
   function isActive(href: string) {
     if (href === '/portal') return pathname === '/portal'

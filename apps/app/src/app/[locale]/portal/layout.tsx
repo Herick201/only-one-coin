@@ -23,13 +23,18 @@ export default async function PortalLayout({
   const monogram = initials(student.firstName, student.lastName)
 
   /**
-   * A ordem manda em duas telas ao mesmo tempo: é a sequência da sidebar no
-   * desktop e, no celular, decide o que fica fixo na barra de abas — as quatro
-   * primeiras — e o que vai para a folha de "mais" (`portal-tabbar.tsx`). As
-   * quatro da frente são as que o aluno abre no dia a dia; matrícula e
-   * documentos são visitas de começo e de fim de curso.
+   * A ordem é a da sidebar no desktop. Quem fica fixo na barra de abas do
+   * celular é dito item a item (`tabBar`), não pela posição: são as seções que
+   * o aluno abre sem motivo — ver a próxima aula, ver os cursos, pedir um
+   * trâmite. O resto vai para a folha de "mais" (`portal-tabbar.tsx`).
    *
-   * `shortLabel` só onde o nome longo não cabe numa coluna de ~72px.
+   * **Pagamentos não fica na barra**: mensalidade e comprovante são visita com
+   * hora marcada, não navegação de todo dia — e uma coluna permanente para o
+   * dinheiro faz o portal parecer uma cobrança. O aviso de módulo em atraso já
+   * chega pelo sino e pelo cadeado no curso, que é o caminho por onde a pessoa
+   * realmente entra ali.
+   *
+   * `shortLabel` só nas fixas cujo nome longo não cabe numa coluna de ~90px.
    */
   const navItems: NavItem[] = [
     {
@@ -37,24 +42,22 @@ export default async function PortalLayout({
       label: t('nav.dashboard'),
       shortLabel: t('nav.tab_dashboard'),
       icon: 'home',
+      tabBar: true,
     },
     {
       href: '/portal/courses',
       label: t('nav.courses'),
       shortLabel: t('nav.tab_courses'),
       icon: 'courses',
+      tabBar: true,
     },
-    {
-      href: '/portal/payments',
-      label: t('nav.payments'),
-      shortLabel: t('nav.tab_payments'),
-      icon: 'card',
-    },
+    { href: '/portal/payments', label: t('nav.payments'), icon: 'card' },
     {
       href: '/portal/requests',
       label: t('nav.requests'),
       shortLabel: t('nav.tab_requests'),
       icon: 'clipboard',
+      tabBar: true,
     },
     { href: '/portal/enrollment', label: t('nav.enrollments'), icon: 'enrollment' },
     { href: '/portal/documents', label: t('nav.documents'), icon: 'documents' },

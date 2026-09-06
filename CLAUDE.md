@@ -304,9 +304,12 @@ tela que apenas não estoura na horizontal ainda não é uma tela de celular.
   `table-stack` fora dele. **Coluna que só existe sob condição entra na lista
   sob a mesma condição** — o rótulo casa com a célula por posição.
 - **O menu do portal fica embaixo**, na barra de abas
-  (`components/portal/portal-tabbar.tsx`). A ordem de `navItems` no layout do
-  portal decide o que fica fixo (as quatro primeiras) e o que vai para a folha
-  de "mais", junto do perfil, do idioma e da saída.
+  (`components/portal/portal-tabbar.tsx`). Quem fica fixo é marcado item a item
+  (`tabBar: true` em `navItems`), nunca recortado por posição — hoje início,
+  cursos e trâmites. O resto vai para a folha de "mais", junto do perfil, do
+  idioma e da saída. **Pagamentos fica na folha**: mensalidade e comprovante são
+  visita com hora marcada, e uma coluna permanente para o dinheiro faz o portal
+  parecer uma cobrança.
 - **Toda borda fixa soma a safe area** — `pb-safe-b`, `pt-safe-t`. O layout raiz
   declara `viewportFit: 'cover'`, então a página pinta sob o notch e sob a barra
   de gestos. **Nunca bloquear zoom** (`maximumScale`/`userScalable`).

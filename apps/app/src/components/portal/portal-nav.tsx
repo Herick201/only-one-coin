@@ -8,9 +8,16 @@ export interface NavItem {
   label: string
   icon: IconName
   /**
-   * Rótulo para a barra de abas do celular, onde cada coluna tem ~72px:
-   * "Mis cursos" não cabe em nenhum dos três idiomas. Só as seções cujo nome
-   * longo estoura precisam dele — o resto cai no `label`.
+   * Fica fixa na barra de abas do celular. O que não é marcado vai para a
+   * folha de "mais" (`portal-tabbar.tsx`). É escolha de produto, não "as N
+   * primeiras": o que merece uma coluna permanente embaixo do polegar é o que
+   * o aluno abre sem motivo, e isso não sai da ordem da sidebar.
+   */
+  tabBar?: boolean
+  /**
+   * Rótulo para a barra de abas do celular, onde cada coluna tem ~90px:
+   * "Mis cursos" não cabe em nenhum dos três idiomas. Só as seções fixas cujo
+   * nome longo estoura precisam dele — o resto cai no `label`.
    */
   shortLabel?: string
 }

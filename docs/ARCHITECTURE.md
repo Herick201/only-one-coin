@@ -395,11 +395,17 @@ ainda não é uma tela de celular.
   (`TableShell columns={[...]}` no painel, `stackLabels()` fora dele) e eles
   viajam na `<table>` como `--stack-col-N`. **Coluna condicional entra na lista
   sob a mesma condição**, ou o rótulo cai na célula errada.
-- **Barra de abas no portal** (`components/portal/portal-tabbar.tsx`): as quatro
-  seções do dia a dia fixas embaixo, e a quinta aba abre uma folha com o resto
-  **mais** o canto da pessoa — perfil, idioma e saída, que no desktop moram no
-  avatar do topo. A ordem de `navItems` no layout do portal é o que decide o que
-  fica na barra e o que vai para a folha.
+- **Barra de abas no portal** (`components/portal/portal-tabbar.tsx`): as seções
+  que o aluno abre sem motivo ficam fixas embaixo, e a última aba abre uma folha
+  com o resto **mais** o canto da pessoa — perfil, idioma e saída, que no
+  desktop moram no avatar do topo. Quem fica fixo é declarado item a item
+  (`tabBar: true` em `navItems`), não recortado por posição: a ordem da sidebar
+  responde outra pergunta, e um `slice` faria a barra mudar sozinha assim que
+  alguém inserisse uma seção no meio da lista. Hoje: início, cursos, trâmites.
+  **Pagamentos ficou de fora da barra** (decisão do dono, 06/09/2026) —
+  mensalidade e comprovante são visita com hora marcada, não navegação de todo
+  dia, e uma coluna permanente para o dinheiro faz o portal parecer uma
+  cobrança; quem precisa chegar lá chega pelo sino e pelo cadeado no curso.
 - **Campo com 16px abaixo de 768px** (`globals.css`). É o único lugar em que a
   régua do toque ganha da régua do desenho.
 - **Modal vira folha de baixo** no telefone (`components/ui/dialog.tsx`), e a
