@@ -1,6 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { getAccountOverview } from '@/lib/backoffice/mock-data'
-import { formatDateTime, initials, type Locale } from '@/lib/format'
+import { getStaffSession } from '@/lib/backoffice/session'
+import { initials, type Locale } from '@/lib/format'
 import {
   Card,
   Field,
@@ -39,7 +39,7 @@ export default async function AccountPage({
   setRequestLocale(raw)
   const t = await getTranslations('bo')
 
-  const { user, security } = getAccountOverview()
+  const user = await getStaffSession()
   const fullName = `${user.firstName} ${user.lastName}`
 
   return (
@@ -68,9 +68,6 @@ export default async function AccountPage({
             <Field label={t('account.role_label')}>
               <StatusBadge tone="info" dot={false} label={t(`role.${user.role}`)} />
             </Field>
-            <Field label={t('account.last_sign_in_label')}>
-              {formatDateTime(security.lastSignInAt, locale)}
-            </Field>
           </AutoGrid>
 
           <p className="mt-5 flex items-start gap-2 rounded-lg bg-sky-soft px-3 py-2 text-xs text-muted-foreground">
@@ -96,7 +93,7 @@ export default async function AccountPage({
       </AutoGrid>
 
       <Card>
-        <AccountPassword updatedAt={security.passwordUpdatedAt} locale={locale} />
+        <AccountPassword updatedAt={null} locale={locale} />
       </Card>
 
       <p className="flex items-start gap-2 rounded-lg border border-dashed border-line bg-sky-soft px-3 py-2 text-xs text-muted-foreground">

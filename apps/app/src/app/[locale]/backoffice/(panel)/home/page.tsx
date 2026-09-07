@@ -62,7 +62,10 @@ export default async function BackofficeHomePage({
   const queue = getReviewQueue()
   const seats = getSeatWatch()
 
-  const seatPct = Math.round((metrics.seatsTaken / metrics.seatsCapacity) * 100)
+  const seatPct =
+    metrics.seatsCapacity === 0
+      ? 0
+      : Math.round((metrics.seatsTaken / metrics.seatsCapacity) * 100)
 
   const stats: {
     label: string
@@ -161,6 +164,16 @@ export default async function BackofficeHomePage({
             </CardHeader>
 
             <CardContent className="px-0">
+              {queue.length === 0 ? (
+                <div className="px-5 py-8 text-center">
+                  <p className="text-sm font-semibold text-foreground">
+                    {t('review.empty_title')}
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {t('review.empty_body')}
+                  </p>
+                </div>
+              ) : (
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
@@ -238,17 +251,20 @@ export default async function BackofficeHomePage({
                   </TableBody>
                 </Table>
               </div>
+              )}
 
               {/* The door to the queue is the counter in the header — one per
                   card, or the eye stops trusting either. */}
-              <div className="border-t border-border px-5 py-3">
-                <p className="text-xs text-muted-foreground">
-                  {t('review.showing', {
-                    shown: queue.length,
-                    total: metrics.pendingReview,
-                  })}
-                </p>
-              </div>
+              {queue.length > 0 && (
+                <div className="border-t border-border px-5 py-3">
+                  <p className="text-xs text-muted-foreground">
+                    {t('review.showing', {
+                      shown: queue.length,
+                      total: metrics.pendingReview,
+                    })}
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </section>
