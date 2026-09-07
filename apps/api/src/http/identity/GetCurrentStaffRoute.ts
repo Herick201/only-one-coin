@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { RouteBuilder } from "@/shared/http/RouteBuilder.js";
+import { splitName } from "@/infra/identity/splitName.js";
 
 const StaffRoleSchema = z.enum(["admin", "coordinator", "teacher", "treasury", "mass_approver"]);
 
@@ -11,16 +12,6 @@ const GetCurrentStaffResponseSchema = z.object({
   role: StaffRoleSchema,
   teacherId: z.string().uuid().nullable(),
 });
-
-// Better Auth's `user` row keeps one `name` field, not firstName/lastName —
-// splitting it here is a display-only, lossy convenience (same tension
-// CLAUDE.md already flags for `students.full_name`, docs/ROADMAP.md Sessão
-// 21a): a compound Peruvian name loses the split, never the data, since the
-// column behind it is still the one `name` field.
-function splitName(name: string): { firstName: string; lastName: string } {
-  const [firstName, ...rest] = name.trim().split(/\s+/);
-  return { firstName: firstName ?? "", lastName: rest.join(" ") };
-}
 
 // The signed-in staff member's own identity, read from the session Better
 // Auth already resolved (`request.currentUser`, populated by

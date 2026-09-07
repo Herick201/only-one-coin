@@ -1,19 +1,48 @@
 import type { FastifyBaseLogger } from "fastify";
 import {
+  CancelStaffInviteUseCase,
+  CancelStaffPasswordResetUseCase,
+  CompleteStaffInviteUseCase,
+  CompleteStaffPasswordResetUseCase,
   CreateManualEnrollmentUseCase,
+  CreateStaffInviteUseCase,
+  CreateStaffPasswordResetUseCase,
+  PromoteUserRoleUseCase,
   RegisterStudentUseCase,
+  RemoveStaffAccessUseCase,
+  RenewStaffInviteUseCase,
+  RenewStaffPasswordResetUseCase,
+  RestoreStaffAccessUseCase,
   SubmitPublicEnrollmentUseCase,
+  type IAuditLogRepository,
   type ICurrentSessionPort,
   type IEnrollmentRepository,
+  type IFreshAuthVerifier,
   type IGuardianRepository,
   type IPlanPriceLookup,
   type IPublicEnrollmentRepository,
+  type IStaffAccessRepository,
+  type IStaffAccountProvisioner,
+  type IStaffInviteRepository,
+  type IStaffPasswordResetRepository,
+  type IStaffPasswordSetter,
+  type IStaffUserLookup,
   type IStudentRepository,
+  type IUserRoleRepository,
 } from "@ooc/domain";
 import { loadConfig, type Config } from "./config.js";
 import { createLogger } from "./infra/logger.js";
 import { createAuth, type Auth } from "./infra/auth/betterAuth.js";
 import { BetterAuthCurrentSessionPort } from "./infra/identity/BetterAuthCurrentSessionPort.js";
+import { BetterAuthFreshAuthVerifier } from "./infra/identity/BetterAuthFreshAuthVerifier.js";
+import { BetterAuthStaffAccountProvisioner } from "./infra/identity/BetterAuthStaffAccountProvisioner.js";
+import { BetterAuthStaffPasswordSetter } from "./infra/identity/BetterAuthStaffPasswordSetter.js";
+import { DrizzleAuditLogRepository } from "./infra/identity/DrizzleAuditLogRepository.js";
+import { DrizzleStaffAccessRepository } from "./infra/identity/DrizzleStaffAccessRepository.js";
+import { DrizzleStaffInviteRepository } from "./infra/identity/DrizzleStaffInviteRepository.js";
+import { DrizzleStaffPasswordResetRepository } from "./infra/identity/DrizzleStaffPasswordResetRepository.js";
+import { DrizzleStaffUserLookup } from "./infra/identity/DrizzleStaffUserLookup.js";
+import { DrizzleUserRoleRepository } from "./infra/identity/DrizzleUserRoleRepository.js";
 import { createDb, type Db } from "./infra/db/client.js";
 import { DrizzleStudentRepository } from "./infra/persistence/student/DrizzleStudentRepository.js";
 import { DrizzleGuardianRepository } from "./infra/persistence/student/DrizzleGuardianRepository.js";
@@ -24,6 +53,8 @@ import { ListStudentsQuery } from "./infra/persistence/student/ListStudentsQuery
 import { GetStudentQuery } from "./infra/persistence/student/GetStudentQuery.js";
 import { ListOpenClassGroupsQuery } from "./infra/persistence/catalog/ListOpenClassGroupsQuery.js";
 import { GetPublicCatalogQuery } from "./infra/persistence/catalog/GetPublicCatalogQuery.js";
+import { ListStaffQuery } from "./infra/persistence/identity/ListStaffQuery.js";
+import { ListStaffRoleChangesQuery } from "./infra/persistence/identity/ListStaffRoleChangesQuery.js";
 
 export interface AppRepositories {
   student: IStudentRepository;
@@ -31,6 +62,8 @@ export interface AppRepositories {
   enrollment: IEnrollmentRepository;
   publicEnrollment: IPublicEnrollmentRepository;
   planPriceLookup: IPlanPriceLookup;
+  staffInvite: IStaffInviteRepository;
+  staffPasswordReset: IStaffPasswordResetRepository;
 }
 
 export interface AppUseCases {
@@ -41,6 +74,19 @@ export interface AppUseCases {
     createManual: CreateManualEnrollmentUseCase;
     submitPublic: SubmitPublicEnrollmentUseCase;
   };
+  staff: {
+    promoteRole: PromoteUserRoleUseCase;
+    createInvite: CreateStaffInviteUseCase;
+    renewInvite: RenewStaffInviteUseCase;
+    cancelInvite: CancelStaffInviteUseCase;
+    completeInvite: CompleteStaffInviteUseCase;
+    removeAccess: RemoveStaffAccessUseCase;
+    restoreAccess: RestoreStaffAccessUseCase;
+    createPasswordReset: CreateStaffPasswordResetUseCase;
+    renewPasswordReset: RenewStaffPasswordResetUseCase;
+    cancelPasswordReset: CancelStaffPasswordResetUseCase;
+    completePasswordReset: CompleteStaffPasswordResetUseCase;
+  };
 }
 
 export interface AppQueries {
@@ -48,10 +94,19 @@ export interface AppQueries {
   getStudent: GetStudentQuery;
   listOpenClassGroups: ListOpenClassGroupsQuery;
   getPublicCatalog: GetPublicCatalogQuery;
+  listStaff: ListStaffQuery;
+  listStaffRoleChanges: ListStaffRoleChangesQuery;
 }
 
 export interface AppIdentity {
   currentSession: ICurrentSessionPort;
+  freshAuthVerifier: IFreshAuthVerifier;
+  userRoleRepository: IUserRoleRepository;
+  auditLogRepository: IAuditLogRepository;
+  staffAccessRepository: IStaffAccessRepository;
+  staffAccountProvisioner: IStaffAccountProvisioner;
+  staffUserLookup: IStaffUserLookup;
+  staffPasswordSetter: IStaffPasswordSetter;
 }
 
 export interface AppContainer {
@@ -76,6 +131,7 @@ function buildContainer(): AppContainer {
 
   // Persistence
   const db = createDb(config);
+  const freshAuthVerifier = new BetterAuthFreshAuthVerifier(auth, db);
 
   // Repositories
   const studentRepository = new DrizzleStudentRepository(db);
@@ -83,17 +139,42 @@ function buildContainer(): AppContainer {
   const enrollmentRepository = new DrizzleEnrollmentRepository(db);
   const publicEnrollmentRepository = new DrizzlePublicEnrollmentRepository(db);
   const planPriceLookup = new DrizzlePlanPriceLookup(db);
+  const userRoleRepository = new DrizzleUserRoleRepository(db);
+  const auditLogRepository = new DrizzleAuditLogRepository(db);
+  const staffInviteRepository = new DrizzleStaffInviteRepository(db);
+  const staffAccessRepository = new DrizzleStaffAccessRepository(db);
+  const staffAccountProvisioner = new BetterAuthStaffAccountProvisioner(auth, db);
+  const staffUserLookup = new DrizzleStaffUserLookup(db);
+  const staffPasswordResetRepository = new DrizzleStaffPasswordResetRepository(db);
+  const staffPasswordSetter = new BetterAuthStaffPasswordSetter(db);
 
   // Use cases
   const registerStudent = new RegisterStudentUseCase(studentRepository, guardianRepository);
   const createManualEnrollment = new CreateManualEnrollmentUseCase(enrollmentRepository, planPriceLookup);
   const submitPublicEnrollment = new SubmitPublicEnrollmentUseCase(publicEnrollmentRepository);
+  const promoteRole = new PromoteUserRoleUseCase(freshAuthVerifier, userRoleRepository, auditLogRepository);
+  const createInvite = new CreateStaffInviteUseCase(staffUserLookup, staffInviteRepository, auditLogRepository);
+  const renewInvite = new RenewStaffInviteUseCase(staffInviteRepository, auditLogRepository);
+  const cancelInvite = new CancelStaffInviteUseCase(staffInviteRepository, auditLogRepository);
+  const completeInvite = new CompleteStaffInviteUseCase(staffInviteRepository, staffAccountProvisioner, auditLogRepository);
+  const removeAccess = new RemoveStaffAccessUseCase(staffAccessRepository, auditLogRepository);
+  const restoreAccess = new RestoreStaffAccessUseCase(staffAccessRepository, auditLogRepository);
+  const createPasswordReset = new CreateStaffPasswordResetUseCase(staffPasswordResetRepository, auditLogRepository);
+  const renewPasswordReset = new RenewStaffPasswordResetUseCase(staffPasswordResetRepository);
+  const cancelPasswordReset = new CancelStaffPasswordResetUseCase(staffPasswordResetRepository);
+  const completePasswordReset = new CompleteStaffPasswordResetUseCase(
+    staffPasswordResetRepository,
+    staffPasswordSetter,
+    auditLogRepository,
+  );
 
   // Queries (read-only, no domain invariant to protect — see class docs)
   const listStudents = new ListStudentsQuery(db);
   const getStudent = new GetStudentQuery(db);
   const listOpenClassGroups = new ListOpenClassGroupsQuery(db);
   const getPublicCatalog = new GetPublicCatalogQuery(db);
+  const listStaff = new ListStaffQuery(db);
+  const listStaffRoleChanges = new ListStaffRoleChangesQuery(db);
 
   return {
     production: config.NODE_ENV === "production",
@@ -103,6 +184,13 @@ function buildContainer(): AppContainer {
     db,
     identity: {
       currentSession,
+      freshAuthVerifier,
+      userRoleRepository,
+      auditLogRepository,
+      staffAccessRepository,
+      staffAccountProvisioner,
+      staffUserLookup,
+      staffPasswordSetter,
     },
     repositories: {
       student: studentRepository,
@@ -110,6 +198,8 @@ function buildContainer(): AppContainer {
       enrollment: enrollmentRepository,
       publicEnrollment: publicEnrollmentRepository,
       planPriceLookup,
+      staffInvite: staffInviteRepository,
+      staffPasswordReset: staffPasswordResetRepository,
     },
     useCases: {
       student: {
@@ -119,12 +209,27 @@ function buildContainer(): AppContainer {
         createManual: createManualEnrollment,
         submitPublic: submitPublicEnrollment,
       },
+      staff: {
+        promoteRole,
+        createInvite,
+        renewInvite,
+        cancelInvite,
+        completeInvite,
+        removeAccess,
+        restoreAccess,
+        createPasswordReset,
+        renewPasswordReset,
+        cancelPasswordReset,
+        completePasswordReset,
+      },
     },
     queries: {
       listStudents,
       getStudent,
       listOpenClassGroups,
       getPublicCatalog,
+      listStaff,
+      listStaffRoleChanges,
     },
   };
 }
