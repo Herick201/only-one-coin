@@ -30,3 +30,9 @@ Thumbs.db
 
 # Test / coverage
 coverage/
+
+# Real PII — legacy enrollment spreadsheets and the reports the import
+# script generates from them (names, DNI, phone, email of real students)
+# must never enter git history (CLAUDE.md §6, "PII em log").
+/tmp/
+/apps/api/legacy-import-reports/

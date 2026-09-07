@@ -1,0 +1,2 @@
+ALTER TABLE "enrollments" ADD COLUMN "origin" text DEFAULT 'web' NOT NULL;--> statement-breakpoint
+ALTER TABLE "enrollments" ADD CONSTRAINT "enrollments_origin_check" CHECK ("origin" in ('whatsapp', 'web'));
