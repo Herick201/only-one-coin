@@ -7,6 +7,7 @@ import { formatDate, type Locale } from '@/lib/format'
 import { Card, SectionTitle } from '@/components/portal/ui'
 import { Icon } from '@/components/portal/icons'
 import { AutoGrid } from '@/components/layout/auto-grid'
+import { ProfilePreferences } from './profile-preferences'
 
 /**
  * Profile with two kinds of data on one screen, told apart visually:
@@ -16,6 +17,11 @@ import { AutoGrid } from '@/components/layout/auto-grid'
  * — record: name, document, birth date, the class-access Gmail (CLAUDE.md §1)
  *   and everything about the guardian. Shown, but locked — a padlock marks
  *   each one, and correcting them is a coordination flow, never self-service.
+ *
+ * Plus what the student chooses about the portal itself (`ProfilePreferences`):
+ * the language, which used to sit in the avatar menu and in the tab bar's
+ * sheet. Neither is the record nor a contact — it is a preference, and it lives
+ * with the rest of what a person sets about themselves.
  */
 
 function LockedField({
@@ -366,6 +372,7 @@ export function ProfileView({ student }: { student: Student }) {
             </p>
           )}
         </Card>
+        <ProfilePreferences />
       </AutoGrid>
 
       <p className="mt-6 flex items-center justify-center gap-1.5 text-center text-xs text-muted-foreground">

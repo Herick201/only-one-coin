@@ -312,7 +312,17 @@ export function StudentFile({ student }: { student: StudentDetail }) {
               />
             </div>
           ) : (
-            <TableShell>
+            <TableShell
+              columns={[
+                t('student_file.col_course'),
+                t('student_file.col_period'),
+                t('student_file.col_enrollment_status'),
+                t('student_file.col_seat'),
+                t('student_file.col_payment'),
+                t('student_file.col_amount'),
+                t('student_file.col_created'),
+              ]}
+            >
               <thead>
                 <tr>
                   <th className={thClass}>{t('student_file.col_course')}</th>

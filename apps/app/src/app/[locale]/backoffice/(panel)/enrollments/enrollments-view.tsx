@@ -355,7 +355,16 @@ export function EnrollmentsView({
           </div>
         ) : (
           <>
-            <TableShell>
+            <TableShell
+              columns={[
+                t('enrollments.col_student'),
+                t('enrollments.col_course'),
+                t('enrollments.col_status'),
+                t('enrollments.col_seat'),
+                t('enrollments.col_payment'),
+                t('enrollments.col_created'),
+              ]}
+            >
               <thead>
                 <tr>
                   <th className={thClass}>{t('enrollments.col_student')}</th>

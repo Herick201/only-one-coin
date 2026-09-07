@@ -51,6 +51,16 @@ function DialogOverlay({
  * from an edge. A long body scrolls inside the box rather than pushing it past
  * the viewport, and the scroll lives on a wrapper so the close button stays
  * pinned to the corner instead of scrolling out of reach.
+ *
+ * On a phone it is not centred: it rises from the bottom edge, full width,
+ * rounded only on top. A box floating in the middle of a 375px screen wastes
+ * the margin on both sides, puts its actions in the middle of the screen where
+ * the thumb has to stretch, and — the part that actually breaks — jumps when
+ * the keyboard opens, because a vertically centred element recentres itself
+ * against the shrunken viewport. Anchored to the bottom it just sits above the
+ * keyboard. `dvh` for the same reason.
+ *
+ * The window IS the ruler here: a modal is not inside anyone's column.
  */
 function DialogContent({
   className,
@@ -69,7 +79,7 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 flex max-h-[85vh] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl border border-line bg-popover bg-clip-padding text-sm text-popover-foreground shadow-lg duration-150 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          "fixed inset-x-0 bottom-0 z-50 flex max-h-[88dvh] flex-col overflow-hidden rounded-t-2xl border border-line bg-popover bg-clip-padding pb-safe-b text-sm text-popover-foreground shadow-lg duration-150 data-open:animate-in data-open:fade-in-0 data-open:slide-in-from-bottom-8 data-closed:animate-out data-closed:fade-out-0 data-closed:slide-out-to-bottom-8 sm:inset-x-auto sm:top-1/2 sm:bottom-auto sm:left-1/2 sm:max-h-[85dvh] sm:w-[calc(100%-2rem)] sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl sm:pb-0 sm:data-open:zoom-in-95 sm:data-open:slide-in-from-bottom-0 sm:data-closed:zoom-out-95 sm:data-closed:slide-out-to-bottom-0",
           className
         )}
         {...props}

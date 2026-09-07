@@ -32,8 +32,12 @@ export function HoldTimer({
   const seconds = secondsLeft % 60
 
   return (
+    /* `flex-wrap` em vez de `truncate`: num telefone a frase não cabe ao lado
+       do relógio, e cortada em "Sua vaga está reservada en…" ela deixa de
+       dizer a única coisa que precisava dizer. Falta espaço, o relógio desce
+       uma linha — a mensagem nunca perde palavra. */
     <div
-      className={`flex items-center justify-between gap-3 rounded-xl border px-3.5 py-2.5 ${
+      className={`flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-xl border px-3.5 py-2.5 ${
         urgent
           ? 'border-red-600/20 bg-red-50 text-red-800'
           : 'border-brand-yellow-deep/25 bg-brand-yellow/10 text-ink'
@@ -41,7 +45,7 @@ export function HoldTimer({
     >
       <span className="flex min-w-0 items-center gap-2 text-sm font-medium">
         <CheckoutIcon name="seat" size={16} className="shrink-0" />
-        <span className="truncate">{label}</span>
+        <span>{label}</span>
       </span>
       <span
         aria-live="off"

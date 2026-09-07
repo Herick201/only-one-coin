@@ -330,7 +330,10 @@ export default async function BackofficePanelLayout({
           />
 
           <SidebarInset className="bg-background">
-            <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b border-border bg-background/95 px-4 backdrop-blur">
+            {/* `pt-safe-t`: com `viewportFit: 'cover'` a página pinta sob a
+                barra de status do celular, e sem isso o botão do menu fica
+                debaixo do relógio do sistema. */}
+            <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b border-border bg-background/95 px-4 pt-safe-t backdrop-blur">
               <SidebarTrigger
                 className="-ml-1 text-muted-foreground"
                 label={t('nav.sidebar_toggle')}
@@ -362,7 +365,7 @@ export default async function BackofficePanelLayout({
               sidebar open and ~1170px with it collapsed, and a `xl:` rule
               cannot tell those apart.
             */}
-            <main className="@container/page mx-auto w-full max-w-[100rem] px-4 py-6 sm:px-6 lg:px-8">
+            <main className="@container/page mx-auto w-full min-w-0 max-w-[100rem] px-4 pb-[calc(var(--spacing-safe-b)+1.5rem)] pt-6 sm:px-6 lg:px-8">
               {children}
             </main>
           </SidebarInset>

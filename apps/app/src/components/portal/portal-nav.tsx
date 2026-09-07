@@ -9,11 +9,30 @@ export interface NavItem {
   label: string
   icon: IconName
   /**
+export interface NavItem {
+  href: string
+  label: string
+  icon: IconName
+  /**
    * Announced, not built. A locked item renders as a padlocked, unclickable
    * row: the student sees what the área do aluno will hold without the portal
    * pretending the screen exists.
    */
   locked?: boolean
+  /**
+   * Fica fixa na barra de abas do celular. O que não é marcado vai para a
+   * folha de "mais" (`portal-tabbar.tsx`). É escolha de produto, não "as N
+   * primeiras": o que merece uma coluna permanente embaixo do polegar é o que
+   * o aluno abre sem motivo, e isso não sai da ordem da sidebar. Um item
+   * travado nunca fica fixo — ele existe para anunciar, não para ser aberto.
+   */
+  tabBar?: boolean
+  /**
+   * Rótulo para a barra de abas do celular, onde cada coluna tem ~90px:
+   * "Mis cursos" não cabe em nenhum dos três idiomas. Só as seções fixas cujo
+   * nome longo estoura precisam dele — o resto cai no `label`.
+   */
+  shortLabel?: string
 }
 
 /** A titled run of items. The first group carries no title. */
@@ -29,60 +48,19 @@ function isActive(pathname: string, href: string) {
 
 export function PortalNav({
   groups,
-  orientation,
   collapsed = false,
 }: {
   groups: NavGroup[]
-  orientation: 'sidebar' | 'bar'
   /** Icon-only rendering for the collapsed sidebar; labels move to `title`. */
   collapsed?: boolean
 }) {
   const pathname = usePathname()
-  const items = groups.flatMap((group) => group.items)
   /**
    * A titled group is a dropdown, closed by default: it is a section of the
    * portal the student can look into, not a permanent column of rows. The
    * untitled first group is the nav itself and never folds.
    */
   const [openGroups, setOpenGroups] = useState<string[]>([])
-
-  if (orientation === 'bar') {
-    return (
-      <nav className="flex gap-1 overflow-x-auto px-4 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {items.map((item) => {
-          const active = isActive(pathname, item.href)
-          if (item.locked) {
-            return (
-              <span
-                key={item.href}
-                aria-disabled="true"
-                className="flex shrink-0 cursor-not-allowed items-center gap-2 rounded-full px-3.5 py-2 text-sm font-semibold text-muted-foreground/60"
-              >
-                <Icon name={item.icon} size={18} />
-                {item.label}
-                <Icon name="lock" size={13} />
-              </span>
-            )
-          }
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={active ? 'page' : undefined}
-              className={`flex shrink-0 items-center gap-2 rounded-full px-3.5 py-2 text-sm font-semibold transition ${
-                active
-                  ? 'bg-brand-blue text-white'
-                  : 'text-muted-foreground hover:bg-sky hover:text-ink'
-              }`}
-            >
-              <Icon name={item.icon} size={18} />
-              {item.label}
-            </Link>
-          )
-        })}
-      </nav>
-    )
-  }
 
   // Sidebar rides a brand-blue panel, so the palette inverts: quiet items are
   // translucent white, and the active one is the white pill.

@@ -248,7 +248,15 @@ export function ReviewQueueView({
           </div>
         ) : (
           <>
-            <TableShell>
+            <TableShell
+              columns={[
+                t('review.col_student'),
+                t('review.col_amount'),
+                t('review.col_flag'),
+                t('review.col_submitted'),
+                '',
+              ]}
+            >
               <thead>
                 <tr>
                   <th className={thClass}>{t('review.col_student')}</th>

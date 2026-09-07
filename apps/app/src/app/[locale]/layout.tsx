@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import type { Viewport } from 'next'
 import { Fredoka, Inter, Poppins } from 'next/font/google'
 import { NextIntlClientProvider, hasLocale } from 'next-intl'
 import { getMessages, setRequestLocale } from 'next-intl/server'
@@ -44,6 +45,25 @@ const poppins = Poppins({
   variable: '--font-poppins',
   display: 'swap',
 })
+
+/**
+ * Viewport — o app é operado no celular de ponta a ponta.
+ *
+ * `viewportFit: 'cover'` deixa a página pintar sob o notch e a barra de
+ * gestos; sem isso o `env(safe-area-inset-*)` devolve 0 e a barra de abas do
+ * portal fica com o rodapé do sistema por cima. Quem paga por isso é quem
+ * desenha: todo elemento fixo no rodapé soma a safe area (`pb-safe-b`).
+ *
+ * `maximumScale`/`userScalable` ficam de fora de propósito: bloquear o zoom é
+ * a forma mais rápida de tornar um app inacessível, e boa parte do público
+ * aqui é apoderado lendo termo de consentimento no celular.
+ */
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#f6f9ff',
+}
 
 // CSP com nonce por request (middleware.ts, CLAUDE.md §8) exige rendering
 // dinâmico em toda rota — sem isso, o nonce embutido no HTML pré-renderizado

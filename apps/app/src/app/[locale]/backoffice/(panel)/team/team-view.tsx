@@ -354,7 +354,15 @@ export function TeamView({
           </div>
         ) : (
           <>
-            <TableShell>
+            <TableShell
+              columns={[
+                t('team.col_member'),
+                t('team.col_role'),
+                t('team.col_access'),
+                t('team.col_last_access'),
+                t('common.actions'),
+              ]}
+            >
               <thead>
                 <tr>
                   <th className={thClass}>{t('team.col_member')}</th>

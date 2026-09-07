@@ -21,6 +21,7 @@ import {
   GhostButton,
   Note,
   PrimaryButton,
+  StepNav,
   SelectInput,
   StepHeading,
   TextInput,
@@ -427,16 +428,19 @@ export function StepStudent({
 
       {show && !ready && <Note tone="danger">{t('error.fix_fields')}</Note>}
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <GhostButton onClick={onBack}>
-          <CheckoutIcon name="arrow-left" size={16} />
-          {t('action.back')}
-        </GhostButton>
+      <StepNav
+        back={
+          <GhostButton onClick={onBack}>
+            <CheckoutIcon name="arrow-left" size={16} />
+            {t('action.back')}
+          </GhostButton>
+        }
+      >
         <PrimaryButton onClick={submit}>
           {t('action.continue')}
           <CheckoutIcon name="arrow-right" size={16} />
         </PrimaryButton>
-      </div>
+      </StepNav>
     </div>
   )
 }

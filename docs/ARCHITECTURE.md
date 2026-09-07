@@ -354,6 +354,109 @@ Varredura das 18 rotas de `apps/app` (13 do painel, 5 do portal) em 1920, 1600,
 
 ---
 
+## 7.1 Celular (`apps/app`) — fechado 06/09/2026
+
+A §7 acertou a régua (container em vez de janela) e matou a rolagem horizontal
+de página. O que ela não resolveu é o outro lado: **o app é operado no celular
+de ponta a ponta** — o aluno vive no portal pelo telefone, e a coordenação
+aprova pagamento e abre matrícula de onde estiver. Uma tela que só não estoura
+ainda não é uma tela de celular.
+
+### O que quebrava
+
+1. **A tabela do painel.** Cinco a oito colunas com `min-width: 46rem` num
+   telefone de 375px é rolagem lateral dentro de rolagem vertical — é assim que
+   se perde uma linha no meio de uma fila de revisão.
+2. **O menu do portal ficava no topo, numa tira que rolava de lado.** O que não
+   coubesse era invisível (ninguém arrasta uma tira que não parece arrastável),
+   e o topo de um celular grande é o canto mais longe do polegar.
+3. **Campo de 14px.** O Safari do iPhone dá zoom ao focar qualquer campo com
+   menos de 16px, e o zoom não volta sozinho: a pessoa termina o formulário com
+   a página cortada de lado.
+4. **Modal centralizado.** Num telefone ele desperdiça margem dos dois lados,
+   põe as ações no meio da tela e — o que de fato quebra — pula quando o teclado
+   abre, porque um elemento centrado se recentra contra o viewport encolhido.
+5. **Sem safe area.** Nada previa notch nem barra de gestos.
+6. **Alvos de toque de 30–36px.** Abaixo dos 44px que Apple e Google publicam.
+
+### O que passou a valer
+
+- **`viewport` no layout raiz** (`app/[locale]/layout.tsx`) com
+  `viewportFit: 'cover'`, e os tokens `--spacing-safe-*` derivados de
+  `env(safe-area-inset-*)` (`globals.css`). Todo elemento fixo numa borda soma a
+  faixa do sistema: `pb-safe-b`, `pt-safe-t`. `maximumScale`/`userScalable`
+  ficam de fora de propósito — boa parte do público é apoderado lendo termo de
+  consentimento no celular.
+- **Tabela vira lista** abaixo de **48rem de coluna** (container query em
+  `page`, não breakpoint de janela — a sidebar rouba largura). Cada `<tr>` vira
+  um item com o nome da coluna como etiqueta; a primeira célula vira o título do
+  item, sem etiqueta e na linha inteira. A regra é CSS
+  (`globals.css`, "Tabela densa vira lista"); o que o CSS não sabe é o nome da
+  coluna, porque o `<thead>` está escondido nessa largura — então quem monta a
+  tabela passa os mesmos títulos que já imprime no cabeçalho
+  (`TableShell columns={[...]}` no painel, `stackLabels()` fora dele) e eles
+  viajam na `<table>` como `--stack-col-N`. **Coluna condicional entra na lista
+  sob a mesma condição**, ou o rótulo cai na célula errada.
+- **Barra de abas no portal** (`components/portal/portal-tabbar.tsx`): as seções
+  que o aluno abre sem motivo ficam fixas embaixo, e a última aba abre uma folha
+  com o resto **mais** o canto da pessoa — perfil e saída, que no desktop moram
+  no avatar do topo. Quem fica fixo é declarado item a item
+  (`tabBar: true` em `navItems`), não recortado por posição: a ordem da sidebar
+  responde outra pergunta, e um `slice` faria a barra mudar sozinha assim que
+  alguém inserisse uma seção no meio da lista. Hoje: início, cursos, trâmites.
+  **Pagamentos ficou de fora da barra** (decisão do dono, 06/09/2026) —
+  mensalidade e comprovante são visita com hora marcada, não navegação de todo
+  dia, e uma coluna permanente para o dinheiro faz o portal parecer uma
+  cobrança; quem precisa chegar lá chega pelo sino e pelo cadeado no curso.
+- **O idioma saiu do chrome do portal** (06/09/2026) — estava no menu do avatar
+  no desktop e na folha de "mais" no celular, dois lugares permanentes para uma
+  escolha que se faz uma vez. Foi para `/portal/profile`, num cartão
+  "Preferências" que já nasce nomeado no plural porque o próximo ajuste (aviso
+  por e-mail, fuso) entra ali em vez de virar seção solta. É o mesmo movimento
+  que o painel tinha feito antes, quando o globo deixou o cabeçalho e foi para
+  `/backoffice/account`. As telas de login mantêm o seletor: antes de entrar não
+  há perfil para abrir.
+- **Campo com 16px abaixo de 768px** (`globals.css`). É o único lugar em que a
+  régua do toque ganha da régua do desenho.
+- **Modal vira folha de baixo** no telefone (`components/ui/dialog.tsx`), e a
+  folha lateral passa a ocupar a largura toda (`components/ui/sheet.tsx`) — 75%
+  de 375px são 281px, que não é painel de detalhe.
+- **Ação principal com largura inteira** no checkout público, com o botão de
+  voltar embaixo dela (`StepNav`, `components/enrollment/ui.tsx`). O
+  `flex-col-reverse` inverte só o desenho: na ordem do documento "voltar"
+  continua vindo antes.
+- **`--spacing-tap` (44px)** como utilitário (`min-h-tap`), em vez de número
+  mágico espalhado.
+- **Hover não gruda**: sob `@media (hover: none)` a transição é zerada, porque
+  no toque o `:hover` fica preso até o próximo toque em outro lugar.
+
+### Onde a janela continua sendo a régua
+
+No checkout público (`/enrollment`) e nas telas de login — não há shell roubando
+largura, então `sm:` quer dizer o que diz. Dentro de `portal/` e
+`backoffice/(panel)/` vale a §7: container query.
+
+### Verificação (06/09/2026)
+
+- **Portal e checkout a 375px**, rota por rota (`/portal` e suas seis seções,
+  `/enrollment`, as duas telas de login): **zero** com
+  `documentElement.scrollWidth > viewport`.
+- **Painel**: a lista empilhada foi conferida com sessão real de `admin`,
+  estreitando a coluna para 390px — que é o que um telefone produz, já que a
+  regra é container query e não media query. Conferidas alunos, turmas, equipe,
+  docentes, fila de revisão e certificados da turma: `thead` some, `<tr>` vira
+  bloco, a primeira célula vira o título sem etiqueta e as demais casam rótulo
+  com valor.
+- **Os dois lados de cada coluna condicional** foram exercidos, que é onde o
+  mecanismo erraria em silêncio: docentes com e sem o quadro ativo (coluna
+  "Contrato"), e turma que certifica com exame (`cg_01`, 5 colunas) contra uma
+  que não certifica (`cg_03`, 4 colunas) — rótulo e célula alinhados nos dois.
+- **Não exercido**: a tabela de `/backoffice/reports` não renderiza com o seed
+  atual (a quebra por dimensão sai vazia), então o `columns` dela passou só por
+  `tsc`. Mesma coisa para `teacher-home`, que pede sessão de docente.
+
+---
+
 ## 8. Feature flags — o que está no ar em produção (fechado 06/09/2026)
 
 As três superfícies de `apps/app` — **portal do aluno**, **backoffice** e o

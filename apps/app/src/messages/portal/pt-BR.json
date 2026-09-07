@@ -20,7 +20,12 @@
       "back_to_site": "Ir ao site",
       "menu": "Menu",
       "collapse": "Esconder menu",
-      "expand": "Mostrar menu"
+      "expand": "Mostrar menu",
+      "more": "Mais",
+      "more_title": "Mais opções",
+      "close_menu": "Fechar menu",
+      "tab_courses": "Cursos",
+      "tab_dashboard": "Início"
     },
     "greeting": {
       "hello": "Olá, {name}"
@@ -297,7 +302,9 @@
       "error_email": "Esse e-mail não parece válido.",
       "add_secondary_email": "Adicionar outro e-mail (opcional)",
       "add_secondary_phone": "Adicionar outro telefone (opcional)",
-      "remove_secondary": "Remover"
+      "remove_secondary": "Remover",
+      "preferences_title": "Preferências",
+      "language_label": "Idioma"
     },
     "notifications": {
       "title": "Notificações",

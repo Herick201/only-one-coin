@@ -272,8 +272,12 @@ export function PrimaryButton({
   disabled?: boolean
   type?: 'button' | 'submit'
 }) {
+  /* Largura inteira no celular. Num telefone a ação principal do passo é a
+     única coisa que a pessoa vai tocar naquela dobra, e uma pílula de 160px
+     encostada na direita é a que mais erra o dedo — além de parecer opcional
+     ao lado de um formulário que ocupa a tela toda. */
   const className =
-    'inline-flex items-center justify-center gap-2 rounded-full bg-brand-blue px-7 py-3.5 text-[15px] font-bold text-white shadow-blue transition hover:-translate-y-0.5 hover:bg-brand-yellow hover:text-ink hover:shadow-yellow disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none'
+    'inline-flex w-full items-center justify-center gap-2 rounded-full bg-brand-blue px-7 py-3.5 text-[15px] font-bold text-white shadow-blue transition hover:-translate-y-0.5 hover:bg-brand-yellow hover:text-ink hover:shadow-yellow disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none sm:w-auto'
 
   if (href) {
     return (
@@ -310,7 +314,7 @@ export function GhostButton({
          stays outlined rather than filling, so "back" never competes with
          "continue" for the eye. `-deep` for the text because the flat yellow
          is too light to read on white. */
-      className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-transparent px-6 py-3.5 text-[15px] font-bold text-muted-foreground transition hover:border-brand-yellow hover:bg-brand-yellow/10 hover:text-brand-yellow-deep"
+      className="inline-flex w-full items-center justify-center gap-2 rounded-full border-2 border-transparent px-6 py-3.5 text-[15px] font-bold text-muted-foreground transition hover:border-brand-yellow hover:bg-brand-yellow/10 hover:text-brand-yellow-deep sm:w-auto"
     >
       {children}
     </button>
@@ -337,6 +341,34 @@ export function SummaryRow({
       >
         {children}
       </dd>
+    </div>
+  )
+}
+
+/**
+ * A linha que fecha um passo: voltar e continuar.
+ *
+ * No celular os dois empilham e a ação principal fica EM CIMA — daí o
+ * `flex-col-reverse`, que inverte só o desenho: na ordem do documento (e do
+ * teclado, e do leitor de tela) "voltar" continua vindo antes, como em toda
+ * outra largura. A pilha na ordem natural colocaria "voltar" debaixo do polegar
+ * e "continuar" longe dele, que é o contrário do que o passo pede.
+ *
+ * Aqui a janela é a régua mesmo (`sm:`): o checkout público não tem shell
+ * roubando largura (CLAUDE.md §5).
+ */
+export function StepNav({
+  back,
+  children,
+}: {
+  /** O botão de voltar. Ausente no primeiro passo, que não tem para onde. */
+  back?: ReactNode
+  children: ReactNode
+}) {
+  return (
+    <div className="flex flex-col-reverse gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+      {back ?? <span className="hidden sm:block" />}
+      {children}
     </div>
   )
 }

@@ -591,7 +591,15 @@ export function ReportsView({
             body={t('reports.empty_body')}
           />
         ) : (
-          <TableShell>
+          <TableShell
+            columns={[
+              t(`reports.col_${dimension}`),
+              t('reports.col_enrollments'),
+              t('reports.col_collected'),
+              t('reports.col_pending'),
+              t('reports.col_occupancy'),
+            ]}
+          >
             <thead>
               <tr>
                 <th className={thClass}>{t(`reports.col_${dimension}`)}</th>
