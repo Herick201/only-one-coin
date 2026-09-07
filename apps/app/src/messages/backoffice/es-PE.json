@@ -1373,6 +1373,7 @@
       "creating": "Generando…",
       "cancel": "Cancelar",
       "missing_fields": "Completa los campos obligatorios para generar la invitación.",
+      "invite_email_taken": "Ya existe una cuenta o una invitación pendiente para este correo.",
       "created_toast": "Invitación creada",
       "invite_created_title": "Invitación lista",
       "invite_created_subtitle": "Copia el enlace y envíaselo a {name} por el canal que uses siempre. Vence el {date}.",
