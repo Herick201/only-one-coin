@@ -78,10 +78,15 @@ export function StudentsTable({
     setLoadingMore(true)
     try {
       const response = await fetch(`/api/v1/students?cursor=${encodeURIComponent(nextCursor)}`)
-      if (!response.ok) return
+      if (!response.ok) {
+        setToast(t('students.load_more_error'))
+        return
+      }
       const nextPage = (await response.json()) as { items: StudentRow[]; nextCursor: string | null }
       setDirectory((current) => [...current, ...nextPage.items])
       setNextCursor(nextPage.nextCursor)
+    } catch {
+      setToast(t('students.load_more_error'))
     } finally {
       setLoadingMore(false)
     }

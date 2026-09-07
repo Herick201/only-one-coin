@@ -195,7 +195,10 @@
       "locked_body": "Llegas a un alumno desde tu propia aula. El listado completo es de coordinación.",
       "new_student": "Nuevo alumno",
       "load_more": "Cargar más",
-      "loading_more": "Cargando…"
+      "loading_more": "Cargando…",
+      "load_error_title": "No se pudo cargar el padrón",
+      "load_error_body": "El sistema no respondió. Recarga la página; si sigue igual, avisa al equipo técnico.",
+      "load_more_error": "No se pudo cargar más alumnos. Inténtalo de nuevo."
     },
     "student_status": {
       "active": "Activo",

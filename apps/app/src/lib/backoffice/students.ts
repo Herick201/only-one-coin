@@ -20,12 +20,20 @@ export interface StudentListPage {
  * same-origin `/api/v1/students` proxy directly for subsequent pages, since
  * this function runs in a Server Component and can't be called again from
  * the browser.
+ *
+ * `null` means the API failed (error response or unreachable) — the page
+ * shows a visible error state for it. A silent empty page here is
+ * indistinguishable from an empty directory, which reads as data loss.
  */
-export async function listStudents(cursor?: string): Promise<StudentListPage> {
+export async function listStudents(cursor?: string): Promise<StudentListPage | null> {
   const search = cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''
-  const response = await apiFetch(`/api/v1/students${search}`)
-  if (!response.ok) return { items: [], nextCursor: null }
-  return response.json()
+  try {
+    const response = await apiFetch(`/api/v1/students${search}`)
+    if (!response.ok) return null
+    return response.json()
+  } catch {
+    return null
+  }
 }
 
 /**
