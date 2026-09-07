@@ -1,7 +1,18 @@
 import { z } from "zod";
 import { RouteBuilder } from "@/shared/http/RouteBuilder.js";
+import { splitName } from "@/infra/identity/splitName.js";
 
-const StaffRoleSchema = z.enum(["admin", "coordinator", "teacher", "treasury", "mass_approver"]);
+const StaffRoleSchema = z.enum([
+  "master",
+  "admin",
+  "analyst",
+  "enrollment_supervisor",
+  "academic_supervisor",
+  "teacher",
+  "sales",
+  "support",
+  "billing",
+]);
 
 const GetCurrentStaffResponseSchema = z.object({
   id: z.string(),
@@ -11,16 +22,6 @@ const GetCurrentStaffResponseSchema = z.object({
   role: StaffRoleSchema,
   teacherId: z.string().uuid().nullable(),
 });
-
-// Better Auth's `user` row keeps one `name` field, not firstName/lastName —
-// splitting it here is a display-only, lossy convenience (same tension
-// CLAUDE.md already flags for `students.full_name`, docs/ROADMAP.md Sessão
-// 21a): a compound Peruvian name loses the split, never the data, since the
-// column behind it is still the one `name` field.
-function splitName(name: string): { firstName: string; lastName: string } {
-  const [firstName, ...rest] = name.trim().split(/\s+/);
-  return { firstName: firstName ?? "", lastName: rest.join(" ") };
-}
 
 // The signed-in staff member's own identity, read from the session Better
 // Auth already resolved (`request.currentUser`, populated by
@@ -39,7 +40,17 @@ export const getCurrentStaffRoute = RouteBuilder.get("/me")
     summary: "Get the signed-in staff member's own identity",
     description: "Backs the backoffice shell's role gating and account chip.",
   })
-  .roles("admin", "coordinator", "teacher", "treasury", "mass_approver")
+  .roles(
+    "master",
+    "admin",
+    "analyst",
+    "enrollment_supervisor",
+    "academic_supervisor",
+    "teacher",
+    "sales",
+    "support",
+    "billing",
+  )
   .response(200, GetCurrentStaffResponseSchema)
   .handler(async (request, reply) => {
     // The authorization plugin's onRequest hook always sets this before a

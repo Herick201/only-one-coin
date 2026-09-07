@@ -487,3 +487,91 @@ export const waitlistEntries = pgTable(
     ),
   ],
 );
+
+// Pending staff/backoffice invites (CLAUDE.md §8, "Equipe" — an admin opens the
+// door, the person completes it themselves). `invitedBy`/`completedUserId` point
+// at Better Auth's own "user".id, which is `text`, not `uuid` (0001_better_auth_core.sql)
+// — Better Auth's tables aren't modeled in this schema (apps/api reads/writes them
+// via raw SQL, mirroring apps/api/src/scripts/seed-admin.ts), so there is no FK here.
+export const staffInvites = pgTable(
+  "staff_invites",
+  {
+    id: uuidPk(),
+    email: text("email").notNull(),
+    firstName: text("first_name").notNull(),
+    lastName: text("last_name").notNull(),
+    role: text("role").notNull(),
+    // Deliberately plain text, not hashed — a product decision (not the safer
+    // default): keeps "copiar el enlace" reusable for a pending invite at any
+    // time, instead of needing a regenerate-on-resend flow. Trade-off: a DB read
+    // or backup leak also hands out a live one-time sign-up link. Revisit if
+    // that trade-off ever needs to change.
+    token: text("token").notNull(),
+    status: text("status").notNull().default("pending"),
+    invitedBy: text("invited_by").notNull(),
+    completedUserId: text("completed_user_id"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("staff_invites_token_uidx").on(table.token),
+    uniqueIndex("staff_invites_pending_email_uidx")
+      .on(table.email)
+      .where(sql`${table.status} = 'pending'`),
+    check(
+      "staff_invites_role_check",
+      sql`${table.role} in ('master', 'admin', 'analyst', 'enrollment_supervisor', 'academic_supervisor', 'teacher', 'sales', 'support', 'billing')`,
+    ),
+    check("staff_invites_status_check", sql`${table.status} in ('pending', 'completed', 'cancelled')`),
+  ],
+);
+
+// Append-only history of staff/role events (CLAUDE.md §8, "toda mudança de
+// cargo → audit_log append-only"). No update/delete grant is set up for ANY
+// table yet in this schema, so this matches the codebase's current actual
+// enforcement level: append-only is a type-level guarantee on
+// IAuditLogRepository (packages/domain/src/identity/ports/IAuditLogRepository.ts),
+// which only exposes `append`.
+export const auditLog = pgTable(
+  "audit_log",
+  {
+    id: uuidPk(),
+    actorId: text("actor_id").notNull(),
+    action: text("action").notNull(),
+    targetId: text("target_id").notNull(),
+    metadata: jsonb("metadata"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("audit_log_target_id_idx").on(table.targetId)],
+);
+
+// Pending password-reset links for an EXISTING panel account (CLAUDE.md §8 —
+// staff forgetting their own password is expected, not an edge
+// case). Same shape and same plain-text-token trade-off as `staffInvites`
+// (see the comment there) — this is a sibling table, not a repurposed
+// `staffInvites` row, because a reset has no firstName/lastName/role/email to
+// carry: the account it targets already has all of that.
+export const staffPasswordResets = pgTable(
+  "staff_password_resets",
+  {
+    id: uuidPk(),
+    userId: text("user_id").notNull(),
+    token: text("token").notNull(),
+    status: text("status").notNull().default("pending"),
+    requestedBy: text("requested_by").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("staff_password_resets_token_uidx").on(table.token),
+    uniqueIndex("staff_password_resets_pending_user_id_uidx")
+      .on(table.userId)
+      .where(sql`${table.status} = 'pending'`),
+    check(
+      "staff_password_resets_status_check",
+      sql`${table.status} in ('pending', 'completed', 'cancelled')`,
+    ),
+  ],
+);

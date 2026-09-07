@@ -21,8 +21,8 @@ async function buildTestApp(): Promise<FastifyInstance> {
   const provider = app.withTypeProvider<ZodTypeProvider>();
 
   provider.route(
-    RouteBuilder.get("/coordinator-only")
-      .roles("coordinator", "admin")
+    RouteBuilder.get("/supervisor-only")
+      .roles("enrollment_supervisor", "admin")
       .response(200, z.object({ ok: z.boolean() }))
       .handler(async (_request, reply) => {
         reply.send({ ok: true });
@@ -70,23 +70,23 @@ describe("authorization plugin", () => {
 
   it("rejects a role-gated route with no session cookie", async () => {
     const app = await buildTestApp();
-    const response = await app.inject({ method: "GET", url: "/coordinator-only" });
+    const response = await app.inject({ method: "GET", url: "/supervisor-only" });
     expect(response.statusCode).toBe(401);
   });
 
   it("rejects a role-gated route when the session belongs to the wrong role", async () => {
     const app = await buildTestApp();
-    const treasuryUser: AuthenticatedUser = {
+    const billingUser: AuthenticatedUser = {
       id: "u1",
       email: "t@example.com",
       name: "Treasury User",
-      role: "treasury",
+      role: "billing",
     };
-    vi.spyOn(container.identity.currentSession, "resolve").mockResolvedValue(treasuryUser);
+    vi.spyOn(container.identity.currentSession, "resolve").mockResolvedValue(billingUser);
 
     const response = await app.inject({
       method: "GET",
-      url: "/coordinator-only",
+      url: "/supervisor-only",
       cookies: { [SESSION_COOKIE_NAME]: "some-valid-token" },
     });
 
@@ -95,17 +95,17 @@ describe("authorization plugin", () => {
 
   it("allows a role-gated route when the session role is in the allowed list", async () => {
     const app = await buildTestApp();
-    const coordinatorUser: AuthenticatedUser = {
+    const supervisorUser: AuthenticatedUser = {
       id: "u2",
       email: "c@example.com",
       name: "Coordinator User",
-      role: "coordinator",
+      role: "enrollment_supervisor",
     };
-    vi.spyOn(container.identity.currentSession, "resolve").mockResolvedValue(coordinatorUser);
+    vi.spyOn(container.identity.currentSession, "resolve").mockResolvedValue(supervisorUser);
 
     const response = await app.inject({
       method: "GET",
-      url: "/coordinator-only",
+      url: "/supervisor-only",
       cookies: { [SESSION_COOKIE_NAME]: "some-valid-token" },
     });
 

@@ -20,7 +20,7 @@ const OpenClassGroupResponseSchema = z.array(
   }),
 );
 
-// admin/coordinator only — same audience as the manual enrollment route this
+// management + enrollment supervision only — same audience as the manual enrollment route this
 // feeds (CLAUDE.md §1). No client input at all: this is a fixed, server-decided
 // filter (status = enrolling AND seats left), so there's nothing to validate
 // or bound beyond what the query itself already does.
@@ -30,7 +30,7 @@ export const listOpenClassGroupsRoute = RouteBuilder.get("/class-groups")
     summary: "List class groups still open for enrollment",
     description: "Backs the manual enrollment form's class group picker.",
   })
-  .roles("admin", "coordinator")
+  .roles("master", "admin", "enrollment_supervisor")
   .response(200, OpenClassGroupResponseSchema)
   .handler(async (_request, reply) => {
     const results = await container.queries.listOpenClassGroups.run();

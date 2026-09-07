@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { listStaff, listTeachers } from '@/lib/backoffice/mock-data'
+import { listTeachers } from '@/lib/backoffice/mock-data'
+import { listStaff } from '@/lib/backoffice/staff'
 import { getStaffSession } from '@/lib/backoffice/session'
 import { canManageStaff } from '@/lib/backoffice/permissions'
 import { EmptyState, PageHeader } from '@/components/backoffice/ui'
@@ -53,11 +54,13 @@ export default async function TeamPage({
       email: teacher.email,
     }))
 
+  const rows = await listStaff()
+
   return (
     <div className="flex flex-col gap-5">
       <PageHeader title={t('team.title')} />
       <TeamView
-        rows={listStaff()}
+        rows={rows}
         teachers={teachers}
         currentUserId={staff.id}
         currentUserName={`${staff.firstName} ${staff.lastName}`}

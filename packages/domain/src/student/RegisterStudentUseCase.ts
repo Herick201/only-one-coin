@@ -19,7 +19,7 @@ export interface RegisterStudentOutput {
 }
 
 /**
- * Manual backoffice registration (`admin`/`coordinator`, CLAUDE.md §1) — the
+ * Manual backoffice registration (management/enrollment supervision, CLAUDE.md §1) — the
  * counterpart to the manual enrollment exception: this usecase only ever
  * creates the person record, it never enrolls anyone.
  */

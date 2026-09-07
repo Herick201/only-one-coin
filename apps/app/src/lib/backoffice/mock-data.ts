@@ -28,8 +28,6 @@ import type {
   ReviewQueueItem,
   SeatReservation,
   SeatWatchItem,
-  StaffMemberRow,
-  StaffRoleChange,
   StaffUser,
   StudentDetail,
   StudentRow,
@@ -1029,44 +1027,6 @@ export function getEnrollmentMetrics(now: Date = new Date()): EnrollmentMetrics 
     ).length,
     released: rows.filter((row) => row.seatStatus === 'released').length,
   }
-}
-
-/* -------------------------------------------------------------------------- */
-/* Team — the accounts that open the panel, and the cargo each one opens it with */
-/* -------------------------------------------------------------------------- */
-
-/**
- * The Asociación's own people, as accounts. Small on purpose: this is staff,
- * not students — the panel is opened by a dozen people, and every one of them
- * can reach data that belongs to thousands.
- *
- * A `teacher` row points at the teacher record behind it (`teacherId`), which
- * is what narrows the panel to their own class groups. The rest have none:
- * administración, coordinación and tesorería are cargos, not fichas.
- *
- * Names are fictional, like the rest of this module.
- */
-const staffMembers: StaffMemberRow[] = []
-
-/**
- * The cargo ledger. In the database this is `audit_log` — append-only, no grant
- * of UPDATE or DELETE, not even for admin (CLAUDE.md §8) — so the panel reads
- * it and never edits it. The alta of an account is a line too: `fromRole` null
- * is "there was no cargo before this one".
- */
-const staffRoleChanges: StaffRoleChange[] = []
-
-/** The team directory, ordered the way a roster is read: by surname. */
-export function listStaff(): StaffMemberRow[] {
-  return [...staffMembers].sort(
-    (a, b) =>
-      a.lastName.localeCompare(b.lastName) || a.firstName.localeCompare(b.firstName),
-  )
-}
-
-/** The cargo ledger, newest first — it is read as "what changed lately". */
-export function listStaffRoleChanges(): StaffRoleChange[] {
-  return [...staffRoleChanges].sort((a, b) => b.at.localeCompare(a.at))
 }
 
 /* -------------------------------------------------------------------------- */

@@ -45,6 +45,8 @@ export type BoIconName =
   | 'key'
   | 'globe'
   | 'more'
+  | 'link'
+  | 'spinner'
 
 const paths: Record<BoIconName, ReactElement> = {
   dashboard: <path d="M4 4h7v7H4zM13 4h7v4h-7zM13 10h7v10h-7zM4 13h7v7H4z" />,
@@ -121,6 +123,13 @@ const paths: Record<BoIconName, ReactElement> = {
   globe: (
     <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM3 12h18M12 3a14 14 0 0 1 3.5 9A14 14 0 0 1 12 21a14 14 0 0 1-3.5-9A14 14 0 0 1 12 3Z" />
   ),
+  link: (
+    <path d="M9 15l6-6M8.5 12 6 14.5a3 3 0 1 0 4.2 4.2L12.5 16M15.5 12 18 9.5a3 3 0 1 0-4.2-4.2L11.5 8" />
+  ),
+  /* Three-quarter arc, not a full circle — a closed ring gives `animate-spin`
+     nothing to show motion against. Pair with `className="animate-spin"` at
+     the call site; this glyph never spins on its own. */
+  spinner: <path d="M12 3a9 9 0 1 1-9 9" />,
 }
 
 export function BoIcon({
