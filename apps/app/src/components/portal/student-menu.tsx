@@ -1,66 +1,30 @@
 'use client'
 
-import { useTransition } from 'react'
-import { useLocale, useTranslations } from 'next-intl'
-import { Link, usePathname, useRouter } from '@/i18n/navigation'
-import { routing } from '@/i18n/routing'
+import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n/navigation'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Icon } from './icons'
 
 /**
  * The student's own corner — top right, next to the bell. Trigger is the
- * avatar; inside live the profile link, the language submenu (flag before
- * each name) and the logout.
+ * avatar; inside live the profile link and the logout.
  *
- * Flags are inline SVG, decorative and aria-hidden — the language name next
- * to them is the accessible label. Simplified drawings: at ~20px, detail is
- * noise. Spanish wears Spain, English wears the US.
+ * The language used to be a submenu here. It is a once-a-year choice, and a
+ * submenu made it permanent chrome on every screen — so it moved into the
+ * profile, with the rest of what a person sets about themselves. Same move the
+ * panel had already made when it left the header for `/backoffice/account`.
+ *
+ * Desktop only. On a phone the same two live at the bottom of the screen,
+ * inside the tab bar's "more" sheet (`portal-tabbar.tsx`) — a menu anchored to
+ * the top-right corner is the one spot a thumb cannot reach.
  */
-
-function Flag({ locale }: { locale: string }) {
-  const ring = { className: 'h-5 w-5 shrink-0 rounded-full border border-ink/15' }
-  if (locale === 'es') {
-    // Spain
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true" {...ring}>
-        <rect width="24" height="24" fill="#AA151B" />
-        <rect y="7" width="24" height="10" fill="#F1BF00" />
-      </svg>
-    )
-  }
-  if (locale === 'pt') {
-    // Brazil
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true" {...ring}>
-        <rect width="24" height="24" fill="#009739" />
-        <path d="M12 3.5 21 12l-9 8.5L3 12Z" fill="#FEDD00" />
-        <circle cx="12" cy="12" r="4.2" fill="#012169" />
-      </svg>
-    )
-  }
-  // English — United States
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" {...ring}>
-      <rect width="24" height="24" fill="#fff" />
-      <path
-        d="M0 1.5h24M0 5h24M0 8.5h24M0 12h24M0 15.5h24M0 19h24M0 22.5h24"
-        stroke="#B22234"
-        strokeWidth="2.5"
-      />
-      <rect width="11" height="10" fill="#3C3B6E" />
-    </svg>
-  )
-}
 
 export function StudentMenu({
   name,
@@ -73,18 +37,6 @@ export function StudentMenu({
   logoutAction: () => Promise<void>
 }) {
   const t = useTranslations('portal')
-  const tLang = useTranslations('language')
-  const locale = useLocale()
-  const pathname = usePathname()
-  const router = useRouter()
-  const [pending, startTransition] = useTransition()
-
-  function switchLocale(next: string) {
-    if (pending || next === locale) return
-    startTransition(() => {
-      router.replace(pathname, { locale: next })
-    })
-  }
 
   return (
     <DropdownMenu>
@@ -108,32 +60,6 @@ export function StudentMenu({
             {t('nav.profile')}
           </Link>
         </DropdownMenuItem>
-
-        {/* Language: one clean row — current flag + current language name —
-            that opens the list of the other two. */}
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger className="gap-3 px-3 py-2.5 text-sm">
-            <Flag locale={locale} />
-            {tLang(locale)}
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent className="w-44 p-1.5">
-            {routing.locales.map((code) => (
-              <DropdownMenuItem
-                key={code}
-                onSelect={() => switchLocale(code)}
-                className="gap-3 px-3 py-2.5 text-sm"
-              >
-                <Flag locale={code} />
-                {tLang(code)}
-                {code === locale && (
-                  <span className="ml-auto text-brand-blue">
-                    <Icon name="check" size={16} />
-                  </span>
-                )}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
 
         <DropdownMenuSeparator />
 

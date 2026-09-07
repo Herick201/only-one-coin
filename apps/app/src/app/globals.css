@@ -6,6 +6,26 @@
 @custom-variant dark (&:is(.dark *));
 
 /**
+ * `:hover` no toque gruda: o dedo deixa o elemento em estado de hover até o
+ * próximo toque em outro lugar, então a linha que a pessoa acabou de abrir
+ * fica pintada para sempre — e num painel de tabelas isso lê como "esta é a
+ * linha selecionada".
+ *
+ * Quem resolve é não aplicar a regra onde não há ponteiro fino. Zerar a
+ * transição não resolve: tira a suavização e mantém o estado. O Tailwind v4
+ * traz esse portão por padrão, mas esta configuração emite `:hover` puro
+ * (verificado no CSS compilado, `.hover\:bg-sky:hover`), então a variante é
+ * redefinida aqui, e vale para todo utilitário `hover:` do app.
+ */
+@custom-variant hover {
+  @media (hover: hover) {
+    &:hover {
+      @slot;
+    }
+  }
+}
+
+/**
  * Only One Coin — brand palette espelhando apps/landing (blue + white + yellow
  * sobre navy). Registrado como tokens do Tailwind v4, então vira utilitário:
  * bg-brand-blue, text-ink, border-line, bg-sky, etc.
@@ -183,5 +203,202 @@
   }
   html {
     @apply font-sans;
+  }
+}
+/* ---------------------------------------------------------------------------
+ * Celular — fundações
+ *
+ * O app é operado no celular de ponta a ponta: o aluno vive no portal pelo
+ * telefone, e a coordenação aprova pagamento e abre matrícula de onde estiver.
+ * O que está aqui é o que nenhuma tela resolve sozinha — a régua do toque, a
+ * faixa que o notch come, e a tabela densa que precisa virar lista.
+ * ------------------------------------------------------------------------- */
+
+@theme {
+  /* Faixa que o sistema reserva (notch, barra de gestos). Vira utilitário de
+     espaçamento: `pb-safe-b`, `pt-safe-t`, `mb-safe-b`. Fora do celular o
+     `env()` devolve 0px e o utilitário não custa nada. */
+  --spacing-safe-b: env(safe-area-inset-bottom, 0px);
+  --spacing-safe-t: env(safe-area-inset-top, 0px);
+  --spacing-safe-l: env(safe-area-inset-left, 0px);
+  --spacing-safe-r: env(safe-area-inset-right, 0px);
+
+  /* 44px — o alvo mínimo de toque que Apple e Google publicam. Utilitário
+     (`min-h-tap`, `min-w-tap`) para não ficar espalhado como número mágico. */
+  --spacing-tap: 2.75rem;
+
+  /* Altura da barra de abas do portal, sem a safe area. Quem empurra o
+     conteúdo para cima soma as duas — e some junto quando a barra some. */
+  --spacing-tabbar: 3.25rem;
+}
+
+@layer base {
+  html {
+    /* Safari no iPhone aumenta a fonte sozinho quando a tela gira. */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    /* O flash cinza do Android em cada toque contradiz os estados que os
+       componentes já desenham (hover/active/focus-visible). */
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /**
+   * Campo com menos de 16px faz o Safari do iPhone dar zoom ao focar — e o
+   * zoom não volta sozinho, então a pessoa termina o formulário com a página
+   * cortada de lado. O app inteiro usa `text-sm` (14px) nos campos, que é o
+   * tamanho certo no desktop e o errado no celular. Aqui é o único lugar em
+   * que a régua do toque ganha da régua do desenho.
+   *
+   * `select` de tamanho fixo não escapa: o zoom dispara igual.
+   */
+  @media (max-width: 767px) {
+    input:not([type='checkbox']):not([type='radio']),
+    select,
+    textarea {
+      font-size: 16px;
+    }
+  }
+
+}
+
+/**
+ * Tabela densa vira lista no celular.
+ *
+ * As tabelas do painel têm 5 a 8 colunas e nascem com `min-width: 46rem` — num
+ * telefone isso é rolagem lateral dentro de rolagem vertical, que é como se
+ * perde uma linha no meio. Abaixo de 48rem de COLUNA (não de janela: a sidebar
+ * come largura, CLAUDE.md §5) cada `<tr>` vira um item de lista com rótulo à
+ * esquerda e valor à direita, e o `<thead>` some porque cada célula passa a
+ * carregar o próprio rótulo.
+ *
+ * O rótulo não é digitado célula a célula: `TableShell` recebe os mesmos
+ * títulos que já monta no `<thead>` e os publica como `--stack-col-N` na
+ * própria `<table>`. Uma coluna sem rótulo (a que só tem o botão da linha)
+ * entra como string vazia e a célula fica sem etiqueta, encostada à direita.
+ *
+ * A primeira coluna é a identidade da linha — nome, curso, número da operação.
+ * Ela vira o título do item: largura inteira, sem etiqueta, um corpo acima das
+ * outras. É o que faz a lista ser escaneável em vez de ser um monte de pares.
+ */
+@container page (max-width: 48rem) {
+  .table-scroll {
+    /* Não há mais o que rolar de lado — e um wrapper com overflow preso
+       cortaria o menu de uma linha. */
+    overflow-x: visible;
+  }
+
+  table.table-stack {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    /* `table-fixed` + `<colgroup>` desenham colunas que não existem mais. */
+    table-layout: auto;
+  }
+
+  table.table-stack > colgroup,
+  table.table-stack > thead {
+    display: none;
+  }
+
+  table.table-stack > tbody {
+    display: block;
+  }
+
+  table.table-stack > tbody > tr {
+    display: block;
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  table.table-stack > tbody > tr:last-child {
+    border-bottom: 0;
+  }
+
+  table.table-stack > tbody > tr > td {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    /* As utilitárias da célula (`px-4 py-3`, `text-right`, `whitespace-nowrap`)
+       descrevem uma grade que não está mais na tela. */
+    padding: 0.3125rem 0 !important;
+    border: 0 !important;
+    text-align: left !important;
+    white-space: normal !important;
+    vertical-align: baseline;
+  }
+
+  table.table-stack > tbody > tr > td::before {
+    content: var(--stack-col, '');
+    flex: 0 1 auto;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1.4;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-muted-foreground);
+  }
+
+  /* O valor encosta à direita, contra a etiqueta. Sem isto, um valor que é um
+     bloco (badge, medidor, botão) fica colado no rótulo. */
+  table.table-stack > tbody > tr > td > * {
+    text-align: right;
+  }
+
+  /* Título do item: a primeira célula perde a etiqueta e ganha a linha toda. */
+  table.table-stack > tbody > tr > td:first-child {
+    display: block;
+    padding-top: 0 !important;
+    padding-bottom: 0.5rem !important;
+    font-size: 0.9375rem;
+    font-weight: 600;
+  }
+
+  table.table-stack > tbody > tr > td:first-child::before {
+    content: none;
+  }
+
+  table.table-stack > tbody > tr > td:first-child > * {
+    text-align: left;
+  }
+
+  /* Célula vazia não vira uma linha em branco no cartão. */
+  table.table-stack > tbody > tr > td:empty {
+    display: none;
+  }
+
+  /* Piso de toque só aqui. Numa tabela de verdade o botão da linha é apertado
+     com o mouse e 44px de altura engordariam toda linha do painel no desktop —
+     ~14px cada, que numa página de 15 é meia tela a mais de rolagem. */
+  table.table-stack > tbody > tr > td :is(a, button) {
+    min-height: var(--spacing-tap);
+  }
+
+  table.table-stack > tbody > tr > td:nth-child(1) { --stack-col: var(--stack-col-1, ''); }
+  table.table-stack > tbody > tr > td:nth-child(2) { --stack-col: var(--stack-col-2, ''); }
+  table.table-stack > tbody > tr > td:nth-child(3) { --stack-col: var(--stack-col-3, ''); }
+  table.table-stack > tbody > tr > td:nth-child(4) { --stack-col: var(--stack-col-4, ''); }
+  table.table-stack > tbody > tr > td:nth-child(5) { --stack-col: var(--stack-col-5, ''); }
+  table.table-stack > tbody > tr > td:nth-child(6) { --stack-col: var(--stack-col-6, ''); }
+  table.table-stack > tbody > tr > td:nth-child(7) { --stack-col: var(--stack-col-7, ''); }
+  table.table-stack > tbody > tr > td:nth-child(8) { --stack-col: var(--stack-col-8, ''); }
+  table.table-stack > tbody > tr > td:nth-child(9) { --stack-col: var(--stack-col-9, ''); }
+  table.table-stack > tbody > tr > td:nth-child(10) { --stack-col: var(--stack-col-10, ''); }
+
+  /* Uma célula que ocupa a linha inteira na tabela (aviso, subtotal, estado
+     vazio) continua ocupando o item inteiro na lista. */
+  table.table-stack > tbody > tr > td[colspan]::before {
+    content: none;
+  }
+
+  table.table-stack > tbody > tr > td[colspan] {
+    display: block;
+  }
+
+  table.table-stack > tbody > tr > td[colspan] > * {
+    text-align: left;
   }
 }

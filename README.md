@@ -70,7 +70,12 @@ Domínio e fila já existem, independentes dessa escolha:
   JSON-LD de `EducationalOrganization`, `Course` e `FAQPage`. `/blog` e `/comunidad`
   seguem `noindex` enquanto forem placeholder.
 - `apps/app` — Next.js App Router: layout, roteamento, i18n trilíngue e as telas
-  em **mockup** (sem acesso a dados). Portal do aluno (`/portal`), backoffice
+  em **mockup** (sem acesso a dados). As telas são **desenhadas para o celular**,
+  não só encolhidas nele (`docs/ARCHITECTURE.md` §7.1): menu do portal numa
+  barra de abas no rodapé, tabela densa do painel virando lista com o nome da
+  coluna como etiqueta, modal virando folha de baixo, safe area do notch e da
+  barra de gestos, e campo de 16px para o Safari do iPhone não dar zoom ao
+  focar. Portal do aluno (`/portal`), backoffice
   (`/backoffice` para login; painel em `/backoffice/home`) e a **matrícula
   pública** (`/enrollment`). O portal cobre as decisões de 02/09/2026: avisos
   no início, módulos por curso com o **cadeado de acesso à aula** (a opção de

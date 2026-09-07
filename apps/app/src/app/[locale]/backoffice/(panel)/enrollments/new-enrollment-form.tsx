@@ -376,7 +376,7 @@ export function NewEnrollmentForm({
             </label>
 
             {group && (
-              <dl className="grid grid-cols-2 gap-x-4 gap-y-2 self-end rounded-lg border border-line bg-sky-soft px-3 py-2.5">
+              <dl className="grid grid-cols-1 gap-x-4 gap-y-2 self-end rounded-lg border border-line bg-sky-soft px-3 py-2.5 @md/page:grid-cols-2">
                 <Summary
                   label={t('new_enrollment.field_schedule')}
                   value={group.schedule}

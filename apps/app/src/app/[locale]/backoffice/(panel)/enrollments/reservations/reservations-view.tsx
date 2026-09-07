@@ -57,7 +57,16 @@ export function ReservationsView({
       </p>
 
       <Card className="min-w-0">
-        <TableShell>
+        <TableShell
+          columns={[
+            t('reservations.col_student'),
+            t('reservations.col_course'),
+            t('reservations.col_amount'),
+            t('reservations.col_payment'),
+            t('reservations.col_deadline'),
+            '',
+          ]}
+        >
           <thead>
             <tr>
               <th className={thClass}>{t('reservations.col_student')}</th>

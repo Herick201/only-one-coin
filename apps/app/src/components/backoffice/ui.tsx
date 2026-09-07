@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
+import { stackLabels } from '@/lib/table-stack'
 import { BoIcon, type BoIconName } from './icons'
 
 /**
@@ -221,12 +222,31 @@ export function EmptyState({
   )
 }
 
-/** Table shell — horizontal scroll is on the wrapper, never on the page. */
+/**
+ * Table shell — horizontal scroll is on the wrapper, never on the page.
+ *
+ * On a phone the table is not a table: below 48rem of COLUMN (not of window —
+ * the sidebar steals width, CLAUDE.md §5) every row becomes a list item with
+ * the column name as its label. The stacking itself is CSS (`globals.css`,
+ * "Tabela densa vira lista"); what cannot be CSS is knowing what each column
+ * is called, so the caller hands over the same headings it already prints in
+ * the `<thead>` and they ride on the table as `--stack-col-N`.
+ *
+ * A column whose heading is empty — the one holding the row's action — passes
+ * an empty string and its cell stacks without a label.
+ */
 export function TableShell({
   children,
+  columns,
   fixed = false,
 }: {
   children: ReactNode
+  /**
+   * Column headings, in order, already translated (CLAUDE.md §4). Same strings
+   * the `<thead>` prints. Omitted only by a table that has no `<thead>` to
+   * begin with — a key/value grid — which reads fine stacked without labels.
+   */
+  columns?: string[]
   /**
    * Locks the column widths to the caller's `<colgroup>`. Auto layout sizes a
    * column by its widest cell, so a table whose rows appear and disappear —
@@ -239,9 +259,10 @@ export function TableShell({
     // until you already scrolled, so a clipped last column reads as a bug
     // rather than as "there is more to the right" — `scrollbar-width: thin`
     // keeps the track drawn.
-    <div className="overflow-x-auto [scrollbar-width:thin]">
+    <div className="table-scroll overflow-x-auto [scrollbar-width:thin]">
       <table
-        className={`w-full min-w-[46rem] border-collapse text-left text-sm ${
+        style={stackLabels(columns ?? [])}
+        className={`table-stack w-full min-w-[46rem] border-collapse text-left text-sm ${
           fixed ? 'table-fixed' : ''
         }`}
       >
@@ -310,12 +331,17 @@ export function Pager({
   nextLabel: string
   onChange: (page: number) => void
 }) {
+  /* `min-h-tap` porque virar página é a coisa que mais se toca numa lista
+     longa, e 30px de altura no celular erra o dedo. No desktop o botão já
+     tinha essa altura de sobra pelo padding. */
   const button =
-    'inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-sm font-semibold text-muted-foreground transition hover:text-ink disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-muted-foreground'
+    'inline-flex min-h-tap items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-sm font-semibold text-muted-foreground transition hover:text-ink disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-muted-foreground'
   return (
-    <nav className="flex items-center justify-between gap-3 border-t border-line px-4 py-3">
+    /* Enrola em vez de espremer: com a contagem e os dois botões numa linha
+       de 343px, "1–15 de 128" virava reticências. */
+    <nav className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-line px-4 py-3">
       <span className="text-xs text-muted-foreground">{status}</span>
-      <span className="flex items-center gap-2">
+      <span className="flex flex-1 items-center justify-end gap-2">
         <button
           type="button"
           className={button}

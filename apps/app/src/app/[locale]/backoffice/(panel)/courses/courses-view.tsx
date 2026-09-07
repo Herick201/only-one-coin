@@ -188,7 +188,16 @@ export function CoursesView({
           </div>
 
           <Card>
-            <TableShell fixed>
+            <TableShell
+              fixed
+              columns={[
+                t('courses.col_course'),
+                t('courses.col_level'),
+                t('courses.col_load'),
+                t('courses.col_class_groups'),
+                t('courses.col_status'),
+              ]}
+            >
               <colgroup>
                 <col className="w-[36%]" />
                 <col className="w-[12%]" />

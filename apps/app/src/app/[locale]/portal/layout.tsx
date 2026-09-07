@@ -28,15 +28,49 @@ export default async function PortalLayout({
    * class itself lives outside the platform (CLAUDE.md §2 — no own
    * videoconference, no Classroom API). Padlocked rows say what is coming
    * without the portal pretending the screens exist.
+   *
+   * `tabBar` diz quem fica fixo na barra de abas do celular
+   * (`portal-tabbar.tsx`) — item a item, nunca recortado por posição: a ordem
+   * da sidebar responde outra pergunta, e um `slice` mudaria a barra sozinho
+   * assim que alguém inserisse uma seção no meio da lista. São as três seções
+   * que o aluno abre sem motivo; o resto vai para a folha de "mais", o grupo
+   * travado inclusive — anunciar não é navegar.
+   *
+   * **Pagamentos não fica na barra**: mensalidade e comprovante são visita com
+   * hora marcada, não navegação de todo dia — e uma coluna permanente para o
+   * dinheiro faz o portal parecer uma cobrança. O aviso de módulo em atraso já
+   * chega pelo sino e pelo cadeado no curso, que é o caminho por onde a pessoa
+   * realmente entra ali.
+   *
+   * `shortLabel` só nas fixas cujo nome longo não cabe numa coluna de ~90px.
    */
   const navGroups: NavGroup[] = [
     {
       items: [
-        { href: '/portal', label: t('nav.dashboard'), icon: 'home' },
-        { href: '/portal/courses', label: t('nav.courses'), icon: 'courses' },
+        {
+          href: '/portal',
+          label: t('nav.dashboard'),
+          shortLabel: t('nav.tab_dashboard'),
+          icon: 'home',
+          tabBar: true,
+        },
+        {
+          href: '/portal/courses',
+          label: t('nav.courses'),
+          shortLabel: t('nav.tab_courses'),
+          icon: 'courses',
+          tabBar: true,
+        },
         { href: '/portal/payments', label: t('nav.payments'), icon: 'card' },
         { href: '/portal/enrollment', label: t('nav.enrollments'), icon: 'enrollment' },
-        { href: '/portal/documents', label: t('nav.documents'), icon: 'documents' },
+        {
+          /* Absorveu os trâmites (o pedido e o documento que ele produz viraram
+             uma tela só), então herdou a coluna que era deles na barra. */
+          href: '/portal/documents',
+          label: t('nav.documents'),
+          icon: 'documents',
+          tabBar: true,
+        },
       ],
     },
     {

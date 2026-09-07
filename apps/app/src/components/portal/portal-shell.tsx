@@ -4,6 +4,7 @@ import { useState, type ReactNode } from 'react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import { PortalNav, type NavGroup } from './portal-nav'
+import { PortalTabBar } from './portal-tabbar'
 import { StudentMenu } from './student-menu'
 import { NotificationsBell, type NoticeItem } from './notifications-bell'
 import { Icon } from './icons'
@@ -13,6 +14,12 @@ import { Icon } from './icons'
  * sidebar (16rem open, 4rem icons-only) plus the top-right account strip —
  * language, notifications, student menu. Pages stay server components — they
  * arrive as `children`.
+ *
+ * Two chromes, not one shrunk. On a phone the sidebar is gone and the menu
+ * moves to a fixed tab bar at the bottom (`portal-tabbar.tsx`): most of this
+ * portal is read standing up, one-handed, and the top of a large phone is the
+ * corner a thumb never reaches. What stays at the top there is what gets read
+ * rather than pressed — the mark and the bell.
  */
 
 function BrandMark({
@@ -126,17 +133,17 @@ export function PortalShell({
         <div
           className={`flex-1 overflow-y-auto py-4 ${collapsed ? 'px-2' : 'px-3'}`}
         >
-          <PortalNav groups={navGroups} orientation="sidebar" collapsed={collapsed} />
+          <PortalNav groups={navGroups} collapsed={collapsed} />
         </div>
       </aside>
 
-      {/* Top bar — mobile / tablet */}
-      <div className="sticky top-0 z-30 border-b border-line bg-white/90 backdrop-blur lg:hidden">
-        <div className="flex items-center justify-between px-4 py-3">
+      {/* Top bar — mobile / tablet. Só a marca e o sino: o menu, o perfil,
+          o idioma e a saída desceram para a barra de abas. */}
+      <div className="sticky top-0 z-30 border-b border-line bg-white/90 pt-safe-t backdrop-blur lg:hidden">
+        <div className="flex items-center justify-between gap-3 px-4 py-2.5">
           <BrandMark portalLabel={portalLabel} />
-          {accountStrip}
+          <NotificationsBell notifications={notifications} align="end" />
         </div>
-        <PortalNav groups={navGroups} orientation="bar" />
       </div>
 
       {/* Content */}
@@ -154,10 +161,20 @@ export function PortalShell({
             wrong ruler once a sidebar sits beside it: the same window yields a
             different column open vs collapsed — which is exactly why screens
             size themselves to the container, not to breakpoints. */}
-        <main className="@container/page mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
+        {/* O `pb` do celular abre a altura da barra de abas mais a safe area
+            — sem isso o último cartão da página fica atrás dela, e a página
+            parece ter acabado uma linha antes do que acabou. */}
+        <main className="@container/page mx-auto w-full min-w-0 max-w-5xl px-4 pb-[calc(var(--spacing-tabbar)+var(--spacing-safe-b)+1.5rem)] pt-5 sm:px-6 lg:px-10 lg:pb-10 lg:pt-8">
           {children}
         </main>
       </div>
+
+      <PortalTabBar
+        groups={navGroups}
+        studentName={studentName}
+        monogram={monogram}
+        logoutAction={logoutAction}
+      />
     </div>
   )
 }

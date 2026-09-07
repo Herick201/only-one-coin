@@ -19,6 +19,7 @@ import {
   ChoiceCard,
   Note,
   PrimaryButton,
+  StepNav,
   StepHeading,
   SummaryRow,
 } from '@/components/enrollment/ui'
@@ -328,12 +329,12 @@ export function StepCourse({
         </Card>
       )}
 
-      <div className="flex items-center justify-end gap-3">
+      <StepNav>
         <PrimaryButton onClick={onContinue} disabled={selectedGroup === null}>
           {t('action.continue')}
           <CheckoutIcon name="arrow-right" size={16} />
         </PrimaryButton>
-      </div>
+      </StepNav>
 
       {/* The hold is announced before it starts, not after. Somebody who does
           not know a clock is running cannot plan around it. */}

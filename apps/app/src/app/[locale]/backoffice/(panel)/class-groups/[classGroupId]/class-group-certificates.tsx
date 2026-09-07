@@ -209,7 +209,21 @@ export function ClassGroupCertificates({
             />
           </div>
         ) : (
-          <TableShell>
+          <TableShell
+            /* Duas colunas aparecem e somem — o exame, que só existe onde a
+               regra do certificado o exige, e a de ações, que só existe para
+               quem pode emitir. A lista do celular casa rótulo e célula por
+               posição, então a condição tem de ser a mesma dos dois lados. */
+            columns={[
+              t('class_group.col_student'),
+              t('class_group.col_grade'),
+              ...(group.certificateRule === 'exam_required'
+                ? [t('class_group.col_exam')]
+                : []),
+              t('class_group.col_certificate'),
+              ...(canManage ? [''] : []),
+            ]}
+          >
             <thead>
               <tr>
                 <th className={thClass}>{t('class_group.col_student')}</th>
