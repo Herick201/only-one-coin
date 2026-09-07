@@ -195,7 +195,10 @@
       "locked_body": "You reach a student through your own class group. The full list belongs to coordination.",
       "new_student": "New student",
       "load_more": "Load more",
-      "loading_more": "Loading…"
+      "loading_more": "Loading…",
+      "load_error_title": "Could not load the directory",
+      "load_error_body": "The system did not respond. Reload the page; if it keeps happening, tell the technical team.",
+      "load_more_error": "Could not load more students. Try again."
     },
     "student_status": {
       "active": "Active",

@@ -195,7 +195,10 @@
       "locked_body": "Você chega a um aluno pela sua própria turma. A lista completa é da coordenação.",
       "new_student": "Novo aluno",
       "load_more": "Carregar mais",
-      "loading_more": "Carregando…"
+      "loading_more": "Carregando…",
+      "load_error_title": "Não foi possível carregar a lista",
+      "load_error_body": "O sistema não respondeu. Recarregue a página; se continuar assim, avise a equipe técnica.",
+      "load_more_error": "Não foi possível carregar mais alunos. Tente de novo."
     },
     "student_status": {
       "active": "Ativo",

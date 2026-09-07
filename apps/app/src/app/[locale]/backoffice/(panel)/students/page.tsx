@@ -39,14 +39,29 @@ export default async function StudentsPage({
     )
   }
 
-  const { items, nextCursor } = await listStudents()
+  const page = await listStudents()
+
+  /* API down or erroring. An honest failure screen, never an empty
+     directory — "no students" and "could not load" are different facts. */
+  if (!page) {
+    return (
+      <div className="flex flex-col gap-5">
+        <PageHeader title={t('students.title')} />
+        <EmptyState
+          icon="alert"
+          title={t('students.load_error_title')}
+          body={t('students.load_error_body')}
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-5">
       <PageHeader title={t('students.title')} />
       <StudentsTable
-        rows={items}
-        initialNextCursor={nextCursor}
+        rows={page.items}
+        initialNextCursor={page.nextCursor}
         canCreate={canCreateStudent(staff.role)}
       />
     </div>
