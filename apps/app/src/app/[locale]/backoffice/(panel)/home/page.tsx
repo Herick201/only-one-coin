@@ -23,6 +23,8 @@ import {
   getSeatWatch,
 } from '@/lib/backoffice/mock-data'
 import { getStaffSession } from '@/lib/backoffice/session'
+import { getFeatureFlags } from '@/lib/feature-flags/server'
+import type { FeatureFlagKey } from '@/lib/feature-flags/registry'
 import { isRestrictedToOwnClassGroups } from '@/lib/backoffice/permissions'
 import { formatDate, formatDateTime, formatMoney, type Locale } from '@/lib/format'
 import { reviewFlagTone, seatPressureTone } from '@/components/backoffice/status-tone'
@@ -65,6 +67,7 @@ export default async function BackofficeHomePage({
     return <TeacherHome staff={staff} locale={locale} />
   }
 
+  const flags = await getFeatureFlags()
   const metrics = getDashboardMetrics()
   const queue = getReviewQueue()
   const seats = getSeatWatch()
@@ -111,15 +114,20 @@ export default async function BackofficeHomePage({
     },
   ]
 
+  /* Module doors. Each carries the flag of the section behind it: a door to a
+     section that is not on the air is not drawn at all — "pronto" would promise
+     a screen the reader could not be told about yet (CLAUDE.md §5). */
   const modules: {
     href: string
     label: string
     body: string
     icon: LucideIcon
+    flag: FeatureFlagKey
     ready?: boolean
   }[] = [
     {
       href: '/backoffice/students',
+      flag: 'backoffice.students',
       label: t('nav.students'),
       body: t('modules.students'),
       icon: Users,
@@ -127,6 +135,7 @@ export default async function BackofficeHomePage({
     },
     {
       href: '/backoffice/enrollments',
+      flag: 'backoffice.enrollments',
       label: t('nav.enrollments'),
       body: t('modules.enrollments'),
       icon: ClipboardList,
@@ -134,6 +143,7 @@ export default async function BackofficeHomePage({
     },
     {
       href: '/backoffice/payments',
+      flag: 'backoffice.payments',
       label: t('nav.payments'),
       body: t('modules.payments'),
       icon: CreditCard,
@@ -141,6 +151,7 @@ export default async function BackofficeHomePage({
     },
     {
       href: '/backoffice/courses',
+      flag: 'backoffice.academic',
       label: t('nav.courses'),
       body: t('modules.courses'),
       icon: BookOpen,
@@ -148,6 +159,7 @@ export default async function BackofficeHomePage({
     },
     {
       href: '/backoffice/teachers',
+      flag: 'backoffice.teachers',
       label: t('nav.teachers'),
       body: t('modules.teachers'),
       icon: GraduationCap,
@@ -155,6 +167,7 @@ export default async function BackofficeHomePage({
     },
     {
       href: '/backoffice/emails',
+      flag: 'backoffice.email',
       label: t('nav.email'),
       body: t('modules.email'),
       icon: Mail,
@@ -162,6 +175,7 @@ export default async function BackofficeHomePage({
     },
     {
       href: '/backoffice/reports',
+      flag: 'backoffice.reports',
       label: t('nav.reports'),
       body: t('modules.reports'),
       icon: BarChart3,
@@ -169,6 +183,7 @@ export default async function BackofficeHomePage({
     },
     {
       href: '/backoffice/team',
+      flag: 'backoffice.staff',
       label: t('nav.staff'),
       body: t('modules.staff'),
       icon: UserCog,
@@ -176,6 +191,7 @@ export default async function BackofficeHomePage({
     },
     {
       href: '/backoffice/settings',
+      flag: 'backoffice.settings',
       label: t('nav.settings'),
       body: t('modules.settings'),
       icon: Settings,
@@ -217,197 +233,208 @@ export default async function BackofficeHomePage({
         ))}
       </AutoGrid>
 
-      {/* Human review queue — the core of the backoffice (CLAUDE.md §5). */}
-      <section>
-        <Card className="gap-0 overflow-hidden py-0">
-          <CardHeader className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
-            <div>
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <AlertTriangle className="size-4 text-amber-500" />
-                {t('review.title')}
-              </CardTitle>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {t('review.subtitle')}
-              </p>
-            </div>
-            {/* Contador e porta são a mesma coisa: o número é o que chama, a
-                seta diz que dá pra ir. */}
-            <Button asChild size="lg" className="shrink-0 font-semibold">
-              <Link href="/backoffice/payments/review" aria-label={t('review.see_all')}>
-                {t('review.pending_count', { count: metrics.pendingReview })}
-                <ArrowRight data-icon="inline-end" />
-              </Link>
-            </Button>
-          </CardHeader>
+      {/* Human review queue — the core of the backoffice (CLAUDE.md §5). It is
+          Pagos seen from the door, so it answers to that flag: with the section
+          off, the panel does not advertise a pile of work nobody can open. */}
+      {flags['backoffice.payments'] && (
+        <section>
+          <Card className="gap-0 overflow-hidden py-0">
+            <CardHeader className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-base font-semibold">
+                  <AlertTriangle className="size-4 text-amber-500" />
+                  {t('review.title')}
+                </CardTitle>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {t('review.subtitle')}
+                </p>
+              </div>
+              {/* Contador e porta são a mesma coisa: o número é o que chama, a
+                  seta diz que dá pra ir. */}
+              <Button asChild size="lg" className="shrink-0 font-semibold">
+                <Link href="/backoffice/payments/review" aria-label={t('review.see_all')}>
+                  {t('review.pending_count', { count: metrics.pendingReview })}
+                  <ArrowRight data-icon="inline-end" />
+                </Link>
+              </Button>
+            </CardHeader>
 
-          <CardContent className="px-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className="pl-5">{t('review.col_student')}</TableHead>
-                    <TableHead>{t('review.col_course')}</TableHead>
-                    <TableHead>{t('review.col_amount')}</TableHead>
-                    <TableHead>{t('review.col_flag')}</TableHead>
-                    <TableHead>{t('review.col_extraction')}</TableHead>
-                    <TableHead>{t('review.col_submitted')}</TableHead>
-                    <TableHead className="pr-5 text-right">
-                      <span className="sr-only">{t('common.actions')}</span>
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {queue.map((item) => {
-                    const mismatch = item.amountCents !== item.expectedAmountCents
-                    return (
-                      <TableRow key={item.id}>
-                        <TableCell className="whitespace-nowrap pl-5 font-medium">
-                          {item.studentName}
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap text-muted-foreground">
-                          {item.courseName}
-                        </TableCell>
-                        <TableCell>
-                          <span className="flex flex-col leading-tight">
-                            <span
-                              className={`font-semibold tabular-nums ${
-                                mismatch ? 'text-destructive' : ''
-                              }`}
-                            >
-                              {formatMoney(item.amountCents, 'PEN', locale)}
+            <CardContent className="px-0">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="pl-5">{t('review.col_student')}</TableHead>
+                      <TableHead>{t('review.col_course')}</TableHead>
+                      <TableHead>{t('review.col_amount')}</TableHead>
+                      <TableHead>{t('review.col_flag')}</TableHead>
+                      <TableHead>{t('review.col_extraction')}</TableHead>
+                      <TableHead>{t('review.col_submitted')}</TableHead>
+                      <TableHead className="pr-5 text-right">
+                        <span className="sr-only">{t('common.actions')}</span>
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {queue.map((item) => {
+                      const mismatch = item.amountCents !== item.expectedAmountCents
+                      return (
+                        <TableRow key={item.id}>
+                          <TableCell className="whitespace-nowrap pl-5 font-medium">
+                            {item.studentName}
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap text-muted-foreground">
+                            {item.courseName}
+                          </TableCell>
+                          <TableCell>
+                            <span className="flex flex-col leading-tight">
+                              <span
+                                className={`font-semibold tabular-nums ${
+                                  mismatch ? 'text-destructive' : ''
+                                }`}
+                              >
+                                {formatMoney(item.amountCents, 'PEN', locale)}
+                              </span>
+                              {mismatch && (
+                                <span className="text-xs text-muted-foreground">
+                                  {t('review.expected', {
+                                    amount: formatMoney(
+                                      item.expectedAmountCents,
+                                      'PEN',
+                                      locale,
+                                    ),
+                                  })}
+                                </span>
+                              )}
                             </span>
-                            {mismatch && (
-                              <span className="text-xs text-muted-foreground">
-                                {t('review.expected', {
-                                  amount: formatMoney(
-                                    item.expectedAmountCents,
-                                    'PEN',
-                                    locale,
-                                  ),
+                          </TableCell>
+                          <TableCell>
+                            <StatusPill
+                              tone={reviewFlagTone[item.flag]}
+                              label={t(`review_flag.${item.flag}`)}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <span className="flex flex-col leading-tight text-xs text-muted-foreground">
+                              <span>{t('review.tier', { tier: item.tier })}</span>
+                              <span>
+                                {t('review.confidence', {
+                                  value: Math.round(item.confidence * 100),
                                 })}
                               </span>
-                            )}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <StatusPill
-                            tone={reviewFlagTone[item.flag]}
-                            label={t(`review_flag.${item.flag}`)}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <span className="flex flex-col leading-tight text-xs text-muted-foreground">
-                            <span>{t('review.tier', { tier: item.tier })}</span>
-                            <span>
-                              {t('review.confidence', {
-                                value: Math.round(item.confidence * 100),
-                              })}
                             </span>
-                          </span>
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
-                          {formatDateTime(item.submittedAt, locale)}
-                        </TableCell>
-                        <TableCell className="pr-5 text-right">
-                          <Button asChild variant="outline" size="sm">
-                            <Link
-                              href={`/backoffice/students/${item.studentId}`}
-                              className="font-semibold text-primary"
-                            >
-                              {t('review.open_file')}
-                              <ArrowUpRight data-icon="inline-end" />
-                            </Link>
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    )
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                            {formatDateTime(item.submittedAt, locale)}
+                          </TableCell>
+                          <TableCell className="pr-5 text-right">
+                            {/* The row still says what is waiting; the way into
+                                the ficha exists only while that section does. */}
+                            {flags['backoffice.students'] && (
+                              <Button asChild variant="outline" size="sm">
+                                <Link
+                                  href={`/backoffice/students/${item.studentId}`}
+                                  className="font-semibold text-primary"
+                                >
+                                  {t('review.open_file')}
+                                  <ArrowUpRight data-icon="inline-end" />
+                                </Link>
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* The door to the queue is the counter in the header — one per
+                  card, or the eye stops trusting either. */}
+              <div className="border-t border-border px-5 py-3">
+                <p className="text-xs text-muted-foreground">
+                  {t('review.showing', {
+                    shown: queue.length,
+                    total: metrics.pendingReview,
                   })}
-                </TableBody>
-              </Table>
-            </div>
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      )}
 
-            {/* The door to the queue is the counter in the header — one per
-                card, or the eye stops trusting either. */}
-            <div className="border-t border-border px-5 py-3">
-              <p className="text-xs text-muted-foreground">
-                {t('review.showing', {
-                  shown: queue.length,
-                  total: metrics.pendingReview,
-                })}
-              </p>
+      {/* Seat pressure per class group — the academic section summed up, and
+          off with it: there would be nothing behind these cards to open. */}
+      {flags['backoffice.academic'] && (
+        <section>
+          <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
+                <Armchair className="size-4 text-brand-blue" />
+                {t('seats.title')}
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">{t('seats.subtitle')}</p>
             </div>
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* Seat pressure per class group. */}
-      <section>
-        <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
-          <div>
-            <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
-              <Armchair className="size-4 text-brand-blue" />
-              {t('seats.title')}
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">{t('seats.subtitle')}</p>
+            {/* A lista mostra só as aulas mais cheias; a porta pro resto fica aqui. */}
+            <Link
+              href="/backoffice/courses"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-primary transition hover:underline"
+            >
+              {t('seats.see_all')}
+              <ArrowRight className="size-3.5" />
+            </Link>
           </div>
-          {/* A lista mostra só as aulas mais cheias; a porta pro resto fica aqui. */}
-          <Link
-            href="/backoffice/courses"
-            className="inline-flex items-center gap-1 text-xs font-semibold text-primary transition hover:underline"
-          >
-            {t('seats.see_all')}
-            <ArrowRight className="size-3.5" />
-          </Link>
-        </div>
-        <AutoGrid min="20rem" gap="gap-3">
-          {seats.map((group) => {
-            const tone = seatPressureTone(group.seatsTaken, group.capacity)
-            const full = group.seatsTaken >= group.capacity
-            const pct = Math.round((group.seatsTaken / group.capacity) * 100)
-            return (
-              <Card key={group.id} className="gap-0 py-4">
-                <CardContent className="px-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold">{group.courseName}</p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {group.classGroupName}
-                      </p>
+          <AutoGrid min="20rem" gap="gap-3">
+            {seats.map((group) => {
+              const tone = seatPressureTone(group.seatsTaken, group.capacity)
+              const full = group.seatsTaken >= group.capacity
+              const pct = Math.round((group.seatsTaken / group.capacity) * 100)
+              return (
+                <Card key={group.id} className="gap-0 py-4">
+                  <CardContent className="px-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold">{group.courseName}</p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {group.classGroupName}
+                        </p>
+                      </div>
+                      <StatusPill
+                        tone={tone}
+                        dot={false}
+                        label={
+                          full
+                            ? t('seats.full')
+                            : t('seats.available', {
+                                count: group.capacity - group.seatsTaken,
+                              })
+                        }
+                      />
                     </div>
-                    <StatusPill
-                      tone={tone}
-                      dot={false}
-                      label={
-                        full
-                          ? t('seats.full')
-                          : t('seats.available', {
-                              count: group.capacity - group.seatsTaken,
-                            })
-                      }
+                    <Progress
+                      value={pct}
+                      className="mt-3 h-1.5 bg-secondary"
+                      indicatorClassName={toneBar[tone]}
                     />
-                  </div>
-                  <Progress
-                    value={pct}
-                    className="mt-3 h-1.5 bg-secondary"
-                    indicatorClassName={toneBar[tone]}
-                  />
-                  <div className="mt-1.5 flex items-center justify-between text-xs text-muted-foreground">
-                    <span>
-                      {t('seats.taken', {
-                        taken: group.seatsTaken,
-                        capacity: group.capacity,
-                      })}
-                    </span>
-                    <span>
-                      {t('seats.starts', { date: formatDate(group.startDate, locale) })}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </AutoGrid>
-      </section>
+                    <div className="mt-1.5 flex items-center justify-between text-xs text-muted-foreground">
+                      <span>
+                        {t('seats.taken', {
+                          taken: group.seatsTaken,
+                          capacity: group.capacity,
+                        })}
+                      </span>
+                      <span>
+                        {t('seats.starts', { date: formatDate(group.startDate, locale) })}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </AutoGrid>
+        </section>
+      )}
 
       {/* Module doors — everything the backoffice will manage. */}
       <section>
@@ -417,51 +444,53 @@ export default async function BackofficeHomePage({
         </h2>
         <p className="mb-3 text-sm text-muted-foreground">{t('modules.subtitle')}</p>
         <AutoGrid min="18rem" gap="gap-3">
-          {modules.map(({ href, label, body, icon: Icon, ready }) => {
-            const inner = (
-              <>
-                <div className="flex items-center gap-2.5">
-                  <span
-                    className={`grid size-9 shrink-0 place-items-center rounded-lg ${
-                      ready ? 'bg-sky text-brand-blue' : 'bg-secondary text-muted-foreground'
-                    }`}
-                  >
-                    <Icon className="size-4.5" />
-                  </span>
-                  <span className="flex-1 text-sm font-semibold">{label}</span>
-                  {ready ? (
-                    <ArrowUpRight className="size-4 text-muted-foreground" />
-                  ) : (
-                    <Badge
-                      variant="secondary"
-                      className="text-[10px] font-semibold uppercase tracking-wide"
+          {modules
+            .filter((module) => flags[module.flag])
+            .map(({ href, label, body, icon: Icon, ready }) => {
+              const inner = (
+                <>
+                  <div className="flex items-center gap-2.5">
+                    <span
+                      className={`grid size-9 shrink-0 place-items-center rounded-lg ${
+                        ready ? 'bg-sky text-brand-blue' : 'bg-secondary text-muted-foreground'
+                      }`}
                     >
-                      {t('nav.soon')}
-                    </Badge>
-                  )}
+                      <Icon className="size-4.5" />
+                    </span>
+                    <span className="flex-1 text-sm font-semibold">{label}</span>
+                    {ready ? (
+                      <ArrowUpRight className="size-4 text-muted-foreground" />
+                    ) : (
+                      <Badge
+                        variant="secondary"
+                        className="text-[10px] font-semibold uppercase tracking-wide"
+                      >
+                        {t('nav.soon')}
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                    {body}
+                  </p>
+                </>
+              )
+              return ready ? (
+                <Link
+                  key={href}
+                  href={href}
+                  className="rounded-xl border border-border bg-card p-4 shadow-card transition hover:border-primary/40"
+                >
+                  {inner}
+                </Link>
+              ) : (
+                <div
+                  key={href}
+                  className="rounded-xl border border-dashed border-border bg-card/60 p-4"
+                >
+                  {inner}
                 </div>
-                <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                  {body}
-                </p>
-              </>
-            )
-            return ready ? (
-              <Link
-                key={href}
-                href={href}
-                className="rounded-xl border border-border bg-card p-4 shadow-card transition hover:border-primary/40"
-              >
-                {inner}
-              </Link>
-            ) : (
-              <div
-                key={href}
-                className="rounded-xl border border-dashed border-border bg-card/60 p-4"
-              >
-                {inner}
-              </div>
-            )
-          })}
+              )
+            })}
         </AutoGrid>
       </section>
     </div>

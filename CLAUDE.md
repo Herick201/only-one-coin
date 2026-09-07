@@ -266,6 +266,38 @@ interface NotificationProvider {
 
 Templates versionados no repositório, não desenhados só no painel do Brevo.
 
+### Feature flags — o que está no ar em produção (decisão 06/09/2026)
+
+**As três superfícies de `apps/app` são geridas por feature flag: portal do
+aluno, backoffice e painel do docente.** Uma flag ligada significa que a seção
+aparece em produção; desligada significa que ela **não existe em produção** —
+some da navegação e a URL responde 404 — e continua inteira **para nós**: local,
+deploy de preview da Vercel e, em produção, para quem abriu o destravamento
+interno (`/api/preview?token=…`, cookie de 12 h, com tarja em toda tela dizendo
+que aquilo não está ativo para mais ninguém).
+
+- **Flag não é controle de acesso.** Quem pode o quê continua sendo o papel
+  declarado na rota em `apps/api` (§8). A flag diz se a funcionalidade está no
+  ar; o papel diz para quem ela responde.
+- **O interruptor vive em código**, num registro único
+  (`apps/app/src/lib/feature-flags/registry.ts`), com override por ambiente
+  (`OOC_FLAG_<CHAVE>=on|off`, *scoped* por ambiente na Vercel) — banco + tela de
+  gestão no backoffice foi avaliado e adiado, porque `apps/app` não fala com o
+  banco (§8) e a primeira flag exigiria migration, usecase e rota antes de
+  existir.
+- **Fora de produção toda flag está ligada**, sempre. E `APP_ENV` falha fechada:
+  processo sem rótulo rodando build de produção conta como produção.
+- **Flag nova nasce desligada em produção** (`production: false`) e é ligada no
+  mesmo PR que torna a seção real. Quando a seção deixa de ser novidade, a flag
+  sai do registro — flag eterna vira ruído que ninguém confia.
+- **Desligada não vira cadeado.** Cadeado é o vocabulário de "anunciado, não
+  construído" (a Área do aluno do portal, §2), que é uma afirmação pública e
+  diferente.
+
+Detalhe — ordem de resolução, o destravamento interno, a tabela de flags de hoje
+e a limitação conhecida (links profundos entre seções do backoffice):
+`docs/ARCHITECTURE.md` §8.
+
 ### Layout das telas (`apps/app`)
 
 **A tela responde à coluna que recebeu, nunca à janela.** O painel nunca ocupa a

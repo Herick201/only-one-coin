@@ -5,6 +5,8 @@ import { NextIntlClientProvider, hasLocale } from 'next-intl'
 import { getMessages, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import { routing } from '@/i18n/routing'
+import { isInternalPreview } from '@/lib/feature-flags/server'
+import { InternalPreviewBadge } from '@/components/internal-preview-badge'
 import '../globals.css'
 
 /**
@@ -83,6 +85,9 @@ export default async function LocaleLayout({
   setRequestLocale(locale)
 
   const messages = await getMessages()
+  // Renders on every screen while the internal unlock is open, and nowhere
+  // else — see the component for why it is not optional (CLAUDE.md §5).
+  const internalPreview = await isInternalPreview()
 
   return (
     <html
@@ -92,6 +97,7 @@ export default async function LocaleLayout({
       <body>
         <NextIntlClientProvider messages={messages}>
           {children}
+          {internalPreview && <InternalPreviewBadge />}
         </NextIntlClientProvider>
       </body>
     </html>

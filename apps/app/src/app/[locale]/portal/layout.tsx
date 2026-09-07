@@ -2,6 +2,9 @@ import type { ReactNode } from 'react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { logout } from '../actions'
 import { getPortalSession } from '@/lib/portal/mock-data'
+import { getFeatureFlags, requireFeature } from '@/lib/feature-flags/server'
+import type { FeatureFlagKey } from '@/lib/feature-flags/registry'
+import type { NotificationKind } from '@/lib/portal/types'
 import { initials } from '@/lib/portal/format'
 import type { NavGroup } from '@/components/portal/portal-nav'
 import { PortalShell } from '@/components/portal/portal-shell'
@@ -17,6 +20,11 @@ export default async function PortalLayout({
   const { locale } = await params
   setRequestLocale(locale)
   const t = await getTranslations('portal')
+
+  // The portal as a whole. Off, the student portal simply is not on the air —
+  // shell included, so nothing under it can be reached by URL (CLAUDE.md §5).
+  await requireFeature('portal')
+  const flags = await getFeatureFlags()
 
   const { student, notifications } = getPortalSession()
   const fullName = `${student.firstName} ${student.lastName}`
@@ -46,31 +54,54 @@ export default async function PortalLayout({
    */
   const navGroups: NavGroup[] = [
     {
+      /* Each section answers to its own flag: a section that is not on the air
+         is not offered either, because a padlock here would announce something
+         the student cannot be told about yet — that is what the locked group
+         below is for, and it is a different statement. */
       items: [
         {
           href: '/portal',
           label: t('nav.dashboard'),
           shortLabel: t('nav.tab_dashboard'),
-          icon: 'home',
+          icon: 'home' as const,
           tabBar: true,
         },
-        {
-          href: '/portal/courses',
-          label: t('nav.courses'),
-          shortLabel: t('nav.tab_courses'),
-          icon: 'courses',
-          tabBar: true,
-        },
-        { href: '/portal/payments', label: t('nav.payments'), icon: 'card' },
-        { href: '/portal/enrollment', label: t('nav.enrollments'), icon: 'enrollment' },
-        {
-          /* Absorveu os trâmites (o pedido e o documento que ele produz viraram
-             uma tela só), então herdou a coluna que era deles na barra. */
-          href: '/portal/documents',
-          label: t('nav.documents'),
-          icon: 'documents',
-          tabBar: true,
-        },
+        ...(flags['portal.courses']
+          ? [
+              {
+                href: '/portal/courses',
+                label: t('nav.courses'),
+                shortLabel: t('nav.tab_courses'),
+                icon: 'courses' as const,
+                tabBar: true,
+              },
+            ]
+          : []),
+        ...(flags['portal.payments']
+          ? [{ href: '/portal/payments', label: t('nav.payments'), icon: 'card' as const }]
+          : []),
+        ...(flags['portal.procedures']
+          ? [
+              {
+                href: '/portal/enrollment',
+                label: t('nav.enrollments'),
+                icon: 'enrollment' as const,
+              },
+            ]
+          : []),
+        ...(flags['portal.documents']
+          ? [
+              {
+                /* Absorveu os trâmites (o pedido e o documento que ele produz
+                   viraram uma tela só), então herdou a coluna que era deles na
+                   barra. */
+                href: '/portal/documents',
+                label: t('nav.documents'),
+                icon: 'documents' as const,
+                tabBar: true,
+              },
+            ]
+          : []),
       ],
     },
     {
@@ -84,11 +115,22 @@ export default async function PortalLayout({
     },
   ]
 
-  const noticeItems: NoticeItem[] = notifications.map((n) => ({
-    id: n.id,
-    kind: n.kind,
-    courseName: n.courseName,
-  }))
+  /* A notice is a doorway: each kind opens one section (`notifications-bell`
+     holds the map). A notice whose section is off would be a bell that leads
+     to a 404, so it is not rung at all. */
+  const noticeSection = {
+    monthly_payment_due: 'portal.payments',
+    next_level_invite: 'portal.continue',
+    document_ready: 'portal.documents',
+  } as const satisfies Record<NotificationKind, FeatureFlagKey>
+
+  const noticeItems: NoticeItem[] = notifications
+    .filter((n) => flags[noticeSection[n.kind]])
+    .map((n) => ({
+      id: n.id,
+      kind: n.kind,
+      courseName: n.courseName,
+    }))
 
   return (
     <PortalShell

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
 import { getPortalSession } from '@/lib/portal/mock-data'
+import { getFeatureFlags } from '@/lib/feature-flags/server'
 import { formatDateNumeric } from '@/lib/portal/format'
 import type {
   Enrollment,
@@ -76,6 +77,7 @@ export default async function EnrollmentPage({
   setRequestLocale(raw)
   const t = await getTranslations('portal')
 
+  const flags = await getFeatureFlags()
   const { enrollments } = getPortalSession()
 
   function card(e: Enrollment) {
@@ -204,13 +206,17 @@ export default async function EnrollmentPage({
                         <span className="h-2 w-2 rounded-full bg-red-500" />
                         {t('enrollments.state_pending')}
                       </span>
-                      <Link
-                        href="/portal/payments"
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-brand-blue px-3 py-1.5 text-xs font-semibold text-brand-blue transition hover:border-brand-yellow hover:bg-brand-yellow hover:text-ink"
-                      >
-                        {t('enrollments.month_pay_cta')}
-                        <Icon name="arrow-right" size={13} />
-                      </Link>
+                      {/* Pending is stated either way; the shortcut exists
+                          only while Pagos is on the air (CLAUDE.md §5). */}
+                      {flags['portal.payments'] && (
+                        <Link
+                          href="/portal/payments"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-brand-blue px-3 py-1.5 text-xs font-semibold text-brand-blue transition hover:border-brand-yellow hover:bg-brand-yellow hover:text-ink"
+                        >
+                          {t('enrollments.month_pay_cta')}
+                          <Icon name="arrow-right" size={13} />
+                        </Link>
+                      )}
                     </span>
                   )}
                 </li>
