@@ -193,7 +193,9 @@
       "page_status": "{from}–{to} of {total}",
       "locked_title": "No access to the student directory",
       "locked_body": "You reach a student through your own class group. The full list belongs to coordination.",
-      "new_student": "New student"
+      "new_student": "New student",
+      "load_more": "Load more",
+      "loading_more": "Loading…"
     },
     "student_status": {
       "active": "Active",

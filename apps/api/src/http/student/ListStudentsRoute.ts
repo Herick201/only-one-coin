@@ -11,31 +11,40 @@ import { container } from "@/container.js";
 // below), not the same risk.
 const ListStudentsQuerySchema = z.object({
   q: z.string().trim().min(2).max(100).optional(),
+  // Opaque, server-issued (ListStudentsQuery.encodeStudentCursor) — a
+  // malformed or tampered value just restarts the listing from the top
+  // rather than failing the request (see decodeStudentCursor).
+  cursor: z.string().trim().min(1).optional(),
 });
 
 const StudentStatusSchema = z.enum(["active", "under_review", "inactive"]);
 
-const StudentListResponseSchema = z.array(
-  z.object({
-    id: z.string().uuid(),
-    firstName: z.string(),
-    lastName: z.string(),
-    nationalIdType: z.enum(["DNI", "CE", "passport"]),
-    nationalId: z.string(),
-    email: z.string(),
-    phone: z.string(),
-    birthDate: z.string(),
-    country: z.string(),
-    region: z.string().nullable(),
-    city: z.string(),
-    createdAt: z.string(),
-    isMinor: z.boolean(),
-    status: StudentStatusSchema,
-    activeCourses: z.number().int(),
-    totalEnrollments: z.number().int(),
-    lastActivityAt: z.string(),
-  }),
-);
+const StudentListResponseSchema = z.object({
+  items: z.array(
+    z.object({
+      id: z.string().uuid(),
+      firstName: z.string(),
+      lastName: z.string(),
+      nationalIdType: z.enum(["DNI", "CE", "passport"]),
+      nationalId: z.string(),
+      email: z.string(),
+      phone: z.string(),
+      birthDate: z.string(),
+      country: z.string(),
+      region: z.string().nullable(),
+      city: z.string(),
+      createdAt: z.string(),
+      isMinor: z.boolean(),
+      status: StudentStatusSchema,
+      activeCourses: z.number().int(),
+      totalEnrollments: z.number().int(),
+      lastActivityAt: z.string(),
+    }),
+  ),
+  // Present (non-null) only for the no-`q` directory browse when another
+  // page follows — `q` searches are a short, non-paginated list.
+  nextCursor: z.string().nullable(),
+});
 
 // admin/coordinator only — same audience as the rest of the student
 // directory and the manual registration/enrollment routes it sits beside
@@ -51,14 +60,15 @@ export const listStudentsRoute = RouteBuilder.get("/students")
   .response(200, StudentListResponseSchema)
   .response(400, ErrorResponseSchema)
   .handler(async (request, reply) => {
-    const results = await container.queries.listStudents.run(request.query.q);
+    const page = await container.queries.listStudents.run(request.query.q, request.query.cursor);
 
-    reply.status(200).send(
-      results.map((row) => ({
+    reply.status(200).send({
+      items: page.items.map((row) => ({
         ...row,
         birthDate: row.birthDate.toISOString(),
         createdAt: row.createdAt.toISOString(),
         lastActivityAt: row.lastActivityAt.toISOString(),
       })),
-    );
+      nextCursor: page.nextCursor,
+    });
   });

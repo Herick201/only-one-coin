@@ -33,10 +33,13 @@ const STATUS_FILTERS: StatusFilter[] = ['all', 'active', 'under_review', 'inacti
 const PAGE_SIZE = 15
 
 /**
- * Student list with client-side search, status filter and paging. Filtering
- * runs in the browser only because the dataset is mocked; with the real API
- * this becomes a server query (5k–7k enrollments/month will not fit in the
- * client).
+ * Student list with client-side search, status filter and paging, running
+ * over whatever's currently loaded in `directory` — not the whole real
+ * directory, which the server paginates (`ListStudentsQuery`, PAGE_SIZE=50)
+ * rather than hand over in one query at 20k enrollments/month peak
+ * (CLAUDE.md §1). "Carregar mais" fetches the next server page and appends
+ * it to `directory`, so search/filter/counts below cover everything loaded
+ * so far, growing as coordination scrolls — not the entire table at once.
  *
  * The row carries only what tells one student from another — name, document,
  * state, load, last activity. Contact, place, age and enrollment history live
@@ -45,17 +48,19 @@ const PAGE_SIZE = 15
  */
 export function StudentsTable({
   rows,
+  initialNextCursor,
   canCreate,
 }: {
   rows: StudentRow[]
+  initialNextCursor: string | null
   canCreate: boolean
 }) {
   const t = useTranslations('bo')
   const locale = useLocale() as Locale
   const router = useRouter()
-  /* No server yet, so a registration lands at the top of the list and nowhere
-     else (see the mock notice above the table). */
   const [directory, setDirectory] = useState<StudentRow[]>(rows)
+  const [nextCursor, setNextCursor] = useState(initialNextCursor)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [creating, setCreating] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const [query, setQuery] = useState('')
@@ -67,6 +72,20 @@ export function StudentsTable({
    */
   const [minorsOnly, setMinorsOnly] = useState(false)
   const [page, setPage] = useState(0)
+
+  async function loadMore() {
+    if (!nextCursor || loadingMore) return
+    setLoadingMore(true)
+    try {
+      const response = await fetch(`/api/v1/students?cursor=${encodeURIComponent(nextCursor)}`)
+      if (!response.ok) return
+      const nextPage = (await response.json()) as { items: StudentRow[]; nextCursor: string | null }
+      setDirectory((current) => [...current, ...nextPage.items])
+      setNextCursor(nextPage.nextCursor)
+    } finally {
+      setLoadingMore(false)
+    }
+  }
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase()
@@ -334,6 +353,17 @@ export function StudentsTable({
           </>
         )}
       </Card>
+
+      {nextCursor && (
+        <button
+          type="button"
+          onClick={loadMore}
+          disabled={loadingMore}
+          className="self-center rounded-lg border border-line bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:bg-cream disabled:opacity-50"
+        >
+          {loadingMore ? t('students.loading_more') : t('students.load_more')}
+        </button>
+      )}
 
       <Toast message={toast} onDismiss={() => setToast(null)} />
     </div>

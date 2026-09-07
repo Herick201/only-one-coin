@@ -43,6 +43,13 @@
       "when": 1788799361043,
       "tag": "0005_brainy_korath",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788802790802,
+      "tag": "0006_moaning_lady_deathstrike",
+      "breakpoints": true
     }
   ]
 }
