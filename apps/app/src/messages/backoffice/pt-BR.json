@@ -1376,6 +1376,7 @@
       "creating": "Gerando…",
       "cancel": "Cancelar",
       "missing_fields": "Preencha os campos obrigatórios para gerar o convite.",
+      "invite_email_taken": "Já existe uma conta ou um convite pendente para este e-mail.",
       "created_toast": "Convite criado",
       "invite_created_title": "Convite pronto",
       "invite_created_subtitle": "Copie o link e envie para {name} pelo canal que você já usa. Vence em {date}.",
