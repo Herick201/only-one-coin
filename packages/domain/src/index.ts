@@ -63,13 +63,81 @@ export {
 
 export type { Role } from "./identity/Role.js";
 export type { AuthenticatedUser } from "./identity/AuthenticatedUser.js";
-export { NotFreshlyAuthenticatedError, InsufficientPrivilegeError } from "./identity/errors.js";
+export {
+  NotFreshlyAuthenticatedError,
+  InsufficientPrivilegeError,
+  CannotActOnSelfError,
+} from "./identity/errors.js";
 export type { ICurrentSessionPort } from "./identity/ports/ICurrentSessionPort.js";
 export type { IUserRoleRepository } from "./identity/ports/IUserRoleRepository.js";
 export type { IAuditLogRepository, AuditLogEntry } from "./identity/ports/IAuditLogRepository.js";
 export type { IFreshAuthVerifier } from "./identity/ports/IFreshAuthVerifier.js";
+export type {
+  IStaffInviteRepository,
+  StaffInvite,
+  CreateStaffInviteRecord,
+} from "./identity/ports/IStaffInviteRepository.js";
+export type {
+  IStaffAccountProvisioner,
+  ProvisionStaffAccountInput,
+  ProvisionStaffAccountOutput,
+} from "./identity/ports/IStaffAccountProvisioner.js";
+export type { IStaffAccessRepository } from "./identity/ports/IStaffAccessRepository.js";
+export type { IStaffUserLookup, StaffUserDisplay } from "./identity/ports/IStaffUserLookup.js";
+export type {
+  IStaffPasswordResetRepository,
+  StaffPasswordReset,
+  CreateStaffPasswordResetRecord,
+} from "./identity/ports/IStaffPasswordResetRepository.js";
+export type { IStaffPasswordSetter } from "./identity/ports/IStaffPasswordSetter.js";
 export {
   PromoteUserRoleUseCase,
   type PromoteUserRoleInput,
   type PromoteUserRoleOutput,
 } from "./identity/PromoteUserRoleUseCase.js";
+export {
+  CreateStaffInviteUseCase,
+  type CreateStaffInviteInput,
+  type CreateStaffInviteOutput,
+} from "./identity/CreateStaffInviteUseCase.js";
+export {
+  RenewStaffInviteUseCase,
+  type RenewStaffInviteInput,
+  type RenewStaffInviteOutput,
+} from "./identity/RenewStaffInviteUseCase.js";
+export {
+  CancelStaffInviteUseCase,
+  type CancelStaffInviteInput,
+} from "./identity/CancelStaffInviteUseCase.js";
+export {
+  CompleteStaffInviteUseCase,
+  type CompleteStaffInviteInput,
+  type CompleteStaffInviteOutput,
+} from "./identity/CompleteStaffInviteUseCase.js";
+export {
+  RemoveStaffAccessUseCase,
+  type RemoveStaffAccessInput,
+} from "./identity/RemoveStaffAccessUseCase.js";
+export {
+  RestoreStaffAccessUseCase,
+  type RestoreStaffAccessInput,
+} from "./identity/RestoreStaffAccessUseCase.js";
+export {
+  CreateStaffPasswordResetUseCase,
+  type CreateStaffPasswordResetInput,
+  type CreateStaffPasswordResetOutput,
+} from "./identity/CreateStaffPasswordResetUseCase.js";
+export {
+  RenewStaffPasswordResetUseCase,
+  type RenewStaffPasswordResetInput,
+  type RenewStaffPasswordResetOutput,
+} from "./identity/RenewStaffPasswordResetUseCase.js";
+export {
+  CancelStaffPasswordResetUseCase,
+  type CancelStaffPasswordResetInput,
+} from "./identity/CancelStaffPasswordResetUseCase.js";
+export {
+  CompleteStaffPasswordResetUseCase,
+  type CompleteStaffPasswordResetInput,
+  type CompleteStaffPasswordResetOutput,
+} from "./identity/CompleteStaffPasswordResetUseCase.js";

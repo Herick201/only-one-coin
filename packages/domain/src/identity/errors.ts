@@ -20,3 +20,18 @@ export class InsufficientPrivilegeError extends ForbiddenError {
     });
   }
 }
+
+/**
+ * "Nadie cambia su propio cargo ni se quita el acceso a sí mismo" (CLAUDE.md
+ * §8, backed here rather than left as a UI-only convention). Covers role
+ * promotion and access removal/restoration alike.
+ */
+export class CannotActOnSelfError extends ForbiddenError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({
+      reason: "auth.cannot_act_on_self",
+      message: "An acting admin cannot perform this action on their own account.",
+      ...params,
+    });
+  }
+}

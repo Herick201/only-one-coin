@@ -1,5 +1,5 @@
 import { BaseUseCase } from "../shared/base/BaseUseCase.js";
-import { NotFreshlyAuthenticatedError } from "./errors.js";
+import { CannotActOnSelfError, NotFreshlyAuthenticatedError } from "./errors.js";
 import type { IAuditLogRepository } from "./ports/IAuditLogRepository.js";
 import type { IFreshAuthVerifier } from "./ports/IFreshAuthVerifier.js";
 import type { IUserRoleRepository } from "./ports/IUserRoleRepository.js";
@@ -34,11 +34,17 @@ export class PromoteUserRoleUseCase extends BaseUseCase<PromoteUserRoleInput, Pr
   }
 
   async run(input: PromoteUserRoleInput): Promise<PromoteUserRoleOutput> {
+    if (input.adminUserId === input.targetUserId) {
+      throw new CannotActOnSelfError();
+    }
+
     const isFreshlyAuthenticated = await this.freshAuthVerifier.verify(input.adminUserId, input.adminPassword);
 
     if (!isFreshlyAuthenticated) {
       throw new NotFreshlyAuthenticatedError();
     }
+
+    const fromRole = await this.userRoleRepository.findRoleByUserId(input.targetUserId);
 
     await this.userRoleRepository.updateRole(input.targetUserId, input.newRole);
 
@@ -46,7 +52,7 @@ export class PromoteUserRoleUseCase extends BaseUseCase<PromoteUserRoleInput, Pr
       actorId: input.adminUserId,
       action: "role.promote",
       targetId: input.targetUserId,
-      metadata: { newRole: input.newRole },
+      metadata: { fromRole, newRole: input.newRole },
       at: new Date(),
     });
 

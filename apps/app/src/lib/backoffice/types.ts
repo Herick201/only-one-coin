@@ -64,8 +64,13 @@ export interface StaffUser {
  * Whether the account still opens the panel. Never a delete: whoever approved a
  * payment or signed a grade stays pointed at by those rows (CLAUDE.md §6), so
  * somebody who leaves loses the door, not the record.
+ *
+ * `invited` sits before `active`: the row exists — a cargo was decided and an
+ * invite link was generated for it — but nobody has signed in yet, because
+ * nobody outside the person invited holds the password (CLAUDE.md §8, "a
+ * panel that shows somebody else's password is a panel that has it").
  */
-export type StaffStatus = 'active' | 'inactive'
+export type StaffStatus = 'active' | 'invited' | 'inactive'
 
 /**
  * One row of the team directory — an account that opens the backoffice, and the
@@ -98,16 +103,25 @@ export interface StaffMemberRow {
    * Enrolling it is the account owner's own action; nobody enrolls it for them.
    */
   mfaEnrolled: boolean
-  /** ISO date the account was opened. */
+  /** ISO date the account was opened — the day the invite was completed. */
   joinedAt: string
   /** Last sign-in to the panel; null while the account has never been used. */
   lastAccessAt: string | null
+  /**
+   * The pending invite's one-time token, while `status` is `invited`. Null the
+   * rest of the time: an active or inactive account has nothing left to
+   * complete, and this is not a credential to keep lying around.
+   */
+  inviteToken: string | null
+  /** When the invite link stops working. Null outside `invited`. */
+  inviteExpiresAt: string | null
 }
 
 /**
- * What the creation form fills in. No password: the account is opened here and
- * the credentials leave by e-mail, the same way a student's do (CLAUDE.md §8) —
- * a panel that shows somebody else's password is a panel that has it.
+ * What the invite form fills in. No password: nobody but the person invited
+ * ever holds one — the form generates a one-time invite link instead, and the
+ * person sets their own password completing it (CLAUDE.md §8, "a panel that
+ * shows somebody else's password is a panel that has it").
  */
 export type NewStaffMember = Pick<
   StaffMemberRow,

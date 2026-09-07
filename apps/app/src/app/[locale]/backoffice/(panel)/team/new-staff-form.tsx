@@ -1,12 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
+import { getPathname } from '@/i18n/navigation'
 import type { StaffMemberRow, StaffRole } from '@/lib/backoffice/types'
 import { isMfaMandatory } from '@/lib/backoffice/permissions'
+import { buildInvitePath } from '@/lib/backoffice/invite'
 import { Card, RequiredMark } from '@/components/backoffice/ui'
 import { BoIcon } from '@/components/backoffice/icons'
 import { AutoGrid } from '@/components/layout/auto-grid'
+import { formatDate, type Locale } from '@/lib/format'
 
 /** A teacher still on the roster — who an account may be opened over. */
 export interface TeacherOption {
@@ -35,18 +38,19 @@ const labelClass =
  * with. Two blocks, because those are the two questions — and the second one is
  * the whole reason this form is admin-only (CLAUDE.md §8).
  *
- * No password field, by design. The account is opened here and the credentials
- * leave by e-mail, the same way a student's do: a panel that shows somebody
- * else's password is a panel that has it. The second factor is not set here
- * either — the owner enrolls their own, on first sign-in.
+ * No password field, by design. Nobody but the person invited ever holds one:
+ * confirming this step generates a one-time invite link instead — a panel that
+ * shows somebody else's password is a panel that has it. The second factor is
+ * not set here either — the owner enrolls their own, on first sign-in.
  *
  * A `teacher` account is opened over a teacher who is already on the roster,
  * the same shape as a manual enrollment acting only on a student who already
  * exists (CLAUDE.md §1): the record carries what the account is scoped by, so
  * it has to exist before the door does.
  *
- * Screen-local, like every other form in the mockup: the real write is a
- * usecase in `apps/api`, never the browser.
+ * Posts to `POST /api/v1/staff/invites` (same-origin `/api/v1/...` proxy, the
+ * pattern `new-student-form.tsx` already established) — `CreateStaffInviteUseCase`
+ * generates the token server-side; this form never assembles one itself.
  */
 export function NewStaffForm({
   teachers,
@@ -58,12 +62,20 @@ export function NewStaffForm({
   onCreate: (member: StaffMemberRow) => void
 }) {
   const t = useTranslations('bo')
+  const locale = useLocale() as Locale
 
+  const [step, setStep] = useState<'form' | 'created'>('form')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [role, setRole] = useState<StaffRole>('coordinator')
   const [teacherId, setTeacherId] = useState('')
+  const [created, setCreated] = useState<{ member: StaffMemberRow; link: string } | null>(
+    null,
+  )
+  const [copied, setCopied] = useState(false)
+  const [pending, setPending] = useState(false)
+  const [emailTaken, setEmailTaken] = useState(false)
 
   const isTeacher = role === 'teacher'
 
@@ -90,28 +102,134 @@ export function NewStaffForm({
     if (next !== 'teacher') setTeacherId('')
   }
 
-  function submit() {
-    if (!ready) return
-    onCreate({
-      id: `staff_local_${email.trim().toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      email: email.trim(),
-      role,
-      status: 'active',
-      teacherId: isTeacher ? teacherId : null,
-      // Nobody enrolls somebody else's second factor: the account starts
-      // without one and the owner sets it up on first sign-in.
-      mfaEnrolled: false,
-      joinedAt: new Date().toISOString().slice(0, 10),
-      lastAccessAt: null,
-    })
+  async function submit() {
+    if (!ready || pending) return
+    setPending(true)
+    setEmailTaken(false)
+
+    try {
+      const response = await fetch('/api/v1/staff/invites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          email: email.trim(),
+          role,
+        }),
+      })
+
+      if (!response.ok) {
+        setEmailTaken(true)
+        return
+      }
+
+      const result = (await response.json()) as {
+        inviteId: string
+        token: string
+        expiresAt: string
+      }
+
+      const member: StaffMemberRow = {
+        id: result.inviteId,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim(),
+        role,
+        status: 'invited',
+        teacherId: isTeacher ? teacherId : null,
+        // Nobody enrolls somebody else's second factor: the account starts
+        // without one and the owner sets it up on first sign-in.
+        mfaEnrolled: false,
+        joinedAt: new Date().toISOString(),
+        lastAccessAt: null,
+        inviteToken: result.token,
+        inviteExpiresAt: result.expiresAt,
+      }
+
+      const path = getPathname({ href: buildInvitePath(result.token), locale })
+      const origin = typeof window !== 'undefined' ? window.location.origin : ''
+
+      setCreated({ member, link: `${origin}${path}` })
+      setCopied(false)
+      setStep('created')
+    } finally {
+      setPending(false)
+    }
+  }
+
+  async function copyLink() {
+    if (!created) return
+    try {
+      await navigator.clipboard.writeText(created.link)
+      setCopied(true)
+    } catch {
+      // Clipboard permission denied or unavailable — the link stays selectable
+      // in the field below, so copying by hand still works.
+    }
+  }
+
+  if (step === 'created' && created) {
+    return (
+      <Card className="p-5">
+        <p className="mb-1 flex items-center gap-2 text-sm font-semibold text-ink">
+          <BoIcon name="check" size={16} className="text-emerald-600" />
+          {t('team.invite_created_title')}
+        </p>
+        <p className="mb-4 text-xs text-muted-foreground">
+          {t('team.invite_created_subtitle', {
+            name: `${created.member.firstName} ${created.member.lastName}`,
+            date: formatDate(created.member.inviteExpiresAt as string, locale),
+          })}
+        </p>
+
+        <label className="flex flex-col gap-1">
+          <span className={labelClass}>{t('team.invite_link_label')}</span>
+          <span className="flex flex-wrap items-center gap-2">
+            <input
+              readOnly
+              value={created.link}
+              onFocus={(event) => event.currentTarget.select()}
+              className={`${fieldClass} flex-1`}
+            />
+            <button
+              type="button"
+              onClick={copyLink}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-2 text-sm font-semibold text-brand-blue transition hover:border-brand-blue"
+            >
+              <BoIcon name={copied ? 'check' : 'link'} size={16} />
+              {t(copied ? 'team.invite_copied' : 'team.invite_copy')}
+            </button>
+          </span>
+        </label>
+
+        <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-line pt-4">
+          <button
+            type="button"
+            onClick={() => onCreate(created.member)}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-deep"
+          >
+            <BoIcon name="check" size={16} />
+            {t('team.invite_done')}
+          </button>
+        </div>
+      </Card>
+    )
   }
 
   return (
     <Card className="p-5">
       <p className="mb-1 text-sm font-semibold text-ink">{t('team.new_title')}</p>
       <p className="mb-4 text-xs text-muted-foreground">{t('team.new_subtitle')}</p>
+
+      {emailTaken && (
+        <div
+          role="alert"
+          className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+        >
+          {t('team.invite_email_taken')}
+        </div>
+      )}
 
       {/* Access first: the cargo decides whether the rest of the form is typed
           or picked from the roster. */}
@@ -202,16 +320,17 @@ export function NewStaffForm({
       <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-line pt-4">
         <button
           type="button"
-          disabled={!ready}
+          disabled={!ready || pending}
           onClick={submit}
           className="inline-flex items-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-deep disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-brand-blue"
         >
-          <BoIcon name="check" size={16} />
-          {t('team.create')}
+          <BoIcon name={pending ? 'spinner' : 'link'} size={16} className={pending ? 'animate-spin' : undefined} />
+          {pending ? t('team.creating') : t('team.create')}
         </button>
         <button
           type="button"
           onClick={onCancel}
+          disabled={pending}
           className="rounded-lg border border-line px-3.5 py-2 text-sm font-semibold text-muted-foreground transition hover:text-ink"
         >
           {t('team.cancel')}
