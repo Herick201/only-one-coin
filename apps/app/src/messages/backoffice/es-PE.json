@@ -193,7 +193,9 @@
       "page_status": "{from}–{to} de {total}",
       "locked_title": "Sin acceso al padrón de alumnos",
       "locked_body": "Llegas a un alumno desde tu propia aula. El listado completo es de coordinación.",
-      "new_student": "Nuevo alumno"
+      "new_student": "Nuevo alumno",
+      "load_more": "Cargar más",
+      "loading_more": "Cargando…"
     },
     "student_status": {
       "active": "Activo",

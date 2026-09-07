@@ -193,7 +193,9 @@
       "page_status": "{from}–{to} de {total}",
       "locked_title": "Sem acesso à lista de alunos",
       "locked_body": "Você chega a um aluno pela sua própria turma. A lista completa é da coordenação.",
-      "new_student": "Novo aluno"
+      "new_student": "Novo aluno",
+      "load_more": "Carregar mais",
+      "loading_more": "Carregando…"
     },
     "student_status": {
       "active": "Ativo",

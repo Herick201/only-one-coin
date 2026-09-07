@@ -243,6 +243,11 @@ export const students = pgTable(
       "gin",
       sql`${table.phone} gin_trgm_ops`,
     ),
+    // Backs cursor pagination on the no-`q` directory listing
+    // (ListStudentsQuery) — `id` (uuidv7, itself time-ordered) breaks ties
+    // on `created_at`, which a bulk import can produce many of in the same
+    // statement-second.
+    index("students_created_at_id_idx").on(table.createdAt, table.id),
   ],
 );
 

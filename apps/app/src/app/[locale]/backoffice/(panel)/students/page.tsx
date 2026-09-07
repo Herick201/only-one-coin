@@ -39,12 +39,16 @@ export default async function StudentsPage({
     )
   }
 
-  const rows = await listStudents()
+  const { items, nextCursor } = await listStudents()
 
   return (
     <div className="flex flex-col gap-5">
       <PageHeader title={t('students.title')} />
-      <StudentsTable rows={rows} canCreate={canCreateStudent(staff.role)} />
+      <StudentsTable
+        rows={items}
+        initialNextCursor={nextCursor}
+        canCreate={canCreateStudent(staff.role)}
+      />
     </div>
   )
 }

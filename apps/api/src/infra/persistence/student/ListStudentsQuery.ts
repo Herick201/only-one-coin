@@ -1,5 +1,5 @@
 import { enrollments, students } from "@ooc/db";
-import { and, desc, eq, ilike, isNull, or, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, isNull, lt, or, sql } from "drizzle-orm";
 import type { Db } from "@/infra/db/client.js";
 
 export type StudentStatus = "active" | "under_review" | "inactive";
@@ -38,13 +38,45 @@ export interface StudentListRow {
   lastActivityAt: Date;
 }
 
-// No pagination yet — fine at seed scale, not at the 30k the platform is
-// meant to reach (docs/ROADMAP.md Sessão 34 sizes the real search for that).
-// This cap keeps an unfiltered directory read from becoming an unbounded
-// table scan in the meantime; real pagination is follow-up work, not a
-// silent promise this route already keeps.
-const LIST_LIMIT = 200;
+// The no-`q` directory listing is cursor-paginated (created_at, id) DESC —
+// `id` breaks ties since a bulk import can insert many rows in the same
+// statement-second (a real DEFAULT NOW() collision, not a hypothetical one).
+// `q` stays a small, non-paginated cap: it backs the manual enrollment
+// form's picker (CLAUDE.md §1), which only ever needs a short match list, not
+// a directory browse.
+const PAGE_SIZE = 50;
 const SEARCH_LIMIT = 10;
+
+export interface StudentListCursor {
+  createdAt: Date;
+  id: string;
+}
+
+export function encodeStudentCursor(cursor: StudentListCursor): string {
+  return Buffer.from(`${cursor.createdAt.toISOString()}|${cursor.id}`, "utf8").toString("base64url");
+}
+
+/** Malformed/tampered input decodes to `null` rather than throwing — an
+ * invalid cursor just restarts the listing from the top, same as if none had
+ * been sent, instead of failing the request over a client-controlled string
+ * that carries no authorization meaning of its own. */
+export function decodeStudentCursor(raw: string): StudentListCursor | null {
+  try {
+    const decoded = Buffer.from(raw, "base64url").toString("utf8");
+    const [isoDate, id] = decoded.split("|");
+    if (!isoDate || !id) return null;
+    const createdAt = new Date(isoDate);
+    if (Number.isNaN(createdAt.getTime())) return null;
+    return { createdAt, id };
+  } catch {
+    return null;
+  }
+}
+
+export interface StudentListPage {
+  items: StudentListRow[];
+  nextCursor: string | null;
+}
 
 /**
  * Read-only, same reasoning as the rest of this folder for living outside
@@ -64,8 +96,26 @@ const SEARCH_LIMIT = 10;
 export class ListStudentsQuery {
   constructor(private readonly db: Db) {}
 
-  async run(q?: string): Promise<StudentListRow[]> {
+  async run(q?: string, cursor?: string): Promise<StudentListPage> {
     const needle = q ? `%${q}%` : null;
+    // Cursor pagination only applies to the directory browse — a search
+    // already returns a short, non-paginated list.
+    const decodedCursor = !needle && cursor ? decodeStudentCursor(cursor) : null;
+    const limit = needle ? SEARCH_LIMIT : PAGE_SIZE;
+
+    const baseFilter = needle
+      ? and(
+          isNull(students.deletedAt),
+          or(ilike(sql`${students.firstName} || ' ' || ${students.lastName}`, needle), ilike(students.nationalId, needle)),
+        )
+      : isNull(students.deletedAt);
+
+    const cursorFilter = decodedCursor
+      ? or(
+          lt(students.createdAt, decodedCursor.createdAt),
+          and(eq(students.createdAt, decodedCursor.createdAt), lt(students.id, decodedCursor.id)),
+        )
+      : undefined;
 
     const rows = await this.db
       .select({
@@ -95,19 +145,19 @@ export class ListStudentsQuery {
       })
       .from(students)
       .leftJoin(enrollments, eq(enrollments.studentId, students.id))
-      .where(
-        needle
-          ? and(
-              isNull(students.deletedAt),
-              or(ilike(sql`${students.firstName} || ' ' || ${students.lastName}`, needle), ilike(students.nationalId, needle)),
-            )
-          : isNull(students.deletedAt),
-      )
+      .where(cursorFilter ? and(baseFilter, cursorFilter) : baseFilter)
       .groupBy(students.id)
-      .orderBy(desc(students.createdAt))
-      .limit(needle ? SEARCH_LIMIT : LIST_LIMIT);
+      .orderBy(desc(students.createdAt), desc(students.id))
+      // Fetch one extra row to learn whether another page follows, without
+      // a second round-trip — sliced back off before mapping to output.
+      .limit(limit + 1);
 
-    return rows.map((row): StudentListRow => {
+    const hasMore = rows.length > limit;
+    const page = hasMore ? rows.slice(0, limit) : rows;
+    const nextCursor =
+      !needle && hasMore ? encodeStudentCursor({ createdAt: page[page.length - 1]!.createdAt, id: page[page.length - 1]!.id }) : null;
+
+    const items = page.map((row): StudentListRow => {
       const status: StudentStatus =
         row.confirmedEnrollments > 0 ? "active" : row.reservedEnrollments > 0 ? "under_review" : "inactive";
 
@@ -134,5 +184,7 @@ export class ListStudentsQuery {
         lastActivityAt,
       };
     });
+
+    return { items, nextCursor };
   }
 }
