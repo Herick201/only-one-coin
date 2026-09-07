@@ -76,6 +76,7 @@ export function NewStaffForm({
   const [copied, setCopied] = useState(false)
   const [pending, setPending] = useState(false)
   const [emailTaken, setEmailTaken] = useState(false)
+  const [failed, setFailed] = useState(false)
 
   const isTeacher = role === 'teacher'
 
@@ -106,7 +107,13 @@ export function NewStaffForm({
     if (!ready || pending) return
     setPending(true)
     setEmailTaken(false)
+    setFailed(false)
 
+    // Every exit from here — a rejected status, a body that doesn't parse, a
+    // dropped connection — has to land on one of the two banners below.
+    // Leaving any path uncaught is what used to freeze the form on "Gerando…"
+    // with the invite already written server-side and no way for the person
+    // watching the screen to tell.
     try {
       const response = await fetch('/api/v1/staff/invites', {
         method: 'POST',
@@ -120,7 +127,15 @@ export function NewStaffForm({
       })
 
       if (!response.ok) {
-        setEmailTaken(true)
+        const reason = await response
+          .json()
+          .then((body: { reason?: string }) => body.reason)
+          .catch(() => undefined)
+        if (reason === 'staff_invite.email_taken') {
+          setEmailTaken(true)
+        } else {
+          setFailed(true)
+        }
         return
       }
 
@@ -153,6 +168,8 @@ export function NewStaffForm({
       setCreated({ member, link: `${origin}${path}` })
       setCopied(false)
       setStep('created')
+    } catch {
+      setFailed(true)
     } finally {
       setPending(false)
     }
@@ -222,12 +239,12 @@ export function NewStaffForm({
       <p className="mb-1 text-sm font-semibold text-ink">{t('team.new_title')}</p>
       <p className="mb-4 text-xs text-muted-foreground">{t('team.new_subtitle')}</p>
 
-      {emailTaken && (
+      {(emailTaken || failed) && (
         <div
           role="alert"
           className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
         >
-          {t('team.invite_email_taken')}
+          {t(emailTaken ? 'team.invite_email_taken' : 'team.action_failed')}
         </div>
       )}
 
