@@ -9,7 +9,6 @@ import {
   Card,
   EmptyState,
   Meter,
-  MockNotice,
   StatCard,
   StatusBadge,
   TableShell,
@@ -83,7 +82,6 @@ export async function TeacherHome({
         </h1>
       </header>
 
-      <MockNotice label={t('common.mock_notice')} />
 
       <AutoGrid as="section" min="15rem" gap="gap-3">
         <StatCard

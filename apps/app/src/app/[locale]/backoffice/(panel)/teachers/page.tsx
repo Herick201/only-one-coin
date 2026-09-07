@@ -11,7 +11,7 @@ import {
   isRestrictedToOwnClassGroups,
 } from '@/lib/backoffice/permissions'
 import type { CourseLanguage } from '@/lib/backoffice/types'
-import { EmptyState, MockNotice, PageHeader } from '@/components/backoffice/ui'
+import { EmptyState, PageHeader } from '@/components/backoffice/ui'
 import { TeachersView } from './teachers-view'
 
 /**
@@ -67,7 +67,6 @@ export default async function TeachersPage({
   return (
     <div className="flex flex-col gap-5">
       <PageHeader title={t('teachers.title')} />
-      <MockNotice label={t('common.mock_notice')} />
       <TeachersView
         rows={listTeachers()}
         languages={languages}

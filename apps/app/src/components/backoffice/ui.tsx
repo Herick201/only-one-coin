@@ -365,16 +365,6 @@ export function Pager({
   )
 }
 
-/** Banner reminding that the screen is a mock with no backend behind it. */
-export function MockNotice({ label }: { label: string }) {
-  return (
-    <p className="flex items-start gap-2 rounded-lg border border-dashed border-line bg-sky-soft px-3 py-2 text-xs text-muted-foreground">
-      <BoIcon name="alert" size={14} className="mt-0.5 shrink-0" />
-      {label}
-    </p>
-  )
-}
-
 /**
  * The mark that says a field has to be filled in. An asterisk carries no
  * meaning on its own — a screen reader announces "star" — so the word rides

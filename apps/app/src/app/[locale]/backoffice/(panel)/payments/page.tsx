@@ -4,8 +4,8 @@ import {
   listPayments,
 } from '@/lib/backoffice/mock-data'
 import { getStaffSession } from '@/lib/backoffice/session'
-import { canReviewPayments } from '@/lib/backoffice/permissions'
-import { EmptyState, MockNotice, PageHeader } from '@/components/backoffice/ui'
+import { canViewPayments } from '@/lib/backoffice/permissions'
+import { EmptyState, PageHeader } from '@/components/backoffice/ui'
 import { SectionTabs } from '@/components/backoffice/section-tabs'
 import { PaymentsView } from './payments-view'
 
@@ -29,7 +29,7 @@ export default async function PaymentsPage({
 
   const staff = await getStaffSession()
 
-  if (!canReviewPayments(staff.role)) {
+  if (!canViewPayments(staff.role)) {
     return (
       <div className="flex flex-col gap-5">
         <PageHeader title={t('payments.title')} />
@@ -58,7 +58,6 @@ export default async function PaymentsPage({
           { href: '/backoffice/payments/review', label: t('payments.tab_review') },
         ]}
       />
-      <MockNotice label={t('common.mock_notice')} />
       <PaymentsView rows={listPayments()} metrics={getPaymentMetrics()} />
     </div>
   )

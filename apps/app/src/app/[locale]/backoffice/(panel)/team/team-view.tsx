@@ -3,22 +3,15 @@
 import { useMemo, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
-import type {
-  StaffMemberRow,
-  StaffRole,
-  StaffRoleChange,
-} from '@/lib/backoffice/types'
-import { isMfaMandatory } from '@/lib/backoffice/permissions'
+import type { StaffMemberRow, StaffRole } from '@/lib/backoffice/types'
 import { formatDate, formatDateTime, initials, type Locale } from '@/lib/format'
 import {
   Card,
   EmptyState,
+  Field,
   Pager,
   rowActionClass,
   StatusBadge,
-  TableShell,
-  tdClass,
-  thClass,
   Toolbar,
   toolbarSearchClass,
 } from '@/components/backoffice/ui'
@@ -26,6 +19,7 @@ import { Toast } from '@/components/backoffice/controls'
 import { BoIcon } from '@/components/backoffice/icons'
 import { tabClass, tabStripClass } from '@/components/backoffice/tab-strip'
 import { FiltersDropdown } from '@/components/backoffice/filters-dropdown'
+import { AutoGrid } from '@/components/layout/auto-grid'
 import {
   Dialog,
   DialogContent,
@@ -33,8 +27,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { NewStaffForm, type TeacherOption } from './new-staff-form'
-import { RoleChangeDialog } from './role-change-dialog'
+import { NewStaffDialog, type TeacherOption } from './new-staff-dialog'
+import { EditStaffDialog, type StaffEdit } from './edit-staff-dialog'
 
 /**
  * Accounts that still open the panel, and accounts that used to. Two tabs
@@ -48,22 +42,21 @@ const ALL = 'all'
 
 const PAGE_SIZE = 15
 
-/** Every cargo an account can carry (CLAUDE.md §8). */
+/** Every cargo an account can carry (owner's map — `lib/backoffice/permissions.ts`). */
 const ROLES: StaffRole[] = [
+  'master',
   'admin',
-  'coordinator',
-  'treasury',
-  'mass_approver',
+  'analyst',
+  'enrollment_supervisor',
+  'academic_supervisor',
   'teacher',
+  'sales',
+  'support',
+  'billing',
 ]
 
 const selectClass =
   'rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink outline-none transition focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15'
-
-/** A cargo that requires the second factor and does not have it yet. */
-function mfaPending(row: StaffMemberRow): boolean {
-  return isMfaMandatory(row.role) && !row.mfaEnrolled
-}
 
 /**
  * Team directory. Search, filters and paging run in the browser because the
@@ -77,13 +70,11 @@ function mfaPending(row: StaffMemberRow): boolean {
  */
 export function TeamView({
   rows,
-  roleChanges,
   teachers,
   currentUserId,
   currentUserName,
 }: {
   rows: StaffMemberRow[]
-  roleChanges: StaffRoleChange[]
   /** Teachers still on the roster — who an account may be opened over. */
   teachers: TeacherOption[]
   /** The signed-in admin: nobody moves their own cargo or their own door. */
@@ -94,13 +85,13 @@ export function TeamView({
   const locale = useLocale() as Locale
 
   const [members, setMembers] = useState<StaffMemberRow[]>(rows)
-  const [ledger, setLedger] = useState<StaffRoleChange[]>(roleChanges)
   const [tab, setTab] = useState<Tab>('active')
   const [query, setQuery] = useState('')
   const [role, setRole] = useState(ALL)
-  const [mfaOnly, setMfaOnly] = useState(false)
   const [page, setPage] = useState(0)
   const [creating, setCreating] = useState(false)
+  /** The one person folded open in the list — an accordion, one at a time. */
+  const [openId, setOpenId] = useState<string | null>(null)
   const [changing, setChanging] = useState<StaffMemberRow | null>(null)
   const [removing, setRemoving] = useState<StaffMemberRow | null>(null)
   const [toast, setToast] = useState<string | null>(null)
@@ -115,14 +106,13 @@ export function TeamView({
     const needle = query.trim().toLowerCase()
     return scoped.filter((row) => {
       if (role !== ALL && row.role !== role) return false
-      if (mfaOnly && !mfaPending(row)) return false
       if (!needle) return true
       return [`${row.firstName} ${row.lastName}`, row.email, t(`role.${row.role}`)]
         .join(' ')
         .toLowerCase()
         .includes(needle)
     })
-  }, [scoped, query, role, mfaOnly, t])
+  }, [scoped, query, role, t])
 
   const counts = useMemo(
     () => ({
@@ -131,8 +121,6 @@ export function TeamView({
     }),
     [members],
   )
-
-  const mfaCount = useMemo(() => scoped.filter(mfaPending).length, [scoped])
 
   /* Only teachers who do not already hold an account: two doors for one person
      is two sessions to remember to close. Computed here rather than on the
@@ -145,12 +133,9 @@ export function TeamView({
     [teachers, members],
   )
 
-  /* Chasing a missing second factor is a question about somebody who still
-     signs in. Off the tab it would filter a list on a fact that changes
-     nothing — the door is already closed. */
   const onActive = tab === 'active'
 
-  const activeFilters = (role !== ALL ? 1 : 0) + (onActive && mfaOnly ? 1 : 0)
+  const activeFilters = role !== ALL ? 1 : 0
 
   /** A filter that shrinks the list can leave the page behind it. */
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
@@ -163,31 +148,18 @@ export function TeamView({
   function openTab(next: Tab) {
     setTab(next)
     setPage(0)
-    if (next !== 'active') setMfaOnly(false)
   }
 
   /**
-   * The cargo moved. Locally it is one row and one ledger line; in production
-   * it is one transaction — the `role` column and the `audit_log` entry
-   * together, or neither (CLAUDE.md §8).
+   * The account changed. Locally it is one row; in production it is one
+   * transaction — the row and the `audit_log` entry together, or neither, and
+   * the `role` column only ever moves through the dedicated promotion usecase
+   * (CLAUDE.md §8).
    */
-  function applyRoleChange(member: StaffMemberRow, next: StaffRole) {
+  function applyEdit(member: StaffMemberRow, edit: StaffEdit) {
     setMembers((current) =>
-      current.map((row) => (row.id === member.id ? { ...row, role: next } : row)),
+      current.map((row) => (row.id === member.id ? { ...row, ...edit } : row)),
     )
-    setLedger((current) => [
-      {
-        id: `rol_local_${member.id}_${current.length}`,
-        at: new Date().toISOString(),
-        memberId: member.id,
-        memberName: `${member.firstName} ${member.lastName}`,
-        fromRole: member.role,
-        toRole: next,
-        actorName: currentUserName,
-        actorRole: 'admin',
-      },
-      ...current,
-    ])
     setChanging(null)
     setToast(t('team.changed_toast'))
   }
@@ -251,29 +223,6 @@ export function TeamView({
             count={activeFilters}
             panelClassName="flex-wrap items-center gap-1.5"
           >
-            {onActive && (
-              <button
-                type="button"
-                onClick={() => {
-                  setMfaOnly(!mfaOnly)
-                  setPage(0)
-                }}
-                aria-pressed={mfaOnly}
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                  mfaOnly
-                    ? 'bg-brand-blue text-white'
-                    : 'border border-line bg-white text-muted-foreground hover:bg-cream hover:text-ink'
-                }`}
-              >
-                {t('team.filter_mfa')}
-                <span className={mfaOnly ? 'text-white/70' : 'text-slate-400'}>
-                  {mfaCount}
-                </span>
-              </button>
-            )}
-
-            {onActive && <span aria-hidden="true" className="mx-1 h-5 w-px bg-line" />}
-
             <label className="flex items-center gap-2">
               <span className="sr-only">{t('team.filter_role')}</span>
               <select
@@ -294,46 +243,30 @@ export function TeamView({
             </label>
           </FiltersDropdown>
 
-          {!creating && (
-            <button
-              type="button"
-              onClick={() => setCreating(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-deep lg:ml-auto"
-            >
-              <BoIcon name="plus" size={16} />
-              {t('team.new')}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => setCreating(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-deep lg:ml-auto"
+          >
+            <BoIcon name="plus" size={16} />
+            {t('team.new')}
+          </button>
         </Toolbar>
 
       </div>
 
-      {creating && (
-        <NewStaffForm
-          teachers={availableTeachers}
-          onCancel={() => setCreating(false)}
-          onCreate={(member) => {
-            setMembers((current) => [member, ...current])
-            setLedger((current) => [
-              {
-                id: `rol_local_${member.id}`,
-                at: new Date().toISOString(),
-                memberId: member.id,
-                memberName: `${member.firstName} ${member.lastName}`,
-                fromRole: null,
-                toRole: member.role,
-                actorName: currentUserName,
-                actorRole: 'admin',
-              },
-              ...current,
-            ])
-            setCreating(false)
-            setTab('active')
-            setPage(0)
-            setToast(t('team.created_toast'))
-          }}
-        />
-      )}
+      <NewStaffDialog
+        open={creating}
+        teachers={availableTeachers}
+        onClose={() => setCreating(false)}
+        onCreate={(member) => {
+          setMembers((current) => [member, ...current])
+          setCreating(false)
+          setTab('active')
+          setPage(0)
+          setToast(t('team.created_toast'))
+        }}
+      />
 
       <Card>
         {pageRows.length === 0 ? (
@@ -354,164 +287,142 @@ export function TeamView({
           </div>
         ) : (
           <>
-            <TableShell
-              columns={[
-                t('team.col_member'),
-                t('team.col_role'),
-                t('team.col_access'),
-                t('team.col_last_access'),
-                t('common.actions'),
-              ]}
-            >
-              <thead>
-                <tr>
-                  <th className={thClass}>{t('team.col_member')}</th>
-                  <th className={thClass}>{t('team.col_role')}</th>
-                  <th className={thClass}>{t('team.col_access')}</th>
-                  <th className={thClass}>{t('team.col_last_access')}</th>
-                  {/* Off the active tab the row still ends in an action: giving
-                      a door back is done from the same line it was taken. */}
-                  <th className={`${thClass} text-right`}>{t('common.actions')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pageRows.map((row) => {
+            {/* One row per person, and the row is the control: everything the
+                table used to spread over columns lives inside the person's own
+                dropdown — the facts on top, the actions under them. */}
+            <ul className="divide-y divide-line">
+              {pageRows.map((row) => {
                   const self = row.id === currentUserId
                   /* The docente cargo travels with the roster file: an account
                      is opened over a teacher record, so moving somebody into or
                      out of it here would leave the link pointing nowhere. */
                   const lockedByRoster = row.role === 'teacher'
+                  const open = openId === row.id
                   return (
-                    <tr key={row.id}>
-                      <td className={`${tdClass} whitespace-nowrap`}>
-                        <span className="flex items-center gap-2.5">
-                          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-sky text-xs font-semibold text-brand-blue-deep">
-                            {initials(row.firstName, row.lastName)}
+                    <li key={row.id}>
+                      {/* The row is the handle: it folds the person open in
+                          place, pushing the list down — never a floating menu
+                          covering the neighbours. */}
+                      <button
+                        type="button"
+                        onClick={() => setOpenId(open ? null : row.id)}
+                        aria-expanded={open}
+                        className="flex min-h-tap w-full items-center gap-2.5 px-4 py-3 text-left transition hover:bg-sky-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-blue/40 aria-expanded:bg-sky-soft"
+                      >
+                        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-sky text-xs font-semibold text-brand-blue-deep">
+                          {initials(row.firstName, row.lastName)}
+                        </span>
+                        <span className="flex min-w-0 flex-1 items-center gap-1.5">
+                          <span className="truncate font-semibold text-ink">
+                            {`${row.firstName} ${row.lastName}`}
                           </span>
-                          <span className="flex min-w-0 flex-col leading-tight">
-                            <span className="flex items-center gap-1.5">
-                              <span className="font-semibold text-ink">
-                                {`${row.firstName} ${row.lastName}`}
-                              </span>
-                              {self && (
-                                <span className="rounded-full bg-cream px-1.5 py-0.5 text-[11px] font-semibold text-brand-yellow-deep">
-                                  {t('team.you')}
+                          {self && (
+                            <span className="rounded-full bg-cream px-1.5 py-0.5 text-[11px] font-semibold text-brand-yellow-deep">
+                              {t('team.you')}
+                            </span>
+                          )}
+                        </span>
+                        <BoIcon
+                          name="chevron-down"
+                          size={14}
+                          className={`shrink-0 text-muted-foreground transition-transform ${
+                            open ? 'rotate-180' : ''
+                          }`}
+                        />
+                      </button>
+
+                      {open && (
+                        <div className="border-t border-line/70 px-4 py-4">
+                          {/* The person's facts first, read-only … */}
+                          <AutoGrid as="dl" min="13rem">
+                            <Field label={t('team.full_name')}>
+                              {`${row.firstName} ${row.lastName}`}
+                            </Field>
+                            <Field label={t('team.field_email')} wrap>
+                              {row.email}
+                            </Field>
+                            <Field label={t('team.field_phone')}>
+                              {row.phone}
+                            </Field>
+                            <Field label={t('team.col_role')}>
+                              {t(`role.${row.role}`)}
+                            </Field>
+                            <Field label={t('team.joined_at')}>
+                              {formatDate(row.joinedAt, locale)}
+                            </Field>
+                            <Field label={t('team.col_last_access')}>
+                              {row.lastAccessAt ? (
+                                formatDateTime(row.lastAccessAt, locale)
+                              ) : (
+                                <span className="text-amber-700">
+                                  {t('team.never_accessed')}
                                 </span>
                               )}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {row.email}
-                            </span>
-                            {/* The account of a docente is the roster file seen
-                                from the door side — the two are one person, and
-                                the panel says so instead of making somebody
-                                search the other section for them. */}
-                            {row.teacherId && (
-                              <Link
-                                href={`/backoffice/teachers/${row.teacherId}`}
-                                className="mt-0.5 inline-flex w-fit items-center gap-1 text-xs font-semibold text-brand-blue transition hover:text-brand-blue-deep"
-                              >
-                                <BoIcon name="chevron-right" size={12} />
-                                {t('team.teacher_file')}
-                              </Link>
-                            )}
-                          </span>
-                        </span>
-                      </td>
+                            </Field>
+                          </AutoGrid>
 
-                      {/* The cargo, and only the cargo: the tab above already
-                          said whether the door is open, and a badge that reads
-                          the same on every row of a list says nothing. */}
-                      <td className={`${tdClass} whitespace-nowrap`}>
-                        <span className="rounded-full bg-sky px-2 py-0.5 text-[11px] font-semibold text-brand-blue-deep">
-                          {t(`role.${row.role}`)}
-                        </span>
-                      </td>
+                          {/* The account of a docente is the roster file seen
+                              from the door side — the two are one person, and
+                              the panel says so instead of making somebody
+                              search the other section for them. */}
+                          {row.teacherId && (
+                            <Link
+                              href={`/backoffice/teachers/${row.teacherId}`}
+                              className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-brand-blue transition hover:text-brand-blue-deep"
+                            >
+                              <BoIcon name="chevron-right" size={12} />
+                              {t('team.teacher_file')}
+                            </Link>
+                          )}
 
-                      {/* The second factor is on the row, not in a file: an
-                          admin without one is one password away from the whole
-                          panel, and nobody opens nine accounts to find out. */}
-                      <td className={`${tdClass} whitespace-nowrap`}>
-                        {row.status !== 'active' ? (
-                          /* A pending second factor on an account that cannot
-                             sign in is not an errand — chasing it would be
-                             chasing a door that is already shut. */
-                          <span className="text-xs text-muted-foreground">—</span>
-                        ) : !isMfaMandatory(row.role) ? (
-                          <span className="text-xs text-muted-foreground">
-                            {t('team.mfa_optional')}
-                          </span>
-                        ) : row.mfaEnrolled ? (
-                          <StatusBadge tone="success" label={t('team.mfa_on')} />
-                        ) : (
-                          <StatusBadge
-                            tone="warning"
-                            label={t('team.mfa_pending')}
-                            title={t('team.mfa_pending_title')}
-                          />
-                        )}
-                      </td>
-
-                      <td className={`${tdClass} whitespace-nowrap text-xs`}>
-                        {row.lastAccessAt ? (
-                          <span className="text-muted-foreground">
-                            {formatDateTime(row.lastAccessAt, locale)}
-                          </span>
-                        ) : (
-                          <span className="font-semibold text-amber-700">
-                            {t('team.never_accessed')}
-                          </span>
-                        )}
-                      </td>
-
-                      <td className={`${tdClass} whitespace-nowrap text-right`}>
-                        {self ? (
-                          <span
-                            className="text-xs text-muted-foreground"
-                            title={t('team.self_title')}
-                          >
-                            {t('team.self_note')}
-                          </span>
-                        ) : (
-                          <span className="inline-flex flex-wrap items-center justify-end gap-2">
-                            {!lockedByRoster && row.status === 'active' && (
-                              <button
-                                type="button"
-                                onClick={() => setChanging(row)}
-                                className={rowActionClass}
-                              >
-                                <BoIcon name="edit" size={14} />
-                                {t('team.change_role')}
-                              </button>
-                            )}
-
-                            {row.status === 'active' ? (
-                              <button
-                                type="button"
-                                onClick={() => setRemoving(row)}
-                                className="inline-flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-sm font-semibold text-muted-foreground transition hover:border-red-300 hover:text-red-600"
-                              >
-                                <BoIcon name="close" size={14} />
-                                {t('team.remove_access')}
-                              </button>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => applyAccess(row, 'active')}
-                                className="inline-flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-sm font-semibold text-brand-blue transition hover:border-brand-blue"
-                              >
-                                <BoIcon name="check" size={14} />
-                                {t('team.restore_access')}
-                              </button>
-                            )}
-                          </span>
-                        )}
-                      </td>
-                    </tr>
+                          {/* … then what can be done to them. Never to oneself:
+                              nobody moves their own cargo or their own door. */}
+                          {self ? (
+                            <p
+                              className="mt-4 text-xs text-muted-foreground"
+                              title={t('team.self_title')}
+                            >
+                              {t('team.self_note')}
+                            </p>
+                          ) : (
+                            <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
+                              {!lockedByRoster && row.status === 'active' && (
+                                <button
+                                  type="button"
+                                  onClick={() => setChanging(row)}
+                                  className={rowActionClass}
+                                >
+                                  <BoIcon name="edit" size={14} />
+                                  {t('team.change_role')}
+                                </button>
+                              )}
+                              {row.status === 'active' ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setRemoving(row)}
+                                  className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-2.5 py-1.5 text-sm font-semibold text-red-600 transition hover:border-red-400 hover:bg-red-50"
+                                >
+                                  <BoIcon name="close" size={14} />
+                                  {t('team.remove_access')}
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => applyAccess(row, 'active')}
+                                  className="inline-flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-sm font-semibold text-brand-blue transition hover:border-brand-blue"
+                                >
+                                  <BoIcon name="check" size={14} />
+                                  {t('team.restore_access')}
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </li>
                   )
                 })}
-              </tbody>
-            </TableShell>
+            </ul>
 
             {/* Why the docente rows have no cargo button. Once under the
                 table, not once per row: it is one rule, not eight findings. */}
@@ -540,65 +451,10 @@ export function TeamView({
         )}
       </Card>
 
-      {/* The cargo ledger. It sits under the directory because it is the answer
-          to the question the directory raises — "since when does this person
-          open this?" — and because a change nobody can read afterwards is a
-          change nobody can question (CLAUDE.md §8). */}
-      <Card className="p-5">
-        <p className="text-sm font-semibold text-ink">{t('team.ledger_title')}</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          {t('team.ledger_subtitle')}
-        </p>
-
-        {ledger.length === 0 ? (
-          <p className="mt-4 text-sm text-muted-foreground">{t('team.ledger_empty')}</p>
-        ) : (
-          <ul className="mt-4 flex flex-col gap-3">
-            {ledger.map((entry) => (
-              <li
-                key={entry.id}
-                className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-line/70 pb-3 last:border-0 last:pb-0"
-              >
-                <span className="flex min-w-0 flex-col gap-1">
-                  <span className="text-sm font-semibold text-ink">
-                    {entry.memberName}
-                  </span>
-                  {entry.fromRole === null ? (
-                    <span className="text-xs text-muted-foreground">
-                      {t('team.ledger_created', { role: t(`role.${entry.toRole}`) })}
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1.5 text-xs">
-                      <span className="rounded-full bg-slate-100 px-2 py-0.5 font-semibold text-slate-600">
-                        {t(`role.${entry.fromRole}`)}
-                      </span>
-                      <BoIcon
-                        name="chevron-right"
-                        size={12}
-                        className="text-muted-foreground"
-                      />
-                      <span className="rounded-full bg-sky px-2 py-0.5 font-semibold text-brand-blue-deep">
-                        {t(`role.${entry.toRole}`)}
-                      </span>
-                    </span>
-                  )}
-                </span>
-                <span className="flex flex-col text-right text-xs text-muted-foreground">
-                  {/* With the year: this ledger runs back over ciclos, and
-                      "10 de junio" three years ago reads as last week. */}
-                  <span>{formatDate(entry.at, locale)}</span>
-                  <span>{t('team.ledger_by', { actor: entry.actorName })}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
-
-      <RoleChangeDialog
+      <EditStaffDialog
         member={changing}
         onClose={() => setChanging(null)}
-        onConfirm={applyRoleChange}
+        onConfirm={applyEdit}
       />
 
       {/* Taking a door away is a confirmation, not a re-authentication: it

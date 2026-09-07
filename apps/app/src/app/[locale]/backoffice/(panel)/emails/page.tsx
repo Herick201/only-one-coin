@@ -8,7 +8,7 @@ import {
 import { getStaffSession } from '@/lib/backoffice/session'
 import { countDeliveryIssues } from '@/lib/backoffice/email-delivery'
 import { canManageEmail } from '@/lib/backoffice/permissions'
-import { EmptyState, MockNotice, PageHeader } from '@/components/backoffice/ui'
+import { EmptyState, PageHeader } from '@/components/backoffice/ui'
 import { SectionTabs } from '@/components/backoffice/section-tabs'
 import { BoIcon } from '@/components/backoffice/icons'
 import { EmailsView } from './emails-view'
@@ -74,7 +74,6 @@ export default async function EmailsPage({
           { href: '/backoffice/emails/deliveries', label: t('deliveries.tab') },
         ]}
       />
-      <MockNotice label={t('common.mock_notice')} />
 
       {/* The one thing on this screen that is somebody's errand today: an
           e-mail that never reached a person, sitting above the numbers rather

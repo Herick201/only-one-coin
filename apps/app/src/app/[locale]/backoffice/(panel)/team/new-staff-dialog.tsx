@@ -3,10 +3,17 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import type { StaffMemberRow, StaffRole } from '@/lib/backoffice/types'
-import { isMfaMandatory } from '@/lib/backoffice/permissions'
-import { Card, RequiredMark } from '@/components/backoffice/ui'
+import { RequiredMark } from '@/components/backoffice/ui'
 import { BoIcon } from '@/components/backoffice/icons'
 import { AutoGrid } from '@/components/layout/auto-grid'
+import { PhoneField, hasPhoneNumber } from '@/components/backoffice/phone-field'
+import { canHoldMaster } from '@/lib/backoffice/permissions'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 
 /** A teacher still on the roster — who an account may be opened over. */
 export interface TeacherOption {
@@ -16,29 +23,32 @@ export interface TeacherOption {
   email: string
 }
 
+/** `master` is not listed: it only appears for the owners' e-mail domain. */
 const ROLES: StaffRole[] = [
   'admin',
-  'coordinator',
-  'treasury',
-  'mass_approver',
+  'analyst',
+  'enrollment_supervisor',
+  'academic_supervisor',
   'teacher',
+  'sales',
+  'support',
+  'billing',
 ]
 
 const fieldClass =
-  'rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink outline-none transition placeholder:text-muted-foreground focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15'
+  'w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink outline-none transition placeholder:text-muted-foreground focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15'
 
 const labelClass =
   'text-xs font-medium uppercase tracking-wide text-muted-foreground'
 
 /**
- * Opening a panel account: who the person is, and which cargo they come in
- * with. Two blocks, because those are the two questions — and the second one is
- * the whole reason this form is admin-only (CLAUDE.md §8).
+ * Opening a panel account, in its own dialog: who the person is, and which
+ * cargo they come in with — the cargo being the whole reason this is
+ * admin-only (CLAUDE.md §8).
  *
  * No password field, by design. The account is opened here and the credentials
  * leave by e-mail, the same way a student's do: a panel that shows somebody
- * else's password is a panel that has it. The second factor is not set here
- * either — the owner enrolls their own, on first sign-in.
+ * else's password is a panel that has it.
  *
  * A `teacher` account is opened over a teacher who is already on the roster,
  * the same shape as a manual enrollment acting only on a student who already
@@ -48,13 +58,47 @@ const labelClass =
  * Screen-local, like every other form in the mockup: the real write is a
  * usecase in `apps/api`, never the browser.
  */
-export function NewStaffForm({
+export function NewStaffDialog({
+  open,
   teachers,
-  onCancel,
+  onClose,
+  onCreate,
+}: {
+  open: boolean
+  teachers: TeacherOption[]
+  onClose: () => void
+  onCreate: (member: StaffMemberRow) => void
+}) {
+  const t = useTranslations('bo')
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) onClose()
+      }}
+    >
+      <DialogContent
+        closeLabel={t('team.change_close')}
+        className="bg-white sm:max-w-2xl"
+        aria-describedby={undefined}
+      >
+        {/* Mounted per open: closing throws the half-typed answers away. */}
+        {open && (
+          <NewStaffFields teachers={teachers} onClose={onClose} onCreate={onCreate} />
+        )}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function NewStaffFields({
+  teachers,
+  onClose,
   onCreate,
 }: {
   teachers: TeacherOption[]
-  onCancel: () => void
+  onClose: () => void
   onCreate: (member: StaffMemberRow) => void
 }) {
   const t = useTranslations('bo')
@@ -62,15 +106,24 @@ export function NewStaffForm({
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
-  const [role, setRole] = useState<StaffRole>('coordinator')
+  const [phone, setPhone] = useState('')
+  const [role, setRole] = useState<StaffRole>('enrollment_supervisor')
   const [teacherId, setTeacherId] = useState('')
 
   const isTeacher = role === 'teacher'
+
+  /* Master is the owners' cargo: the option only exists while the e-mail is on
+     their domain, and an e-mail edited off it takes the cargo with it. */
+  const allowMaster = canHoldMaster(email)
+  const roles: StaffRole[] =
+    allowMaster || role === 'master' ? ['master', ...ROLES] : ROLES
 
   const ready =
     firstName.trim() !== '' &&
     lastName.trim() !== '' &&
     email.trim() !== '' &&
+    hasPhoneNumber(phone) &&
+    (role !== 'master' || allowMaster) &&
     (!isTeacher || teacherId !== '')
 
   /* Picking the teacher fills the person in: the roster already answered who
@@ -97,6 +150,7 @@ export function NewStaffForm({
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       email: email.trim(),
+      phone: phone.trim(),
       role,
       status: 'active',
       teacherId: isTeacher ? teacherId : null,
@@ -109,23 +163,22 @@ export function NewStaffForm({
   }
 
   return (
-    <Card className="p-5">
-      <p className="mb-1 text-sm font-semibold text-ink">{t('team.new_title')}</p>
-      <p className="mb-4 text-xs text-muted-foreground">{t('team.new_subtitle')}</p>
+    <>
+      <DialogHeader className="border-b border-line p-5 pr-14">
+        <DialogTitle className="text-base font-semibold text-ink">
+          {t('team.new_title')}
+        </DialogTitle>
+      </DialogHeader>
 
-      {/* Access first: the cargo decides whether the rest of the form is typed
-          or picked from the roster. */}
-      <Block title={t('team.section_access')} hint={t('team.role_hint')}>
-        {/* Capped: one or two selects stretched across a wide panel read as a
-            form with a field missing. */}
-        <AutoGrid min="15rem" gap="gap-3" className="max-w-3xl">
+      <div className="flex flex-col gap-4 p-5">
+        <AutoGrid min="14rem" gap="gap-3">
           <Labelled label={t('team.field_role')} required>
             <select
               value={role}
               onChange={(event) => selectRole(event.target.value as StaffRole)}
               className={fieldClass}
             >
-              {ROLES.map((item) => (
+              {roles.map((item) => (
                 <option key={item} value={item}>
                   {t(`role.${item}`)}
                 </option>
@@ -152,19 +205,10 @@ export function NewStaffForm({
         </AutoGrid>
 
         {isTeacher && (
-          <p className="mt-3 text-xs text-muted-foreground">{t('team.teacher_hint')}</p>
+          <p className="text-xs text-muted-foreground">{t('team.teacher_hint')}</p>
         )}
 
-        {isMfaMandatory(role) && (
-          <p className="mt-3 flex items-start gap-2 rounded-lg border border-dashed border-line bg-sky-soft px-3 py-2 text-xs text-muted-foreground">
-            <BoIcon name="shield" size={14} className="mt-0.5 shrink-0" />
-            {t('team.mfa_note')}
-          </p>
-        )}
-      </Block>
-
-      <Block title={t('team.section_person')}>
-        <AutoGrid min="15rem" gap="gap-3">
+        <AutoGrid min="14rem" gap="gap-3">
           <Labelled label={t('team.field_first_name')} required>
             <input
               value={firstName}
@@ -182,7 +226,9 @@ export function NewStaffForm({
               className={`${fieldClass} disabled:bg-slate-50 disabled:text-muted-foreground`}
             />
           </Labelled>
+        </AutoGrid>
 
+        <AutoGrid min="14rem" gap="gap-3">
           <Labelled label={t('team.field_email')} required>
             <input
               type="email"
@@ -192,14 +238,21 @@ export function NewStaffForm({
               className={`${fieldClass} disabled:bg-slate-50 disabled:text-muted-foreground`}
             />
           </Labelled>
+
+          <Labelled label={t('team.field_phone')} required>
+            <PhoneField value={phone} onChange={setPhone} />
+          </Labelled>
         </AutoGrid>
+      </div>
 
-        <p className="mt-3 text-xs text-muted-foreground">
-          {t('team.credentials_note')}
-        </p>
-      </Block>
-
-      <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-line pt-4">
+      <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line p-5">
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-lg border border-line px-3.5 py-2 text-sm font-semibold text-muted-foreground transition hover:text-ink"
+        >
+          {t('team.cancel')}
+        </button>
         <button
           type="button"
           disabled={!ready}
@@ -209,42 +262,8 @@ export function NewStaffForm({
           <BoIcon name="check" size={16} />
           {t('team.create')}
         </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-lg border border-line px-3.5 py-2 text-sm font-semibold text-muted-foreground transition hover:text-ink"
-        >
-          {t('team.cancel')}
-        </button>
-        {/* A button that greys out without saying why reads as broken. */}
-        {!ready && (
-          <span className="text-xs text-muted-foreground">
-            {t('team.missing_fields')}
-          </span>
-        )}
       </div>
-    </Card>
-  )
-}
-
-/** One question per block, with a rule above it — that is the whole layout. */
-function Block({
-  title,
-  hint,
-  children,
-}: {
-  title: string
-  hint?: string
-  children: React.ReactNode
-}) {
-  return (
-    <section className="mt-5 border-t border-line pt-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {title}
-      </p>
-      {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
-      <div className="mt-3">{children}</div>
-    </section>
+    </>
   )
 }
 

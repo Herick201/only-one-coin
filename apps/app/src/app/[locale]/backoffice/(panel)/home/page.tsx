@@ -3,15 +3,7 @@ import {
   Armchair,
   ArrowRight,
   ArrowUpRight,
-  BarChart3,
-  BookOpen,
   ClipboardList,
-  CreditCard,
-  GraduationCap,
-  LayoutDashboard,
-  Mail,
-  Settings,
-  UserCog,
   Users,
   type LucideIcon,
 } from 'lucide-react'
@@ -24,7 +16,6 @@ import {
 } from '@/lib/backoffice/mock-data'
 import { getStaffSession } from '@/lib/backoffice/session'
 import { getFeatureFlags } from '@/lib/feature-flags/server'
-import type { FeatureFlagKey } from '@/lib/feature-flags/registry'
 import { isRestrictedToOwnClassGroups } from '@/lib/backoffice/permissions'
 import { formatDate, formatDateTime, formatMoney, type Locale } from '@/lib/format'
 import { reviewFlagTone, seatPressureTone } from '@/components/backoffice/status-tone'
@@ -39,7 +30,6 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Progress } from '@/components/ui/progress'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { TeacherHome } from './teacher-home'
 import { AutoGrid } from '@/components/layout/auto-grid'
@@ -114,90 +104,6 @@ export default async function BackofficeHomePage({
     },
   ]
 
-  /* Module doors. Each carries the flag of the section behind it: a door to a
-     section that is not on the air is not drawn at all — "pronto" would promise
-     a screen the reader could not be told about yet (CLAUDE.md §5). */
-  const modules: {
-    href: string
-    label: string
-    body: string
-    icon: LucideIcon
-    flag: FeatureFlagKey
-    ready?: boolean
-  }[] = [
-    {
-      href: '/backoffice/students',
-      flag: 'backoffice.students',
-      label: t('nav.students'),
-      body: t('modules.students'),
-      icon: Users,
-      ready: true,
-    },
-    {
-      href: '/backoffice/enrollments',
-      flag: 'backoffice.enrollments',
-      label: t('nav.enrollments'),
-      body: t('modules.enrollments'),
-      icon: ClipboardList,
-      ready: true,
-    },
-    {
-      href: '/backoffice/payments',
-      flag: 'backoffice.payments',
-      label: t('nav.payments'),
-      body: t('modules.payments'),
-      icon: CreditCard,
-      ready: true,
-    },
-    {
-      href: '/backoffice/courses',
-      flag: 'backoffice.academic',
-      label: t('nav.courses'),
-      body: t('modules.courses'),
-      icon: BookOpen,
-      ready: true,
-    },
-    {
-      href: '/backoffice/teachers',
-      flag: 'backoffice.teachers',
-      label: t('nav.teachers'),
-      body: t('modules.teachers'),
-      icon: GraduationCap,
-      ready: true,
-    },
-    {
-      href: '/backoffice/emails',
-      flag: 'backoffice.email',
-      label: t('nav.email'),
-      body: t('modules.email'),
-      icon: Mail,
-      ready: true,
-    },
-    {
-      href: '/backoffice/reports',
-      flag: 'backoffice.reports',
-      label: t('nav.reports'),
-      body: t('modules.reports'),
-      icon: BarChart3,
-      ready: true,
-    },
-    {
-      href: '/backoffice/team',
-      flag: 'backoffice.staff',
-      label: t('nav.staff'),
-      body: t('modules.staff'),
-      icon: UserCog,
-      ready: true,
-    },
-    {
-      href: '/backoffice/settings',
-      flag: 'backoffice.settings',
-      label: t('nav.settings'),
-      body: t('modules.settings'),
-      icon: Settings,
-    },
-  ]
-
   return (
     <div className="flex flex-col gap-8">
       <header>
@@ -205,11 +111,6 @@ export default async function BackofficeHomePage({
           {t('dashboard.greeting', { name: staff.firstName })}
         </h1>
       </header>
-
-      <p className="flex items-start gap-2 rounded-lg border border-dashed border-border bg-secondary/60 px-3 py-2 text-xs text-muted-foreground">
-        <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
-        {t('common.mock_notice')}
-      </p>
 
       {/* Headline numbers */}
       <AutoGrid as="section" min="15rem" gap="gap-3">
@@ -268,7 +169,6 @@ export default async function BackofficeHomePage({
                       <TableHead>{t('review.col_course')}</TableHead>
                       <TableHead>{t('review.col_amount')}</TableHead>
                       <TableHead>{t('review.col_flag')}</TableHead>
-                      <TableHead>{t('review.col_extraction')}</TableHead>
                       <TableHead>{t('review.col_submitted')}</TableHead>
                       <TableHead className="pr-5 text-right">
                         <span className="sr-only">{t('common.actions')}</span>
@@ -313,16 +213,6 @@ export default async function BackofficeHomePage({
                               tone={reviewFlagTone[item.flag]}
                               label={t(`review_flag.${item.flag}`)}
                             />
-                          </TableCell>
-                          <TableCell>
-                            <span className="flex flex-col leading-tight text-xs text-muted-foreground">
-                              <span>{t('review.tier', { tier: item.tier })}</span>
-                              <span>
-                                {t('review.confidence', {
-                                  value: Math.round(item.confidence * 100),
-                                })}
-                              </span>
-                            </span>
                           </TableCell>
                           <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
                             {formatDateTime(item.submittedAt, locale)}
@@ -436,63 +326,6 @@ export default async function BackofficeHomePage({
         </section>
       )}
 
-      {/* Module doors — everything the backoffice will manage. */}
-      <section>
-        <h2 className="mb-1 flex items-center gap-2 text-base font-semibold text-foreground">
-          <LayoutDashboard className="size-4 text-brand-blue" />
-          {t('modules.title')}
-        </h2>
-        <p className="mb-3 text-sm text-muted-foreground">{t('modules.subtitle')}</p>
-        <AutoGrid min="18rem" gap="gap-3">
-          {modules
-            .filter((module) => flags[module.flag])
-            .map(({ href, label, body, icon: Icon, ready }) => {
-              const inner = (
-                <>
-                  <div className="flex items-center gap-2.5">
-                    <span
-                      className={`grid size-9 shrink-0 place-items-center rounded-lg ${
-                        ready ? 'bg-sky text-brand-blue' : 'bg-secondary text-muted-foreground'
-                      }`}
-                    >
-                      <Icon className="size-4.5" />
-                    </span>
-                    <span className="flex-1 text-sm font-semibold">{label}</span>
-                    {ready ? (
-                      <ArrowUpRight className="size-4 text-muted-foreground" />
-                    ) : (
-                      <Badge
-                        variant="secondary"
-                        className="text-[10px] font-semibold uppercase tracking-wide"
-                      >
-                        {t('nav.soon')}
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                    {body}
-                  </p>
-                </>
-              )
-              return ready ? (
-                <Link
-                  key={href}
-                  href={href}
-                  className="rounded-xl border border-border bg-card p-4 shadow-card transition hover:border-primary/40"
-                >
-                  {inner}
-                </Link>
-              ) : (
-                <div
-                  key={href}
-                  className="rounded-xl border border-dashed border-border bg-card/60 p-4"
-                >
-                  {inner}
-                </div>
-              )
-            })}
-        </AutoGrid>
-      </section>
     </div>
   )
 }

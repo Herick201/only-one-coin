@@ -9,7 +9,7 @@ import {
   canCreateClassGroup,
   isRestrictedToOwnClassGroups,
 } from '@/lib/backoffice/permissions'
-import { MockNotice, PageHeader } from '@/components/backoffice/ui'
+import { PageHeader } from '@/components/backoffice/ui'
 import { SectionTabs } from '@/components/backoffice/section-tabs'
 import { ClassGroupsView } from './class-groups-view'
 import { TeacherClassGroups } from './teacher-class-groups'
@@ -45,7 +45,6 @@ export default async function ClassGroupsPage({
     return (
       <div className="flex flex-col gap-5">
         <PageHeader title={t('nav.my_class_groups')} />
-        <MockNotice label={t('common.mock_notice')} />
         <TeacherClassGroups
           groups={listClassGroupRostersFor(staff)}
           teacherName={`${staff.firstName} ${staff.lastName}`}
@@ -64,7 +63,6 @@ export default async function ClassGroupsPage({
           { href: '/backoffice/courses', label: t('courses.title') },
         ]}
       />
-      <MockNotice label={t('common.mock_notice')} />
       <ClassGroupsView
         rows={listClassGroupsFor(staff)}
         courses={listCourses()}

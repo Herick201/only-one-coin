@@ -1,12 +1,8 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import {
-  listStaff,
-  listStaffRoleChanges,
-  listTeachers,
-} from '@/lib/backoffice/mock-data'
+import { listStaff, listTeachers } from '@/lib/backoffice/mock-data'
 import { getStaffSession } from '@/lib/backoffice/session'
 import { canManageStaff } from '@/lib/backoffice/permissions'
-import { EmptyState, MockNotice, PageHeader } from '@/components/backoffice/ui'
+import { EmptyState, PageHeader } from '@/components/backoffice/ui'
 import { TeamView } from './team-view'
 
 /**
@@ -60,10 +56,8 @@ export default async function TeamPage({
   return (
     <div className="flex flex-col gap-5">
       <PageHeader title={t('team.title')} />
-      <MockNotice label={t('common.mock_notice')} />
       <TeamView
         rows={listStaff()}
-        roleChanges={listStaffRoleChanges()}
         teachers={teachers}
         currentUserId={staff.id}
         currentUserName={`${staff.firstName} ${staff.lastName}`}
