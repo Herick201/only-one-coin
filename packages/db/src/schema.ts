@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  boolean,
   check,
   index,
   integer,
@@ -575,3 +576,28 @@ export const staffPasswordResets = pgTable(
     ),
   ],
 );
+
+// The panel's own switchboard: which sections of the platform are on the air
+// (CLAUDE.md §5, "Feature flags"). One row per flag key declared in
+// `apps/app/src/lib/feature-flags/registry.ts` — and only for the flags
+// somebody actually moved: no row means "whatever the code declares", which is
+// why this table starts and usually stays nearly empty.
+//
+// `key` is the primary key rather than a uuid: the identity of the row IS the
+// flag it governs, an upsert is the natural write, and a flag can never have
+// two conflicting rows. There is no FK and no CHECK on it — the list of flags
+// lives in code, so a constraint here would demand a migration for every new
+// flag; a row whose key is no longer in the registry is simply ignored by the
+// resolver, which is the right answer for a flag that has been retired.
+//
+// `updatedBy` points at Better Auth's own "user".id (text, 0001) — the same
+// no-FK situation as `staff_invites.invitedBy`. Who changed what, and when,
+// is answered by `audit_log`, which every write here also appends to; this
+// column only spares the screen a join to say "changed by X".
+export const featureFlagOverrides = pgTable("feature_flag_overrides", {
+  key: text("key").primaryKey(),
+  enabled: boolean("enabled").notNull(),
+  updatedBy: text("updated_by").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});

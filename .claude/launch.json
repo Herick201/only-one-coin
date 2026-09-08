@@ -48,6 +48,16 @@
       "port": 3333
     },
     {
+      "name": "api-wt",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@ooc/api",
+        "dev"
+      ],
+      "port": 3334
+    },
+    {
       "name": "app-wt",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": [

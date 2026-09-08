@@ -239,10 +239,14 @@ Domínio e fila já existem, independentes dessa escolha:
   `docs/ARCHITECTURE.md` §8): ligada, a seção aparece em produção; desligada,
   ela some do menu, a URL dá 404 e continua inteira para nós — local, preview e,
   em produção, atrás do destravamento interno (`/api/preview?token=…`, com tarja
-  em toda tela enquanto está aberto). O interruptor é um registro em código
-  (`src/lib/feature-flags/registry.ts`) com override por ambiente
-  (`OOC_FLAG_<CHAVE>=on|off`). Hoje **todas as flags estão ligadas** — o registro
-  chegou para gerir o que se expõe, não para aposentar tela.
+  em toda tela enquanto está aberto). O catálogo de flags é um registro em
+  código (`src/lib/feature-flags/registry.ts`); o **interruptor** é a tela
+  **Funcionalidades** (`/backoffice/features`, só para contas do domínio dos
+  donos), que grava em `feature_flag_overrides` pela API e registra cada troca
+  no `audit_log`. A variável de ambiente (`OOC_FLAG_<CHAVE>=on|off`) continua
+  existindo e ganha do painel — é o caminho de volta quando o painel é o que
+  quebrou. Hoje **todas as flags estão ligadas** — o registro chegou para gerir
+  o que se expõe, não para aposentar tela.
 - `packages/domain` — domínio DDD puro (entidades, usecases, portas de
   repositório), sem framework nem provedor de banco. Já inclui a porta de
   identidade/auth (`identity/`, ver `packages/domain/README.md`) e um

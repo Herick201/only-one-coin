@@ -13,10 +13,12 @@ import {
   RenewStaffInviteUseCase,
   RenewStaffPasswordResetUseCase,
   RestoreStaffAccessUseCase,
+  SetFeatureFlagOverrideUseCase,
   SubmitPublicEnrollmentUseCase,
   type IAuditLogRepository,
   type ICurrentSessionPort,
   type IEnrollmentRepository,
+  type IFeatureFlagOverrideRepository,
   type IFreshAuthVerifier,
   type IGuardianRepository,
   type IPlanPriceLookup,
@@ -55,6 +57,7 @@ import { ListOpenClassGroupsQuery } from "./infra/persistence/catalog/ListOpenCl
 import { GetPublicCatalogQuery } from "./infra/persistence/catalog/GetPublicCatalogQuery.js";
 import { ListStaffQuery } from "./infra/persistence/identity/ListStaffQuery.js";
 import { ListStaffRoleChangesQuery } from "./infra/persistence/identity/ListStaffRoleChangesQuery.js";
+import { DrizzleFeatureFlagOverrideRepository } from "./infra/persistence/platform/DrizzleFeatureFlagOverrideRepository.js";
 
 export interface AppRepositories {
   student: IStudentRepository;
@@ -64,6 +67,7 @@ export interface AppRepositories {
   planPriceLookup: IPlanPriceLookup;
   staffInvite: IStaffInviteRepository;
   staffPasswordReset: IStaffPasswordResetRepository;
+  featureFlagOverride: IFeatureFlagOverrideRepository;
 }
 
 export interface AppUseCases {
@@ -86,6 +90,9 @@ export interface AppUseCases {
     renewPasswordReset: RenewStaffPasswordResetUseCase;
     cancelPasswordReset: CancelStaffPasswordResetUseCase;
     completePasswordReset: CompleteStaffPasswordResetUseCase;
+  };
+  platform: {
+    setFeatureFlag: SetFeatureFlagOverrideUseCase;
   };
 }
 
@@ -147,6 +154,7 @@ function buildContainer(): AppContainer {
   const staffUserLookup = new DrizzleStaffUserLookup(db);
   const staffPasswordResetRepository = new DrizzleStaffPasswordResetRepository(db);
   const staffPasswordSetter = new BetterAuthStaffPasswordSetter(db);
+  const featureFlagOverrideRepository = new DrizzleFeatureFlagOverrideRepository(db);
 
   // Use cases
   const registerStudent = new RegisterStudentUseCase(studentRepository, guardianRepository);
@@ -167,6 +175,8 @@ function buildContainer(): AppContainer {
     staffPasswordSetter,
     auditLogRepository,
   );
+
+  const setFeatureFlag = new SetFeatureFlagOverrideUseCase(featureFlagOverrideRepository, auditLogRepository);
 
   // Queries (read-only, no domain invariant to protect — see class docs)
   const listStudents = new ListStudentsQuery(db);
@@ -200,6 +210,7 @@ function buildContainer(): AppContainer {
       planPriceLookup,
       staffInvite: staffInviteRepository,
       staffPasswordReset: staffPasswordResetRepository,
+      featureFlagOverride: featureFlagOverrideRepository,
     },
     useCases: {
       student: {
@@ -221,6 +232,9 @@ function buildContainer(): AppContainer {
         renewPasswordReset,
         cancelPasswordReset,
         completePasswordReset,
+      },
+      platform: {
+        setFeatureFlag,
       },
     },
     queries: {

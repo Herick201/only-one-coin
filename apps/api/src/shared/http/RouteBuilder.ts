@@ -22,7 +22,8 @@ export class RouteBuilder<
   private readonly url: string;
   private schema: RouteSchema = {};
   // No default — deny-by-default (CLAUDE.md §6) is enforced by requiring
-  // every route to call .roles(...) or .public() explicitly. A route built
+  // every route to call .roles(...), .owners(), .internal() or .public()
+  // explicitly. A route built
   // without either fails at registration time (authorization plugin's
   // onRoute hook), not silently open.
   private auth?: RouteAuth;
@@ -81,6 +82,27 @@ export class RouteBuilder<
    * `user.role` on every request (CLAUDE.md §8). */
   roles(...roles: [Role, ...Role[]]) {
     this.auth = { public: false, roles };
+    return this;
+  }
+
+  /**
+   * Restricts the route to the platform owners — the accounts on the owners'
+   * e-mail domain, whatever cargo they carry (CLAUDE.md §5). Not a role: this
+   * is the door to what belongs to whoever runs the platform, not to whoever
+   * runs the school.
+   */
+  owners() {
+    this.auth = { public: false, owners: true };
+    return this;
+  }
+
+  /**
+   * Service-to-service only: apps/app calling with the shared internal token,
+   * for what it must know before it knows who is browsing (the feature-flag
+   * state). Never reachable from a browser.
+   */
+  internal() {
+    this.auth = { public: false, internal: true };
     return this;
   }
 

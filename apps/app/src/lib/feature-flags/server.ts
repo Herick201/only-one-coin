@@ -2,6 +2,7 @@ import { cache } from 'react'
 import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { featureEnv, readFlagOverride } from './env'
+import { getFlagOverrides, type FlagOverrides } from './overrides'
 import { PREVIEW_COOKIE, isPreviewTokenValid } from './preview'
 import {
   FEATURE_FLAGS,
@@ -26,17 +27,35 @@ function parentOf(key: FeatureFlagKey): FeatureFlagKey | undefined {
   return spec.parent as FeatureFlagKey | undefined
 }
 
-/** The flag's own answer, before its parent has a say. */
-function resolveOwn(key: FeatureFlagKey): boolean {
-  const override = readFlagOverride(key)
-  if (override) return override === 'on'
-  // Outside production the platform is ours: everything is on, always, so a
-  // branch is never demoed with half a panel missing.
+/**
+ * The flag's own answer, before its parent has a say. Four sources, strongest
+ * first — and the order is the whole design (CLAUDE.md §5):
+ *
+ * 1. `OOC_FLAG_*`, the deploy's own env var. It outranks the panel on purpose:
+ *    it is the way back when the panel itself is what broke.
+ * 2. The switchboard — what somebody turned in Funcionalidades. Scoped to this
+ *    environment by nothing more than the database it was written in.
+ * 3. Outside production, on. Local and preview are ours, and a branch is never
+ *    demoed with half a panel missing.
+ * 4. What the registry declares.
+ *
+ * Note that (2) beats (3): a person clicking a switch in *this* environment is
+ * not the forgotten registry default the "everything on outside production"
+ * rule was written to protect against — it is a deliberate act, and testing
+ * the off state locally is exactly what somebody would open that screen for.
+ */
+function resolveOwn(key: FeatureFlagKey, overrides: FlagOverrides): boolean {
+  const envOverride = readFlagOverride(key)
+  if (envOverride) return envOverride === 'on'
+
+  const panelOverride = overrides[key]
+  if (panelOverride !== undefined) return panelOverride
+
   if (featureEnv.APP_ENV !== 'production') return true
   return FEATURE_FLAGS[key].production
 }
 
-function resolve(key: FeatureFlagKey): boolean {
+function resolve(key: FeatureFlagKey, overrides: FlagOverrides): boolean {
   let current: FeatureFlagKey | undefined = key
   // The chain is three deep at most and the boot check proves every parent
   // exists; the guard is against a cycle someone introduces later.
@@ -46,7 +65,7 @@ function resolve(key: FeatureFlagKey): boolean {
       throw new Error(`Feature flag cycle through "${current}".`)
     }
     seen.add(current)
-    if (!resolveOwn(current)) return false
+    if (!resolveOwn(current, overrides)) return false
     current = parentOf(current)
   }
   return true
@@ -57,10 +76,10 @@ function resolve(key: FeatureFlagKey): boolean {
  * nav and each gate below read the same answer, and the cookie is read once.
  */
 export const getFeatureFlags = cache(async (): Promise<FeatureFlagState> => {
-  const unlocked = await isInternalPreview()
+  const [unlocked, overrides] = await Promise.all([isInternalPreview(), getFlagOverrides()])
   const state = {} as Record<FeatureFlagKey, boolean>
   for (const key of FEATURE_FLAG_KEYS) {
-    state[key] = unlocked || resolve(key)
+    state[key] = unlocked || resolve(key, overrides)
   }
   return state
 })

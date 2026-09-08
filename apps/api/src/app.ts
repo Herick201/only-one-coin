@@ -31,6 +31,9 @@ import { renewStaffPasswordResetRoute } from "@/http/identity/RenewStaffPassword
 import { cancelStaffPasswordResetRoute } from "@/http/identity/CancelStaffPasswordResetRoute.js";
 import { getStaffPasswordResetRoute } from "@/http/identity/GetStaffPasswordResetRoute.js";
 import { completeStaffPasswordResetRoute } from "@/http/identity/CompleteStaffPasswordResetRoute.js";
+import { getFeatureFlagStateRoute } from "@/http/platform/GetFeatureFlagStateRoute.js";
+import { listFeatureFlagsRoute } from "@/http/platform/ListFeatureFlagsRoute.js";
+import { setFeatureFlagRoute } from "@/http/platform/SetFeatureFlagRoute.js";
 import { container } from "@/container.js";
 
 export async function buildApp(): Promise<FastifyInstance> {
@@ -89,6 +92,9 @@ export async function buildApp(): Promise<FastifyInstance> {
         instance.withTypeProvider<ZodTypeProvider>().route(cancelStaffPasswordResetRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(getStaffPasswordResetRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(completeStaffPasswordResetRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(getFeatureFlagStateRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(listFeatureFlagsRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(setFeatureFlagRoute);
         done();
       },
       { prefix: "/api/v1" },

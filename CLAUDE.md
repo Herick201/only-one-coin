@@ -266,7 +266,7 @@ interface NotificationProvider {
 
 Templates versionados no repositório, não desenhados só no painel do Brevo.
 
-### Feature flags — o que está no ar em produção (decisão 06/09/2026)
+### Feature flags — o que está no ar em produção (decisão 06/09/2026; interruptor no painel 08/09/2026)
 
 **As três superfícies de `apps/app` são geridas por feature flag: portal do
 aluno, backoffice e painel do docente.** Uma flag ligada significa que a seção
@@ -279,12 +279,34 @@ que aquilo não está ativo para mais ninguém).
 - **Flag não é controle de acesso.** Quem pode o quê continua sendo o papel
   declarado na rota em `apps/api` (§8). A flag diz se a funcionalidade está no
   ar; o papel diz para quem ela responde.
-- **O interruptor vive em código**, num registro único
-  (`apps/app/src/lib/feature-flags/registry.ts`), com override por ambiente
-  (`OOC_FLAG_<CHAVE>=on|off`, *scoped* por ambiente na Vercel) — banco + tela de
-  gestão no backoffice foi avaliado e adiado, porque `apps/app` não fala com o
-  banco (§8) e a primeira flag exigiria migration, usecase e rota antes de
-  existir.
+- **O catálogo vive em código; o interruptor vive no painel (08/09/2026).** A
+  flag continua nascendo num commit, no registro único
+  (`apps/app/src/lib/feature-flags/registry.ts`) ao lado da seção que governa —
+  inventar uma pela tela seria inventar uma seção que não existe. Mas **ligar e
+  desligar é a tela `FUNCIONALIDADES`** (`/backoffice/features`), que grava em
+  `feature_flag_overrides` pela API (`SetFeatureFlagOverrideUseCase`, toda troca
+  no `audit_log`). Isto reverte o adiamento registrado antes: a pilha que ele
+  cobrava — migration, usecase, rota — foi construída, porque o custo do
+  adiamento era pior (só quem abre `registry.ts` sabia o que estava no ar, e
+  desligar uma seção em produção era um deploy).
+- **Só os donos abrem a tela — e é o e-mail que decide, não o cargo.** Conta em
+  `@nrlabsdigital.com` (`isOwnerEmail`, o mesmo domínio do `master`): o que a
+  plataforma admite existir é decisão de quem opera a plataforma, não de quem
+  administra a escola. Na API é uma declaração de rota própria, `.owners()`, ao
+  lado de `.roles(...)` e `.public()` — deny-by-default continua valendo — e o
+  usecase repete a checagem antes de escrever.
+- **Ordem de resolução:** `OOC_FLAG_<CHAVE>` (env, *scoped* por ambiente na
+  Vercel) → interruptor do painel → fora de produção tudo ligado → padrão do
+  registro → pai. A env **ganha do painel** de propósito: é o caminho de volta
+  quando o painel é o que quebrou.
+- **O resolver lê o estado por serviço-a-serviço**, não por sessão: precisa da
+  resposta antes de saber quem navega (o shell do portal renderiza para um
+  aluno; a página de convite, para ninguém). `GET /feature-flags/state` é
+  `.internal()` — segredo `INTERNAL_API_TOKEN` no header, obrigatório em
+  produção, opcional fora dela. API fora do ar → vale o que o código declara,
+  com aviso no log.
+- **A tela de flags não tem flag própria**: seria a única da qual não se volta
+  pela tela que ela esconde.
 - **Fora de produção toda flag está ligada**, sempre. E `APP_ENV` falha fechada:
   processo sem rótulo rodando build de produção conta como produção.
 - **Flag nova nasce desligada em produção** (`production: false`) e é ligada no
@@ -294,9 +316,9 @@ que aquilo não está ativo para mais ninguém).
   construído" (a Área do aluno do portal, §2), que é uma afirmação pública e
   diferente.
 
-Detalhe — ordem de resolução, o destravamento interno, a tabela de flags de hoje
-e a limitação conhecida (links profundos entre seções do backoffice):
-`docs/ARCHITECTURE.md` §8.
+Detalhe — a pilha completa, o destravamento interno, a tabela de flags de hoje,
+o desenho da tela e a limitação conhecida (links profundos entre seções do
+backoffice): `docs/ARCHITECTURE.md` §8.
 
 ### Layout das telas (`apps/app`)
 
@@ -543,7 +565,7 @@ Cada um tem um mecanismo. O mecanismo é obrigatório, não a boa intenção.
 
 **Papéis (quadro redefinido pelo dono, 07/09/2026):** `master`, `admin`, `analyst`, `enrollment_supervisor`, `academic_supervisor`, `teacher`, `sales`, `support`, `billing`. Aluno e apoderado: `student`, `guardian`. Substituiu o quadro antigo (`coordinator`, `treasury`, `mass_approver` deixaram de existir; grosso modo: coordinator → enrollment_supervisor, treasury → billing, mass_approver extinto — aprovação é de admin/billing).
 
-- **`master`** é o cargo dos donos da plataforma: vê e faz tudo, e **só conta com e-mail `@nrlabsdigital.com`** pode carregá-lo (`canHoldMaster`, `apps/app/src/lib/backoffice/permissions.ts`).
+- **`master`** é o cargo dos donos da plataforma: vê e faz tudo, e **só conta com e-mail `@nrlabsdigital.com`** pode carregá-lo (`canHoldMaster`, `apps/app/src/lib/backoffice/permissions.ts`). O mesmo domínio — e não o cargo — é o que abre a seção **Funcionalidades** (§5): lá quem decide é `isOwnerEmail`, então um `admin` da Asociación é recusado e um dono passa com qualquer cargo.
 - **`admin`** vê tudo e autoriza. **`analyst`** (assistente/analista da administração) observa todas as áreas e propõe solução, mas **não aprova nem edita nada**.
 - **`enrollment_supervisor`** cuida do lado acadêmico das matrículas (alunos, matrículas manuais, cursos/turmas); **`academic_supervisor`** supervisiona os docentes.
 - **`sales`** (vendedor) e **`support`** (atenção ao cliente) leem alunos/matrículas; **`billing`** (facturación) liquida dinheiro e não vê dado acadêmico não financeiro.

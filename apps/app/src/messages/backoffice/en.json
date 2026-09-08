@@ -15,6 +15,7 @@
       "reports": "Reports",
       "staff": "Team",
       "settings": "Settings",
+      "features": "Features",
       "logout": "Sign out",
       "soon": "Soon",
       "group_operations": "Operations",
@@ -1476,6 +1477,55 @@
       "save": "Save changes",
       "cancel": "Discard",
       "saved_toast": "Changes applied on screen only. No server is connected yet."
+    },
+    "features": {
+      "title": "Features",
+      "locked_title": "Platform owners only",
+      "locked_body": "This is where it is decided which parts of the platform exist in production. That is a call for whoever runs the platform, not for whoever administers the school, so only accounts on the owners’ domain open it.",
+      "surface": {
+        "portal": "Student portal",
+        "backoffice": "Staff panel",
+        "teacher": "Teacher panel"
+      },
+      "flag": {
+        "portal": "Student portal",
+        "portal_courses": "My courses",
+        "portal_payments": "Payments and receipts",
+        "portal_procedures": "Procedures",
+        "portal_documents": "Documents",
+        "portal_continue": "Keep studying",
+        "backoffice": "Staff panel",
+        "backoffice_students": "Students",
+        "backoffice_enrollments": "Enrollments",
+        "backoffice_payments": "Payments",
+        "backoffice_academic": "Class groups and courses",
+        "backoffice_teachers": "Teachers",
+        "backoffice_email": "E-mail",
+        "backoffice_reports": "Reports",
+        "backoffice_staff": "Team",
+        "backoffice_settings": "Settings",
+        "teacher": "Teacher panel"
+      },
+      "source": {
+        "env": "Set by this deploy’s {envVar} variable.",
+        "panel": "Set here, on this panel.",
+        "environment": "On because this is not the production environment.",
+        "code": "As the code declares it."
+      },
+      "changed_by": "changed by {who}",
+      "removed_account": "an account since removed",
+      "hidden_by_parent": "On, but nobody sees it: the section that holds it is off.",
+      "reset": "Back to the code ({value})",
+      "locked_by_env": "Held by {envVar}",
+      "on": "on",
+      "off": "off",
+      "not_production": "This is the “{env}” environment, not production: whatever nobody turns off here shows up on, always. A switch moved on this screen does count for this environment.",
+      "internal_unlock": "Your browser is carrying the internal unlock: you see everything on, including what is off for everyone else.",
+      "footnote": "Turning a section off takes it out of production: it leaves the menu and its address answers 404. It stays whole for us — local, the preview deploys and, in production, for whoever opens the internal unlock. This is not access control: who may do what is still the cargo. Every change is recorded.",
+      "turned_on": "Feature turned on.",
+      "turned_off": "Feature turned off.",
+      "reset_done": "Back to what the code says.",
+      "write_failed": "The change could not be saved."
     }
   }
 }

@@ -138,6 +138,16 @@ export const FEATURE_FLAGS = {
   teacher: { surface: 'teacher', parent: 'backoffice', production: true },
 } as const satisfies Record<string, FeatureFlagSpec>
 
+/*
+ * Funcionalidades — the panel screen that moves these switches — has no flag
+ * of its own, and that is deliberate. A flag over the switchboard is the one
+ * flag nobody could recover from the screen it hides: turning it off in
+ * production would leave the env var as the only way back, which is exactly
+ * the situation the screen exists to end. It is kept off the air by other
+ * means instead — it is drawn only for the owners' e-mail domain, and the
+ * routes behind it are `.owners()` in `apps/api`.
+ */
+
 export type FeatureFlagKey = keyof typeof FEATURE_FLAGS
 
 export const FEATURE_FLAG_KEYS = Object.keys(FEATURE_FLAGS) as FeatureFlagKey[]
