@@ -7,7 +7,17 @@ const StaffMemberSchema = z.object({
   firstName: z.string(),
   lastName: z.string(),
   email: z.string(),
-  role: z.enum(["admin", "coordinator", "treasury", "mass_approver", "teacher"]),
+  role: z.enum([
+    "master",
+    "admin",
+    "analyst",
+    "enrollment_supervisor",
+    "academic_supervisor",
+    "teacher",
+    "sales",
+    "support",
+    "billing",
+  ]),
   status: z.enum(["active", "invited", "inactive"]),
   teacherId: z.string().nullable(),
   mfaEnrolled: z.boolean(),
@@ -28,7 +38,7 @@ export const listStaffRoute = RouteBuilder.get("/staff")
     summary: "List panel accounts and pending invites",
     description: "Backs the Equipo directory — real accounts plus invites still waiting on the person.",
   })
-  .roles("admin")
+  .roles("master", "admin")
   .response(200, ListStaffResponseSchema)
   .handler(async (_request, reply) => {
     const items = await container.queries.listStaff.run();

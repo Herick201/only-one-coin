@@ -2,7 +2,17 @@ import { z } from "zod";
 import { RouteBuilder } from "@/shared/http/RouteBuilder.js";
 import { container } from "@/container.js";
 
-const StaffRoleSchema = z.enum(["admin", "coordinator", "treasury", "mass_approver", "teacher"]);
+const StaffRoleSchema = z.enum([
+  "master",
+  "admin",
+  "analyst",
+  "enrollment_supervisor",
+  "academic_supervisor",
+  "teacher",
+  "sales",
+  "support",
+  "billing",
+]);
 
 const StaffRoleChangeSchema = z.object({
   id: z.string(),
@@ -26,7 +36,7 @@ export const listStaffRoleChangesRoute = RouteBuilder.get("/staff/role-changes")
     summary: "List the cargo ledger",
     description: "Backs Equipo's role-change history — reads audit_log, never edits it.",
   })
-  .roles("admin")
+  .roles("master", "admin")
   .response(200, ListStaffRoleChangesResponseSchema)
   .handler(async (_request, reply) => {
     const items = await container.queries.listStaffRoleChanges.run();

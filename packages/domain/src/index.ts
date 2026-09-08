@@ -62,6 +62,7 @@ export {
 } from "./enrollment/SubmitPublicEnrollmentUseCase.js";
 
 export type { Role } from "./identity/Role.js";
+export { MASTER_EMAIL_DOMAIN, canHoldMaster } from "./identity/Role.js";
 export type { AuthenticatedUser } from "./identity/AuthenticatedUser.js";
 export {
   NotFreshlyAuthenticatedError,

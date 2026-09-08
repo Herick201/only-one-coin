@@ -4,23 +4,22 @@ import { getGeneralSettings } from '@/lib/backoffice/settings'
 import { canConfigureSettings } from '@/lib/backoffice/permissions'
 import { EmptyState, PageHeader } from '@/components/backoffice/ui'
 import { SectionTabs } from '@/components/backoffice/section-tabs'
-import { AcademicSettingsForm } from './academic-form'
+import { ReceiptSettingsForm } from './receipts-form'
 
 /**
- * Platform settings — the values every screen already runs on, in the one place
- * somebody can change them. One section, two screens (same pattern as
- * payments): this one holds the academic rules and procedures, the sibling
- * under `/settings/receipts` holds what the receipt pipeline approves on.
+ * The receipt half of the settings section — the parameters the OCR ladder
+ * approves on before it asks for a human, plus the seat's two clocks. The
+ * academic half lives at the section index; the tabs bind the two screens to
+ * the one sidebar entry (same pattern as payments).
  *
- * Nothing here is a new rule. Each field is a constant the code itself flags as
- * belonging in the backoffice (`lib/backoffice/settings.ts`). Putting them
- * behind a screen is what stops a change of "aprobado" from being a deploy
- * (CLAUDE.md §5).
+ * This block used to be its own screen under payments. It lives here whole
+ * rather than being mirrored: two screens that both claim to own the same
+ * number is how the two drift apart.
  *
  * Admin only. The gate here draws the form or the locked state; the check that
  * counts is the role declared on the route in `apps/api` (CLAUDE.md §8).
  */
-export default async function SettingsPage({
+export default async function ReceiptSettingsPage({
   params,
 }: {
   params: Promise<{ locale: string }>
@@ -60,7 +59,7 @@ export default async function SettingsPage({
           },
         ]}
       />
-      <AcademicSettingsForm settings={getGeneralSettings().academic} />
+      <ReceiptSettingsForm settings={getGeneralSettings().receipts} />
     </div>
   )
 }

@@ -5,7 +5,7 @@ import {
 } from '@/lib/backoffice/mock-data'
 import { getStaffSession } from '@/lib/backoffice/session'
 import { canBrowseEnrollments } from '@/lib/backoffice/permissions'
-import { EmptyState, MockNotice, PageHeader } from '@/components/backoffice/ui'
+import { EmptyState, PageHeader } from '@/components/backoffice/ui'
 import { SectionTabs } from '@/components/backoffice/section-tabs'
 import { ReservationsView } from './reservations-view'
 
@@ -72,7 +72,6 @@ export default async function ReservationsPage({
           },
         ]}
       />
-      <MockNotice label={t('common.mock_notice')} />
       <ReservationsView
         rows={listSeatReservations()}
         reservationDays={getPaymentSettings().reservationDays}

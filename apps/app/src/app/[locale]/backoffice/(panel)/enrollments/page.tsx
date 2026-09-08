@@ -8,7 +8,7 @@ import {
   canCreateEnrollment,
   canBrowseEnrollments,
 } from '@/lib/backoffice/permissions'
-import { EmptyState, MockNotice, PageHeader } from '@/components/backoffice/ui'
+import { EmptyState, PageHeader } from '@/components/backoffice/ui'
 import { SectionTabs } from '@/components/backoffice/section-tabs'
 import { EnrollmentsView } from './enrollments-view'
 
@@ -77,7 +77,6 @@ export default async function EnrollmentsPage({
           },
         ]}
       />
-      <MockNotice label={t('common.mock_notice')} />
       <EnrollmentsView
         rows={listEnrollments()}
         metrics={getEnrollmentMetrics()}

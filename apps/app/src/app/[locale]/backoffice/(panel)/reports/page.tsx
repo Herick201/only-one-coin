@@ -6,7 +6,7 @@ import {
 } from '@/lib/backoffice/mock-data'
 import { getStaffSession } from '@/lib/backoffice/session'
 import { canBrowseReports } from '@/lib/backoffice/permissions'
-import { EmptyState, MockNotice, PageHeader } from '@/components/backoffice/ui'
+import { EmptyState, PageHeader } from '@/components/backoffice/ui'
 import { ReportsView } from './reports-view'
 
 /**
@@ -52,7 +52,6 @@ export default async function ReportsPage({
   return (
     <div className="flex flex-col gap-5">
       <PageHeader title={t('reports.title')} />
-      <MockNotice label={t('common.mock_notice')} />
       <ReportsView
         enrollments={listEnrollments()}
         classGroups={listClassGroups()}

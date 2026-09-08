@@ -2,7 +2,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { listCourses } from '@/lib/backoffice/mock-data'
 import { getStaffSession } from '@/lib/backoffice/session'
 import { canConfigureCourse, canCreateCourse } from '@/lib/backoffice/permissions'
-import { MockNotice, PageHeader } from '@/components/backoffice/ui'
+import { PageHeader } from '@/components/backoffice/ui'
 import { SectionTabs } from '@/components/backoffice/section-tabs'
 import { CoursesView } from './courses-view'
 
@@ -36,7 +36,6 @@ export default async function CoursesPage({
           { href: '/backoffice/courses', label: t('courses.title') },
         ]}
       />
-      <MockNotice label={t('common.mock_notice')} />
       <CoursesView
         rows={listCourses()}
         canCreate={canCreateCourse(staff.role)}

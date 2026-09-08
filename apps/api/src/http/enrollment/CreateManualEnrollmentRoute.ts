@@ -38,8 +38,8 @@ const CreateManualEnrollmentResponseSchema = z.object({
   }),
 });
 
-// admin/coordinator only — the manual backoffice enrollment exception
-// (CLAUDE.md §1, "/backoffice/enrollments"). Never touches money: treasury
+// management + enrollment supervision only — the manual backoffice enrollment exception
+// (CLAUDE.md §1, "/backoffice/enrollments"). Never touches money: billing
 // settles payments elsewhere.
 export const createManualEnrollmentRoute = RouteBuilder.post("/enrollments")
   .docs({
@@ -48,7 +48,7 @@ export const createManualEnrollmentRoute = RouteBuilder.post("/enrollments")
     description:
       "The manual exception — the documented path is the student enrolling through the public form. Seat is always reserved, payment never starts approved.",
   })
-  .roles("admin", "coordinator")
+  .roles("master", "admin", "enrollment_supervisor")
   .body(CreateManualEnrollmentBodySchema)
   .response(201, CreateManualEnrollmentResponseSchema)
   .response(400, ErrorResponseSchema)

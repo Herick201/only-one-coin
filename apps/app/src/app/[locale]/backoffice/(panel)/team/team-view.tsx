@@ -3,12 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { Link, getPathname } from '@/i18n/navigation'
-import type {
-  StaffMemberRow,
-  StaffRole,
-  StaffRoleChange,
-} from '@/lib/backoffice/types'
-import { isMfaMandatory } from '@/lib/backoffice/permissions'
+import type { StaffMemberRow, StaffRole } from '@/lib/backoffice/types'
 import { buildInvitePath, isInviteExpired } from '@/lib/backoffice/invite'
 import { formatDate, formatDateTime, initials, type Locale } from '@/lib/format'
 import {
@@ -51,22 +46,21 @@ const ALL = 'all'
 
 const PAGE_SIZE = 15
 
-/** Every cargo an account can carry (CLAUDE.md §8). */
+/** Every cargo an account can carry (owner's map — `lib/backoffice/permissions.ts`). */
 const ROLES: StaffRole[] = [
+  'master',
   'admin',
-  'coordinator',
-  'treasury',
-  'mass_approver',
+  'analyst',
+  'enrollment_supervisor',
+  'academic_supervisor',
   'teacher',
+  'sales',
+  'support',
+  'billing',
 ]
 
 const selectClass =
   'rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink outline-none transition focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15'
-
-/** A cargo that requires the second factor and does not have it yet. */
-function mfaPending(row: StaffMemberRow): boolean {
-  return isMfaMandatory(row.role) && !row.mfaEnrolled
-}
 
 /**
  * Team directory. Search, filters and paging run in the browser because the
@@ -80,13 +74,11 @@ function mfaPending(row: StaffMemberRow): boolean {
  */
 export function TeamView({
   rows,
-  roleChanges,
   teachers,
   currentUserId,
   currentUserName,
 }: {
   rows: StaffMemberRow[]
-  roleChanges: StaffRoleChange[]
   /** Teachers still on the roster — who an account may be opened over. */
   teachers: TeacherOption[]
   /** The signed-in admin: nobody moves their own cargo or their own door. */
@@ -97,11 +89,9 @@ export function TeamView({
   const locale = useLocale() as Locale
 
   const [members, setMembers] = useState<StaffMemberRow[]>(rows)
-  const [ledger, setLedger] = useState<StaffRoleChange[]>(roleChanges)
   const [tab, setTab] = useState<Tab>('active')
   const [query, setQuery] = useState('')
   const [role, setRole] = useState(ALL)
-  const [mfaOnly, setMfaOnly] = useState(false)
   const [page, setPage] = useState(0)
   const [creating, setCreating] = useState(false)
   const [changing, setChanging] = useState<StaffMemberRow | null>(null)
@@ -122,14 +112,13 @@ export function TeamView({
     const needle = query.trim().toLowerCase()
     return scoped.filter((row) => {
       if (role !== ALL && row.role !== role) return false
-      if (mfaOnly && !mfaPending(row)) return false
       if (!needle) return true
       return [`${row.firstName} ${row.lastName}`, row.email, t(`role.${row.role}`)]
         .join(' ')
         .toLowerCase()
         .includes(needle)
     })
-  }, [scoped, query, role, mfaOnly, t])
+  }, [scoped, query, role, t])
 
   const counts = useMemo(
     () => ({
@@ -139,8 +128,6 @@ export function TeamView({
     }),
     [members],
   )
-
-  const mfaCount = useMemo(() => scoped.filter(mfaPending).length, [scoped])
 
   /* Only teachers who do not already hold an account: two doors for one person
      is two sessions to remember to close. Computed here rather than on the
@@ -153,12 +140,9 @@ export function TeamView({
     [teachers, members],
   )
 
-  /* Chasing a missing second factor is a question about somebody who still
-     signs in. Off the tab it would filter a list on a fact that changes
-     nothing — the door is already closed. */
   const onActive = tab === 'active'
 
-  const activeFilters = (role !== ALL ? 1 : 0) + (onActive && mfaOnly ? 1 : 0)
+  const activeFilters = role !== ALL ? 1 : 0
 
   /** A filter that shrinks the list can leave the page behind it. */
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
@@ -171,7 +155,6 @@ export function TeamView({
   function openTab(next: Tab) {
     setTab(next)
     setPage(0)
-    if (next !== 'active') setMfaOnly(false)
   }
 
   /**
@@ -196,19 +179,6 @@ export function TeamView({
     setMembers((current) =>
       current.map((row) => (row.id === member.id ? { ...row, role: next } : row)),
     )
-    setLedger((current) => [
-      {
-        id: `rol_local_${member.id}_${current.length}`,
-        at: new Date().toISOString(),
-        memberId: member.id,
-        memberName: `${member.firstName} ${member.lastName}`,
-        fromRole: member.role,
-        toRole: next,
-        actorName: currentUserName,
-        actorRole: 'admin',
-      },
-      ...current,
-    ])
     setChanging(null)
     setToast(t('team.changed_toast'))
     return true
@@ -390,29 +360,6 @@ export function TeamView({
             count={activeFilters}
             panelClassName="flex-wrap items-center gap-1.5"
           >
-            {onActive && (
-              <button
-                type="button"
-                onClick={() => {
-                  setMfaOnly(!mfaOnly)
-                  setPage(0)
-                }}
-                aria-pressed={mfaOnly}
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                  mfaOnly
-                    ? 'bg-brand-blue text-white'
-                    : 'border border-line bg-white text-muted-foreground hover:bg-cream hover:text-ink'
-                }`}
-              >
-                {t('team.filter_mfa')}
-                <span className={mfaOnly ? 'text-white/70' : 'text-slate-400'}>
-                  {mfaCount}
-                </span>
-              </button>
-            )}
-
-            {onActive && <span aria-hidden="true" className="mx-1 h-5 w-px bg-line" />}
-
             <label className="flex items-center gap-2">
               <span className="sr-only">{t('team.filter_role')}</span>
               <select
@@ -453,19 +400,6 @@ export function TeamView({
           onCancel={() => setCreating(false)}
           onCreate={(member) => {
             setMembers((current) => [member, ...current])
-            setLedger((current) => [
-              {
-                id: `rol_local_${member.id}`,
-                at: new Date().toISOString(),
-                memberId: member.id,
-                memberName: `${member.firstName} ${member.lastName}`,
-                fromRole: null,
-                toRole: member.role,
-                actorName: currentUserName,
-                actorRole: 'admin',
-              },
-              ...current,
-            ])
             setCreating(false)
             setTab('invited')
             setPage(0)
@@ -505,7 +439,6 @@ export function TeamView({
               columns={[
                 t('team.col_member'),
                 t('team.col_role'),
-                t('team.col_access'),
                 t('team.col_last_access'),
                 t('common.actions'),
               ]}
@@ -514,7 +447,6 @@ export function TeamView({
                 <tr>
                   <th className={thClass}>{t('team.col_member')}</th>
                   <th className={thClass}>{t('team.col_role')}</th>
-                  <th className={thClass}>{t('team.col_access')}</th>
                   <th className={thClass}>{t('team.col_last_access')}</th>
                   {/* Off the active tab the row still ends in an action: giving
                       a door back is done from the same line it was taken. */}
@@ -573,30 +505,6 @@ export function TeamView({
                         <span className="rounded-full bg-sky px-2 py-0.5 text-[11px] font-semibold text-brand-blue-deep">
                           {t(`role.${row.role}`)}
                         </span>
-                      </td>
-
-                      {/* The second factor is on the row, not in a file: an
-                          admin without one is one password away from the whole
-                          panel, and nobody opens nine accounts to find out. */}
-                      <td className={`${tdClass} whitespace-nowrap`}>
-                        {row.status !== 'active' ? (
-                          /* A pending second factor on an account that cannot
-                             sign in is not an errand — chasing it would be
-                             chasing a door that is already shut. */
-                          <span className="text-xs text-muted-foreground">—</span>
-                        ) : !isMfaMandatory(row.role) ? (
-                          <span className="text-xs text-muted-foreground">
-                            {t('team.mfa_optional')}
-                          </span>
-                        ) : row.mfaEnrolled ? (
-                          <StatusBadge tone="success" label={t('team.mfa_on')} />
-                        ) : (
-                          <StatusBadge
-                            tone="warning"
-                            label={t('team.mfa_pending')}
-                            title={t('team.mfa_pending_title')}
-                          />
-                        )}
                       </td>
 
                       <td className={`${tdClass} whitespace-nowrap text-xs`}>
@@ -758,61 +666,6 @@ export function TeamView({
               />
             )}
           </>
-        )}
-      </Card>
-
-      {/* The cargo ledger. It sits under the directory because it is the answer
-          to the question the directory raises — "since when does this person
-          open this?" — and because a change nobody can read afterwards is a
-          change nobody can question (CLAUDE.md §8). */}
-      <Card className="p-5">
-        <p className="text-sm font-semibold text-ink">{t('team.ledger_title')}</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          {t('team.ledger_subtitle')}
-        </p>
-
-        {ledger.length === 0 ? (
-          <p className="mt-4 text-sm text-muted-foreground">{t('team.ledger_empty')}</p>
-        ) : (
-          <ul className="mt-4 flex flex-col gap-3">
-            {ledger.map((entry) => (
-              <li
-                key={entry.id}
-                className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-line/70 pb-3 last:border-0 last:pb-0"
-              >
-                <span className="flex min-w-0 flex-col gap-1">
-                  <span className="text-sm font-semibold text-ink">
-                    {entry.memberName}
-                  </span>
-                  {entry.fromRole === null ? (
-                    <span className="text-xs text-muted-foreground">
-                      {t('team.ledger_created', { role: t(`role.${entry.toRole}`) })}
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1.5 text-xs">
-                      <span className="rounded-full bg-slate-100 px-2 py-0.5 font-semibold text-slate-600">
-                        {t(`role.${entry.fromRole}`)}
-                      </span>
-                      <BoIcon
-                        name="chevron-right"
-                        size={12}
-                        className="text-muted-foreground"
-                      />
-                      <span className="rounded-full bg-sky px-2 py-0.5 font-semibold text-brand-blue-deep">
-                        {t(`role.${entry.toRole}`)}
-                      </span>
-                    </span>
-                  )}
-                </span>
-                <span className="flex flex-col text-right text-xs text-muted-foreground">
-                  {/* With the year: this ledger runs back over ciclos, and
-                      "10 de junio" three years ago reads as last week. */}
-                  <span>{formatDate(entry.at, locale)}</span>
-                  <span>{t('team.ledger_by', { actor: entry.actorName })}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
         )}
       </Card>
 

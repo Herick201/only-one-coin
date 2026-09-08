@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { getPathname } from '@/i18n/navigation'
 import type { StaffMemberRow, StaffRole } from '@/lib/backoffice/types'
-import { isMfaMandatory } from '@/lib/backoffice/permissions'
+import { canHoldMaster } from '@/lib/backoffice/permissions'
 import { buildInvitePath } from '@/lib/backoffice/invite'
 import { Card, RequiredMark } from '@/components/backoffice/ui'
 import { BoIcon } from '@/components/backoffice/icons'
@@ -19,12 +19,16 @@ export interface TeacherOption {
   email: string
 }
 
+/** `master` is not listed: it only appears for the owners' e-mail domain. */
 const ROLES: StaffRole[] = [
   'admin',
-  'coordinator',
-  'treasury',
-  'mass_approver',
+  'analyst',
+  'enrollment_supervisor',
+  'academic_supervisor',
   'teacher',
+  'sales',
+  'support',
+  'billing',
 ]
 
 const fieldClass =
@@ -68,7 +72,7 @@ export function NewStaffForm({
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
-  const [role, setRole] = useState<StaffRole>('coordinator')
+  const [role, setRole] = useState<StaffRole>('enrollment_supervisor')
   const [teacherId, setTeacherId] = useState('')
   const [created, setCreated] = useState<{ member: StaffMemberRow; link: string } | null>(
     null,
@@ -80,10 +84,17 @@ export function NewStaffForm({
 
   const isTeacher = role === 'teacher'
 
+  /* Master is the owners' cargo: the option only exists while the e-mail is
+     on their domain — the server refuses the pair anyway (route schema). */
+  const allowMaster = canHoldMaster(email)
+  const roles: StaffRole[] =
+    allowMaster || role === 'master' ? ['master', ...ROLES] : ROLES
+
   const ready =
     firstName.trim() !== '' &&
     lastName.trim() !== '' &&
     email.trim() !== '' &&
+    (role !== 'master' || allowMaster) &&
     (!isTeacher || teacherId !== '')
 
   /* Picking the teacher fills the person in: the roster already answered who
@@ -237,7 +248,6 @@ export function NewStaffForm({
   return (
     <Card className="p-5">
       <p className="mb-1 text-sm font-semibold text-ink">{t('team.new_title')}</p>
-      <p className="mb-4 text-xs text-muted-foreground">{t('team.new_subtitle')}</p>
 
       {(emailTaken || failed) && (
         <div
@@ -250,7 +260,7 @@ export function NewStaffForm({
 
       {/* Access first: the cargo decides whether the rest of the form is typed
           or picked from the roster. */}
-      <Block title={t('team.section_access')} hint={t('team.role_hint')}>
+      <Block>
         {/* Capped: one or two selects stretched across a wide panel read as a
             form with a field missing. */}
         <AutoGrid min="15rem" gap="gap-3" className="max-w-3xl">
@@ -260,7 +270,7 @@ export function NewStaffForm({
               onChange={(event) => selectRole(event.target.value as StaffRole)}
               className={fieldClass}
             >
-              {ROLES.map((item) => (
+              {roles.map((item) => (
                 <option key={item} value={item}>
                   {t(`role.${item}`)}
                 </option>
@@ -289,16 +299,9 @@ export function NewStaffForm({
         {isTeacher && (
           <p className="mt-3 text-xs text-muted-foreground">{t('team.teacher_hint')}</p>
         )}
-
-        {isMfaMandatory(role) && (
-          <p className="mt-3 flex items-start gap-2 rounded-lg border border-dashed border-line bg-sky-soft px-3 py-2 text-xs text-muted-foreground">
-            <BoIcon name="shield" size={14} className="mt-0.5 shrink-0" />
-            {t('team.mfa_note')}
-          </p>
-        )}
       </Block>
 
-      <Block title={t('team.section_person')}>
+      <Block>
         <AutoGrid min="15rem" gap="gap-3">
           <Labelled label={t('team.field_first_name')} required>
             <input
@@ -328,10 +331,6 @@ export function NewStaffForm({
             />
           </Labelled>
         </AutoGrid>
-
-        <p className="mt-3 text-xs text-muted-foreground">
-          {t('team.credentials_note')}
-        </p>
       </Block>
 
       <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-line pt-4">
@@ -352,33 +351,15 @@ export function NewStaffForm({
         >
           {t('team.cancel')}
         </button>
-        {/* A button that greys out without saying why reads as broken. */}
-        {!ready && (
-          <span className="text-xs text-muted-foreground">
-            {t('team.missing_fields')}
-          </span>
-        )}
       </div>
     </Card>
   )
 }
 
 /** One question per block, with a rule above it — that is the whole layout. */
-function Block({
-  title,
-  hint,
-  children,
-}: {
-  title: string
-  hint?: string
-  children: React.ReactNode
-}) {
+function Block({ children }: { children: React.ReactNode }) {
   return (
     <section className="mt-5 border-t border-line pt-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {title}
-      </p>
-      {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
       <div className="mt-3">{children}</div>
     </section>
   )

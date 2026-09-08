@@ -10,7 +10,6 @@ import {
   canManageTeachers,
   isRestrictedToOwnClassGroups,
 } from '@/lib/backoffice/permissions'
-import { MockNotice } from '@/components/backoffice/ui'
 import { BoIcon } from '@/components/backoffice/icons'
 import { TeacherFile } from './teacher-file'
 
@@ -64,7 +63,6 @@ export default async function TeacherDetailPage({
 
       {/* The identity header belongs to `TeacherFile`: the status is changed
           from it, and it is the client half that owns that state. */}
-      <MockNotice label={t('common.mock_notice')} />
 
       <TeacherFile
         teacher={teacher}

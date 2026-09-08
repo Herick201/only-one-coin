@@ -17,7 +17,6 @@ import {
   Card,
   Field,
   Meter,
-  MockNotice,
   StatusBadge,
 } from '@/components/backoffice/ui'
 import { classGroupTone, seatPressureTone } from '@/components/backoffice/status-tone'
@@ -117,7 +116,6 @@ export default async function ClassGroupDetailPage({
         </AutoGrid>
       </Card>
 
-      <MockNotice label={t('common.mock_notice')} />
 
       <ClassGroupCertificates
         group={group}

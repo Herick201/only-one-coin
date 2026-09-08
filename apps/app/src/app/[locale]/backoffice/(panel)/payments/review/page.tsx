@@ -4,8 +4,8 @@ import {
   listReviewQueue,
 } from '@/lib/backoffice/mock-data'
 import { getStaffSession } from '@/lib/backoffice/session'
-import { canReviewPayments } from '@/lib/backoffice/permissions'
-import { EmptyState, MockNotice, PageHeader } from '@/components/backoffice/ui'
+import { canReviewPayments, canViewPayments } from '@/lib/backoffice/permissions'
+import { EmptyState, PageHeader } from '@/components/backoffice/ui'
 import { SectionTabs } from '@/components/backoffice/section-tabs'
 import { ReviewQueueView } from './review-queue-view'
 
@@ -39,7 +39,7 @@ export default async function PaymentsReviewPage({
 
   const staff = await getStaffSession()
 
-  if (!canReviewPayments(staff.role)) {
+  if (!canViewPayments(staff.role)) {
     return (
       <div className="flex flex-col gap-5">
         <PageHeader title={t('payments.title')} />
@@ -68,7 +68,6 @@ export default async function PaymentsReviewPage({
           { href: '/backoffice/payments/review', label: t('payments.tab_review') },
         ]}
       />
-      <MockNotice label={t('common.mock_notice')} />
       <ReviewQueueView
         rows={listReviewQueue()}
         extractions={listReceiptExtractions()}

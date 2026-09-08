@@ -6,7 +6,7 @@ import { listEmailFlows } from '@/lib/backoffice/mock-data'
 import { getStaffSession } from '@/lib/backoffice/session'
 import { canManageEmail } from '@/lib/backoffice/permissions'
 import { buildEmailJourney } from '@/lib/backoffice/email-journey'
-import { MockNotice, PageHeader, StatusBadge } from '@/components/backoffice/ui'
+import { PageHeader, StatusBadge } from '@/components/backoffice/ui'
 import { SectionTabs } from '@/components/backoffice/section-tabs'
 import { BoIcon } from '@/components/backoffice/icons'
 
@@ -114,7 +114,6 @@ export default async function EmailJourneyPage({
           { href: '/backoffice/emails/deliveries', label: t('deliveries.tab') },
         ]}
       />
-      <MockNotice label={t('common.mock_notice')} />
 
       <ol className="flex flex-col">
         {journey.map((step, index) => {

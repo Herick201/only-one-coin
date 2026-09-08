@@ -46,7 +46,7 @@ const StudentListResponseSchema = z.object({
   nextCursor: z.string().nullable(),
 });
 
-// admin/coordinator only — same audience as the rest of the student
+// management + enrollment supervision only — same audience as the rest of the student
 // directory and the manual registration/enrollment routes it sits beside
 // (CLAUDE.md §1).
 export const listStudentsRoute = RouteBuilder.get("/students")
@@ -55,7 +55,7 @@ export const listStudentsRoute = RouteBuilder.get("/students")
     summary: "List students, or search by name / national id",
     description: "Backs the student directory and the manual enrollment form's student picker.",
   })
-  .roles("admin", "coordinator")
+  .roles("master", "admin", "enrollment_supervisor")
   .query(ListStudentsQuerySchema)
   .response(200, StudentListResponseSchema)
   .response(400, ErrorResponseSchema)

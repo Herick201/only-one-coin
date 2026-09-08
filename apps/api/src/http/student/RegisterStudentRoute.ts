@@ -37,7 +37,7 @@ const RegisterStudentResponseSchema = z.object({
   guardian: GuardianResponseSchema.nullable(),
 });
 
-// admin/coordinator only — the manual backoffice registration flow
+// management + enrollment supervision only — the manual backoffice registration flow
 // (CLAUDE.md §1, "/backoffice/students"). It never enrolls anyone; it only
 // creates the person record.
 export const registerStudentRoute = RouteBuilder.post("/students")
@@ -47,7 +47,7 @@ export const registerStudentRoute = RouteBuilder.post("/students")
     description:
       "Manual registration exception — the documented path is the student filling the public enrollment form themselves.",
   })
-  .roles("admin", "coordinator")
+  .roles("master", "admin", "enrollment_supervisor")
   .body(RegisterStudentBodySchema)
   .response(201, RegisterStudentResponseSchema)
   .response(400, ErrorResponseSchema)

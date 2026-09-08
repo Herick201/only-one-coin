@@ -4,7 +4,6 @@ import { Link } from '@/i18n/navigation'
 import { getEmailFlow, getEmailMetrics } from '@/lib/backoffice/mock-data'
 import { getStaffSession } from '@/lib/backoffice/session'
 import { canManageEmail } from '@/lib/backoffice/permissions'
-import { MockNotice } from '@/components/backoffice/ui'
 import { BoIcon } from '@/components/backoffice/icons'
 import { EmailFlowDetail } from './email-flow-detail'
 
@@ -56,7 +55,6 @@ export default async function EmailFlowPage({
         {t(fromJourney ? 'emails.back_journey' : 'emails.back')}
       </Link>
 
-      <MockNotice label={t('common.mock_notice')} />
 
       {/* The header lives in the client half: the switch is up there with the
           state it changes, and that state is what the header reads. */}

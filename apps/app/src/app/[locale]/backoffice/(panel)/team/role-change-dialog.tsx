@@ -3,22 +3,30 @@
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import type { StaffMemberRow, StaffRole } from '@/lib/backoffice/types'
-import { isMfaMandatory } from '@/lib/backoffice/permissions'
 import { BoIcon } from '@/components/backoffice/icons'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
 
 /**
- * Cargos a change can move an account between. `teacher` is deliberately absent
- * from both ends: that cargo travels with the roster file it is scoped by
- * (`teacherId`), so it is opened and closed from Docentes, never here.
+ * Cargos a promotion can move an account onto. `teacher` is deliberately
+ * absent from both ends: that cargo travels with the roster file it is scoped
+ * by (`teacherId`), so it is opened and closed from Docentes, never here. And
+ * `master` is never granted from here — an account is born master through the
+ * owners'-domain invite, or not at all.
  */
-const ROLES: StaffRole[] = ['admin', 'coordinator', 'treasury', 'mass_approver']
+const ROLES: StaffRole[] = [
+  'admin',
+  'analyst',
+  'enrollment_supervisor',
+  'academic_supervisor',
+  'sales',
+  'support',
+  'billing',
+]
 
 const fieldClass =
   'w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink outline-none transition placeholder:text-muted-foreground focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15'
@@ -49,7 +57,7 @@ export function RoleChangeDialog({
   onConfirm: (member: StaffMemberRow, role: StaffRole, password: string) => Promise<boolean>
 }) {
   const t = useTranslations('bo')
-  const [role, setRole] = useState<StaffRole>('coordinator')
+  const [role, setRole] = useState<StaffRole>('enrollment_supervisor')
   const [password, setPassword] = useState('')
   const [pending, setPending] = useState(false)
   const [wrongPassword, setWrongPassword] = useState(false)
@@ -58,7 +66,7 @@ export function RoleChangeDialog({
      answers — least of all the password. */
   useEffect(() => {
     if (!member) return
-    setRole(ROLES.find((item) => item !== member.role) ?? 'coordinator')
+    setRole(ROLES.find((item) => item !== member.role) ?? 'enrollment_supervisor')
     setPassword('')
     setWrongPassword(false)
   }, [member])
@@ -88,11 +96,6 @@ export function RoleChangeDialog({
               <DialogTitle className="text-base font-semibold text-ink">
                 {t('team.change_title')}
               </DialogTitle>
-              <DialogDescription>
-                {t('team.change_subtitle', {
-                  name: `${member.firstName} ${member.lastName}`,
-                })}
-              </DialogDescription>
             </DialogHeader>
 
             {/*
@@ -138,14 +141,6 @@ export function RoleChangeDialog({
                   </select>
                 </label>
 
-                {/* Moving somebody onto a cargo that demands a second factor is
-                    worth saying out loud: the account does not have one yet. */}
-                {isMfaMandatory(role) && !member.mfaEnrolled && (
-                  <p className="flex items-start gap-2 rounded-lg border border-dashed border-line bg-sky-soft px-3 py-2 text-xs text-muted-foreground">
-                    <BoIcon name="shield" size={14} className="mt-0.5 shrink-0" />
-                    {t('team.mfa_note')}
-                  </p>
-                )}
 
                 <div className="flex flex-col gap-1">
                   {/* The hint sits outside the label on purpose: inside it, it

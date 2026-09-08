@@ -521,7 +521,7 @@ export const staffInvites = pgTable(
       .where(sql`${table.status} = 'pending'`),
     check(
       "staff_invites_role_check",
-      sql`${table.role} in ('admin', 'coordinator', 'treasury', 'mass_approver', 'teacher')`,
+      sql`${table.role} in ('master', 'admin', 'analyst', 'enrollment_supervisor', 'academic_supervisor', 'teacher', 'sales', 'support', 'billing')`,
     ),
     check("staff_invites_status_check", sql`${table.status} in ('pending', 'completed', 'cancelled')`),
   ],
@@ -547,7 +547,7 @@ export const auditLog = pgTable(
 );
 
 // Pending password-reset links for an EXISTING panel account (CLAUDE.md §8 —
-// admin/coordinator forgetting their own password is expected, not an edge
+// staff forgetting their own password is expected, not an edge
 // case). Same shape and same plain-text-token trade-off as `staffInvites`
 // (see the comment there) — this is a sibling table, not a repurposed
 // `staffInvites` row, because a reset has no firstName/lastName/role/email to

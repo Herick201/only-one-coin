@@ -37,13 +37,21 @@ export type {
   SeatStatus,
 }
 
-/** Staff + student-side roles (CLAUDE.md §8). */
+/**
+ * Panel cargos (owner's map, 07/09/2026 — see `permissions.ts` for what each
+ * one opens). `master` is the platform owners' cargo, restricted to their
+ * e-mail domain (`canHoldMaster`).
+ */
 export type StaffRole =
+  | 'master'
   | 'admin'
-  | 'coordinator'
+  | 'analyst'
+  | 'enrollment_supervisor'
+  | 'academic_supervisor'
   | 'teacher'
-  | 'treasury'
-  | 'mass_approver'
+  | 'sales'
+  | 'support'
+  | 'billing'
 
 export interface StaffUser {
   id: string

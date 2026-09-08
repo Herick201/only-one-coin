@@ -1,6 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { listTeachers } from '@/lib/backoffice/mock-data'
-import { listStaff, listStaffRoleChanges } from '@/lib/backoffice/staff'
+import { listStaff } from '@/lib/backoffice/staff'
 import { getStaffSession } from '@/lib/backoffice/session'
 import { canManageStaff } from '@/lib/backoffice/permissions'
 import { EmptyState, PageHeader } from '@/components/backoffice/ui'
@@ -54,14 +54,13 @@ export default async function TeamPage({
       email: teacher.email,
     }))
 
-  const [rows, roleChanges] = await Promise.all([listStaff(), listStaffRoleChanges()])
+  const rows = await listStaff()
 
   return (
     <div className="flex flex-col gap-5">
       <PageHeader title={t('team.title')} />
       <TeamView
         rows={rows}
-        roleChanges={roleChanges}
         teachers={teachers}
         currentUserId={staff.id}
         currentUserName={`${staff.firstName} ${staff.lastName}`}

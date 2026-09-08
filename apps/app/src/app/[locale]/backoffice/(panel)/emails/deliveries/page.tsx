@@ -6,7 +6,7 @@ import { listEmailDeliveryIssues } from '@/lib/backoffice/mock-data'
 import { getStaffSession } from '@/lib/backoffice/session'
 import { canManageEmail } from '@/lib/backoffice/permissions'
 import { countDeliveryIssues } from '@/lib/backoffice/email-delivery'
-import { MockNotice, PageHeader } from '@/components/backoffice/ui'
+import { PageHeader } from '@/components/backoffice/ui'
 import { SectionTabs } from '@/components/backoffice/section-tabs'
 import { BoIcon } from '@/components/backoffice/icons'
 import { DeliveriesView } from './deliveries-view'
@@ -93,7 +93,6 @@ export default async function EmailDeliveriesPage({
           { href: '/backoffice/emails/deliveries', label: t('deliveries.tab') },
         ]}
       />
-      <MockNotice label={t('common.mock_notice')} />
 
       {/* One control, not three chips sitting under the tabs pretending to be
           more of them. Real links inside it, so a number on another screen can

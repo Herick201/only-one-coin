@@ -2,7 +2,17 @@ import { z } from "zod";
 import { RouteBuilder } from "@/shared/http/RouteBuilder.js";
 import { splitName } from "@/infra/identity/splitName.js";
 
-const StaffRoleSchema = z.enum(["admin", "coordinator", "teacher", "treasury", "mass_approver"]);
+const StaffRoleSchema = z.enum([
+  "master",
+  "admin",
+  "analyst",
+  "enrollment_supervisor",
+  "academic_supervisor",
+  "teacher",
+  "sales",
+  "support",
+  "billing",
+]);
 
 const GetCurrentStaffResponseSchema = z.object({
   id: z.string(),
@@ -30,7 +40,17 @@ export const getCurrentStaffRoute = RouteBuilder.get("/me")
     summary: "Get the signed-in staff member's own identity",
     description: "Backs the backoffice shell's role gating and account chip.",
   })
-  .roles("admin", "coordinator", "teacher", "treasury", "mass_approver")
+  .roles(
+    "master",
+    "admin",
+    "analyst",
+    "enrollment_supervisor",
+    "academic_supervisor",
+    "teacher",
+    "sales",
+    "support",
+    "billing",
+  )
   .response(200, GetCurrentStaffResponseSchema)
   .handler(async (request, reply) => {
     // The authorization plugin's onRequest hook always sets this before a

@@ -1,11 +1,9 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { getAccountOverview } from '@/lib/backoffice/mock-data'
-import { isMfaMandatory } from '@/lib/backoffice/permissions'
-import { formatDateTime, initials, type Locale } from '@/lib/format'
+import { getStaffSession } from '@/lib/backoffice/session'
+import { initials, type Locale } from '@/lib/format'
 import {
   Card,
   Field,
-  MockNotice,
   PageHeader,
   SectionTitle,
   StatusBadge,
@@ -14,15 +12,13 @@ import { BoIcon } from '@/components/backoffice/icons'
 import { AutoGrid } from '@/components/layout/auto-grid'
 import { Link } from '@/i18n/navigation'
 import { AccountPassword } from './account-password'
-import { AccountMfaCard } from './account-mfa'
-import { AccountSessions } from './account-sessions'
 import { AccountLanguage } from './account-language'
 
 /**
  * The one screen in the panel that is about the reader rather than about the
- * institution: their own access. It manages the three things a person can
- * change about themselves without asking anybody — password, second factor and
- * open sessions — plus the language the panel speaks to them in.
+ * institution: their own access. It manages what a person can change about
+ * themselves without asking anybody — password, plus the language the panel
+ * speaks to them in.
  *
  * What it deliberately does not edit: name, login e-mail and role. Those are
  * identity, not access. The role in particular is written only by the dedicated
@@ -43,14 +39,12 @@ export default async function AccountPage({
   setRequestLocale(raw)
   const t = await getTranslations('bo')
 
-  const { user, security, sessions } = getAccountOverview()
-  const mfaMandatory = isMfaMandatory(user.role)
+  const user = await getStaffSession()
   const fullName = `${user.firstName} ${user.lastName}`
 
   return (
     <div className="flex flex-col gap-5">
       <PageHeader title={t('account.title')} />
-      <MockNotice label={t('common.mock_notice')} />
 
       <AutoGrid min="24rem" gap="gap-5">
         <Card className="p-5">
@@ -73,9 +67,6 @@ export default async function AccountPage({
           <AutoGrid as="dl" min="11rem" className="mt-5">
             <Field label={t('account.role_label')}>
               <StatusBadge tone="info" dot={false} label={t(`role.${user.role}`)} />
-            </Field>
-            <Field label={t('account.last_sign_in_label')}>
-              {formatDateTime(security.lastSignInAt, locale)}
             </Field>
           </AutoGrid>
 
@@ -101,18 +92,9 @@ export default async function AccountPage({
         <AccountLanguage />
       </AutoGrid>
 
-      {/*
-        Password and second factor are one block, not two cards. Apart, each
-        was a mostly empty box holding a single line and a button — and they
-        are read together anyway: they are the two things standing between a
-        stolen password and this panel.
-      */}
-      <Card className="divide-y divide-line">
-        <AccountPassword updatedAt={security.passwordUpdatedAt} locale={locale} />
-        <AccountMfaCard mfa={security.mfa} mandatory={mfaMandatory} locale={locale} />
+      <Card>
+        <AccountPassword updatedAt={null} locale={locale} />
       </Card>
-
-      <AccountSessions sessions={sessions} locale={locale} />
 
       <p className="flex items-start gap-2 rounded-lg border border-dashed border-line bg-sky-soft px-3 py-2 text-xs text-muted-foreground">
         <BoIcon name="alert" size={14} className="mt-0.5 shrink-0" />

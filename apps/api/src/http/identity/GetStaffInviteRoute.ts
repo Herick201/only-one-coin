@@ -11,7 +11,17 @@ const GetStaffInviteParamsSchema = z.object({
 const GetStaffInviteResponseSchema = z.object({
   firstName: z.string(),
   email: z.string(),
-  role: z.enum(["admin", "coordinator", "treasury", "mass_approver", "teacher"]),
+  role: z.enum([
+    "master",
+    "admin",
+    "analyst",
+    "enrollment_supervisor",
+    "academic_supervisor",
+    "teacher",
+    "sales",
+    "support",
+    "billing",
+  ]),
   status: z.enum(["pending", "completed", "cancelled"]),
   expiresAt: z.string(),
 });

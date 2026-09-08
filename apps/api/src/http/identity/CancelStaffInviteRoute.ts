@@ -15,7 +15,7 @@ export const cancelStaffInviteRoute = RouteBuilder.post("/staff/invites/:inviteI
     tags: ["Identity"],
     summary: "Cancel a pending invite",
   })
-  .roles("admin")
+  .roles("master", "admin")
   .params(CancelStaffInviteParamsSchema)
   .response(204, z.void())
   .response(404, ErrorResponseSchema)

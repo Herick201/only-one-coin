@@ -711,11 +711,6 @@ export function ReportsView({
         )}
       </Card>
 
-      {/* Where each column comes from. The two halves of a row are read off
-          different things — the ledger and the seat map — and a class group
-          whose enrollments predate the ledger shows seats with no rows behind
-          them. Saying so beats letting it read as an arithmetic error. */}
-      <p className="text-xs text-muted-foreground">{t('reports.source_note')}</p>
         </>
       )}
     </div>

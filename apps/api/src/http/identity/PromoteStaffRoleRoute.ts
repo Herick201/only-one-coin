@@ -8,7 +8,18 @@ const PromoteStaffRoleParamsSchema = z.object({
 });
 
 const PromoteStaffRoleBodySchema = z.object({
-  role: z.enum(["admin", "coordinator", "treasury", "mass_approver"]),
+  // `master` is deliberately absent: an account is born master through the
+  // owners'-domain invite, never promoted into it. `teacher` travels with the
+  // roster file.
+  role: z.enum([
+    "admin",
+    "analyst",
+    "enrollment_supervisor",
+    "academic_supervisor",
+    "sales",
+    "support",
+    "billing",
+  ]),
   // The acting admin's own password, confirmed again right now — the only
   // way a `role` ever moves (CLAUDE.md §8, PromoteUserRoleUseCase).
   password: z.string().min(1),
@@ -28,7 +39,7 @@ export const promoteStaffRoleRoute = RouteBuilder.patch("/staff/:userId/role")
     summary: "Change a panel account's cargo",
     description: "Requires the acting admin's own password again, even with their session open.",
   })
-  .roles("admin")
+  .roles("master", "admin")
   .params(PromoteStaffRoleParamsSchema)
   .body(PromoteStaffRoleBodySchema)
   .response(200, PromoteStaffRoleResponseSchema)

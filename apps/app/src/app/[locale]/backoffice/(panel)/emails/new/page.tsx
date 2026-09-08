@@ -9,7 +9,7 @@ import {
 import { getStaffSession } from '@/lib/backoffice/session'
 import type { EnrollmentStatus } from '@/lib/backoffice/types'
 import { canManageEmail } from '@/lib/backoffice/permissions'
-import { MockNotice, PageHeader } from '@/components/backoffice/ui'
+import { PageHeader } from '@/components/backoffice/ui'
 import { BoIcon } from '@/components/backoffice/icons'
 import { NewEmailForm } from './new-email-form'
 
@@ -72,7 +72,6 @@ export default async function NewEmailPage({
       </Link>
 
       <PageHeader title={t('new_email.title')} />
-      <MockNotice label={t('common.mock_notice')} />
 
       <NewEmailForm
         allCount={countEmailRecipients({ kind: 'all' })}

@@ -53,7 +53,7 @@ const GetStudentResponseSchema = z.object({
   activity: z.array(z.unknown()),
 });
 
-// admin/coordinator only — same audience as the rest of the student
+// management + enrollment supervision only — same audience as the rest of the student
 // directory (CLAUDE.md §1). A teacher never reaches this route: the panel
 // narrows them to their own class groups before a student id is ever in
 // reach, and the role gate here is the backstop if they arrive by URL
@@ -64,7 +64,7 @@ export const getStudentRoute = RouteBuilder.get("/students/:studentId")
     summary: "Get a student's file",
     description: "Backs the student detail screen — identity, contact and guardian.",
   })
-  .roles("admin", "coordinator")
+  .roles("master", "admin", "enrollment_supervisor")
   .params(GetStudentParamsSchema)
   .response(200, GetStudentResponseSchema)
   .response(404, ErrorResponseSchema)

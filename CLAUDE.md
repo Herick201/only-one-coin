@@ -534,16 +534,22 @@ Cada um tem um mecanismo. O mecanismo é obrigatório, não a boa intenção.
 - Bucket de comprovantes privado, signed URL de 5 min, caminho escopado por aluno, acesso registrado
 - Docente vê só as próprias turmas — checagem explícita no usecase (`teacher_id` do usuário autenticado comparado ao dado), nunca um filtro montado a partir de input do cliente
 - Nenhum id vindo do cliente é confiado (anti-IDOR)
-- MFA obrigatório: `admin`, `treasury`, `mass_approver`
+- MFA obrigatório: `master`, `admin`, `billing`
 - Anti-enumeração: login e recuperação de senha respondem igual para conta existente e inexistente
 - Upload validado por **magic bytes**, re-encode da imagem, teto de tamanho
 - Headers: CSP, HSTS, X-Frame-Options, Referrer-Policy
 - `audit_log` append-only: sem grant de UPDATE nem DELETE, nem para admin
 - Ley 29733: consentimento com timestamp, versão do texto e IP; política de retenção; exclusão a pedido
 
-Papéis: `admin`, `coordinator`, `teacher`, `treasury`, `mass_approver`. Aluno e apoderado: `student`, `guardian`.
+**Papéis (quadro redefinido pelo dono, 07/09/2026):** `master`, `admin`, `analyst`, `enrollment_supervisor`, `academic_supervisor`, `teacher`, `sales`, `support`, `billing`. Aluno e apoderado: `student`, `guardian`. Substituiu o quadro antigo (`coordinator`, `treasury`, `mass_approver` deixaram de existir; grosso modo: coordinator → enrollment_supervisor, treasury → billing, mass_approver extinto — aprovação é de admin/billing).
 
-Emitem documento (constancia, certificado) e disparam o lote de uma turma: `admin`, `coordinator`, `teacher` — o docente **só nas próprias turmas**, checado no usecase. `treasury` e `mass_approver` não emitem. Toda emissão e todo reenvio de e-mail vão para o `audit_log`.
+- **`master`** é o cargo dos donos da plataforma: vê e faz tudo, e **só conta com e-mail `@nrlabsdigital.com`** pode carregá-lo (`canHoldMaster`, `apps/app/src/lib/backoffice/permissions.ts`).
+- **`admin`** vê tudo e autoriza. **`analyst`** (assistente/analista da administração) observa todas as áreas e propõe solução, mas **não aprova nem edita nada**.
+- **`enrollment_supervisor`** cuida do lado acadêmico das matrículas (alunos, matrículas manuais, cursos/turmas); **`academic_supervisor`** supervisiona os docentes.
+- **`sales`** (vendedor) e **`support`** (atenção ao cliente) leem alunos/matrículas; **`billing`** (facturación) liquida dinheiro e não vê dado acadêmico não financeiro.
+- A matriz tela-a-tela vive em `apps/app/src/lib/backoffice/permissions.ts`. O backend já fala o quadro novo: `Role` em `packages/domain/src/identity/Role.ts` (com `MASTER_EMAIL_DOMAIN`/`canHoldMaster`), as rotas de `apps/api` declaram os cargos novos, e a migration `0009` troca os CHECKs de `user.role` e `staff_invites.role`. O convite recusa `master` fora do domínio dos donos na própria rota (`CreateStaffInviteRoute`). Pendente: a tabela RBAC de `docs/ARCHITECTURE.md` §3 ainda descreve o quadro antigo.
+
+Emitem documento (constancia, certificado) e disparam o lote de uma turma: `master`, `admin`, `enrollment_supervisor`, `academic_supervisor`, `teacher` — o docente **só nas próprias turmas**, checado no usecase. `billing` não emite. Toda emissão e todo reenvio de e-mail vão para o `audit_log`.
 
 ### Pontos de entrada separados (portal ≠ backoffice)
 
