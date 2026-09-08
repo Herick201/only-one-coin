@@ -4,7 +4,7 @@ import { z } from "zod";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { AuthenticatedUser } from "@ooc/domain";
 import { RouteBuilder } from "@/shared/http/RouteBuilder.js";
-import authorizationPlugin from "@/infra/plugins/authorization.js";
+import authorizationPlugin, { INTERNAL_TOKEN_HEADER } from "@/infra/plugins/authorization.js";
 import errorHandlerPlugin from "@/infra/plugins/errorHandler.js";
 import { SESSION_COOKIE_NAME } from "@/infra/auth/betterAuth.js";
 import { container } from "@/container.js";
@@ -30,6 +30,24 @@ async function buildTestApp(): Promise<FastifyInstance> {
   );
 
   provider.route(
+    RouteBuilder.get("/owners-only")
+      .owners()
+      .response(200, z.object({ ok: z.boolean() }))
+      .handler(async (_request, reply) => {
+        reply.send({ ok: true });
+      }),
+  );
+
+  provider.route(
+    RouteBuilder.get("/internal-only")
+      .internal()
+      .response(200, z.object({ ok: z.boolean() }))
+      .handler(async (_request, reply) => {
+        reply.send({ ok: true });
+      }),
+  );
+
+  provider.route(
     RouteBuilder.get("/open")
       .public()
       .response(200, z.object({ ok: z.boolean() }))
@@ -42,9 +60,18 @@ async function buildTestApp(): Promise<FastifyInstance> {
   return app;
 }
 
+const TEST_INTERNAL_TOKEN = "an-internal-token-long-enough-01";
+
+/** The config is a plain object; put the secret in place and take it back out
+ *  afterwards, so one test's token never leaks into the next one. */
+function withInternalToken(token: string | undefined) {
+  (container.config as { INTERNAL_API_TOKEN?: string }).INTERNAL_API_TOKEN = token;
+}
+
 describe("authorization plugin", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    withInternalToken(undefined);
   });
 
   it("fails app boot when a route declares neither .roles() nor .public()", async () => {
@@ -111,6 +138,88 @@ describe("authorization plugin", () => {
 
     expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual({ ok: true });
+  });
+
+  /* The owners' door (CLAUDE.md §5): the e-mail domain decides, not the cargo
+     — so a legitimate `admin` of the Asociación is refused, and an owner
+     passes on a cargo that would fail every other gate in the panel. */
+  it("refuses an .owners() route to an admin outside the owners' domain", async () => {
+    const app = await buildTestApp();
+    vi.spyOn(container.identity.currentSession, "resolve").mockResolvedValue({
+      id: "u3",
+      email: "admin@onlyonecoin.edu.pe",
+      name: "Admin de la Asociación",
+      role: "admin",
+    } satisfies AuthenticatedUser);
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/owners-only",
+      cookies: { [SESSION_COOKIE_NAME]: "some-valid-token" },
+    });
+
+    expect(response.statusCode).toBe(403);
+  });
+
+  it("allows an .owners() route to the owners' domain whatever the cargo", async () => {
+    const app = await buildTestApp();
+    vi.spyOn(container.identity.currentSession, "resolve").mockResolvedValue({
+      id: "u4",
+      email: "rick@nrlabsdigital.com",
+      name: "Owner",
+      role: "support",
+    } satisfies AuthenticatedUser);
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/owners-only",
+      cookies: { [SESSION_COOKIE_NAME]: "some-valid-token" },
+    });
+
+    expect(response.statusCode).toBe(200);
+  });
+
+  it("refuses an .owners() route with no session at all", async () => {
+    const app = await buildTestApp();
+    const response = await app.inject({ method: "GET", url: "/owners-only" });
+    expect(response.statusCode).toBe(401);
+  });
+
+  /* The service-to-service door. Outside production the secret is optional and
+     the check is skipped (a fresh clone has nothing to invent); configured, it
+     is demanded — never quietly downgraded to a public read. */
+  it("refuses an .internal() route when a token is configured and not presented", async () => {
+    const app = await buildTestApp();
+    withInternalToken(TEST_INTERNAL_TOKEN);
+
+    const response = await app.inject({ method: "GET", url: "/internal-only" });
+    expect(response.statusCode).toBe(401);
+  });
+
+  it("refuses an .internal() route when the token presented is wrong", async () => {
+    const app = await buildTestApp();
+    withInternalToken(TEST_INTERNAL_TOKEN);
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/internal-only",
+      headers: { [INTERNAL_TOKEN_HEADER]: "not-the-token-but-same-length-0" },
+    });
+
+    expect(response.statusCode).toBe(401);
+  });
+
+  it("allows an .internal() route with the matching token", async () => {
+    const app = await buildTestApp();
+    withInternalToken(TEST_INTERNAL_TOKEN);
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/internal-only",
+      headers: { [INTERNAL_TOKEN_HEADER]: TEST_INTERNAL_TOKEN },
+    });
+
+    expect(response.statusCode).toBe(200);
   });
 
   it("never checks the session for a .public() route", async () => {

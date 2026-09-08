@@ -62,7 +62,7 @@ export {
 } from "./enrollment/SubmitPublicEnrollmentUseCase.js";
 
 export type { Role } from "./identity/Role.js";
-export { MASTER_EMAIL_DOMAIN, canHoldMaster } from "./identity/Role.js";
+export { MASTER_EMAIL_DOMAIN, canHoldMaster, isOwnerEmail } from "./identity/Role.js";
 export type { AuthenticatedUser } from "./identity/AuthenticatedUser.js";
 export {
   NotFreshlyAuthenticatedError,
@@ -142,3 +142,15 @@ export {
   type CompleteStaffPasswordResetInput,
   type CompleteStaffPasswordResetOutput,
 } from "./identity/CompleteStaffPasswordResetUseCase.js";
+
+export type {
+  FeatureFlagOverride,
+  FeatureFlagOverrideView,
+} from "./platform/FeatureFlagOverride.js";
+export type { IFeatureFlagOverrideRepository } from "./platform/ports/IFeatureFlagOverrideRepository.js";
+export { NotAPlatformOwnerError } from "./platform/errors.js";
+export {
+  SetFeatureFlagOverrideUseCase,
+  type SetFeatureFlagOverrideInput,
+  type SetFeatureFlagOverrideOutput,
+} from "./platform/SetFeatureFlagOverrideUseCase.js";
