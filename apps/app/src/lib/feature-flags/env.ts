@@ -9,9 +9,13 @@ import {
 /**
  * The environment side of a flag: which deploy this is, the internal-unlock
  * secret, and the per-flag overrides. Kept apart from the registry so the
- * registry stays pure data, and apart from `src/server-env.ts` on purpose — a
- * screen that reads a flag must not be made to depend on the API address it
- * never calls (the mock portal and the public checkout are exactly that).
+ * registry stays pure data.
+ *
+ * It is also kept apart from `src/server-env.ts`, though that separation buys
+ * less than it did: since the switchboard moved to the panel, resolving a flag
+ * does reach the API (`overrides.ts`). What stays true is the direction — this
+ * file answers from the process's own environment alone, so the env ladder can
+ * be read, and validated at boot, without a network call.
  */
 
 /**

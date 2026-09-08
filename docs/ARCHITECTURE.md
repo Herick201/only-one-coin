@@ -457,7 +457,7 @@ largura, então `sm:` quer dizer o que diz. Dentro de `portal/` e
 
 ---
 
-## 8. Feature flags — o que está no ar em produção (fechado 06/09/2026)
+## 8. Feature flags — o que está no ar em produção (fechado 06/09/2026, interruptor no painel 08/09/2026)
 
 As três superfícies de `apps/app` — **portal do aluno**, **backoffice** e o
 **painel do docente** — são geridas por feature flag. A semântica é uma só:
@@ -473,20 +473,55 @@ funcionalidade está no ar; o papel decide para quem ela responde.
 
 ### 8.1 Onde vive o interruptor
 
-Registro único em código, com override por variável de ambiente:
+**Duas peças, e a distinção importa:** o *catálogo* de flags vive em código, ao
+lado das seções que governa; o *interruptor* vive no banco, movido pela tela
+**Funcionalidades** do backoffice. Uma flag nova continua nascendo num commit —
+inventar uma pelo painel seria inventar uma seção que não existe.
 
-| Peça | Arquivo |
+| Peça | Onde |
 | --- | --- |
-| Declaração de toda flag | `apps/app/src/lib/feature-flags/registry.ts` |
-| Ambiente + overrides (zod no boot) | `apps/app/src/lib/feature-flags/env.ts` |
+| Declaração de toda flag (o catálogo) | `apps/app/src/lib/feature-flags/registry.ts` |
+| Ambiente + overrides de env (zod no boot) | `apps/app/src/lib/feature-flags/env.ts` |
+| Interruptor persistido | tabela `feature_flag_overrides` (`packages/db`) |
+| Regra de escrita (donos + `audit_log`) | `packages/domain/src/platform/SetFeatureFlagOverrideUseCase.ts` |
+| Rotas | `apps/api/src/http/platform/` — `GET /feature-flags/state` (interna), `GET /feature-flags` e `PUT /feature-flags/:key` (donos) |
+| Leitura do interruptor (server-only) | `apps/app/src/lib/feature-flags/overrides.ts` |
+| Resolução (server-only) | `apps/app/src/lib/feature-flags/server.ts` |
 | Destravamento interno | `apps/app/src/lib/feature-flags/preview.ts` + `src/app/api/preview/route.ts` |
-| Leitura (server-only) | `apps/app/src/lib/feature-flags/server.ts` |
+| A tela | `apps/app/src/app/[locale]/backoffice/(panel)/features/` |
 
-Banco + tela de gestão no backoffice foi a alternativa considerada e **não**
-escolhida agora: `apps/app` não fala com o banco (`CLAUDE.md` §8, tudo passa
-pela API), então uma flag em tabela exigiria migration, usecase e rota antes de
-a primeira flag existir. O registro em código entrega a gestão hoje; a tela
-continua possível depois, lendo a mesma chave.
+**Por que mudou (08/09/2026).** A versão anterior desta seção registrava que
+banco + tela tinham sido adiados: `apps/app` não fala com o banco
+(`CLAUDE.md` §8), então a primeira flag exigiria migration, usecase e rota antes
+de existir. O custo era real e foi pago — as três camadas estão acima. O que o
+adiamento cobrava em troca era pior: as duas pessoas que sabem abrir
+`registry.ts` eram as duas únicas capazes de responder "a tela de pagamentos do
+portal está no ar?", e desligar uma seção em produção era um deploy ou uma
+variável na Vercel.
+
+**Quem abre: só os donos da plataforma.** Não é cargo — é o domínio do e-mail
+(`isOwnerEmail`, `packages/domain/src/identity/Role.ts`, o mesmo
+`@nrlabsdigital.com` que já governa o `master`). O que a plataforma admite
+existir é decisão de quem opera a plataforma, não de quem administra a escola:
+um `admin` da Asociación autoriza tudo o que é acadêmico e nada disto. Na API
+isso é uma declaração de rota própria, `.owners()`, ao lado de `.roles(...)` e
+`.public()` — deny-by-default continua valendo, e o usecase repete a checagem
+antes de escrever, para que um segundo chamador não herde a escrita sem a regra.
+
+**A leitura é serviço-a-serviço.** O resolver precisa do estado antes de saber
+quem está navegando (o shell do portal renderiza para um aluno; a página de
+convite, para ninguém), então `GET /feature-flags/state` é `.internal()`: nem
+sessão nem papel, e sim o segredo compartilhado `INTERNAL_API_TOKEN` no header
+`x-ooc-internal-token`. Não é `.public()` porque a lista do que está desligado é
+a lista do que está sendo construído. Fora de produção o segredo é opcional e a
+checagem é pulada (clone novo sobe sem nada a inventar); em produção `apps/api`
+**não sobe sem ele**. Se a leitura falhar, o app cai no que o código declara e
+diz isso no log — tratar API fora do ar como "tudo desligado" transformaria um
+soluço de cinco segundos em 404 no painel e no portal inteiros.
+
+**A tela não tem flag própria**, de propósito: seria a única flag da qual não se
+volta pela tela que ela esconde. Ela é mantida fora do ar por outros meios — só
+é desenhada para o domínio dos donos, e as rotas atrás dela são `.owners()`.
 
 ### 8.2 Ordem de resolução
 
@@ -496,12 +531,24 @@ Para cada flag, nesta ordem:
    (`portal.payments` → `OOC_FLAG_PORTAL_PAYMENTS`). Qualquer outro valor é
    erro de boot, não um encolher de ombros. Na Vercel a variável é *scoped* por
    ambiente, que é o que permite ligar algo em produção sem mexer no código.
-2. **Ambiente** — fora de produção **toda flag está ligada**, sempre. Ramo
-   nenhum é demonstrado com meio painel faltando.
-3. **Padrão do registro** — o campo `production` da flag.
-4. **Pai** — filha nunca fica mais ligada que a mãe (`portal.payments` depende
+   **Ela ganha do painel de propósito:** é o caminho de volta quando o painel é
+   justamente o que quebrou.
+2. **Interruptor do painel** — a linha em `feature_flag_overrides`. Fica
+   naturalmente restrita ao ambiente pelo banco em que foi escrita (local,
+   branch de staging, produção).
+3. **Ambiente** — fora de produção **toda flag está ligada**, sempre. Ramo
+   nenhum é demonstrado com meio painel faltando. Note que (2) ganha de (3):
+   quem move um interruptor *neste* ambiente não é o padrão esquecido contra o
+   qual essa regra foi escrita — é um ato deliberado, e testar o estado
+   desligado localmente é exatamente para o que se abre aquela tela.
+4. **Padrão do registro** — o campo `production` da flag.
+5. **Pai** — filha nunca fica mais ligada que a mãe (`portal.payments` depende
    de `portal`; `teacher` depende de `backoffice`).
-5. **Destravamento interno** — com o cookie válido, tudo resolve ligado.
+6. **Destravamento interno** — com o cookie válido, tudo resolve ligado.
+
+Uma linha cuja chave não está mais no registro **não governa nada**: flag
+aposentada deixa a linha para trás, e o resolver a ignora em vez de andar uma
+cadeia de pais para uma chave que já não existe.
 
 `APP_ENV` diz qual é o ambiente. É derivada (`APP_ENV` explícita →
 `VERCEL_ENV` → `NODE_ENV`) e **falha fechada**: processo sem rótulo rodando
@@ -568,14 +615,32 @@ desligado não vai no bundle.
 
 Todas nascem aqui com `production: true` porque **todas já estão no ar**: o
 registro chegou para gerir o que se expõe, não para aposentar tela sem aviso.
-Desligar qualquer uma é uma linha — decisão de quem toca o produto, não efeito
-colateral desta sessão.
+Desligar qualquer uma agora é um clique em Funcionalidades — e toda troca fica
+no `audit_log` (`feature_flag.override`, com o valor de antes e o de depois).
 
 **Flag nova nasce `production: false`**, e é ligada no mesmo PR que torna a
 seção real. Quando a seção deixa de ser novidade, a flag sai do registro junto
 com o `layout.tsx` que a checava — flag eterna vira ruído que ninguém confia.
 
-### 8.6 Limitação conhecida
+### 8.6 A tela (Funcionalidades)
+
+`/backoffice/features`, último item do grupo Administração — e o único item da
+rail decidido por e-mail em vez de cargo.
+
+Por flag ela mostra o nome, a chave técnica, **qual das quatro fontes decidiu**
+(env, painel, ambiente, código), quem moveu por último, e o interruptor. Duas
+verdades diferentes convivem ali: o que a flag diz de si (o interruptor) e o que
+o leitor de fato recebe depois de o pai opinar — uma seção pode estar ligada e
+invisível porque a superfície acima dela está desligada, e a tela diz isso em
+vez de deixar o interruptor parecer quebrado. Flag mandada por `OOC_FLAG_*` tem
+o interruptor travado, com o nome da variável do lado: a tela não finge poder
+mover o que não move.
+
+Quem já foi movida ganha **"Voltar ao código"**, que apaga a linha em vez de
+gravar o padrão — o padrão do código volta a valer de verdade, inclusive se ele
+mudar num commit futuro.
+
+### 8.7 Limitação conhecida
 
 Links profundos **entre seções do backoffice** ainda não consultam a flag do
 destino: abrir a ficha de um aluno a partir de Pagamentos, de Matrículas, de

@@ -24,9 +24,29 @@ import type { StaffRole, StaffUser } from './types'
 /** The owners' e-mail domain — the only accounts allowed to hold `master`. */
 export const MASTER_EMAIL_DOMAIN = 'nrlabsdigital.com'
 
+/** Whether this e-mail belongs to the platform owners. */
+export function isOwnerEmail(email: string): boolean {
+  return email.trim().toLowerCase().endsWith(`@${MASTER_EMAIL_DOMAIN}`)
+}
+
 /** Whether this e-mail is allowed to carry the `master` cargo. */
 export function canHoldMaster(email: string): boolean {
-  return email.trim().toLowerCase().endsWith(`@${MASTER_EMAIL_DOMAIN}`)
+  return isOwnerEmail(email)
+}
+
+/**
+ * Who opens Funcionalidades — the switchboard that says which sections of the
+ * platform are on the air (CLAUDE.md §5).
+ *
+ * The only gate in this file that reads an e-mail instead of a cargo, and
+ * deliberately so: what exists is a decision of whoever runs the platform, not
+ * of whoever runs the school. An `admin` of the Asociación authorizes
+ * everything academic and none of this; an owner opens it whatever cargo their
+ * account carries. As everywhere else here, this only draws the screen — the
+ * check that counts is `.owners()` on the route in `apps/api`.
+ */
+export function canManageFeatureFlags(email: string): boolean {
+  return isOwnerEmail(email)
 }
 
 /** The two cargos that run the platform itself. */

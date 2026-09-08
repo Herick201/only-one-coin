@@ -8,6 +8,7 @@ import {
   canBrowseReports,
   canConfigureSettings,
   canManageEmail,
+  canManageFeatureFlags,
   canManageStaff,
   isRestrictedToOwnClassGroups,
 } from '@/lib/backoffice/permissions'
@@ -255,6 +256,21 @@ export default async function BackofficePanelLayout({
                 key: 'settings' as const,
                 href: '/backoffice/settings',
                 label: t('nav.settings'),
+              },
+            ]
+          : []),
+        /* Funcionalidades — which sections of the platform are on the air
+           (CLAUDE.md §5). The only entry in the rail gated by an e-mail domain
+           instead of a cargo: what the platform admits to existing belongs to
+           whoever runs the platform, not to whoever runs the school. And the
+           only one with no flag of its own — see the note in
+           `lib/feature-flags/registry.ts`. */
+        ...(canManageFeatureFlags(staff.email)
+          ? [
+              {
+                key: 'features' as const,
+                href: '/backoffice/features',
+                label: t('nav.features'),
               },
             ]
           : []),

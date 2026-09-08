@@ -15,6 +15,7 @@
       "reports": "Reportes",
       "staff": "Equipo",
       "settings": "Configuración",
+      "features": "Funcionalidades",
       "logout": "Cerrar sesión",
       "soon": "Pronto",
       "group_operations": "Operaciones",
@@ -1476,6 +1477,55 @@
       "save": "Guardar cambios",
       "cancel": "Descartar",
       "saved_toast": "Cambios aplicados solo en pantalla. Todavía no hay servidor conectado."
+    },
+    "features": {
+      "title": "Funcionalidades",
+      "locked_title": "Solo los dueños de la plataforma",
+      "locked_body": "Aquí se decide qué partes de la plataforma existen en producción. Es una decisión de quien opera la plataforma, no de quien administra la escuela, así que solo la abren las cuentas del dominio de los dueños.",
+      "surface": {
+        "portal": "Portal del alumno",
+        "backoffice": "Panel administrativo",
+        "teacher": "Panel del docente"
+      },
+      "flag": {
+        "portal": "Portal del alumno",
+        "portal_courses": "Mis cursos",
+        "portal_payments": "Pagos y comprobantes",
+        "portal_procedures": "Trámites",
+        "portal_documents": "Documentos",
+        "portal_continue": "Seguir estudiando",
+        "backoffice": "Panel administrativo",
+        "backoffice_students": "Alumnos",
+        "backoffice_enrollments": "Matrículas",
+        "backoffice_payments": "Pagos",
+        "backoffice_academic": "Turnos y cursos",
+        "backoffice_teachers": "Docentes",
+        "backoffice_email": "Correos",
+        "backoffice_reports": "Reportes",
+        "backoffice_staff": "Equipo",
+        "backoffice_settings": "Configuración",
+        "teacher": "Panel del docente"
+      },
+      "source": {
+        "env": "Definido por la variable {envVar} de este despliegue.",
+        "panel": "Definido aquí, en este panel.",
+        "environment": "Encendido porque este no es el ambiente de producción.",
+        "code": "Como lo declara el código."
+      },
+      "changed_by": "cambiado por {who}",
+      "removed_account": "una cuenta ya removida",
+      "hidden_by_parent": "Encendida, pero nadie la ve: la sección que la contiene está apagada.",
+      "reset": "Volver al código ({value})",
+      "locked_by_env": "Mandada por {envVar}",
+      "on": "encendida",
+      "off": "apagada",
+      "not_production": "Este es el ambiente «{env}», no producción: lo que nadie apague aquí aparece encendido, siempre. Un interruptor movido en esta pantalla sí vale para este ambiente.",
+      "internal_unlock": "Tu navegador tiene el desbloqueo interno abierto: ves todo encendido, aunque esté apagado para el resto.",
+      "footnote": "Apagar una sección la saca de producción: desaparece del menú y su dirección responde 404. Sigue entera para nosotros — local, los despliegues de preview y, en producción, para quien abra el desbloqueo interno. Esto no es control de acceso: quién puede qué lo sigue decidiendo el cargo. Cada cambio queda registrado.",
+      "turned_on": "Funcionalidad encendida.",
+      "turned_off": "Funcionalidad apagada.",
+      "reset_done": "Vuelve a valer lo que dice el código.",
+      "write_failed": "No se pudo guardar el cambio."
     }
   }
 }

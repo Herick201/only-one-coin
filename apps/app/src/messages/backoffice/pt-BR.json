@@ -15,6 +15,7 @@
       "reports": "Relatórios",
       "staff": "Equipe",
       "settings": "Configuração",
+      "features": "Funcionalidades",
       "logout": "Sair",
       "soon": "Em breve",
       "group_operations": "Operações",
@@ -1476,6 +1477,55 @@
       "save": "Salvar alterações",
       "cancel": "Descartar",
       "saved_toast": "Alterações aplicadas só na tela. Ainda não há servidor conectado."
+    },
+    "features": {
+      "title": "Funcionalidades",
+      "locked_title": "Só os donos da plataforma",
+      "locked_body": "Aqui se decide quais partes da plataforma existem em produção. É decisão de quem opera a plataforma, não de quem administra a escola — então só as contas do domínio dos donos abrem esta tela.",
+      "surface": {
+        "portal": "Portal do aluno",
+        "backoffice": "Painel administrativo",
+        "teacher": "Painel do docente"
+      },
+      "flag": {
+        "portal": "Portal do aluno",
+        "portal_courses": "Meus cursos",
+        "portal_payments": "Pagamentos e comprovantes",
+        "portal_procedures": "Trâmites",
+        "portal_documents": "Documentos",
+        "portal_continue": "Continuar estudando",
+        "backoffice": "Painel administrativo",
+        "backoffice_students": "Alunos",
+        "backoffice_enrollments": "Matrículas",
+        "backoffice_payments": "Pagamentos",
+        "backoffice_academic": "Turmas e cursos",
+        "backoffice_teachers": "Docentes",
+        "backoffice_email": "E-mails",
+        "backoffice_reports": "Relatórios",
+        "backoffice_staff": "Equipe",
+        "backoffice_settings": "Configuração",
+        "teacher": "Painel do docente"
+      },
+      "source": {
+        "env": "Definido pela variável {envVar} deste deploy.",
+        "panel": "Definido aqui, neste painel.",
+        "environment": "Ligada porque este não é o ambiente de produção.",
+        "code": "Como o código declara."
+      },
+      "changed_by": "mudado por {who}",
+      "removed_account": "uma conta já removida",
+      "hidden_by_parent": "Ligada, mas ninguém vê: a seção que a contém está desligada.",
+      "reset": "Voltar ao código ({value})",
+      "locked_by_env": "Mandada por {envVar}",
+      "on": "ligada",
+      "off": "desligada",
+      "not_production": "Este é o ambiente «{env}», não produção: o que ninguém desligar aqui aparece ligado, sempre. Um interruptor movido nesta tela vale para este ambiente.",
+      "internal_unlock": "Seu navegador está com o destravamento interno aberto: você vê tudo ligado, mesmo o que está desligado para o resto.",
+      "footnote": "Desligar uma seção a tira de produção: some do menu e o endereço responde 404. Continua inteira para nós — local, os deploys de preview e, em produção, para quem abrir o destravamento interno. Isto não é controle de acesso: quem pode o quê continua sendo o cargo. Toda mudança fica registrada.",
+      "turned_on": "Funcionalidade ligada.",
+      "turned_off": "Funcionalidade desligada.",
+      "reset_done": "Volta a valer o que o código diz.",
+      "write_failed": "Não foi possível salvar a mudança."
     }
   }
 }

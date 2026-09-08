@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   Mail,
   Settings,
+  ToggleRight,
   UserCog,
   Users,
   type LucideIcon,
@@ -53,6 +54,7 @@ const icons = {
   email: Mail,
   reports: BarChart3,
   staff: UserCog,
+  features: ToggleRight,
   settings: Settings,
 } satisfies Record<string, LucideIcon>
 
