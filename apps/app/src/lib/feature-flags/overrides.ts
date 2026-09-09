@@ -1,6 +1,5 @@
 import { cache } from 'react'
 import { serverEnv } from '@/server-env'
-import { upstreamSignal } from '@/lib/upstream-timeout'
 import { FEATURE_FLAGS, type FeatureFlagKey } from './registry'
 
 /**
@@ -32,9 +31,6 @@ export const getFlagOverrides = cache(async (): Promise<FlagOverrides> => {
           ? { 'x-ooc-internal-token': serverEnv.INTERNAL_API_TOKEN }
           : {},
         cache: 'no-store',
-        // Bounded, like every other read of the API: past the limit this is
-        // the `catch` below — code defaults — not a shell that never renders.
-        signal: upstreamSignal(),
       },
     )
 

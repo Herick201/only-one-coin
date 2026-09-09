@@ -48,7 +48,6 @@
     "verifying": "Verifying…",
     "back": "Back",
     "generic_error": "We couldn't validate those details. Check them and try again.",
-    "connection_error": "We couldn't reach the server. Check your connection and try again.",
     "error_reference": "Reference code: {errorId}",
     "security_notice": "This access is monitored. Every attempt is logged.",
     "show_password": "Show password",

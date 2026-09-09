@@ -1,6 +1,5 @@
 import { cookies } from 'next/headers'
 import { serverEnv } from '@/server-env'
-import { upstreamSignal } from '@/lib/upstream-timeout'
 
 // Duplicated from apps/api/src/infra/auth/betterAuth.ts (SESSION_COOKIE_NAME)
 // on purpose — apps/app never instantiates Better Auth itself (CLAUDE.md §3),
@@ -40,9 +39,6 @@ export async function resolveSessionCookie(): Promise<{ name: string; value: str
 export async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
   const session = await resolveSessionCookie()
 
-  // Bounded wait (`lib/upstream-timeout.ts`): an API that never answers turns
-  // into an error the boundary can show, not a "verifying session" screen
-  // that stays up for as long as the render is allowed to run.
   return fetch(new URL(path, serverEnv.API_INTERNAL_URL), {
     ...init,
     headers: {
@@ -50,6 +46,5 @@ export async function apiFetch(path: string, init?: RequestInit): Promise<Respon
       ...(session ? { cookie: `${session.name}=${session.value}` } : {}),
     },
     cache: 'no-store',
-    signal: init?.signal ?? upstreamSignal(),
   })
 }
