@@ -48,6 +48,7 @@
     "verifying": "Verificando…",
     "back": "Volver",
     "generic_error": "No pudimos validar esos datos. Verifica e intenta de nuevo.",
+    "connection_error": "No pudimos conectar con el servidor. Revisa tu conexión e intenta de nuevo.",
     "error_reference": "Código de referencia: {errorId}",
     "security_notice": "Este acceso es monitoreado. Cada intento queda registrado.",
     "show_password": "Mostrar contraseña",

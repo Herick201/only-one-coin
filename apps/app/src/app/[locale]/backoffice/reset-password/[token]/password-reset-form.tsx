@@ -101,20 +101,25 @@ export function PasswordResetForm({
         return
       }
 
+      // Password is set either way — the immediate sign-in is a convenience,
+      // not the definition of success. That includes a sign-in that never
+      // answers (network gone, server restarting), hence the `.catch`.
       const signIn = await fetch('/api/auth/sign-in/email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
-      })
+      }).catch(() => null)
 
-      if (signIn.ok) {
+      if (signIn?.ok) {
         router.push('/backoffice/home')
         return
       }
 
-      // Password is set either way — the immediate sign-in is a convenience,
-      // not the definition of success.
       setStep('done')
+    } catch {
+      // The reset call itself never answered — the password may or may not
+      // have been written; asking again is safe either way.
+      setError('server')
     } finally {
       setPending(false)
     }

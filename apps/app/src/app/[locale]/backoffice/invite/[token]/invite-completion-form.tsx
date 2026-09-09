@@ -104,20 +104,27 @@ export function InviteCompletionForm({
         return
       }
 
+      // Account exists but the immediate sign-in failed for some other
+      // reason — the account itself is real, so this still counts as done.
+      // A sign-in that never answers (network gone, server restarting) is the
+      // same case, hence the `.catch`: it must not surface as a server error
+      // for an invite that has in fact been completed.
       const signIn = await fetch('/api/auth/sign-in/email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
-      })
+      }).catch(() => null)
 
-      if (signIn.ok) {
+      if (signIn?.ok) {
         router.push('/backoffice/home')
         return
       }
 
-      // Account exists but the immediate sign-in failed for some other
-      // reason — the account itself is real, so this still counts as done.
       setStep('done')
+    } catch {
+      // The completion call itself never answered — nothing was written
+      // that we know of, so the person gets to try again.
+      setError('server')
     } finally {
       setPending(false)
     }
