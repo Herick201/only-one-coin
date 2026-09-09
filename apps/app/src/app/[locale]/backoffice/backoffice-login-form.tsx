@@ -14,14 +14,6 @@ import {
 
 type Step = 'credentials' | 'mfa' | 'recover' | 'recover_sent'
 
-/**
- * Upper bound on the sign-in round trip. The proxy behind `/api/auth` has its
- * own bound on `apps/api` (`lib/upstream-timeout.ts`); this one covers the hop
- * the browser cannot see past — a Next server that accepted the request and
- * then stalled — and is a little longer so the proxy's own 504 arrives first.
- */
-const SIGN_IN_TIMEOUT_MS = 20_000
-
 function Heading({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <div className="mb-6">
@@ -56,15 +48,7 @@ export function BackofficeLoginForm() {
   const router = useRouter()
   const [step, setStep] = useState<Step>('credentials')
   const [pending, setPending] = useState(false)
-  /**
-   * Two failures, two banners. `credentials` is the anti-enumeration answer
-   * (same text whether the address exists or the password is wrong).
-   * `connection` is everything that is not an answer at all: the request
-   * never came back (server down, restarting, network gone, timed out) or
-   * came back as a server error. Folding that into the credentials banner
-   * would send someone to retype a password the platform never checked.
-   */
-  const [error, setError] = useState<'credentials' | 'connection' | null>(null)
+  const [error, setError] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const timer = useRef<number | undefined>(undefined)
 
@@ -84,45 +68,27 @@ export function BackofficeLoginForm() {
     event.preventDefault()
     if (pending) return
 
-    setError(null)
+    setError(false)
     setPending(true)
 
     const formData = new FormData(event.currentTarget)
+    const response = await fetch('/api/auth/sign-in/email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: formData.get('email'),
+        password: formData.get('password'),
+      }),
+    })
 
-    // `finally` is what keeps the button from sitting in "Verificando…"
-    // forever: a `fetch` that rejects (dev server restarting, connection
-    // refused or reset, the timeout below) used to escape this handler with
-    // `pending` still true, and nothing on the screen could reset it.
-    try {
-      const response = await fetch('/api/auth/sign-in/email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData.get('email'),
-          password: formData.get('password'),
-        }),
-        signal: AbortSignal.timeout(SIGN_IN_TIMEOUT_MS),
-      })
+    setPending(false)
 
-      if (response.ok) {
-        router.push('/backoffice/home')
-        return
-      }
-
-      // Better Auth answers a rejected password or an unknown address with
-      // 401 (and an untrusted origin with 403); anything else — the proxy's
-      // own 502/504, a 5xx from the API — is the platform failing, not the
-      // person.
-      setError(
-        response.status === 401 || response.status === 403
-          ? 'credentials'
-          : 'connection',
-      )
-    } catch {
-      setError('connection')
-    } finally {
-      setPending(false)
+    if (!response.ok) {
+      setError(true)
+      return
     }
+
+    router.push('/backoffice/home')
   }
 
   function onMfa(event: React.FormEvent<HTMLFormElement>) {
@@ -259,7 +225,7 @@ export function BackofficeLoginForm() {
           role="alert"
           className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
         >
-          {error === 'connection' ? t('connection_error') : t('generic_error')}
+          {t('generic_error')}
         </div>
       )}
 
