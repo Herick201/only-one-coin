@@ -266,7 +266,7 @@ interface NotificationProvider {
 
 Templates versionados no repositório, não desenhados só no painel do Brevo.
 
-### Feature flags — o que está no ar em produção (decisão 06/09/2026; interruptor no painel 08/09/2026)
+### Feature flags — o que está no ar em produção (decisão 06/09/2026; interruptor no painel 08/09/2026; leitura pública 09/09/2026)
 
 **As três superfícies de `apps/app` são geridas por feature flag: portal do
 aluno, backoffice e painel do docente.** Uma flag ligada significa que a seção
@@ -299,12 +299,21 @@ que aquilo não está ativo para mais ninguém).
   Vercel) → interruptor do painel → fora de produção tudo ligado → padrão do
   registro → pai. A env **ganha do painel** de propósito: é o caminho de volta
   quando o painel é o que quebrou.
-- **O resolver lê o estado por serviço-a-serviço**, não por sessão: precisa da
-  resposta antes de saber quem navega (o shell do portal renderiza para um
-  aluno; a página de convite, para ninguém). `GET /feature-flags/state` é
-  `.internal()` — segredo `INTERNAL_API_TOKEN` no header, obrigatório em
-  produção, opcional fora dela. API fora do ar → vale o que o código declara,
-  com aviso no log.
+- **A leitura do estado é pública (revertido 09/09/2026).** `GET
+  /feature-flags/state` nasceu `.internal()`, atrás de um segredo
+  `INTERNAL_API_TOKEN` novo e obrigatório em produção — e ninguém garantiu que
+  esse segredo existisse no Fly.io antes do deploy: a API não subia sem ele, o
+  processo caía em produção, e como o formulário de login do backoffice não
+  tinha `try/finally` em volta do `fetch` (bug preexistente, não desta
+  decisão), a queda virou "login carregando pra sempre" em vez de um erro
+  claro — auth inteiro fora do ar sem ninguém perceber no deploy. Decisão do
+  dono: o que precisa de porta é **quem muda** uma flag (`.owners()` em `PUT
+  /feature-flags/:key`, e-mail `@nrlabsdigital.com`, inalterado) — **quem só
+  lê** o estado atual não, porque o resolver às vezes não tem sessão nenhuma
+  pra checar (o shell do portal renderiza pra um aluno; a página de convite,
+  pra ninguém). `INTERNAL_API_TOKEN` foi removido do código dos dois lados
+  (`apps/api`, `apps/app`), não só desligado — segredo de produção obrigatório
+  que ninguém revisou uma vez já foi o suficiente.
 - **A tela de flags não tem flag própria**: seria a única da qual não se volta
   pela tela que ela esconde.
 - **Fora de produção toda flag está ligada**, sempre. E `APP_ENV` falha fechada:

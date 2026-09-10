@@ -11,19 +11,20 @@ const FeatureFlagStateResponseSchema = z.object({
 /**
  * What apps/app's resolver reads on every render (CLAUDE.md §5).
  *
- * `.internal()` rather than a role: the portal shell reads this for a student,
- * and the invite page reads it for somebody with no session at all — there is
- * no cargo to check. It is not `.public()` either: the list of what is off is
- * the list of what is being built, and that is not something to publish
- * (CLAUDE.md §8, anti-enumeração).
+ * `.public()`: the portal shell reads this for a student, and the invite page
+ * reads it for somebody with no session at all — there is no cargo to check,
+ * and no service secret either. What it returns is a list of booleans (which
+ * sections are on), not anything an owner needs kept from a logged-out
+ * caller — the door that matters is who can *change* one (`.owners()` on
+ * `PUT /feature-flags/:key`), not who can read the current state.
  */
 export const getFeatureFlagStateRoute = RouteBuilder.get("/feature-flags/state")
   .docs({
     tags: ["Platform"],
     summary: "Feature-flag overrides in force",
-    description: "Service-to-service read for apps/app's flag resolver. Internal token only.",
+    description: "Public read for apps/app's flag resolver.",
   })
-  .internal()
+  .public()
   .response(200, FeatureFlagStateResponseSchema)
   .response(401, ErrorResponseSchema)
   .handler(async (_request, reply) => {

@@ -7,8 +7,11 @@ import { FEATURE_FLAGS, type FeatureFlagKey } from './registry'
  * (CLAUDE.md §5). The registry below in `registry.ts` says what a flag is and
  * what it defaults to; this says what was decided about it since.
  *
- * It is read from `apps/api` over the internal token, never from the database:
- * `apps/app` has no connection string and is not getting one (CLAUDE.md §8).
+ * It is read from `apps/api`, never from the database: `apps/app` has no
+ * connection string and is not getting one (CLAUDE.md §8). The read is a
+ * public route — who can *change* a flag is the door that matters
+ * (`.owners()` on the panel's write route), not who can read the current
+ * state, which the portal shell needs before it even knows who is browsing.
  * The call is memoized per request, so a page reading five flags still costs
  * one round trip.
  */
@@ -26,12 +29,7 @@ export const getFlagOverrides = cache(async (): Promise<FlagOverrides> => {
   try {
     const response = await fetch(
       new URL('/api/v1/feature-flags/state', serverEnv.API_INTERNAL_URL),
-      {
-        headers: serverEnv.INTERNAL_API_TOKEN
-          ? { 'x-ooc-internal-token': serverEnv.INTERNAL_API_TOKEN }
-          : {},
-        cache: 'no-store',
-      },
+      { cache: 'no-store' },
     )
 
     if (!response.ok) {
