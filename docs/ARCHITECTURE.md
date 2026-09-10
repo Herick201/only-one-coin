@@ -457,7 +457,7 @@ largura, então `sm:` quer dizer o que diz. Dentro de `portal/` e
 
 ---
 
-## 8. Feature flags — o que está no ar em produção (fechado 06/09/2026, interruptor no painel 08/09/2026)
+## 8. Feature flags — o que está no ar em produção (fechado 06/09/2026, interruptor no painel 08/09/2026, leitura pública 09/09/2026)
 
 As três superfícies de `apps/app` — **portal do aluno**, **backoffice** e o
 **painel do docente** — são geridas por feature flag. A semântica é uma só:
@@ -484,7 +484,7 @@ inventar uma pelo painel seria inventar uma seção que não existe.
 | Ambiente + overrides de env (zod no boot) | `apps/app/src/lib/feature-flags/env.ts` |
 | Interruptor persistido | tabela `feature_flag_overrides` (`packages/db`) |
 | Regra de escrita (donos + `audit_log`) | `packages/domain/src/platform/SetFeatureFlagOverrideUseCase.ts` |
-| Rotas | `apps/api/src/http/platform/` — `GET /feature-flags/state` (interna), `GET /feature-flags` e `PUT /feature-flags/:key` (donos) |
+| Rotas | `apps/api/src/http/platform/` — `GET /feature-flags/state` (pública), `GET /feature-flags` e `PUT /feature-flags/:key` (donos) |
 | Leitura do interruptor (server-only) | `apps/app/src/lib/feature-flags/overrides.ts` |
 | Resolução (server-only) | `apps/app/src/lib/feature-flags/server.ts` |
 | Destravamento interno | `apps/app/src/lib/feature-flags/preview.ts` + `src/app/api/preview/route.ts` |
@@ -508,16 +508,28 @@ isso é uma declaração de rota própria, `.owners()`, ao lado de `.roles(...)`
 `.public()` — deny-by-default continua valendo, e o usecase repete a checagem
 antes de escrever, para que um segundo chamador não herde a escrita sem a regra.
 
-**A leitura é serviço-a-serviço.** O resolver precisa do estado antes de saber
-quem está navegando (o shell do portal renderiza para um aluno; a página de
-convite, para ninguém), então `GET /feature-flags/state` é `.internal()`: nem
-sessão nem papel, e sim o segredo compartilhado `INTERNAL_API_TOKEN` no header
-`x-ooc-internal-token`. Não é `.public()` porque a lista do que está desligado é
-a lista do que está sendo construído. Fora de produção o segredo é opcional e a
-checagem é pulada (clone novo sobe sem nada a inventar); em produção `apps/api`
-**não sobe sem ele**. Se a leitura falhar, o app cai no que o código declara e
-diz isso no log — tratar API fora do ar como "tudo desligado" transformaria um
-soluço de cinco segundos em 404 no painel e no portal inteiros.
+**A leitura é pública, revertido 09/09/2026.** `GET /feature-flags/state`
+nasceu `.internal()` — segredo `INTERNAL_API_TOKEN`, obrigatório em produção
+por um `throw` no boot de `apps/api` (`config.ts`). Ninguém garantiu que esse
+segredo novo existisse no Fly.io antes do deploy da #91: a API não subiu em
+produção, e como o formulário de login do backoffice não tinha
+`try/finally` em volta do `fetch` de sign-in (bug preexistente, não desta
+decisão) nem o proxy same-origin tinha timeout, a queda da API virou "login
+carregando pra sempre" em vez de um erro claro — ninguém viu no deploy.
+
+Decisão do dono ao ver a causa: o resolver às vezes não tem sessão nenhuma
+pra checar (o shell do portal renderiza para um aluno; a página de convite,
+para ninguém), então checar e-mail ali não é possível — mas isso não exige um
+segredo de serviço-a-serviço, exige aceitar que **ler o estado não precisa de
+porta**. O que a lista de flags desligadas revela (quais seções ainda não
+foram lançadas) não é sensível o bastante pra justificar um segredo de
+produção obrigatório sem processo nenhum garantindo que ele exista antes do
+deploy. A porta que importa continua de pé: **mudar** uma flag exige
+`.owners()` (§8.1 acima) — só ler o estado, não.
+
+`INTERNAL_API_TOKEN` foi removido do código dos dois lados (`apps/api`,
+`apps/app`), não só desligado: um segredo obrigatório em produção que ninguém
+revisou uma vez já bastou.
 
 **A tela não tem flag própria**, de propósito: seria a única flag da qual não se
 volta pela tela que ela esconde. Ela é mantida fora do ar por outros meios — só

@@ -22,10 +22,9 @@ export class RouteBuilder<
   private readonly url: string;
   private schema: RouteSchema = {};
   // No default — deny-by-default (CLAUDE.md §6) is enforced by requiring
-  // every route to call .roles(...), .owners(), .internal() or .public()
-  // explicitly. A route built
-  // without either fails at registration time (authorization plugin's
-  // onRoute hook), not silently open.
+  // every route to call .roles(...), .owners() or .public() explicitly. A
+  // route built without one fails at registration time (authorization
+  // plugin's onRoute hook), not silently open.
   private auth?: RouteAuth;
 
   private constructor(method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH", url: string) {
@@ -93,16 +92,6 @@ export class RouteBuilder<
    */
   owners() {
     this.auth = { public: false, owners: true };
-    return this;
-  }
-
-  /**
-   * Service-to-service only: apps/app calling with the shared internal token,
-   * for what it must know before it knows who is browsing (the feature-flag
-   * state). Never reachable from a browser.
-   */
-  internal() {
-    this.auth = { public: false, internal: true };
     return this;
   }
 
