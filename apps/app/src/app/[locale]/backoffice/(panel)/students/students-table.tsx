@@ -110,7 +110,11 @@ export function StudentsTable({
       const search = new URLSearchParams()
       if (options.q) search.set('q', options.q)
       if (options.cursor) search.set('cursor', options.cursor)
-      const suffix = search.size > 0 ? `?${search.toString()}` : ''
+      /* `.toString()` rather than `.size`: the property is recent enough that
+         an older Safari would throw here, and this screen is opened from
+         whatever phone coordination happens to carry. */
+      const params = search.toString()
+      const suffix = params ? `?${params}` : ''
       try {
         const response = await fetch(`/api/v1/students${suffix}`)
         if (!response.ok) return null
