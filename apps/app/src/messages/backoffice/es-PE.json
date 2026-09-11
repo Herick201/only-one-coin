@@ -1482,11 +1482,25 @@
       "title": "Funcionalidades",
       "locked_title": "Solo los dueños de la plataforma",
       "locked_body": "Aquí se decide qué partes de la plataforma existen en producción. Es una decisión de quien opera la plataforma, no de quien administra la escuela, así que solo la abren las cuentas del dominio de los dueños.",
+      "total": "{count, plural, one {# funcionalidad} other {# funcionalidades}}",
+      "changed_here": "{count, plural, one {# cambiada aquí} other {# cambiadas aquí}}",
+      "state": {
+        "live": "En el aire",
+        "hidden": "Oculta",
+        "off": "Apagada"
+      },
+      "tally": {
+        "live": "{count, plural, one {en el aire} other {en el aire}}",
+        "hidden": "{count, plural, one {oculta} other {ocultas}}",
+        "off": "{count, plural, one {apagada} other {apagadas}}"
+      },
       "surface": {
         "portal": "Portal del alumno",
         "backoffice": "Panel administrativo",
         "teacher": "Panel del docente"
       },
+      "sections_count": "{count, plural, one {# sección} other {# secciones}}",
+      "tab_alert": "Con excepciones",
       "flag": {
         "portal": "Portal del alumno",
         "portal_courses": "Mis cursos",
@@ -1506,6 +1520,7 @@
         "backoffice_settings": "Configuración",
         "teacher": "Panel del docente"
       },
+      "details_label": "Detalles de {name}",
       "source": {
         "env": "Definido por la variable {envVar} de este despliegue.",
         "panel": "Definido aquí, en este panel.",
@@ -1515,12 +1530,14 @@
       "changed_by": "cambiado por {who}",
       "removed_account": "una cuenta ya removida",
       "hidden_by_parent": "Encendida, pero nadie la ve: la sección que la contiene está apagada.",
+      "parent_off": "Apagada: las {count, plural, one {# sección de abajo no la ve} other {# secciones de abajo no las ve}} nadie, digan lo que digan sus propios interruptores.",
       "reset": "Volver al código ({value})",
-      "locked_by_env": "Mandada por {envVar}",
+      "locked_short": "Mandada por el despliegue",
       "on": "encendida",
       "off": "apagada",
       "not_production": "Este es el ambiente «{env}», no producción: lo que nadie apague aquí aparece encendido, siempre. Un interruptor movido en esta pantalla sí vale para este ambiente.",
       "internal_unlock": "Tu navegador tiene el desbloqueo interno abierto: ves todo encendido, aunque esté apagado para el resto.",
+      "footnote_title": "Cómo funciona",
       "footnote": "Apagar una sección la saca de producción: desaparece del menú y su dirección responde 404. Sigue entera para nosotros — local, los despliegues de preview y, en producción, para quien abra el desbloqueo interno. Esto no es control de acceso: quién puede qué lo sigue decidiendo el cargo. Cada cambio queda registrado.",
       "turned_on": "Funcionalidad encendida.",
       "turned_off": "Funcionalidad apagada.",
