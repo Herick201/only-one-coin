@@ -291,13 +291,12 @@ export default async function BackofficePanelLayout({
           className="h-auto w-7"
         />
       </span>
-      <span className="flex min-w-0 flex-col leading-tight group-data-[collapsible=icon]:hidden">
-        <span className="truncate text-[15px] font-semibold text-white">
-          Only One Coin
-        </span>
-        <span className="truncate text-xs font-medium text-slate-400">
-          {t('brand.panel_label')}
-        </span>
+      {/* The mark and the name, nothing under them. "Painel administrativo"
+          sat here as a second line and said what the reader had already been
+          told twice — by the door they came in through and by the header at
+          the top of the page they are on. */}
+      <span className="min-w-0 truncate text-[15px] font-semibold text-white group-data-[collapsible=icon]:hidden">
+        Only One Coin
       </span>
     </div>
   )

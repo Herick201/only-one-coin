@@ -1482,11 +1482,25 @@
       "title": "Features",
       "locked_title": "Platform owners only",
       "locked_body": "This is where it is decided which parts of the platform exist in production. That is a call for whoever runs the platform, not for whoever administers the school, so only accounts on the owners’ domain open it.",
+      "total": "{count, plural, one {# feature} other {# features}}",
+      "changed_here": "{count, plural, one {# changed here} other {# changed here}}",
+      "state": {
+        "live": "Live",
+        "hidden": "Hidden",
+        "off": "Off"
+      },
+      "tally": {
+        "live": "{count, plural, one {live} other {live}}",
+        "hidden": "{count, plural, one {hidden} other {hidden}}",
+        "off": "{count, plural, one {off} other {off}}"
+      },
       "surface": {
         "portal": "Student portal",
         "backoffice": "Staff panel",
         "teacher": "Teacher panel"
       },
+      "sections_count": "{count, plural, one {# section} other {# sections}}",
+      "tab_alert": "Has exceptions",
       "flag": {
         "portal": "Student portal",
         "portal_courses": "My courses",
@@ -1506,6 +1520,7 @@
         "backoffice_settings": "Settings",
         "teacher": "Teacher panel"
       },
+      "details_label": "Details for {name}",
       "source": {
         "env": "Set by this deploy’s {envVar} variable.",
         "panel": "Set here, on this panel.",
@@ -1515,12 +1530,14 @@
       "changed_by": "changed by {who}",
       "removed_account": "an account since removed",
       "hidden_by_parent": "On, but nobody sees it: the section that holds it is off.",
+      "parent_off": "Off: {count, plural, one {the # section below is} other {the # sections below are}} seen by nobody, whatever their own switches say.",
       "reset": "Back to the code ({value})",
-      "locked_by_env": "Held by {envVar}",
+      "locked_short": "Set by the deploy",
       "on": "on",
       "off": "off",
       "not_production": "This is the “{env}” environment, not production: whatever nobody turns off here shows up on, always. A switch moved on this screen does count for this environment.",
       "internal_unlock": "Your browser is carrying the internal unlock: you see everything on, including what is off for everyone else.",
+      "footnote_title": "How this works",
       "footnote": "Turning a section off takes it out of production: it leaves the menu and its address answers 404. It stays whole for us — local, the preview deploys and, in production, for whoever opens the internal unlock. This is not access control: who may do what is still the cargo. Every change is recorded.",
       "turned_on": "Feature turned on.",
       "turned_off": "Feature turned off.",
