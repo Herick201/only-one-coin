@@ -331,6 +331,76 @@ export function Pager({
   nextLabel: string
   onChange: (page: number) => void
 }) {
+  return (
+    <PagerNav
+      status={status}
+      prevLabel={prevLabel}
+      nextLabel={nextLabel}
+      prevDisabled={page <= 0}
+      nextDisabled={page >= pageCount - 1}
+      onPrev={() => onChange(page - 1)}
+      onNext={() => onChange(page + 1)}
+    />
+  )
+}
+
+/**
+ * The same pager for a list the server pages by cursor: there is no total and
+ * no page count to count down to, only "is there another page". A list that
+ * can reach 20k rows (CLAUDE.md §1) never gets counted just to draw a label.
+ *
+ * `busy` blocks both buttons while a page is in flight — each turn is a
+ * request here, and a double click would skip a page.
+ */
+export function CursorPager({
+  status,
+  prevLabel,
+  nextLabel,
+  hasPrev,
+  hasNext,
+  busy = false,
+  onPrev,
+  onNext,
+}: {
+  status: string
+  prevLabel: string
+  nextLabel: string
+  hasPrev: boolean
+  hasNext: boolean
+  busy?: boolean
+  onPrev: () => void
+  onNext: () => void
+}) {
+  return (
+    <PagerNav
+      status={status}
+      prevLabel={prevLabel}
+      nextLabel={nextLabel}
+      prevDisabled={busy || !hasPrev}
+      nextDisabled={busy || !hasNext}
+      onPrev={onPrev}
+      onNext={onNext}
+    />
+  )
+}
+
+function PagerNav({
+  status,
+  prevLabel,
+  nextLabel,
+  prevDisabled,
+  nextDisabled,
+  onPrev,
+  onNext,
+}: {
+  status: string
+  prevLabel: string
+  nextLabel: string
+  prevDisabled: boolean
+  nextDisabled: boolean
+  onPrev: () => void
+  onNext: () => void
+}) {
   /* `min-h-tap` porque virar página é a coisa que mais se toca numa lista
      longa, e 30px de altura no celular erra o dedo. No desktop o botão já
      tinha essa altura de sobra pelo padding. */
@@ -342,21 +412,11 @@ export function Pager({
     <nav className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-line px-4 py-3">
       <span className="text-xs text-muted-foreground">{status}</span>
       <span className="flex flex-1 items-center justify-end gap-2">
-        <button
-          type="button"
-          className={button}
-          disabled={page <= 0}
-          onClick={() => onChange(page - 1)}
-        >
+        <button type="button" className={button} disabled={prevDisabled} onClick={onPrev}>
           <BoIcon name="chevron-down" size={14} className="rotate-90" />
           {prevLabel}
         </button>
-        <button
-          type="button"
-          className={button}
-          disabled={page >= pageCount - 1}
-          onClick={() => onChange(page + 1)}
-        >
+        <button type="button" className={button} disabled={nextDisabled} onClick={onNext}>
           {nextLabel}
           <BoIcon name="chevron-down" size={14} className="-rotate-90" />
         </button>

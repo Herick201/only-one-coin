@@ -133,7 +133,7 @@
     "students": {
       "title": "Alunos",
       "search_label": "Buscar aluno",
-      "search_placeholder": "Nome, documento, e-mail ou telefone",
+      "search_placeholder": "Nome ou documento",
       "filter_all": "Todos",
       "filters": "Filtros",
       "col_student": "Aluno",
@@ -144,18 +144,18 @@
       "col_last_activity": "Última atividade",
       "minor": "Menor de idade",
       "empty_title": "Nenhum resultado",
-      "empty_body": "Tente outro nome, documento ou e-mail, ou remova o filtro de status.",
+      "empty_body": "Tente outro nome ou documento, ou remova os filtros.",
       "page_prev": "Anteriores",
       "page_next": "Próximos",
-      "page_status": "{from}–{to} de {total}",
       "locked_title": "Sem acesso à lista de alunos",
       "locked_body": "Você chega a um aluno pela sua própria turma. A lista completa é da coordenação.",
       "new_student": "Novo aluno",
-      "load_more": "Carregar mais",
-      "loading_more": "Carregando…",
       "load_error_title": "Não foi possível carregar a lista",
       "load_error_body": "O sistema não respondeu. Recarregue a página; se continuar assim, avise a equipe técnica.",
-      "load_more_error": "Não foi possível carregar mais alunos. Tente de novo."
+      "page_number": "Página {page}",
+      "page_error": "Não foi possível carregar a lista. Tente de novo.",
+      "search_hint": "Busca em todo o cadastro por nome ou documento. Mostramos as primeiras correspondências: se o aluno não aparecer, digite o documento completo.",
+      "filters_scope": "Os filtros valem para a página que você está vendo, não para o cadastro inteiro."
     },
     "student_status": {
       "active": "Ativo",
