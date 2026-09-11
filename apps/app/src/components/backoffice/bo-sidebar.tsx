@@ -10,7 +10,7 @@ import {
   ClipboardList,
   CreditCard,
   GraduationCap,
-  LayoutDashboard,
+  Home,
   Mail,
   Settings,
   ToggleRight,
@@ -44,7 +44,7 @@ import {
 
 /** Module key -> icon. Labels never live here — they come from i18n. */
 const icons = {
-  dashboard: LayoutDashboard,
+  dashboard: Home,
   students: Users,
   enrollments: ClipboardList,
   payments: CreditCard,
