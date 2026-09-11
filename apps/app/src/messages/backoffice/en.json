@@ -133,7 +133,7 @@
     "students": {
       "title": "Students",
       "search_label": "Search student",
-      "search_placeholder": "Name, ID, email or phone",
+      "search_placeholder": "Name or ID",
       "filter_all": "All",
       "filters": "Filters",
       "col_student": "Student",
@@ -144,18 +144,18 @@
       "col_last_activity": "Last activity",
       "minor": "Minor",
       "empty_title": "No results",
-      "empty_body": "Try another name, ID or email, or clear the status filter.",
+      "empty_body": "Try another name or ID, or clear the filters.",
       "page_prev": "Previous",
       "page_next": "Next",
-      "page_status": "{from}–{to} of {total}",
       "locked_title": "No access to the student directory",
       "locked_body": "You reach a student through your own class group. The full list belongs to coordination.",
       "new_student": "New student",
-      "load_more": "Load more",
-      "loading_more": "Loading…",
       "load_error_title": "Could not load the directory",
       "load_error_body": "The system did not respond. Reload the page; if it keeps happening, tell the technical team.",
-      "load_more_error": "Could not load more students. Try again."
+      "page_number": "Page {page}",
+      "page_error": "Could not load the directory. Try again.",
+      "search_hint": "Searches the whole directory by name or ID. Only the first matches are listed: if the student is missing, type the full ID.",
+      "filters_scope": "Filters apply to the page you are looking at, not to the whole directory."
     },
     "student_status": {
       "active": "Active",

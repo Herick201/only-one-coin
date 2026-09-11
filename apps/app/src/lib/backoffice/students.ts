@@ -15,11 +15,11 @@ export interface StudentListPage {
  * merges both concerns off one query (`apps/api/src/infra/persistence/
  * student/ListStudentsQuery.ts`).
  *
- * The directory browse is cursor-paginated server-side — this only fetches
- * one page. The client component (`students-table.tsx`) calls the
- * same-origin `/api/v1/students` proxy directly for subsequent pages, since
- * this function runs in a Server Component and can't be called again from
- * the browser.
+ * The directory browse is cursor-paginated server-side — this fetches the
+ * first page only, and it is the whole list the screen ever holds at once.
+ * Every later page, and every search, goes through the same-origin
+ * `/api/v1/students` proxy from `students-table.tsx`: this function runs in
+ * a Server Component and can't be called again from the browser.
  *
  * `null` means the API failed (error response or unreachable) — the page
  * shows a visible error state for it. A silent empty page here is

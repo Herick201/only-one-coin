@@ -133,7 +133,7 @@
     "students": {
       "title": "Alumnos",
       "search_label": "Buscar alumno",
-      "search_placeholder": "Nombre, documento, correo o teléfono",
+      "search_placeholder": "Nombre o documento",
       "filter_all": "Todos",
       "filters": "Filtros",
       "col_student": "Alumno",
@@ -144,18 +144,18 @@
       "col_last_activity": "Última actividad",
       "minor": "Menor de edad",
       "empty_title": "Sin resultados",
-      "empty_body": "Prueba con otro nombre, documento o correo, o quita el filtro de estado.",
+      "empty_body": "Prueba con otro nombre o documento, o quita los filtros.",
       "page_prev": "Anteriores",
       "page_next": "Siguientes",
-      "page_status": "{from}–{to} de {total}",
       "locked_title": "Sin acceso al padrón de alumnos",
       "locked_body": "Llegas a un alumno desde tu propia aula. El listado completo es de coordinación.",
       "new_student": "Nuevo alumno",
-      "load_more": "Cargar más",
-      "loading_more": "Cargando…",
       "load_error_title": "No se pudo cargar el padrón",
       "load_error_body": "El sistema no respondió. Recarga la página; si sigue igual, avisa al equipo técnico.",
-      "load_more_error": "No se pudo cargar más alumnos. Inténtalo de nuevo."
+      "page_number": "Página {page}",
+      "page_error": "No se pudo cargar el padrón. Inténtalo de nuevo.",
+      "search_hint": "Búsqueda sobre todo el padrón por nombre o documento. Se muestran las primeras coincidencias: si no aparece, escribe el documento completo.",
+      "filters_scope": "Los filtros se aplican a la página que estás viendo, no a todo el padrón."
     },
     "student_status": {
       "active": "Activo",

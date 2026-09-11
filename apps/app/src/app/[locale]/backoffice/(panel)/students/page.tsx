@@ -9,8 +9,10 @@ import { EmptyState, PageHeader } from '@/components/backoffice/ui'
 import { StudentsTable } from './students-table'
 
 /**
- * Student directory. The list itself is a client component so search and the
- * status filter work without a backend; the data still comes from the server.
+ * Student directory. Only the first page is rendered here — the list is a
+ * client component from there on, because turning a page and searching are
+ * both requests the browser makes itself (the server component cannot be
+ * called again once the page is on screen).
  */
 export default async function StudentsPage({
   params,
