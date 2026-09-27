@@ -141,7 +141,6 @@
       "document": "{type} {number}",
       "col_status": "Status",
       "col_courses": "Active courses",
-      "col_last_activity": "Last activity",
       "minor": "Minor",
       "empty_title": "No results",
       "empty_body": "Try another name, ID or email, or clear the status filter.",

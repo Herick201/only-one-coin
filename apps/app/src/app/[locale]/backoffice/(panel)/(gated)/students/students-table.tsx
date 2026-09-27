@@ -1,10 +1,9 @@
 'use client'
 
 import { useEffect, useMemo, useState, type MouseEvent } from 'react'
-import { useLocale, useTranslations } from 'next-intl'
+import { useTranslations } from 'next-intl'
 import { Link, useRouter } from '@/i18n/navigation'
 import type { StudentRow, StudentStatus } from '@/lib/backoffice/types'
-import { formatDate, type Locale } from '@/lib/format'
 import {
   Card,
   EmptyState,
@@ -66,7 +65,7 @@ const PAGE_SIZE = 15
  * is its own piece of work, not a line in this one.
  *
  * The row carries only what tells one student from another — name, document,
- * state, load, last activity. Contact, place, age and enrollment history live
+ * state, load. Contact, place, age and enrollment history live
  * one click away in the ficha: repeating them per row made every line three
  * lines tall and pushed the table off the screen.
  */
@@ -84,11 +83,18 @@ export function StudentsTable({
   canCreate: boolean
 }) {
   const t = useTranslations('bo')
-  const locale = useLocale() as Locale
   const router = useRouter()
   const [directory, setDirectory] = useState<StudentRow[]>(rows)
   const [nextCursor, setNextCursor] = useState(initialNextCursor)
   const [loadingMore, setLoadingMore] = useState(false)
+  /**
+   * A fetch failed and the prefetch effect must not fire again on its own. It
+   * re-runs whenever `loadingMore` drops back to false, so without this a
+   * failing page turned into a request loop — the table sat on "Loading…"
+   * forever while the toast repeated. The reader turning the page is what
+   * clears it: a retry they asked for, not one the effect keeps making.
+   */
+  const [loadFailed, setLoadFailed] = useState(false)
   const [creating, setCreating] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const [query, setQuery] = useState('')
@@ -121,6 +127,7 @@ export function StudentsTable({
   async function loadUpTo(rowsNeeded: number) {
     if (loadingMore) return
     setLoadingMore(true)
+    setLoadFailed(false)
 
     let cursor = nextCursor
     let loaded = directory.length
@@ -129,6 +136,7 @@ export function StudentsTable({
       while (cursor && loaded < rowsNeeded) {
         const response = await fetch(`/api/v1/students?cursor=${encodeURIComponent(cursor)}`)
         if (!response.ok) {
+          setLoadFailed(true)
           setToast(t('students.load_more_error'))
           return
         }
@@ -145,6 +153,7 @@ export function StudentsTable({
           // production (same URL, over and over) instead of failing safe.
           if (nextPage.nextCursor === cursor && nextPage.items.length > 0) {
             setDirectory((current) => dedupeById([...current, ...nextPage.items]))
+            setLoadFailed(true)
             setToast(t('students.load_more_error'))
           }
           cursor = null
@@ -158,6 +167,7 @@ export function StudentsTable({
 
       setNextCursor(cursor)
     } catch {
+      setLoadFailed(true)
       setToast(t('students.load_more_error'))
     } finally {
       setLoadingMore(false)
@@ -183,7 +193,7 @@ export function StudentsTable({
    * what is still missing or finds nothing to do.
    */
   useEffect(() => {
-    if (filtering || loadingMore || !nextCursor) return
+    if (filtering || loadingMore || loadFailed || !nextCursor) return
 
     // `page + 2`: the page being read, plus one held in reserve.
     const rowsWanted = (page + 2) * PAGE_SIZE
@@ -193,7 +203,7 @@ export function StudentsTable({
     // `loadUpTo` is stable enough for this: it only reads state it re-reads
     // itself at call time, and the guards above are what actually stop it.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, filtering, loadingMore, nextCursor, directory.length])
+  }, [page, filtering, loadingMore, loadFailed, nextCursor, directory.length])
 
   /**
    * Whether the reader is actually waiting on rows, as opposed to a fetch
@@ -202,6 +212,11 @@ export function StudentsTable({
    * for.
    */
   const awaitingRows = loadingMore && directory.length < (page + 1) * PAGE_SIZE
+
+  function turnPage(next: number) {
+    setLoadFailed(false)
+    setPage(next)
+  }
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase()
@@ -401,7 +416,6 @@ export function StudentsTable({
                 t('students.col_document'),
                 t('students.col_status'),
                 t('students.col_courses'),
-                t('students.col_last_activity'),
               ]}
             >
               <thead>
@@ -410,7 +424,6 @@ export function StudentsTable({
                   <th className={thClass}>{t('students.col_document')}</th>
                   <th className={thClass}>{t('students.col_status')}</th>
                   <th className={`${thClass} text-right`}>{t('students.col_courses')}</th>
-                  <th className={thClass}>{t('students.col_last_activity')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -452,11 +465,6 @@ export function StudentsTable({
                     >
                       {row.activeCourses}
                     </td>
-                    <td
-                      className={`${tdClass} whitespace-nowrap text-sm tabular-nums text-muted-foreground`}
-                    >
-                      {formatDate(row.lastActivityAt, locale)}
-                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -477,7 +485,7 @@ export function StudentsTable({
                 }
                 prevLabel={t('students.page_prev')}
                 nextLabel={t('students.page_next')}
-                onChange={setPage}
+                onChange={turnPage}
               />
             )}
           </>
