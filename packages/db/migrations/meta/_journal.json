@@ -92,6 +92,13 @@
       "when": 1790092763336,
       "tag": "0012_soft_delete_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790548396494,
+      "tag": "0013_outbox",
+      "breakpoints": true
     }
   ]
 }

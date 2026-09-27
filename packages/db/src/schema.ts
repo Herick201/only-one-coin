@@ -606,3 +606,57 @@ export const featureFlagOverrides = pgTable("feature_flag_overrides", {
   updatedBy: text("updated_by").notNull(),
   ...timestamps(),
 });
+
+// Transactional outbox (apps/api/CLAUDE.md, "Notificações"): the use case that
+// decides a message must go out writes the row in the SAME transaction as the
+// business change that caused it — an enrollment committed without its e-mail,
+// or an e-mail about an enrollment that rolled back, are both impossible. The
+// relay worker picks up `pending` rows and the send-email worker delivers them
+// through NotificationProvider; the provider (Brevo today) is never named here.
+//
+// One row is one message to one recipient, not one domain event: a minor's
+// enrollment produces two rows (student + guardian, CLAUDE.md §1), and each
+// is delivered, retried and audited on its own.
+//
+// `dedupe_key` is what makes emitting idempotent — `<template>:<subject id>:
+// <recipient kind>`, inserted with ON CONFLICT DO NOTHING, so a retried
+// transaction can never queue the same message twice.
+//
+// `recipient` and `vars` carry PII (e-mail, names) — never logged
+// (CLAUDE.md §6); `last_error` only ever holds a provider status code, never
+// the provider's free-text message, which can echo the address back.
+//
+// No `deleted_at`: a row is a record that a message was (or was not) sent,
+// and its life is told by `status`.
+export const outbox = pgTable(
+  "outbox",
+  {
+    id: uuidPk(),
+    channel: text("channel").notNull().default("email"),
+    templateKey: text("template_key").notNull(),
+    recipient: text("recipient").notNull(),
+    locale: text("locale").notNull(),
+    vars: jsonb("vars").notNull().default({}),
+    dedupeKey: text("dedupe_key").notNull(),
+    status: text("status").notNull().default("pending"),
+    attempts: integer("attempts").notNull().default(0),
+    providerMessageId: text("provider_message_id"),
+    lastError: text("last_error"),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    ...timestamps(),
+  },
+  (table) => [
+    uniqueIndex("outbox_dedupe_key_uidx").on(table.dedupeKey),
+    check("outbox_channel_check", sql`${table.channel} in ('email')`),
+    check("outbox_locale_check", sql`${table.locale} in ('es-PE', 'pt-BR', 'en')`),
+    // pending → sent | blocked | failed. `blocked` is the allowlist guard
+    // refusing a recipient outside production (CLAUDE.md §6) — a decision,
+    // not an error, so it is never retried.
+    check("outbox_status_check", sql`${table.status} in ('pending', 'sent', 'blocked', 'failed')`),
+    check("outbox_attempts_check", sql`${table.attempts} >= 0`),
+    // The relay's only query: the oldest pending rows first.
+    index("outbox_pending_created_at_idx")
+      .on(table.createdAt)
+      .where(sql`${table.status} = 'pending'`),
+  ],
+);
