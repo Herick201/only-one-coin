@@ -161,6 +161,7 @@
       "plan_price": "Plan price",
       "module_price": "Price per module",
       "result_title": "Your result",
+      "result_grade_scale": "/ 20",
       "result_pass_note": "Passing grade (minimum 14): your free certificate is issued within 25 business days.",
       "result_fail_note": "The certificate requires a minimum grade of 14.",
       "result_did_not_attempt": "You didn't take the final exam (DA), so no certificate applies. You can request the make-up exam under Requests.",

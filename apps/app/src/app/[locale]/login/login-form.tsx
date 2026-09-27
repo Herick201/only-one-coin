@@ -69,6 +69,9 @@ export function LoginForm() {
         aria-label={t('method_legend')}
         className="mb-5 grid grid-cols-2 gap-1 rounded-full border border-line bg-sky-soft p-1"
       >
+        {/* eslint-disable-next-line i18next/no-literal-string --
+            closed domain union (login method), rendered through `t()` below
+            (`option === 'email' ? t(...) : t(...)`), never shown raw. */}
         {(['email', 'national_id'] as const).map((option) => (
           <button
             key={option}

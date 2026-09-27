@@ -1,3 +1,6 @@
+/* eslint-disable i18next/no-literal-string --
+   XML sitemap generation: markup fragments and entity-escaping, machine
+   output for search crawlers, never rendered as UI to a person. */
 import type { APIRoute } from "astro";
 import { languages, htmlLang, type Lang } from "../i18n/ui";
 import { withLang } from "../i18n/utils";

@@ -1,3 +1,7 @@
+/* eslint-disable i18next/no-literal-string --
+   whole file is technical identifiers (catalog course ids matching
+   apps/api's `pp_en_a1_v3`-style codes, URL query param names) that are
+   never rendered to a user — none of it is UI text. */
 import type { CourseSlug } from "../i18n/ui";
 
 /**

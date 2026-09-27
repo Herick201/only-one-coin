@@ -502,7 +502,7 @@ export function NewEnrollmentForm({
         <button
           type="button"
           disabled={!ready}
-          onClick={submit}
+          onClick={() => void submit()}
           className="inline-flex items-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-deep disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-brand-blue"
         >
           <BoIcon name="check" size={16} />

@@ -239,7 +239,7 @@ export function NewStudentForm({
       <p className="mb-1 text-sm font-semibold text-ink">{t('new_student.title')}</p>
       <p className="mb-4 text-xs text-muted-foreground">{t('new_student.subtitle')}</p>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5" noValidate>
+      <form onSubmit={(event) => void handleSubmit(event)} className="flex flex-col gap-5" noValidate>
         {/* Student */}
         <section className="border-t border-line pt-4">
           <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">

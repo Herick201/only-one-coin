@@ -1,3 +1,5 @@
+/* eslint-disable i18next/no-literal-string --
+   route paths and priority-hint codes, not UI text. */
 import { courseSlugs } from "../i18n/ui";
 
 // Paths that exist AND deserve to be indexed, written in the default locale

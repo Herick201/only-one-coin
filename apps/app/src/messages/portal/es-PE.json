@@ -161,6 +161,7 @@
       "plan_price": "Precio del plan",
       "module_price": "Precio por módulo",
       "result_title": "Tu resultado",
+      "result_grade_scale": "/ 20",
       "result_pass_note": "Nota aprobatoria (mínimo 14): tu certificado gratuito se emite en un máximo de 25 días hábiles.",
       "result_fail_note": "El certificado requiere nota mínima de 14.",
       "result_did_not_attempt": "No rendiste el examen final (DA), por lo que no corresponde certificado. Puedes solicitar el examen de rezagados en Trámites.",

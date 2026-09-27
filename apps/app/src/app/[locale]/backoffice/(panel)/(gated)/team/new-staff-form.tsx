@@ -222,7 +222,7 @@ export function NewStaffForm({
             />
             <button
               type="button"
-              onClick={copyLink}
+              onClick={() => void copyLink()}
               className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-2 text-sm font-semibold text-brand-blue transition hover:border-brand-blue"
             >
               <BoIcon name={copied ? 'check' : 'link'} size={16} />
@@ -337,7 +337,7 @@ export function NewStaffForm({
         <button
           type="button"
           disabled={!ready || pending}
-          onClick={submit}
+          onClick={() => void submit()}
           className="inline-flex items-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-deep disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-brand-blue"
         >
           <BoIcon name={pending ? 'spinner' : 'link'} size={16} className={pending ? 'animate-spin' : undefined} />
