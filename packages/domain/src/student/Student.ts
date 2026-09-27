@@ -65,13 +65,24 @@ export class Student extends SoftDeletableModel {
    * this year" rule the public checkout uses client-side
    * (apps/app/src/lib/enrollment/checkout.ts, ageFrom). */
   get ageInYears(): number {
+    return Student.ageOf(this.birthDate);
+  }
+
+  /** Whether the student is under Student.MAJORITY_AGE as of today — drives
+   * whether a guardian is required (CLAUDE.md §1). */
+  get isMinor(): boolean {
+    return Student.isMinorBornOn(this.birthDate);
+  }
+
+  /** `ageInYears` for a birth date read off a record that was never
+   * rehydrated into a Student (a narrow lookup that only needs the age). */
+  static ageOf(birthDate: Date): number {
     const today = new Date();
-    let age = today.getUTCFullYear() - this.birthDate.getUTCFullYear();
+    let age = today.getUTCFullYear() - birthDate.getUTCFullYear();
 
     const hasHadBirthdayThisYear =
-      today.getUTCMonth() > this.birthDate.getUTCMonth() ||
-      (today.getUTCMonth() === this.birthDate.getUTCMonth() &&
-        today.getUTCDate() >= this.birthDate.getUTCDate());
+      today.getUTCMonth() > birthDate.getUTCMonth() ||
+      (today.getUTCMonth() === birthDate.getUTCMonth() && today.getUTCDate() >= birthDate.getUTCDate());
 
     if (!hasHadBirthdayThisYear) {
       age -= 1;
@@ -80,10 +91,8 @@ export class Student extends SoftDeletableModel {
     return age;
   }
 
-  /** Whether the student is under Student.MAJORITY_AGE as of today — drives
-   * whether a guardian is required (CLAUDE.md §1). */
-  get isMinor(): boolean {
-    return this.ageInYears < Student.MAJORITY_AGE;
+  static isMinorBornOn(birthDate: Date): boolean {
+    return Student.ageOf(birthDate) < Student.MAJORITY_AGE;
   }
 
   static create(dto: CreateStudentDTO): Student {

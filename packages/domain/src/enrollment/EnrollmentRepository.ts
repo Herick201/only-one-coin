@@ -1,3 +1,4 @@
+import type { EmailNotification } from "../notification/EmailNotification.js";
 import type { Enrollment } from "./Enrollment.js";
 import type { Payment } from "./Payment.js";
 
@@ -12,9 +13,16 @@ import type { Payment } from "./Payment.js";
  * Throws ClassGroupFullError (see errors.ts) when the atomic seat increment
  * finds no room — never validated ahead of time in application code
  * (CLAUDE.md §5, "nunca validar vaga na aplicação").
+ *
+ * `notifications` land in the outbox inside the same transaction — the
+ * e-mail about an enrollment exists exactly when the enrollment does.
  */
 export interface IEnrollmentRepository {
-  createWithPayment(params: { enrollment: Enrollment; payment: Payment }): Promise<{
+  createWithPayment(params: {
+    enrollment: Enrollment;
+    payment: Payment;
+    notifications: EmailNotification[];
+  }): Promise<{
     enrollment: Enrollment;
     payment: Payment;
   }>;
