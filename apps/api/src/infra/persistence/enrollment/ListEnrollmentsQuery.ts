@@ -1,5 +1,5 @@
 import { academicPeriods, classGroups, courses, enrollments, payments, planPrices, plans, students } from "@ooc/db";
-import { and, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, isNull, or, sql, type SQL, type SQLWrapper } from "drizzle-orm";
 import type { Db } from "@/infra/db/client.js";
 
 /**
@@ -53,13 +53,46 @@ export interface EnrollmentListMetrics {
   released: number;
 }
 
+export type EnrollmentListSeatStatus = "reserved" | "confirmed" | "released";
+
+/**
+ * What the reader narrowed the ledger to. Every field is optional — absent
+ * means "all" — and all of them are applied by Postgres, never by the browser
+ * over a slice: at 20k enrollments a month in peak season (CLAUDE.md §1) a
+ * filter that only sees the newest few hundred rows answers the wrong question.
+ */
+export interface EnrollmentListFilters {
+  status?: EnrollmentListStatus;
+  seatStatus?: EnrollmentListSeatStatus;
+  /** `courses.language` — the label itself, there is no languages table. */
+  language?: string;
+  academicPeriodId?: string;
+  /** Free text: tracking code, student, course, class group, teacher or
+   * operation number. */
+  q?: string;
+  sort?: "newest" | "oldest";
+  /** 1-based. */
+  page?: number;
+}
+
+export interface EnrollmentListFilterOptions {
+  languages: string[];
+  periods: { id: string; name: string }[];
+}
+
 export interface EnrollmentListResult {
   items: EnrollmentListRow[];
-  /** Counted over the whole ledger, never over the page above — the header
-   * figures must not shrink because the list is capped. */
+  /** Enrollments matching the filters, across every page. */
+  total: number;
+  page: number;
+  pageSize: number;
+  /** Counted over the whole ledger, never over the filtered page — the header
+   * figures describe the ciclo, not the reader's current search. */
   metrics: EnrollmentListMetrics;
-  /** Whether the ledger holds more than `items` carries. */
-  truncated: boolean;
+  /** What the filter panel may offer, read from the catalog rather than from
+   * the rows on screen — a language nobody on this page bought is still one
+   * the ledger holds. */
+  filterOptions: EnrollmentListFilterOptions;
 }
 
 /**
@@ -75,14 +108,12 @@ const RESERVATION_WARNING_HOURS = 24;
 const HOUR_MS = 60 * 60 * 1000;
 
 /**
- * The ledger is read whole by the browser — search, filters and paging all run
- * client-side on this array (`enrollments-view.tsx`). That is fine for a ciclo
- * and not fine for the table: peak season writes up to 20k enrollments a month
- * (CLAUDE.md §1). The cap keeps the response bounded until the screen learns
- * to page server-side, the way the student directory already does; `truncated`
- * is what tells it, and the reader, that it is looking at the newest slice.
+ * One screen of rows (`enrollments-view.tsx` shows exactly this many). Paged
+ * by offset rather than cursor: the reader jumps to page 40 of a filtered
+ * ledger and sorts both ways, and at this table's size an offset costs a sort
+ * Postgres already does for the ORDER BY.
  */
-const MAX_ROWS = 500;
+const PAGE_SIZE = 15;
 
 /**
  * The tracking code the student quotes on the phone (`EnrollmentRow.code`).
@@ -97,6 +128,13 @@ export function trackingCode(id: string, createdAt: Date): string {
 }
 
 /**
+ * `trackingCode` rebuilt in SQL, so a search for the code a student reads out
+ * on the phone finds the row without the ledger being loaded into memory. The
+ * two must agree character for character — the integration test pins that.
+ */
+const trackingCodeSql = sql<string>`'OOC-' || to_char(${enrollments.createdAt} at time zone 'UTC', 'YYYY') || '-' || lpad(right(regexp_replace(${enrollments.id}::text, '\\D', '', 'g'), 4), 4, '0')`;
+
+/**
  * What the row means to a reader, out of the two states that are actually
  * stored. `completed` is in the union the screen filters by, but nothing in
  * the schema can produce it yet — there is no grading, so no enrollment is
@@ -108,10 +146,34 @@ function deriveStatus(seatStatus: string, paymentStatus: string): EnrollmentList
   return "under_review";
 }
 
+/**
+ * `deriveStatus` as a WHERE condition, so the status filter runs in Postgres.
+ * A seat with no payment row reads `pending`, same as the mapping below.
+ */
+function statusCondition(status: EnrollmentListStatus, latestPaymentStatus: SQLWrapper): SQL {
+  const payment = sql`coalesce(${latestPaymentStatus}, 'pending')`;
+  const rejected = sql`(${payment} = 'rejected' or ${enrollments.seatStatus} = 'released')`;
+  const active = sql`(${enrollments.seatStatus} = 'confirmed' and ${payment} = 'approved')`;
+
+  switch (status) {
+    case "rejected":
+      return rejected;
+    case "active":
+      return active;
+    case "under_review":
+      return sql`not ${rejected} and not ${active}`;
+    case "completed":
+      // Nothing in the schema can produce it yet (see above).
+      return sql`false`;
+  }
+}
+
 export class ListEnrollmentsQuery {
   constructor(private readonly db: Db) {}
 
-  async run(now = new Date()): Promise<EnrollmentListResult> {
+  async run(filters: EnrollmentListFilters = {}, now = new Date()): Promise<EnrollmentListResult> {
+    const page = Math.max(1, Math.floor(filters.page ?? 1));
+
     // The payment that speaks for the enrollment: the most recent one. An
     // enrollment carries more than one once the monthly modality writes a
     // receipt per module (CLAUDE.md §1), and the ledger's money column is
@@ -129,7 +191,16 @@ export class ListEnrollmentsQuery {
       .orderBy(payments.enrollmentId, desc(payments.createdAt))
       .as("latest_payment");
 
-    const rows = await this.db
+    const where = and(
+      // Only the enrollment itself is filtered for retirement: a retired
+      // course or class group must still label the enrollments that happened
+      // on it, or the ledger would lose rows every time the catalog is tidied
+      // up.
+      isNull(enrollments.deletedAt),
+      ...this.filterConditions(filters, latestPayment),
+    );
+
+    const rowsPromise = this.db
       .select({
         id: enrollments.id,
         seatStatus: enrollments.seatStatus,
@@ -161,17 +232,35 @@ export class ListEnrollmentsQuery {
       .innerJoin(planPrices, eq(planPrices.id, enrollments.planPriceId))
       .innerJoin(plans, eq(plans.id, planPrices.planId))
       .leftJoin(latestPayment, eq(latestPayment.enrollmentId, enrollments.id))
-      // Only the enrollment itself is filtered: a retired course or class
-      // group must still label the enrollments that happened on it, or the
-      // ledger would lose rows every time the catalog is tidied up.
-      .where(isNull(enrollments.deletedAt))
-      .orderBy(desc(enrollments.createdAt), desc(enrollments.id))
-      .limit(MAX_ROWS + 1);
+      .where(where)
+      .orderBy(
+        ...(filters.sort === "oldest"
+          ? [asc(enrollments.createdAt), asc(enrollments.id)]
+          : [desc(enrollments.createdAt), desc(enrollments.id)]),
+      )
+      .limit(PAGE_SIZE)
+      .offset((page - 1) * PAGE_SIZE);
 
-    const truncated = rows.length > MAX_ROWS;
-    const page = truncated ? rows.slice(0, MAX_ROWS) : rows;
+    // Same joins as the page wherever a filter can reach them — every inner
+    // join here follows a NOT NULL foreign key, so none of them changes the
+    // count, and the ones no filter reads (period name, plan) are left out.
+    const totalPromise = this.db
+      .select({ value: sql<number>`count(*)`.mapWith(Number) })
+      .from(enrollments)
+      .innerJoin(students, eq(students.id, enrollments.studentId))
+      .innerJoin(classGroups, eq(classGroups.id, enrollments.classGroupId))
+      .innerJoin(courses, eq(courses.id, classGroups.courseId))
+      .leftJoin(latestPayment, eq(latestPayment.enrollmentId, enrollments.id))
+      .where(where);
 
-    const items = page.map((row): EnrollmentListRow => {
+    const [rows, counted, metrics, filterOptions] = await Promise.all([
+      rowsPromise,
+      totalPromise,
+      this.metrics(now),
+      this.filterOptions(),
+    ]);
+
+    const items = rows.map((row): EnrollmentListRow => {
       const paymentStatus = row.paymentStatus ?? "pending";
 
       return {
@@ -215,12 +304,70 @@ export class ListEnrollmentsQuery {
       };
     });
 
-    return { items, metrics: await this.metrics(now), truncated };
+    return {
+      items,
+      total: counted[0]?.value ?? 0,
+      page,
+      pageSize: PAGE_SIZE,
+      metrics,
+      filterOptions,
+    };
+  }
+
+  /**
+   * The reader's filters as WHERE conditions. `latestPayment` columns come in
+   * as parameters because the subquery is built per call.
+   */
+  private filterConditions(
+    filters: EnrollmentListFilters,
+    latestPayment: { status: SQLWrapper; operationNumber: SQLWrapper },
+  ): SQL[] {
+    const conditions: SQL[] = [];
+
+    if (filters.status) conditions.push(statusCondition(filters.status, latestPayment.status));
+    if (filters.seatStatus) conditions.push(eq(enrollments.seatStatus, filters.seatStatus));
+    if (filters.language) conditions.push(eq(courses.language, filters.language));
+    if (filters.academicPeriodId) conditions.push(eq(classGroups.academicPeriodId, filters.academicPeriodId));
+
+    const q = filters.q?.trim();
+    if (q) {
+      const needle = `%${q}%`;
+      conditions.push(
+        or(
+          ilike(trackingCodeSql, needle),
+          ilike(sql`${students.firstName} || ' ' || ${students.lastName}`, needle),
+          ilike(courses.name, needle),
+          ilike(classGroups.code, needle),
+          ilike(classGroups.schedule, needle),
+          ilike(classGroups.teacherName, needle),
+          ilike(sql`${latestPayment.operationNumber}`, needle),
+        )!,
+      );
+    }
+
+    return conditions;
+  }
+
+  /**
+   * Every language and period the ledger can hold, retired ones included — an
+   * enrollment on a retired course still lists, so the filter has to be able
+   * to reach it.
+   */
+  private async filterOptions(): Promise<EnrollmentListFilterOptions> {
+    const [languageRows, periods] = await Promise.all([
+      this.db.selectDistinct({ language: courses.language }).from(courses).orderBy(asc(courses.language)),
+      this.db
+        .select({ id: academicPeriods.id, name: academicPeriods.name })
+        .from(academicPeriods)
+        .orderBy(desc(academicPeriods.startsOn)),
+    ]);
+
+    return { languages: languageRows.map((row) => row.language), periods };
   }
 
   /**
    * The header figures, counted by Postgres over the whole ledger. Doing it in
-   * JS over `items` would make every number quietly mean "of the newest 500",
+   * JS over `items` would make every number quietly mean "of this page",
    * which is the kind of figure somebody reports upward.
    */
   private async metrics(now: Date): Promise<EnrollmentListMetrics> {
@@ -276,4 +423,4 @@ export class ListEnrollmentsQuery {
   }
 }
 
-export { RESERVATION_WINDOW_DAYS, RESERVATION_WARNING_HOURS, MAX_ROWS };
+export { RESERVATION_WINDOW_DAYS, RESERVATION_WARNING_HOURS, PAGE_SIZE };

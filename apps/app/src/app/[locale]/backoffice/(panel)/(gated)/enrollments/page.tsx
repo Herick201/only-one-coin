@@ -1,5 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { listEnrollments } from '@/lib/backoffice/enrollments'
+import { listEnrollments, parseEnrollmentLedgerQuery } from '@/lib/backoffice/enrollments'
 import { getStaffSession } from '@/lib/backoffice/session'
 import {
   canCreateEnrollment,
@@ -20,15 +20,18 @@ import { EnrollmentsView } from './enrollments-view'
  * hands those seats back after the reservation window (CLAUDE.md §5), and
  * nobody chases a deadline they have to remember to filter for.
  *
- * The list is a client component so search, filters and paging work with no
- * backend; the data and the role gate come from the server. Hiding the create
+ * Search, filters and paging live in the URL and run in Postgres: this server
+ * component reads them from `searchParams` and fetches exactly the page asked
+ * for. The client component only rewrites the URL. Hiding the create
  * button is a screen convenience — the enforcing check is the role declared on
  * the route in `apps/api` (CLAUDE.md §8).
  */
 export default async function EnrollmentsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const { locale } = await params
   setRequestLocale(locale)
@@ -59,7 +62,8 @@ export default async function EnrollmentsPage({
   /* The ledger comes from `apps/api` (GET /enrollments). A failure is shown as
      a failure: an empty table would read as "nobody enrolled this ciclo",
      which is the one thing this screen must never say by accident. */
-  const ledger = await listEnrollments()
+  const query = parseEnrollmentLedgerQuery(await searchParams)
+  const ledger = await listEnrollments(query)
 
   if (!ledger) {
     return (
@@ -93,9 +97,8 @@ export default async function EnrollmentsPage({
         ]}
       />
       <EnrollmentsView
-        rows={ledger.items}
-        metrics={ledger.metrics}
-        truncated={ledger.truncated}
+        ledger={ledger}
+        query={query}
         canCreate={canCreateEnrollment(staff.role)}
       />
     </div>

@@ -1,6 +1,23 @@
 import { z } from "zod";
 import { RouteBuilder } from "@/shared/http/RouteBuilder.js";
+import { ErrorResponseSchema } from "@/shared/http/ErrorResponseSchema.js";
 import { container } from "@/container.js";
+
+const EnrollmentStatusSchema = z.enum(["under_review", "active", "completed", "rejected"]);
+const SeatStatusSchema = z.enum(["reserved", "confirmed", "released"]);
+
+// Every filter the ledger screen offers, applied by Postgres. Absent means
+// "all". `q` keeps the same floor as the student search, so a one-letter
+// query does not turn into a full-ledger ILIKE on every keystroke.
+const ListEnrollmentsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).max(100_000).default(1),
+  status: EnrollmentStatusSchema.optional(),
+  seat: SeatStatusSchema.optional(),
+  language: z.string().trim().min(1).max(100).optional(),
+  period: z.string().uuid().optional(),
+  q: z.string().trim().min(2).max(100).optional(),
+  sort: z.enum(["newest", "oldest"]).default("newest"),
+});
 
 const EnrollmentListRowSchema = z.object({
   id: z.string().uuid(),
@@ -14,8 +31,8 @@ const EnrollmentListRowSchema = z.object({
   language: z.object({ id: z.string(), name: z.string() }).nullable(),
   modality: z.literal("online"),
   academicPeriodName: z.string(),
-  status: z.enum(["under_review", "active", "completed", "rejected"]),
-  seatStatus: z.enum(["reserved", "confirmed", "released"]),
+  status: EnrollmentStatusSchema,
+  seatStatus: SeatStatusSchema,
   planName: z.string(),
   planPriceId: z.string().uuid(),
   amountCents: z.number().int(),
@@ -31,6 +48,10 @@ const EnrollmentListRowSchema = z.object({
 
 const EnrollmentListResponseSchema = z.object({
   items: z.array(EnrollmentListRowSchema),
+  // Matching the filters, across every page.
+  total: z.number().int(),
+  page: z.number().int(),
+  pageSize: z.number().int(),
   metrics: z.object({
     periodName: z.string(),
     total: z.number().int(),
@@ -39,7 +60,10 @@ const EnrollmentListResponseSchema = z.object({
     expiringSoon: z.number().int(),
     released: z.number().int(),
   }),
-  truncated: z.boolean(),
+  filterOptions: z.object({
+    languages: z.array(z.string()),
+    periods: z.array(z.object({ id: z.string().uuid(), name: z.string() })),
+  }),
 });
 
 // Who reads the ledger, matching the screen's own gate
@@ -54,12 +78,23 @@ export const listEnrollmentsRoute = RouteBuilder.get("/enrollments")
     tags: ["Enrollments"],
     summary: "List the enrollment ledger",
     description:
-      "Backs /backoffice/enrollments. Newest first, capped — `truncated` says whether the ledger holds more.",
+      "Backs /backoffice/enrollments. One page at a time, filtered and searched server-side; the metrics count the whole ledger.",
   })
   .roles("master", "admin", "enrollment_supervisor", "analyst", "sales", "support")
+  .query(ListEnrollmentsQuerySchema)
   .response(200, EnrollmentListResponseSchema)
-  .handler(async (_request, reply) => {
-    const result = await container.queries.listEnrollments.run();
+  .response(400, ErrorResponseSchema)
+  .handler(async (request, reply) => {
+    const { page, status, seat, language, period, q, sort } = request.query;
+    const result = await container.queries.listEnrollments.run({
+      page,
+      status,
+      seatStatus: seat,
+      language,
+      academicPeriodId: period,
+      q,
+      sort,
+    });
 
     reply.status(200).send({
       items: result.items.map((row) => ({
@@ -67,7 +102,10 @@ export const listEnrollmentsRoute = RouteBuilder.get("/enrollments")
         createdAt: row.createdAt.toISOString(),
         paidAt: row.paidAt?.toISOString() ?? null,
       })),
+      total: result.total,
+      page: result.page,
+      pageSize: result.pageSize,
       metrics: result.metrics,
-      truncated: result.truncated,
+      filterOptions: result.filterOptions,
     });
   });
