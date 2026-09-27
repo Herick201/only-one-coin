@@ -1,0 +1,52 @@
+{
+  "layout": {
+    "greeting": "Hi {recipientName},",
+    "signature": "The Only One Coin team",
+    "footer": "This is an automated message from Only One Coin. Please do not reply to this e-mail."
+  },
+  "templates": {
+    "enrollment_received": {
+      "subject": "We received {studentName}'s enrollment",
+      "preheader": "We are verifying the payment for {courseName}.",
+      "paragraphs": [
+        "We received {studentName}'s enrollment in {courseName}, with classes starting on {startsOn}.",
+        "We are verifying the payment of {amount}. We will write to you here as soon as it is confirmed.",
+        "The seat stays reserved while we review the payment."
+      ]
+    },
+    "payment_under_review": {
+      "subject": "We are reviewing {studentName}'s payment",
+      "preheader": "Our team will check the receipt for {courseName}.",
+      "paragraphs": [
+        "The payment for {studentName}'s enrollment in {courseName} has gone to manual review.",
+        "Our team will check the receipt and write to you here with the outcome. There is no need to send it again."
+      ]
+    },
+    "payment_approved": {
+      "subject": "Enrollment confirmed in {courseName}!",
+      "preheader": "Classes start on {startsOn}.",
+      "paragraphs": [
+        "We approved the payment for {studentName}'s enrollment in {courseName}. The enrollment is confirmed!",
+        "Classes start on {startsOn}.",
+        "The student portal login details will arrive in a separate e-mail."
+      ]
+    },
+    "payment_rejected": {
+      "subject": "We could not confirm {studentName}'s payment",
+      "preheader": "The receipt for {courseName} was not approved.",
+      "paragraphs": [
+        "We could not confirm the payment for {studentName}'s enrollment in {courseName}, so the enrollment was not approved.",
+        "If you think this is a mistake, please reach out through Only One Coin's support channels."
+      ]
+    },
+    "portal_credentials": {
+      "subject": "Your Only One Coin student portal access",
+      "preheader": "Your account is ready.",
+      "paragraphs": [
+        "Your student portal account is ready.",
+        "Sign in with your e-mail {loginEmail} using the button below."
+      ],
+      "action": "Go to the portal"
+    }
+  }
+}

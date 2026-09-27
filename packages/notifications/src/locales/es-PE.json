@@ -1,0 +1,52 @@
+{
+  "layout": {
+    "greeting": "Hola, {recipientName}:",
+    "signature": "Equipo Only One Coin",
+    "footer": "Este es un mensaje automático de Only One Coin. Por favor, no respondas a este correo."
+  },
+  "templates": {
+    "enrollment_received": {
+      "subject": "Recibimos la matrícula de {studentName}",
+      "preheader": "Estamos verificando el pago de {courseName}.",
+      "paragraphs": [
+        "Recibimos la matrícula de {studentName} en {courseName}, con inicio de clases el {startsOn}.",
+        "Estamos verificando el pago de {amount}. Te escribiremos por este medio apenas esté confirmado.",
+        "La vacante queda reservada mientras revisamos el pago."
+      ]
+    },
+    "payment_under_review": {
+      "subject": "Estamos revisando el pago de {studentName}",
+      "preheader": "Nuestro equipo verificará el comprobante de {courseName}.",
+      "paragraphs": [
+        "El pago de la matrícula de {studentName} en {courseName} pasó a revisión manual.",
+        "Nuestro equipo verificará el comprobante y te escribiremos por este medio con el resultado. No necesitas enviarlo de nuevo."
+      ]
+    },
+    "payment_approved": {
+      "subject": "¡Matrícula confirmada en {courseName}!",
+      "preheader": "Las clases empiezan el {startsOn}.",
+      "paragraphs": [
+        "Aprobamos el pago de la matrícula de {studentName} en {courseName}. ¡La matrícula está confirmada!",
+        "Las clases empiezan el {startsOn}.",
+        "Los datos de acceso al portal del alumno llegarán en un correo aparte."
+      ]
+    },
+    "payment_rejected": {
+      "subject": "No pudimos confirmar el pago de {studentName}",
+      "preheader": "El comprobante de {courseName} no fue aprobado.",
+      "paragraphs": [
+        "No pudimos confirmar el pago de la matrícula de {studentName} en {courseName}, por lo que la matrícula no fue aprobada.",
+        "Si crees que se trata de un error, comunícate con nosotros por los canales de atención de Only One Coin."
+      ]
+    },
+    "portal_credentials": {
+      "subject": "Tu acceso al portal del alumno de Only One Coin",
+      "preheader": "Tu cuenta ya está lista.",
+      "paragraphs": [
+        "Tu cuenta en el portal del alumno ya está lista.",
+        "Ingresa con tu correo {loginEmail} usando el botón de abajo."
+      ],
+      "action": "Ingresar al portal"
+    }
+  }
+}
