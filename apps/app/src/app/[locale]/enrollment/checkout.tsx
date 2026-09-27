@@ -1,7 +1,8 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
+import type { Locale } from '@/lib/format'
 import type {
   CheckoutDraft,
   PublicCatalog,
@@ -17,6 +18,14 @@ import { StepPayment } from './step-payment'
 import { StepReview } from './step-review'
 import { Submitted } from './submitted'
 import { Expired } from './expired'
+
+// Short route code -> the full locale name the API (and the e-mails it
+// sends) speaks — the same mapping as `src/i18n/request.ts`.
+const apiLocale: Record<Locale, 'es-PE' | 'en' | 'pt-BR'> = {
+  es: 'es-PE',
+  en: 'en',
+  pt: 'pt-BR',
+}
 
 /**
  * The public checkout — one wizard, two ways in.
@@ -39,6 +48,7 @@ export function Checkout({
   initialDraft: CheckoutDraft
 }) {
   const t = useTranslations('enrollment')
+  const locale = useLocale() as Locale
   const [reference, setReference] = useState<string | null>(null)
 
   // Minted once per visit to this component and resent unchanged on every
@@ -112,6 +122,8 @@ export function Checkout({
               consentAccepted: true as const,
             }
           : null,
+        // The e-mails about this enrollment are written in this language.
+        locale: apiLocale[locale],
         payment: {
           method: draft.payment.method,
           methodDetail: null,
