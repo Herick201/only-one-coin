@@ -16,18 +16,20 @@ COPY apps/app/package.json apps/app/package.json
 COPY apps/landing/package.json apps/landing/package.json
 COPY packages/domain/package.json packages/domain/package.json
 COPY packages/queue/package.json packages/queue/package.json
+COPY packages/notifications/package.json packages/notifications/package.json
 COPY packages/db/package.json packages/db/package.json
 # pnpm precisa do manifest de todo workspace member pra validar o lockfile
 # compartilhado, mesmo filtrando a instalação só pro grafo do @ooc/api.
 RUN pnpm install --frozen-lockfile --filter @ooc/api...
 
-# --- build: compila @ooc/domain, @ooc/queue, @ooc/db e @ooc/api pra dist/ ---
+# --- build: compila @ooc/domain, @ooc/queue, @ooc/notifications, @ooc/db e @ooc/api pra dist/ ---
 FROM deps AS build
 COPY packages/domain packages/domain
 COPY packages/queue packages/queue
+COPY packages/notifications packages/notifications
 COPY packages/db packages/db
 COPY apps/api apps/api
-RUN pnpm --filter @ooc/domain --filter @ooc/queue --filter @ooc/db --filter @ooc/api build
+RUN pnpm --filter @ooc/domain --filter @ooc/queue --filter @ooc/notifications --filter @ooc/db --filter @ooc/api build
 # Empacota só o @ooc/api e suas deps de produção (workspace + npm) num
 # diretório autocontido — sem TypeScript/tsx/devDependencies. "--legacy"
 # porque este workspace não usa injected dependencies (pnpm 10+ default).

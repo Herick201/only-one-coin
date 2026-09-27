@@ -63,6 +63,10 @@ import { DrizzleCatalogEntryRepository } from "./infra/persistence/catalog/Drizz
 import { ListStaffQuery } from "./infra/persistence/identity/ListStaffQuery.js";
 import { ListStaffRoleChangesQuery } from "./infra/persistence/identity/ListStaffRoleChangesQuery.js";
 import { DrizzleFeatureFlagOverrideRepository } from "./infra/persistence/platform/DrizzleFeatureFlagOverrideRepository.js";
+import { DrizzleEnrollmentEmailContextLookup } from "./infra/persistence/enrollment/DrizzleEnrollmentEmailContextLookup.js";
+import { DrizzleOutboxRepository, type IOutboxStore } from "./infra/persistence/notification/DrizzleOutboxRepository.js";
+import { createNotificationProvider } from "./infra/notification/createNotificationProvider.js";
+import type { NotificationProvider } from "@ooc/notifications";
 
 export interface AppRepositories {
   catalogEntry: ICatalogEntryRepository;
@@ -127,6 +131,12 @@ export interface AppIdentity {
   staffPasswordSetter: IStaffPasswordSetter;
 }
 
+/** What the e-mail workers need — the outbox and the (guarded) provider. */
+export interface AppNotifications {
+  outbox: IOutboxStore;
+  provider: NotificationProvider;
+}
+
 export interface AppContainer {
   production: boolean;
   config: Config;
@@ -134,6 +144,7 @@ export interface AppContainer {
   auth: Auth;
   db: Db;
   identity: AppIdentity;
+  notifications: AppNotifications;
   repositories: AppRepositories;
   useCases: AppUseCases;
   queries: AppQueries;
@@ -167,10 +178,19 @@ function buildContainer(): AppContainer {
   const staffPasswordSetter = new BetterAuthStaffPasswordSetter(db);
   const featureFlagOverrideRepository = new DrizzleFeatureFlagOverrideRepository(db);
   const catalogEntryRepository = new DrizzleCatalogEntryRepository(db);
+  const enrollmentEmailContextLookup = new DrizzleEnrollmentEmailContextLookup(db);
+
+  // Notifications
+  const outboxRepository = new DrizzleOutboxRepository(db);
+  const notificationProvider = createNotificationProvider(config, logger);
 
   // Use cases
   const registerStudent = new RegisterStudentUseCase(studentRepository, guardianRepository);
-  const createManualEnrollment = new CreateManualEnrollmentUseCase(enrollmentRepository, planPriceLookup);
+  const createManualEnrollment = new CreateManualEnrollmentUseCase(
+    enrollmentRepository,
+    planPriceLookup,
+    enrollmentEmailContextLookup,
+  );
   const submitPublicEnrollment = new SubmitPublicEnrollmentUseCase(publicEnrollmentRepository);
   const promoteRole = new PromoteUserRoleUseCase(freshAuthVerifier, userRoleRepository, auditLogRepository);
   const createInvite = new CreateStaffInviteUseCase(staffUserLookup, staffInviteRepository, auditLogRepository);
@@ -217,6 +237,10 @@ function buildContainer(): AppContainer {
       staffAccountProvisioner,
       staffUserLookup,
       staffPasswordSetter,
+    },
+    notifications: {
+      outbox: outboxRepository,
+      provider: notificationProvider,
     },
     repositories: {
       catalogEntry: catalogEntryRepository,

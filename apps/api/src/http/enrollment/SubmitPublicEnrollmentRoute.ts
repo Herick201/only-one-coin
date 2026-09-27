@@ -1,4 +1,4 @@
-import { CreateGuardianSchema, CreateStudentSchema, PaymentMethodSchema } from "@ooc/domain";
+import { CreateGuardianSchema, CreateStudentSchema, DEFAULT_LOCALE, LocaleSchema, PaymentMethodSchema } from "@ooc/domain";
 import { z } from "zod";
 import { RouteBuilder } from "@/shared/http/RouteBuilder.js";
 import { ErrorResponseSchema } from "@/shared/http/ErrorResponseSchema.js";
@@ -24,6 +24,9 @@ const SubmitPublicEnrollmentBodySchema = z
         consentAccepted: z.literal(true),
       })
       .nullable(),
+    // The language the form was filled in; the e-mails follow it (CLAUDE.md
+    // §4). Optional so an older client still enrolls — in es-PE, the default.
+    locale: LocaleSchema.default(DEFAULT_LOCALE),
     payment: z
       .object({
         method: PaymentMethodSchema,
@@ -62,7 +65,7 @@ export const submitPublicEnrollmentRoute = RouteBuilder.post("/enrollments/publi
   .response(404, ErrorResponseSchema)
   .response(422, ErrorResponseSchema)
   .handler(async (request, reply) => {
-    const { classGroupId, planId, student, guardian, payment } = request.body;
+    const { classGroupId, planId, student, guardian, payment, locale } = request.body;
 
     const result = await container.useCases.enrollment.submitPublic.run({
       classGroupId,
@@ -80,6 +83,7 @@ export const submitPublicEnrollmentRoute = RouteBuilder.post("/enrollments/publi
           }
         : null,
       consent: guardian ? { version: CONSENT_VERSION, ip: request.ip } : null,
+      locale,
       payment,
     });
 

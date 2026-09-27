@@ -87,11 +87,19 @@ Tudo passa pela tabela `outbox`. O sistema não conhece o Brevo:
 
 ```ts
 interface NotificationProvider {
-  sendEmail(to, templateKey, vars): Promise<{ providerId: string }>
+  sendEmail({ to, templateKey, locale, vars }): Promise<{ providerId: string }>
 }
 ```
 
-Templates versionados no repositório (`packages/notifications`), não desenhados só no painel do Brevo.
+- **Quem decide o e-mail é o domínio; quem grava é a transação do negócio.** O usecase monta os `EmailNotification` (`packages/domain/src/notification/`) e o repositório os insere na `outbox` **dentro da mesma transação** da mudança que os causou (`insertOutboxEmails(tx, …)`). Matrícula que dá rollback não deixa e-mail pra trás; e-mail nunca é enviado no caminho síncrono da rota.
+- **Uma linha = um e-mail para um destinatário**, com `dedupe_key` único (`<template>:<id>:<student|guardian>`, `ON CONFLICT DO NOTHING`) — emitir de novo é no-op.
+- **Destinatários (decisão 27/09/2026):** aluno sempre; apoderado junto **quando o aluno é menor**. Credenciais do portal só pro aluno. As duas matrículas (checkout e manual) mandam "matrícula recebida"; a manual sai em `es-PE`, o checkout no idioma do formulário.
+- **Entrega:** `outbox-relay` (BullMQ job scheduler, 5 s) oferece as linhas `pending` à fila `send-email` com `jobId` derivado da linha — oferecer de novo é no-op, job perdido é reoferecido. O worker leva `pending → sent | blocked | failed`; 5xx/429/rede retentam (5 tentativas, backoff exponencial), outro 4xx e template quebrado falham na hora. O payload do job é só o `outboxId` — PII não vai pro Redis.
+- **PII:** `recipient`/`vars` nunca vão pro log; `last_error` guarda só código (`brevo_http_400_invalid_parameter`), nunca a mensagem do provedor.
+- **Guarda de staging (`CLAUDE.md` §6):** `AllowlistGuard` embrulha qualquer provider e só abre com `NODE_ENV=production`. Fora disso, só `EMAIL_ALLOWLIST` (endereços e/ou `@dominio`); recusado vira `blocked`, sem retry. O `Dockerfile` fixa `NODE_ENV=production` em toda imagem — staging construído dela precisa sobrescrever `NODE_ENV`, ou a guarda fica aberta.
+- Sem `BREVO_API_KEY` o provider é o `LogNotificationProvider` (renderiza e loga, não envia) — opcional até em produção, pra deploy nunca cair por segredo de e-mail faltando; o boot avisa com `warn`. Com a chave, `EMAIL_SENDER_ADDRESS` é obrigatório.
+
+Templates versionados no repositório (`packages/notifications/src/locales/{es-PE,pt-BR,en}.json`, mesma estrutura de chaves nas três), enviados como HTML pronto — nunca template desenhado só no painel do Brevo.
 
 ## Domínio e fila (fronteira com `packages/domain`, `packages/queue`)
 
