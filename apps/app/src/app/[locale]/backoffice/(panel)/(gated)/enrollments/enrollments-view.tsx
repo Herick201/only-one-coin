@@ -1,15 +1,16 @@
 'use client'
 
-import { useMemo, useState, type MouseEvent, type ReactNode } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState, useTransition, type MouseEvent, type ReactNode } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
-import type {
-  EnrollmentMetrics,
-  EnrollmentRow,
-  EnrollmentStatus,
-  SeatStatus,
-} from '@/lib/backoffice/types'
+import type { EnrollmentRow, EnrollmentStatus, SeatStatus } from '@/lib/backoffice/types'
+import type { EnrollmentLedger } from '@/lib/backoffice/enrollments'
+import {
+  enrollmentLedgerSearchParams,
+  MIN_SEARCH_LENGTH,
+  type EnrollmentLedgerQuery,
+} from '@/lib/backoffice/enrollment-ledger-query'
 import { formatDateTime, type Locale } from '@/lib/format'
 import {
   Card,
@@ -35,21 +36,19 @@ import { EnrollmentDetailDialog } from './enrollment-detail-dialog'
 import { NewEnrollmentForm } from './new-enrollment-form'
 import { AutoGrid } from '@/components/layout/auto-grid'
 
-type StatusFilter = EnrollmentStatus | 'all'
-type SeatFilter = SeatStatus | 'all'
 
 /** The states as they are worked, not alphabetically: open ones first. */
-const STATUS_FILTERS: StatusFilter[] = [
-  'all',
+const STATUS_FILTERS: EnrollmentStatus[] = [
   'under_review',
   'active',
   'completed',
   'rejected',
 ]
 
-const SEAT_FILTERS: SeatFilter[] = ['all', 'reserved', 'confirmed', 'released']
+const SEAT_FILTERS: SeatStatus[] = ['reserved', 'confirmed', 'released']
 
-const PAGE_SIZE = 15
+/** Long enough to finish a word, short enough to feel like typing. */
+const SEARCH_DEBOUNCE_MS = 350
 
 /**
  * The enrollment ledger. Newest first, like the payments one: this screen
@@ -60,23 +59,20 @@ const PAGE_SIZE = 15
  * job — a confirmed seat with an unsettled payment is the case coordination
  * has to catch, and it is invisible on either screen alone.
  *
- * The rows are the real ledger now (`GET /api/v1/enrollments`), but search,
- * filters and paging still run in the browser over whatever the API sent. That
- * holds while the response is capped at the newest few hundred and stops
- * holding at peak season volume (up to 20k enrollments a month, CLAUDE.md §1):
- * the next step is server-side paging, the way the student directory already
- * does it with a cursor.
+ * Search, filters, sort and paging are the URL, and the URL is a query to
+ * Postgres (`GET /api/v1/enrollments`): this component never holds more than
+ * the page on screen. It used to filter the newest 500 rows in the browser,
+ * which at 20k enrollments a month (CLAUDE.md §1) meant a filter panel that
+ * only knew one language and one period, and a search that could not find
+ * last month.
  */
 export function EnrollmentsView({
-  rows,
-  metrics,
-  truncated,
+  ledger,
+  query,
   canCreate,
 }: {
-  rows: EnrollmentRow[]
-  metrics: EnrollmentMetrics
-  /** The API capped the read: the ledger holds more than `rows` carries. */
-  truncated: boolean
+  ledger: EnrollmentLedger
+  query: EnrollmentLedgerQuery
   canCreate: boolean
 }) {
   const t = useTranslations('bo')
@@ -96,73 +92,50 @@ export function EnrollmentsView({
   const [toast, setToast] = useState<string | null>(null)
 
   const [detail, setDetail] = useState<EnrollmentRow | null>(null)
-  const [query, setQuery] = useState('')
-  const [status, setStatus] = useState<StatusFilter>('all')
-  const [seat, setSeat] = useState<SeatFilter>('all')
-  const [languageId, setLanguageId] = useState<string>('all')
-  const [period, setPeriod] = useState<string>('all')
-  const [sort, setSort] = useState<'newest' | 'oldest'>('newest')
-  const [page, setPage] = useState(0)
 
-  const all = useMemo(() => rows, [rows])
+  const pathname = usePathname()
+  /**
+   * True while the server renders the page the reader just asked for. The
+   * table stays on screen, dimmed, instead of blanking: the rows being
+   * replaced are still the best answer until the new ones arrive.
+   */
+  const [pending, startTransition] = useTransition()
 
-  /** Filter options come from the data, not from a list kept in sync by hand. */
-  const languages = useMemo(() => {
-    const map = new Map<string, string>()
-    for (const row of all) {
-      if (row.language) map.set(row.language.id, row.language.name)
-    }
-    return [...map].map(([id, name]) => ({ id, name }))
-  }, [all])
-
-  const periods = useMemo(
-    () => [...new Set(all.map((row) => row.academicPeriodName))],
-    [all],
-  )
-
-  const activeFilters = [status, seat, languageId, period].filter(
-    (value) => value !== 'all',
-  ).length
-
-  const filtered = useMemo(() => {
-    const needle = query.trim().toLowerCase()
-    const list = all.filter((row) => {
-      if (status !== 'all' && row.status !== status) return false
-      if (seat !== 'all' && row.seatStatus !== seat) return false
-      if (languageId !== 'all' && row.language?.id !== languageId) return false
-      if (period !== 'all' && row.academicPeriodName !== period) return false
-      if (!needle) return true
-      return [
-        row.code,
-        row.studentName,
-        row.courseName,
-        row.classGroupName,
-        row.teacherName,
-        row.operationNumber ?? '',
-      ]
-        .join(' ')
-        .toLowerCase()
-        .includes(needle)
+  /** Any change to the query goes back to page 1, unless it IS the page. */
+  function navigate(next: Partial<EnrollmentLedgerQuery>, mode: 'push' | 'replace' = 'push') {
+    const search = enrollmentLedgerSearchParams({ ...query, page: 1, ...next }).toString()
+    const href = search ? `${pathname}?${search}` : pathname
+    startTransition(() => {
+      router[mode](href, { scroll: false })
     })
-    // The source hands the list over newest first; oldest is a reversal, not a
-    // second sort key.
-    return sort === 'newest' ? list : [...list].reverse()
-  }, [all, query, status, seat, languageId, period, sort])
-
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
-  const currentPage = Math.min(page, pageCount - 1)
-  const pageRows = filtered.slice(
-    currentPage * PAGE_SIZE,
-    currentPage * PAGE_SIZE + PAGE_SIZE,
-  )
-
-  /** Any filter change sends the reader back to the first page. */
-  function reset<T>(setter: (value: T) => void) {
-    return (value: T) => {
-      setter(value)
-      setPage(0)
-    }
   }
+
+  /**
+   * The search box is typed into locally and reaches the URL after a pause —
+   * a request per keystroke would be a full-ledger ILIKE per keystroke. Under
+   * the API's minimum length it is not a search yet, so nothing is sent.
+   */
+  const [searchText, setSearchText] = useState(query.q)
+  useEffect(() => {
+    const needle = searchText.trim()
+    if (needle === query.q) return
+    if (needle.length > 0 && needle.length < MIN_SEARCH_LENGTH) return
+
+    const timer = setTimeout(() => navigate({ q: needle }, 'replace'), SEARCH_DEBOUNCE_MS)
+    return () => clearTimeout(timer)
+    // `navigate` closes over `query`, which is already a dependency.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchText, query])
+
+  const { items: pageRows, total, pageSize, metrics, filterOptions } = ledger
+
+  const activeFilters = [query.status, query.seat, query.language, query.period].filter(
+    (value) => value !== null,
+  ).length
+  const narrowed = activeFilters > 0 || query.q !== ''
+
+  const pageCount = Math.max(1, Math.ceil(total / pageSize))
+  const currentPage = Math.min(query.page, pageCount) - 1
 
   /**
    * The row opens the enrollment; the student's name stays a real link to the
@@ -228,8 +201,8 @@ export function EnrollmentsView({
             />
             <input
               type="search"
-              value={query}
-              onChange={(event) => reset(setQuery)(event.target.value)}
+              value={searchText}
+              onChange={(event) => setSearchText(event.target.value)}
               placeholder={t('enrollments.search_placeholder')}
               className="w-full rounded-lg border border-line bg-white py-2 pl-9 pr-3 text-sm text-ink outline-none transition placeholder:text-muted-foreground focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15"
             />
@@ -243,63 +216,66 @@ export function EnrollmentsView({
             panelClassName="flex-col gap-3"
           >
             <FilterRow label={t('enrollments.filter_status')}>
+              <Chip
+                active={query.status === null}
+                onClick={() => navigate({ status: null })}
+                label={t('enrollments.filter_all')}
+              />
               {STATUS_FILTERS.map((value) => (
                 <Chip
                   key={value}
-                  active={status === value}
-                  onClick={() => reset(setStatus)(value)}
-                  label={
-                    value === 'all'
-                      ? t('enrollments.filter_all')
-                      : t(`enrollment_status.${value}`)
-                  }
+                  active={query.status === value}
+                  onClick={() => navigate({ status: value })}
+                  label={t(`enrollment_status.${value}`)}
                 />
               ))}
             </FilterRow>
             <FilterRow label={t('enrollments.filter_seat')}>
+              <Chip
+                active={query.seat === null}
+                onClick={() => navigate({ seat: null })}
+                label={t('enrollments.filter_all')}
+              />
               {SEAT_FILTERS.map((value) => (
                 <Chip
                   key={value}
-                  active={seat === value}
-                  onClick={() => reset(setSeat)(value)}
-                  label={
-                    value === 'all'
-                      ? t('enrollments.filter_all')
-                      : t(`seat_status.${value}`)
-                  }
+                  active={query.seat === value}
+                  onClick={() => navigate({ seat: value })}
+                  label={t(`seat_status.${value}`)}
                 />
               ))}
             </FilterRow>
             {/* Language is catalogue data, never a translated enum — the
                 Asociación opens new ones and nothing language-specific belongs
-                in the code (CLAUDE.md §1). */}
+                in the code (CLAUDE.md §1). The options come from the catalog,
+                not from the rows on this page. */}
             <FilterRow label={t('enrollments.filter_language')}>
               <Chip
-                active={languageId === 'all'}
-                onClick={() => reset(setLanguageId)('all')}
+                active={query.language === null}
+                onClick={() => navigate({ language: null })}
                 label={t('enrollments.filter_all')}
               />
-              {languages.map((item) => (
+              {filterOptions.languages.map((language) => (
                 <Chip
-                  key={item.id}
-                  active={languageId === item.id}
-                  onClick={() => reset(setLanguageId)(item.id)}
-                  label={item.name}
+                  key={language}
+                  active={query.language === language}
+                  onClick={() => navigate({ language })}
+                  label={language}
                 />
               ))}
             </FilterRow>
             <FilterRow label={t('enrollments.filter_period')}>
               <Chip
-                active={period === 'all'}
-                onClick={() => reset(setPeriod)('all')}
+                active={query.period === null}
+                onClick={() => navigate({ period: null })}
                 label={t('enrollments.filter_all')}
               />
-              {periods.map((item) => (
+              {filterOptions.periods.map((item) => (
                 <Chip
-                  key={item}
-                  active={period === item}
-                  onClick={() => reset(setPeriod)(item)}
-                  label={item}
+                  key={item.id}
+                  active={query.period === item.id}
+                  onClick={() => navigate({ period: item.id })}
+                  label={item.name}
                 />
               ))}
             </FilterRow>
@@ -307,12 +283,12 @@ export function EnrollmentsView({
 
           <button
             type="button"
-            onClick={() => setSort(sort === 'newest' ? 'oldest' : 'newest')}
+            onClick={() => navigate({ sort: query.sort === 'newest' ? 'oldest' : 'newest' })}
             className="inline-flex items-center gap-1.5 self-start rounded-lg border border-line bg-white px-3 py-2 text-sm font-semibold text-muted-foreground transition hover:text-ink"
           >
             <BoIcon name="sort" size={16} />
             {t(
-              sort === 'newest'
+              query.sort === 'newest'
                 ? 'enrollments.sort_newest'
                 : 'enrollments.sort_oldest',
             )}
@@ -337,7 +313,6 @@ export function EnrollmentsView({
           onCancel={() => setCreating(false)}
           onCreate={() => {
             setCreating(false)
-            setPage(0)
             setToast(t('new_enrollment.created'))
             /* Re-runs the server component, so the new seat arrives as the
                ledger has it — with the student's real file behind it. */
@@ -346,30 +321,20 @@ export function EnrollmentsView({
         />
       )}
 
-      {/* The ledger is longer than what was read. Said out loud, because the
-          figures above count the whole thing while the table below shows the
-          newest slice — a reader comparing the two would otherwise conclude
-          that one of them is lying. */}
-      {truncated && (
-        <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-          {t('enrollments.truncated_notice', { shown: rows.length, total: metrics.total })}
-        </p>
-      )}
-
       {/* min-w-0: the row is wide enough to push a flex child past the page,
           and the scroll belongs to the table, never to the page. */}
-      <Card className="min-w-0">
+      <Card className={`min-w-0 transition-opacity ${pending ? 'opacity-60' : ''}`} aria-busy={pending}>
         {pageRows.length === 0 ? (
           <div className="p-4">
             <EmptyState
-              icon={all.length === 0 ? 'enrollments' : 'search'}
+              icon={!narrowed ? 'enrollments' : 'search'}
               title={t(
-                all.length === 0
+                !narrowed
                   ? 'enrollments.empty_title'
                   : 'enrollments.empty_search_title',
               )}
               body={t(
-                all.length === 0
+                !narrowed
                   ? 'enrollments.empty_body'
                   : 'enrollments.empty_search_body',
               )}
@@ -471,7 +436,7 @@ export function EnrollmentsView({
                 })}
                 prevLabel={t('enrollments.page_prev')}
                 nextLabel={t('enrollments.page_next')}
-                onChange={setPage}
+                onChange={(page) => navigate({ page: page + 1 })}
               />
             )}
           </>
