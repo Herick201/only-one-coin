@@ -31,6 +31,7 @@
     "typecheck:queue": "pnpm --filter @ooc/queue typecheck",
     "typecheck:api": "pnpm --filter @ooc/api typecheck",
     "typecheck:db": "pnpm --filter @ooc/db typecheck",
+    "lint": "pnpm -r --if-present run lint",
     "test:api": "pnpm --filter @ooc/api test",
     "test:db": "pnpm --filter @ooc/db test",
     "test:api:db": "pnpm --filter @ooc/api test:db",

@@ -56,12 +56,28 @@ jobs:
         # quando acha algo, que é o que reprova o merge.
         run: gitleaks git --redact --verbose .
 
+  # Portão de CI item 4 (CLAUDE.md §6) — ESLint com no-floating-promises
+  # (todo o monorepo) e no-literal-string (apps/app, via eslint-plugin-i18next
+  # em modo jsx-only; apps/landing só em `src/**/*.ts` fora de `src/i18n/**` —
+  # cobrir o *template* do .astro fica de fora, pendência conhecida, ver
+  # apps/landing/eslint.config.mjs).
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Lint (todos os pacotes e apps)
+        run: pnpm run lint
+
   # Portão de CI item 3 (tsc --noEmit) + build de todo o monorepo.
-  # Item 4 (ESLint com no-floating-promises/no-literal-string) ainda não
-  # existe neste repo — nenhum app tem eslint.config.* configurado (só
-  # apps/app tem a dependência instalada, sem config). Adicionar aqui
-  # quebraria o CI sem checar nada de verdade; fica como pendência separada
-  # (ver apps/api/README.md "Pendências conhecidas").
   # Item 2 (varredura de credencial no bundle do Next.js) roda como último
   # passo, depois que apps/app/.next existe de verdade.
   build:

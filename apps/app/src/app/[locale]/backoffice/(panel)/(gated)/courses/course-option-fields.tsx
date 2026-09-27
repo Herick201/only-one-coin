@@ -108,10 +108,14 @@ export function CourseOptionFields({
           {t('course_options.procedures')}
         </legend>
         {(
+          /* eslint-disable i18next/no-literal-string --
+             second element of each tuple is an i18n *key* (fed to `t()`
+             below), not text shown to the user. */
           [
             ['allowsTransfer', 'course_options.allows_transfer'],
             ['allowsFreeze', 'course_options.allows_freeze'],
           ] as const
+          /* eslint-enable i18next/no-literal-string */
         ).map(([key, label]) => (
           <Toggle
             key={key}

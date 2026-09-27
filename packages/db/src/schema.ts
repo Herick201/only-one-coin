@@ -303,7 +303,7 @@ export const guardians = pgTable(
     phone: text("phone").notNull(),
     ...softDeletable(),
   },
-  (table) => [
+  () => [
     check(
       "guardians_relationship_check",
       sql`"relationship" in ('mother', 'father', 'legal_guardian')`,

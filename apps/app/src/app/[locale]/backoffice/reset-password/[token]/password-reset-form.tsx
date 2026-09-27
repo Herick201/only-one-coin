@@ -121,7 +121,7 @@ export function PasswordResetForm({
   }
 
   return (
-    <form onSubmit={submit} className={cardClass} noValidate>
+    <form onSubmit={(event) => void submit(event)} className={cardClass} noValidate>
       <div className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight text-ink">
           {t('reset_title', { name })}

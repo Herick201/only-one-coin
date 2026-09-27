@@ -30,7 +30,9 @@ export function registerAuthRoutes(app: FastifyInstance, auth: Auth) {
       }
 
       reply.status(response.status);
-      response.headers.forEach((value, key) => reply.header(key, value));
+      response.headers.forEach((value, key) => {
+        reply.header(key, value);
+      });
       return reply.send(bodyText);
     },
   });

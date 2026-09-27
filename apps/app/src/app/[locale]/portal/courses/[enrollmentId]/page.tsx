@@ -256,7 +256,7 @@ export default async function CourseDetailPage({
                     {enrollment.finalGrade}
                     <span className="text-base font-semibold text-muted-foreground">
                       {' '}
-                      / 20
+                      {t('course_detail.result_grade_scale')}
                     </span>
                   </p>
                   <p className="mt-1.5 text-xs text-muted-foreground">

@@ -206,7 +206,7 @@ export function StepReview({
           </GhostButton>
         }
       >
-        <PrimaryButton onClick={send} disabled={sending}>
+        <PrimaryButton onClick={() => void send()} disabled={sending}>
           <CheckoutIcon name="check" size={16} />
           {t('action.submit')}
         </PrimaryButton>

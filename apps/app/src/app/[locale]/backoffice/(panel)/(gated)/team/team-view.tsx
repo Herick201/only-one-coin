@@ -11,7 +11,6 @@ import {
   EmptyState,
   Pager,
   rowActionClass,
-  StatusBadge,
   TableShell,
   tdClass,
   thClass,
@@ -76,7 +75,8 @@ export function TeamView({
   rows,
   teachers,
   currentUserId,
-  currentUserName,
+  // Recebido pelo caller mas ainda não consumido por este componente.
+  currentUserName: _currentUserName,
 }: {
   rows: StaffMemberRow[]
   /** Teachers still on the roster — who an account may be opened over. */
@@ -139,8 +139,6 @@ export function TeamView({
       ),
     [teachers, members],
   )
-
-  const onActive = tab === 'active'
 
   const activeFilters = role !== ALL ? 1 : 0
 
@@ -302,12 +300,16 @@ export function TeamView({
       <nav className={tabStripClass}>
         {(['active', 'invited', 'inactive'] as Tab[]).map((value) => {
           const active = tab === value
+          /* eslint-disable i18next/no-literal-string --
+             each branch is an i18n key (fed to `t()` below), not text shown
+             to the user. */
           const label =
             value === 'active'
               ? 'team.tab_active'
               : value === 'invited'
                 ? 'team.tab_invited'
                 : 'team.tab_inactive'
+          /* eslint-enable i18next/no-literal-string */
           return (
             <button
               key={value}
@@ -550,7 +552,7 @@ export function TeamView({
                           <span className="inline-flex flex-wrap items-center justify-end gap-2">
                             <button
                               type="button"
-                              onClick={() => copyInviteLink(row)}
+                              onClick={() => void copyInviteLink(row)}
                               className={rowActionClass}
                             >
                               <BoIcon name={copiedId === row.id ? 'check' : 'link'} size={14} />
@@ -559,7 +561,7 @@ export function TeamView({
                             {isInviteExpired(row.inviteExpiresAt) && (
                               <button
                                 type="button"
-                                onClick={() => renewInvite(row)}
+                                onClick={() => void renewInvite(row)}
                                 disabled={busyId === row.id}
                                 className={`${rowActionClass} disabled:cursor-not-allowed disabled:opacity-60`}
                               >
@@ -601,7 +603,7 @@ export function TeamView({
                             {row.status === 'active' && (
                               <button
                                 type="button"
-                                onClick={() => createPasswordReset(row)}
+                                onClick={() => void createPasswordReset(row)}
                                 disabled={busyId === row.id}
                                 className={`${rowActionClass} disabled:cursor-not-allowed disabled:opacity-60`}
                               >
@@ -626,7 +628,7 @@ export function TeamView({
                             ) : (
                               <button
                                 type="button"
-                                onClick={() => restoreAccess(row)}
+                                onClick={() => void restoreAccess(row)}
                                 className="inline-flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-sm font-semibold text-brand-blue transition hover:border-brand-blue"
                               >
                                 <BoIcon name="check" size={14} />
@@ -828,7 +830,7 @@ function PasswordResetLinkDialog({
                   />
                   <button
                     type="button"
-                    onClick={copy}
+                    onClick={() => void copy()}
                     className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-2 text-sm font-semibold text-brand-blue transition hover:border-brand-blue"
                   >
                     <BoIcon name={copied ? 'check' : 'link'} size={16} />
@@ -927,7 +929,7 @@ function ConfirmDialog({
           </button>
           <button
             type="button"
-            onClick={handleConfirm}
+            onClick={() => void handleConfirm()}
             disabled={pending}
             className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
           >

@@ -15,6 +15,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
     "test": "vitest run"
   },
   "dependencies": {
@@ -25,7 +26,9 @@
     "@types/node": "^22.10.5",
     "@types/pg": "^8.11.10",
     "drizzle-kit": "^0.30.0",
+    "eslint": "^9.39.5",
     "typescript": "^5.7.3",
+    "typescript-eslint": "^8.70.1",
     "vitest": "^4.1.11"
   }
 }

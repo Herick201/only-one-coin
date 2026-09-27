@@ -217,7 +217,7 @@ export function BackofficeLoginForm() {
   }
 
   return (
-    <form onSubmit={onCredentials} className={cardClass} noValidate>
+    <form onSubmit={(event) => void onCredentials(event)} className={cardClass} noValidate>
       <Heading title={t('title')} subtitle={t('subtitle')} />
 
       {error && (

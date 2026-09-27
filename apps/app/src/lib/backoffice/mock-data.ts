@@ -1,7 +1,4 @@
 import type {
-  AccountOverview,
-  AuditEntry,
-  AvailabilitySlot,
   ClassGroupDetail,
   ClassGroupRow,
   ClassGroupStudent,
@@ -10,13 +7,10 @@ import type {
   DashboardMetrics,
   EnrollmentMetrics,
   EnrollmentRow,
-  DocumentDelivery,
-  DocumentItem,
   EmailDeliveryIssue,
   EmailFlow,
   EmailMetrics,
   EmailSegment,
-  EnrollmentHistoryItem,
   ExtractionField,
   PaymentMethod,
   PaymentMetrics,
@@ -30,7 +24,6 @@ import type {
   SeatWatchItem,
   StaffUser,
   StudentDetail,
-  StudentRow,
   TeacherContract,
   TeacherDetail,
   TeacherRow,
@@ -60,43 +53,6 @@ import { daysUntil } from './contract'
 
 const PERIOD = ''
 
-function enrollment(
-  partial: Partial<EnrollmentHistoryItem> & Pick<EnrollmentHistoryItem, 'id'>,
-): EnrollmentHistoryItem {
-  return {
-    status: 'active',
-    seatStatus: 'confirmed',
-    createdAt: '2026-07-02T14:20:00Z',
-    courseName: 'Inglés Básico A1',
-    classGroupName: 'A1 — Lun/Mié 18:00',
-    teacherName: 'Carlos Meza',
-    modality: 'online',
-    academicPeriodName: PERIOD,
-    planName: 'Paquete completo',
-    planPriceId: 'pp_en_a1_v3',
-    amountCents: 6990,
-    currency: 'PEN',
-    paymentStatus: 'approved',
-    paymentMethod: 'yape',
-    paymentMethodDetail: null,
-    operationNumber: '00871245',
-    paidAt: '2026-07-02T14:12:00Z',
-    progressPct: 45,
-    ...partial,
-  }
-}
-
-function audit(
-  partial: Partial<AuditEntry> & Pick<AuditEntry, 'id' | 'action' | 'at'>,
-): AuditEntry {
-  return {
-    actorName: 'Lucía Ramírez',
-    actorRole: 'admin',
-    reference: null,
-    ...partial,
-  }
-}
-
 /**
  * Fee for the constancia de matrícula (`docs/REGRAS-NEGOCIO.md` §5: S/25).
  * A backoffice setting in the real system, never a constant in the code — the
@@ -109,24 +65,6 @@ export const CONSTANCIA_FEE_CENTS = 2500
  * backoffice setting later; it lives here so the batch preview has one source.
  */
 export const PASSING_GRADE = 14
-
-function noEmail(): DocumentDelivery {
-  return { status: 'not_sent', lastSentAt: null, attempts: 0 }
-}
-
-function doc(
-  partial: Partial<DocumentItem> &
-    Pick<DocumentItem, 'id' | 'type' | 'enrollmentId'>,
-): DocumentItem {
-  return {
-    status: 'available',
-    issuedAt: null,
-    verificationCode: null,
-    issuedByName: null,
-    delivery: noEmail(),
-    ...partial,
-  }
-}
 
 /**
  * The tail of the human review queue. One entry describes a person, the seat
@@ -160,87 +98,7 @@ interface PendingReceipt {
   submittedAt: string
 }
 
-/** Price version each course was selling under this period. */
-const PLAN_PRICE_ID: Record<string, string> = {
-  'Inglés Básico A1': 'pp_en_a1_v3',
-  'Inglés Intermedio B1': 'pp_en_b1_v2',
-  'Francés Inicial': 'pp_fr_i_v2',
-  'Alemán Inicial': 'pp_de_i_v1',
-  'Italiano Inicial': 'pp_it_i_v1',
-  'Portugués Inicial': 'pp_pt_i_v2',
-  'Quechua Conversacional': 'pp_qu_i_v1',
-}
-
 const pendingReceipts: PendingReceipt[] = []
-
-/**
- * A student the panel only knows because a receipt of theirs is waiting: seat
- * reserved, payment under review, nothing issued yet.
- */
-function pendingStudent(receipt: PendingReceipt): StudentDetail {
-  return {
-    id: receipt.studentId,
-    firstName: receipt.firstName,
-    lastName: receipt.lastName,
-    nationalIdType: 'DNI',
-    nationalId: receipt.nationalId,
-    email: receipt.email,
-    phone: receipt.phone,
-    birthDate: receipt.birthDate,
-    isMinor: false,
-    status: 'under_review',
-    country: 'PE',
-    region: receipt.region,
-    city: receipt.city,
-    activeCourses: 0,
-    totalEnrollments: 1,
-    createdAt: receipt.submittedAt,
-    lastActivityAt: receipt.submittedAt,
-    guardian: null,
-    enrollments: [
-      enrollment({
-        id: receipt.id.replace('rev_', 'enr_19'),
-        status: 'under_review',
-        seatStatus: 'reserved',
-        paymentStatus: 'under_review',
-        courseName: receipt.courseName,
-        classGroupName: receipt.classGroupName,
-        teacherName: receipt.teacherName,
-        planPriceId: PLAN_PRICE_ID[receipt.courseName] ?? 'pp_en_a1_v3',
-        // The enrollment carries the frozen plan price; what the receipt reads
-        // is the extraction's problem, not the enrollment's (CLAUDE.md §5).
-        amountCents: receipt.expectedAmountCents,
-        paymentMethod: receipt.method,
-        paymentMethodDetail: null,
-        operationNumber: receipt.operationNumber,
-        createdAt: receipt.submittedAt,
-        paidAt: null,
-        progressPct: null,
-      }),
-    ],
-    documents: [],
-    documentRequests: [],
-    attachments: [],
-    activity: [
-      audit({
-        id: `aud_${receipt.id}_flagged`,
-        action: 'payment_flagged',
-        at: receipt.submittedAt,
-        actorName: 'Sistema',
-        actorRole: 'billing',
-        reference: { kind: 'review_flag', flag: receipt.flag },
-      }),
-      audit({
-        id: `aud_${receipt.id}_created`,
-        action: 'enrollment_created',
-        at: receipt.submittedAt,
-        actorName: 'Sistema',
-        actorRole: 'enrollment_supervisor',
-        reference: { kind: 'course', name: receipt.courseName },
-      }),
-    ],
-  }
-}
 
 const students: StudentDetail[] = []
 
@@ -314,16 +172,6 @@ export function getSeatWatch(): SeatWatchItem[] {
 /* -------------------------------------------------------------------------- */
 /* Class groups                                                                */
 /* -------------------------------------------------------------------------- */
-
-/** Language catalogue. New languages are rows here, never code branches. */
-const LANGUAGES = {
-  en: { id: 'lang_en', name: 'Inglés' },
-  it: { id: 'lang_it', name: 'Italiano' },
-  fr: { id: 'lang_fr', name: 'Francés' },
-  de: { id: 'lang_de', name: 'Alemán' },
-  qu: { id: 'lang_qu', name: 'Quechua' },
-  pt: { id: 'lang_pt', name: 'Portugués' },
-} as const
 
 /**
  * Class groups across the three states that matter for the panel: still
@@ -433,15 +281,6 @@ export function listClassGroupRosters(): ClassGroupDetail[] {
 /* -------------------------------------------------------------------------- */
 /* Teachers                                                                    */
 /* -------------------------------------------------------------------------- */
-
-/** Weekly availability, written the way the schedule is spoken about. */
-function slots(
-  weekdays: AvailabilitySlot['weekday'][],
-  startTime: string,
-  endTime: string,
-): AvailabilitySlot[] {
-  return weekdays.map((weekday) => ({ weekday, startTime, endTime }))
-}
 
 /**
  * Teacher roster. Everything countable — class groups, students, pending

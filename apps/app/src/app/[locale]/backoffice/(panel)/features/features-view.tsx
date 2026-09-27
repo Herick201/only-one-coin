@@ -263,8 +263,8 @@ export function FeaturesView({
             disabled={pending !== null}
             detailsOpen={open.has(current.root.key)}
             onDetails={() => toggleDetails(current.root.key)}
-            onToggle={(next) => (next ? write(current.root.key, next) : setConfirmOff(current))}
-            onReset={() => write(current.root.key, null)}
+            onToggle={(next) => void (next ? write(current.root.key, next) : setConfirmOff(current))}
+            onReset={() => void write(current.root.key, null)}
           />
 
           {current.children.length > 0 && (
@@ -277,8 +277,8 @@ export function FeaturesView({
                     disabled={pending !== null}
                     detailsOpen={open.has(row.key)}
                     onDetails={() => toggleDetails(row.key)}
-                    onToggle={(next) => write(row.key, next)}
-                    onReset={() => write(row.key, null)}
+                    onToggle={(next) => void write(row.key, next)}
+                    onReset={() => void write(row.key, null)}
                   />
                 </li>
               ))}
@@ -378,7 +378,7 @@ function ConfirmSurfaceOffDialog({
           </button>
           <button
             type="button"
-            onClick={handleConfirm}
+            onClick={() => void handleConfirm()}
             disabled={pending}
             className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
           >

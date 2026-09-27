@@ -115,7 +115,7 @@ export function RoleChangeDialog({
             <form
               onSubmit={(event) => {
                 event.preventDefault()
-                submit()
+                void submit()
               }}
             >
               <div className="flex flex-col gap-4 p-5">

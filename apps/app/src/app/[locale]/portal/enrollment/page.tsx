@@ -3,11 +3,9 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
 import { getPortalSession } from '@/lib/portal/mock-data'
 import { getFeatureFlags } from '@/lib/feature-flags/server'
-import { formatDateNumeric } from '@/lib/portal/format'
 import type {
   Enrollment,
   EnrollmentStatus,
-  Locale,
   PaymentStatus,
 } from '@/lib/portal/types'
 import { Card, EmptyState, PageHeader } from '@/components/portal/ui'
@@ -73,7 +71,6 @@ export default async function EnrollmentPage({
   params: Promise<{ locale: string }>
 }) {
   const { locale: raw } = await params
-  const locale = raw as Locale
   setRequestLocale(raw)
   const t = await getTranslations('portal')
 
