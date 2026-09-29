@@ -105,10 +105,6 @@
     "message": "Loading…",
     "verifying_session": "Verifying your session…"
   },
-  "home": {
-    "coming_soon": "Student Portal — coming soon.",
-    "go_to_login": "Go to sign in"
-  },
   "language": {
     "label": "Language",
     "es": "Español",
