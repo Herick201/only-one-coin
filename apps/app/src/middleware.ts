@@ -4,6 +4,28 @@ import { routing } from './i18n/routing'
 
 const intlMiddleware = createMiddleware(routing)
 
+// Domínio dedicado do backoffice (registrado 29/09/2026, CLAUDE.md §7).
+// student.onlyonecoin.edu.pe não precisa de rewrite: a raiz do app já é o
+// portal. backoffice.onlyonecoin.edu.pe precisa cair sob /backoffice, e isso
+// tem que acontecer antes do next-intl resolver o locale — daí mexer no
+// pathname aqui, não depois da resposta do intlMiddleware.
+const BACKOFFICE_HOST = 'backoffice.onlyonecoin.edu.pe'
+const locales: readonly string[] = routing.locales
+
+function isAlreadyBackofficePath(pathname: string): boolean {
+  const [, first, second] = pathname.split('/')
+  return locales.includes(first) ? second === 'backoffice' : first === 'backoffice'
+}
+
+function withBackofficePrefix(pathname: string): string {
+  const [, first, ...rest] = pathname.split('/')
+  if (locales.includes(first)) {
+    const restPath = rest.join('/')
+    return restPath ? `/${first}/backoffice/${restPath}` : `/${first}/backoffice`
+  }
+  return pathname === '/' ? '/backoffice' : `/backoffice${pathname}`
+}
+
 // CSP com nonce por request (CLAUDE.md §8). Exige rendering dinâmico em toda
 // rota — natural aqui, porque apps/app inteiro fica atrás de login (portal +
 // backoffice, sem página pública indexada). O nonce só nonça os scripts que o
@@ -39,6 +61,10 @@ function buildCsp(nonce: string): string {
 }
 
 export default function middleware(request: NextRequest) {
+  if (request.headers.get('host') === BACKOFFICE_HOST && !isAlreadyBackofficePath(request.nextUrl.pathname)) {
+    request.nextUrl.pathname = withBackofficePrefix(request.nextUrl.pathname)
+  }
+
   const response = intlMiddleware(request)
 
   const nonce = Buffer.from(crypto.randomUUID()).toString('base64')

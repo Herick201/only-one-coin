@@ -150,9 +150,24 @@ A ponta do backend (rotas `.owners()`, `feature_flag_overrides`) está em `apps/
 Um **único backend de auth** (um só provedor de auth, um só registro de usuários) — a separação de acesso é a checagem de **`role`** em `apps/api`, nunca a tela. Mas **duas telas de login distintas**, pelo mesmo app Next.js (não são dois deploys):
 
 - **Portal do aluno** — `/` ou `/portal`, linkado da landing, indexável, sem MFA. **Sem auto-cadastro**: o aluno recebe credenciais por e-mail após aprovação, não se registra.
-- **Backoffice** — path discreto (`/backoffice`), **nunca linkado na landing nem indexável**, MFA no fluxo. É defesa em profundidade, não a defesa.
+- **Backoffice** — path interno `/backoffice`, **nunca linkado na landing nem indexável**, MFA no fluxo. É defesa em profundidade, não a defesa.
 - **Docente** entra pelo backoffice, mas vê só as próprias turmas — checagem no usecase, não filtro solto.
 - **Redirect por `role` sempre server-side.** O cliente nunca escolhe "sou aluno/sou admin"; o `role` vem do banco, lido por `apps/api`.
+
+### Dois domínios, um deploy (decisão 29/09/2026)
+
+`student.onlyonecoin.edu.pe` e `backoffice.onlyonecoin.edu.pe` são dois domínios
+custom apontados pro **mesmo projeto Vercel** (`apps/app`) — não tem deploy
+separado por superfície. `student.*` não precisa de tratamento: a raiz do app
+já é o portal. `backoffice.*` precisa cair sob `/backoffice`, e isso é feito
+por **rewrite baseado em host** em `src/middleware.ts`, antes do
+`next-intl` resolver o locale (senão `/en` vira `/backoffice/en` em vez de
+`/en/backoffice`) — é rewrite, não redirect: a URL que o navegador mostra
+continua no domínio do backoffice, nunca expõe o path interno.
+
+Domínio dedicado não substitui a defesa real (RBAC em `apps/api`) nem some do
+Certificate Transparency log só por não estar linkado — é só mais uma camada,
+igual o path discreto já era.
 
 ## RBAC na UI
 

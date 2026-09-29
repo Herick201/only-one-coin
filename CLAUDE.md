@@ -259,7 +259,7 @@ Cada um tem um mecanismo. O mecanismo é obrigatório, não a boa intenção.
 | --- | --- |
 | Local | Postgres local |
 | Staging | `staging.aula.onlyonecoin.edu.pe` · Postgres gerenciado (Neon, branch de staging) |
-| Produção | `aula.onlyonecoin.edu.pe` · Postgres gerenciado (Neon) |
+| Produção | `student.onlyonecoin.edu.pe` (portal) · `backoffice.onlyonecoin.edu.pe` (backoffice) · Postgres gerenciado (Neon) |
 
 - `apps/landing`/`apps/app`: Vercel, deploy automático a cada push em `main` via GitHub Actions (`.github/workflows/deploy-vercel.yml`); PR gera deploy preview nativo da Vercel. `apps/api`: Fly.io, mesmo gatilho (`deploy-api.yml`), sempre backup → migration → deploy, nessa ordem
 - Variáveis de ambiente **por projeto/ambiente** na Vercel e como secret do repo no GitHub (o que `apps/api` lê em runtime vem do Fly.io)
