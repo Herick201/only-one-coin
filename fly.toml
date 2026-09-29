@@ -15,7 +15,7 @@ primary_region = "gru"
   dockerfile = "apps/api/Dockerfile"
 
 # REDIS_URL, DATABASE_URL, BETTER_AUTH_URL, BETTER_AUTH_SECRET e
-# APP_PUBLIC_URL não entram aqui — são segredo/dado sensível de ambiente,
+# APP_PUBLIC_URLS não entram aqui — são segredo/dado sensível de ambiente,
 # vão via `fly secrets set` (nunca em texto plano no fly.toml versionado).
 [env]
   NODE_ENV = "production"
