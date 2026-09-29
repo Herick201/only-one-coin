@@ -17,6 +17,7 @@ import {
 import { classGroups, consents, courses, enrollments, guardians, payments, planPrices, plans, students } from "@ooc/db";
 import { and, eq, isNull, lt, lte, desc, sql } from "drizzle-orm";
 import type { Db } from "@/infra/db/client.js";
+import { insertOutboxEmails } from "@/infra/persistence/notification/DrizzleOutboxRepository.js";
 
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
 
@@ -25,7 +26,7 @@ export class DrizzlePublicEnrollmentRepository implements IPublicEnrollmentRepos
 
   async findContext(params: { classGroupId: string; planId: string }): Promise<PublicEnrollmentContext | null> {
     const [classGroupRow] = await this.db
-      .select({ courseMinAge: courses.minAge })
+      .select({ courseMinAge: courses.minAge, courseName: courses.name, classGroupStartsOn: classGroups.startsOn })
       .from(classGroups)
       .innerJoin(courses, eq(courses.id, classGroups.courseId))
       // A retired class group or course is not on offer any more, the same
@@ -65,6 +66,8 @@ export class DrizzlePublicEnrollmentRepository implements IPublicEnrollmentRepos
       courseMinAge: classGroupRow.courseMinAge,
       planPriceId: priceRow.id,
       amountCents: priceRow.amountCents,
+      courseName: classGroupRow.courseName,
+      classGroupStartsOn: classGroupRow.classGroupStartsOn,
     };
   }
 
@@ -260,6 +263,11 @@ export class DrizzlePublicEnrollmentRepository implements IPublicEnrollmentRepos
       if (!paymentRow) {
         throw new Error("Insert into payments returned no row");
       }
+
+      // Same transaction as everything above: the "enrollment received"
+      // e-mail exists exactly when the enrollment does. The idempotent-retry
+      // branch at the top returns before this, so a retry queues nothing new.
+      await insertOutboxEmails(tx, params.notifications);
 
       return {
         student: new Student({

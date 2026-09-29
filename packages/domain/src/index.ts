@@ -49,6 +49,29 @@ export type { PaymentProps, PaymentMethod, PaymentStatus } from "./enrollment/Pa
 export type { IEnrollmentRepository } from "./enrollment/EnrollmentRepository.js";
 export type { IPlanPriceLookup } from "./enrollment/PlanPriceLookup.js";
 export type {
+  IEnrollmentEmailContextLookup,
+  EnrollmentEmailContext,
+} from "./enrollment/EnrollmentEmailContextLookup.js";
+
+export {
+  LocaleSchema,
+  DEFAULT_LOCALE,
+  EMAIL_TEMPLATE_KEYS,
+} from "./notification/EmailNotification.js";
+export type {
+  Locale,
+  EmailTemplateKey,
+  EmailTemplateVars,
+  EmailNotification,
+} from "./notification/EmailNotification.js";
+export {
+  enrollmentRecipients,
+  enrollmentReceivedEmails,
+  type EnrollmentEmailFacts,
+  type EnrollmentRecipient,
+  type EnrollmentRecipientKind,
+} from "./notification/enrollmentEmails.js";
+export type {
   IPublicEnrollmentRepository,
   PublicEnrollmentContext,
   SubmitPublicEnrollmentParams,

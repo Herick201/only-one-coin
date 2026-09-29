@@ -1,3 +1,4 @@
+import type { EmailNotification } from "../notification/EmailNotification.js";
 import type { Guardian } from "../student/Guardian.js";
 import type { Student } from "../student/Student.js";
 import type { Enrollment } from "./Enrollment.js";
@@ -14,6 +15,9 @@ export interface PublicEnrollmentContext {
   courseMinAge: number;
   planPriceId: string;
   amountCents: number;
+  /** Carried for the "enrollment received" e-mail, not for any check. */
+  courseName: string;
+  classGroupStartsOn: Date;
 }
 
 export interface SubmitPublicEnrollmentParams {
@@ -24,6 +28,9 @@ export interface SubmitPublicEnrollmentParams {
   consent: { version: string; acceptedAt: Date; ip: string } | null;
   enrollment: Enrollment;
   payment: Payment;
+  /** Written to the outbox in the same transaction. An idempotent retry
+   * writes nothing: the first attempt already did. */
+  notifications: EmailNotification[];
 }
 
 export interface SubmitPublicEnrollmentResult {

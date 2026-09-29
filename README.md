@@ -342,8 +342,9 @@ o que é real:
   `packages/db/tests/privileges.test.ts`; e `deleted_at` no catálogo,
   na matrícula e no apoderado (`0012`), completando o par da trava —
   `students` já tinha, e `plan_prices`/`consents`/`audit_log` ficam de fora
-  por serem append-only. Ainda
-  não existem: `teachers`, `outbox`, `campaigns`, `attendance`, `grades`,
+  por serem append-only; e a `outbox` de notificações (`0013`), uma linha
+  por e-mail a enviar. Ainda
+  não existem: `teachers`, `campaigns`, `attendance`, `grades`,
   `materials`, `certificates` — essas entram nas próximas sessões do
   `ROADMAP.md`.
 - `apps/api` — Fastify expondo `@ooc/domain` via HTTP e rodando os workers de

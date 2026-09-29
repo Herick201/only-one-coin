@@ -96,7 +96,7 @@ substituída pelos bounded contexts reais acima.
   implementação em memória. Ainda faltam bounded contexts inteiros: não há
   tabela nem repositório de `teachers`, de turma no lado da escrita (só
   leitura, `GET /class-groups`), de `payments` avulso fora do fluxo de
-  matrícula, nem de `attendance`/`grades`/`materials`/`certificates`/`outbox`/`campaigns`.
+  matrícula, nem de `attendance`/`grades`/`materials`/`certificates`/`campaigns`.
 - **Índice único de documento** (`national_id_type` + `national_id`, CLAUDE.md
   §1 "Um documento, uma pessoa, uma ficha"): ainda não existe — só a garantia
   de aplicação no `RegisterStudentUseCase`. `scripts/report-duplicate-students.ts`
@@ -107,7 +107,15 @@ substituída pelos bounded contexts reais acima.
   idempotency key, mas não enfileira job de extração, não tem upload por
   signed URL, magic bytes nem Turnstile/rate limit — é uma fatia
   deliberadamente reduzida do funil (`docs/ROADMAP.md`, Sessões 23/25/26).
-- **Envio de e-mail real**: `send-email.worker.ts` só loga o payload — falta
-  `packages/notifications` (adapter Brevo) pra completar.
+- **E-mail transacional**: real. As duas matrículas (checkout público e manual)
+  gravam o "matrícula recebida" na tabela `outbox` na mesma transação; o
+  `outbox-relay.worker.ts` (a cada 5 s) oferece as linhas `pending` à fila
+  `send-email`, e o `send-email.worker.ts` entrega pelo `NotificationProvider`
+  de `packages/notifications` (Brevo), sempre atrás da guarda de allowlist
+  (`NODE_ENV` ≠ `production` → só `EMAIL_ALLOWLIST`). Sem `BREVO_API_KEY` o
+  e-mail é renderizado e só logado. Os templates de aprovado/em revisão/
+  rejeitado/credenciais existem e renderizam, mas **nenhum usecase os emite
+  ainda** — aprovação, revisão humana e conta do portal não existem (OCR e
+  fila de revisão, `docs/ROADMAP.md` Sessões 26+).
 - **MFA**: nenhum plugin `twoFactor` do Better Auth configurado — `admin`/`billing`
   não têm segundo fator ainda, apesar de `CLAUDE.md` §8 exigir.

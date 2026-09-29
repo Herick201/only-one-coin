@@ -2,6 +2,7 @@ import {
   ClassGroupFullError,
   Enrollment,
   Payment,
+  type EmailNotification,
   type IEnrollmentRepository,
   type PaymentMethod,
   type PaymentStatus,
@@ -10,6 +11,7 @@ import {
 import { classGroups, enrollments, payments } from "@ooc/db";
 import { and, eq, isNull, lt, sql } from "drizzle-orm";
 import type { Db } from "@/infra/db/client.js";
+import { insertOutboxEmails } from "@/infra/persistence/notification/DrizzleOutboxRepository.js";
 
 export class DrizzleEnrollmentRepository implements IEnrollmentRepository {
   constructor(private readonly db: Db) {}
@@ -17,6 +19,7 @@ export class DrizzleEnrollmentRepository implements IEnrollmentRepository {
   async createWithPayment(params: {
     enrollment: Enrollment;
     payment: Payment;
+    notifications: EmailNotification[];
   }): Promise<{ enrollment: Enrollment; payment: Payment }> {
     const { enrollment, payment } = params;
 
@@ -76,6 +79,10 @@ export class DrizzleEnrollmentRepository implements IEnrollmentRepository {
       if (!paymentRow) {
         throw new Error("Insert into payments returned no row");
       }
+
+      // Same transaction as the enrollment: the e-mail exists exactly when
+      // the enrollment it talks about does (apps/api/CLAUDE.md, outbox).
+      await insertOutboxEmails(tx, params.notifications);
 
       return {
         enrollment: new Enrollment({

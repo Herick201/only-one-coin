@@ -1,3 +1,5 @@
+import type { Locale } from "../notification/EmailNotification.js";
+import { enrollmentReceivedEmails } from "../notification/enrollmentEmails.js";
 import { BaseUseCase } from "../shared/base/BaseUseCase.js";
 import { GuardianRequiredForMinorError } from "../student/errors.js";
 import { Guardian, type CreateGuardianDTO } from "../student/Guardian.js";
@@ -15,6 +17,9 @@ export interface SubmitPublicEnrollmentInput {
   /** Resolved by the route from the request itself (CLAUDE.md §8) — never
    * trusted from the body. Required exactly when `guardian` is. */
   consent: { version: string; ip: string } | null;
+  /** The language the person filled the form in — the one their e-mails
+   * are written in (CLAUDE.md §4). */
+  locale: Locale;
   payment: {
     method: PaymentMethod;
     methodDetail: string | null;
@@ -30,7 +35,7 @@ export type SubmitPublicEnrollmentOutput = SubmitPublicEnrollmentResult;
  * slice — no real hold, no upload, no OCR yet, all tracked separately). One
  * call, one transaction at the repository boundary: register the student
  * (and guardian, if a minor), claim the seat, create the enrollment and its
- * payment `pending`.
+ * payment `pending`, and queue the "enrollment received" e-mail in the outbox.
  *
  * Price and the course's minimum age are resolved here from the server's
  * own read of the class group and plan — never accepted from the client
@@ -81,6 +86,18 @@ export class SubmitPublicEnrollmentUseCase extends BaseUseCase<
       operationNumber: input.payment.operationNumber,
     });
 
+    const notifications = enrollmentReceivedEmails(
+      {
+        enrollmentId: enrollment.id,
+        student,
+        guardian,
+        courseName: context.courseName,
+        classGroupStartsOn: context.classGroupStartsOn,
+        amountCents: context.amountCents,
+      },
+      input.locale,
+    );
+
     return this.repository.submit({
       student,
       guardian,
@@ -90,6 +107,7 @@ export class SubmitPublicEnrollmentUseCase extends BaseUseCase<
           : null,
       enrollment,
       payment,
+      notifications,
     });
   }
 }

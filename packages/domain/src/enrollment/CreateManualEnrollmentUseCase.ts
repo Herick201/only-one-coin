@@ -1,5 +1,8 @@
+import { DEFAULT_LOCALE } from "../notification/EmailNotification.js";
+import { enrollmentReceivedEmails } from "../notification/enrollmentEmails.js";
 import { BaseUseCase } from "../shared/base/BaseUseCase.js";
 import { Enrollment } from "./Enrollment.js";
+import type { IEnrollmentEmailContextLookup } from "./EnrollmentEmailContextLookup.js";
 import type { IEnrollmentRepository } from "./EnrollmentRepository.js";
 import { Payment, type PaymentMethod } from "./Payment.js";
 import { PlanPriceNotFoundError } from "./errors.js";
@@ -29,6 +32,10 @@ export interface CreateManualEnrollmentOutput {
  *     plan in force, never accepted from the client; (c) the seat is always
  *     reserved, never confirmed (Enrollment.createManual); (d) the payment
  *     never starts approved (Payment.createManual).
+ *
+ * The student hears about it exactly as a checkout student would — the same
+ * "enrollment received" e-mail (decision of 27/09/2026). In es-PE: the
+ * student never chose a language here, and the staff member's is not theirs.
  */
 export class CreateManualEnrollmentUseCase extends BaseUseCase<
   CreateManualEnrollmentInput,
@@ -37,6 +44,7 @@ export class CreateManualEnrollmentUseCase extends BaseUseCase<
   constructor(
     private readonly enrollmentRepository: IEnrollmentRepository,
     private readonly planPriceLookup: IPlanPriceLookup,
+    private readonly emailContextLookup: IEnrollmentEmailContextLookup,
   ) {
     super();
   }
@@ -63,6 +71,20 @@ export class CreateManualEnrollmentUseCase extends BaseUseCase<
       receiptAttached: input.receiptAttached,
     });
 
-    return this.enrollmentRepository.createWithPayment({ enrollment, payment });
+    const emailContext = await this.emailContextLookup.find({
+      studentId: input.studentId,
+      classGroupId: input.classGroupId,
+    });
+
+    // No context means the student or class group is not on file; the write
+    // below fails on that by itself, exactly as it did before e-mails existed.
+    const notifications = emailContext
+      ? enrollmentReceivedEmails(
+          { enrollmentId: enrollment.id, amountCents: price.amountCents, ...emailContext },
+          DEFAULT_LOCALE,
+        )
+      : [];
+
+    return this.enrollmentRepository.createWithPayment({ enrollment, payment, notifications });
   }
 }

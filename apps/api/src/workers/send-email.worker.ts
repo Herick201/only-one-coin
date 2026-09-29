@@ -1,19 +1,39 @@
 import { Worker, type ConnectionOptions } from "bullmq";
-import { SEND_EMAIL_QUEUE, SendEmailPayloadSchema } from "@ooc/queue";
+import type { NotificationProvider } from "@ooc/notifications";
+import { SEND_EMAIL_ATTEMPTS, SEND_EMAIL_QUEUE, SendEmailPayloadSchema, type SendEmailPayload } from "@ooc/queue";
 import type { FastifyBaseLogger } from "fastify";
+import type { IOutboxStore } from "@/infra/persistence/notification/DrizzleOutboxRepository.js";
+import { deliverOutboxEmail } from "./deliverOutboxEmail.js";
 
 /**
- * Placeholder — só loga o payload. A implementação real chama o adapter de
- * e-mail (packages/notifications, quando existir) e grava o resultado na
- * tabela outbox.
+ * Delivers one outbox row per job (the relay enqueues them). Logs carry the
+ * outbox id and the outcome, never the recipient or the vars (CLAUDE.md §6).
  */
-export function startSendEmailWorker(connection: ConnectionOptions, logger: FastifyBaseLogger): Worker {
-  return new Worker(
+export function startSendEmailWorker(
+  connection: ConnectionOptions,
+  logger: FastifyBaseLogger,
+  deps: { store: IOutboxStore; provider: NotificationProvider },
+): Worker<SendEmailPayload> {
+  return new Worker<SendEmailPayload>(
     SEND_EMAIL_QUEUE,
     async (job) => {
-      const payload = SendEmailPayloadSchema.parse(job.data);
-      logger.info({ payload }, "send-email job received (stub — not sent)");
+      const { outboxId } = SendEmailPayloadSchema.parse(job.data);
+      const maxAttempts = job.opts.attempts ?? SEND_EMAIL_ATTEMPTS;
+
+      try {
+        const outcome = await deliverOutboxEmail(outboxId, {
+          ...deps,
+          isFinalAttempt: job.attemptsMade + 1 >= maxAttempts,
+        });
+        logger.info({ outboxId, outcome }, "send-email job done");
+      } catch (error) {
+        logger.warn(
+          { outboxId, attempt: job.attemptsMade + 1, code: (error as { code?: unknown }).code },
+          "send-email attempt failed, will retry",
+        );
+        throw error;
+      }
     },
-    { connection },
+    { connection, concurrency: 5 },
   );
 }

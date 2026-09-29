@@ -29,6 +29,9 @@ importers:
       '@ooc/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@ooc/notifications':
+        specifier: workspace:*
+        version: link:../../packages/notifications
       '@ooc/queue':
         specifier: workspace:*
         version: link:../../packages/queue
@@ -228,6 +231,25 @@ importers:
       zod:
         specifier: ^3.24.1
         version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.5
+        version: 22.20.1
+      eslint:
+        specifier: ^9.39.5
+        version: 9.39.5(jiti@2.7.0)(supports-color@7.2.0)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      typescript-eslint:
+        specifier: ^8.70.1
+        version: 8.70.1(eslint@9.39.5(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.9.3)
+
+  packages/notifications:
+    dependencies:
+      '@ooc/domain':
+        specifier: workspace:*
+        version: link:../domain
     devDependencies:
       '@types/node':
         specifier: ^22.10.5

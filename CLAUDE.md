@@ -138,11 +138,11 @@ packages/
   domain/            domínio DDD puro (entidades, usecases, portas de repositório) — sem framework, sem infra
   queue/             contrato de fila compartilhado (jobs, producers) — usado por quem publica e por quem consome
   db/                schema + migrations (Drizzle Kit) + seed — mesma DATABASE_URL local/Neon
-  notifications/     ainda não criado — adapter de e-mail + outbox (entra com a Sessão 30 do ROADMAP)
+  notifications/     NotificationProvider, templates de e-mail trilíngues, adapter Brevo e guarda de allowlist
   ocr/               ainda não criado — pipeline de extração (entra com a Sessão 26 do ROADMAP)
 ```
 
-Hoje só `domain/`, `queue/` e `db/` existem. `i18n` e `shared` não viraram pacote — cada app tem as próprias mensagens (`apps/*/src/i18n/`, `apps/*/src/messages/`) e não há tipo/utilitário cross-app que já justifique extrair um `packages/shared`.
+Hoje existem `domain/`, `queue/`, `notifications/` e `db/`. `i18n` e `shared` não viraram pacote — cada app tem as próprias mensagens (`apps/*/src/i18n/`, `apps/*/src/messages/`) e não há tipo/utilitário cross-app que já justifique extrair um `packages/shared`.
 
 ---
 
@@ -206,7 +206,7 @@ Todo o detalhe de arquitetura por camada morou aqui até esta sessão; agora viv
 | Upload (signed URL) | `apps/api/CLAUDE.md` |
 | Vagas (condição de corrida, os dois relógios) | `apps/api/CLAUDE.md` |
 | Origem da matrícula (atribuição de canal) | `apps/api/CLAUDE.md` |
-| Notificações (outbox, `NotificationProvider`) | `apps/api/CLAUDE.md` |
+| Notificações (outbox, `NotificationProvider`, allowlist de staging) | `apps/api/CLAUDE.md` |
 | Fronteira `packages/domain` (DDD puro, exceção do vocabulário de erro HTTP) | `packages/domain/CLAUDE.md` |
 | Feature flags das três superfícies | `apps/app/CLAUDE.md` |
 | Layout de tela do backoffice/portal (`AutoGrid`, container query) | `apps/app/CLAUDE.md` |
@@ -224,7 +224,7 @@ Cada um tem um mecanismo. O mecanismo é obrigatório, não a boa intenção.
 | --- | --- |
 | `.env` no Git | `.gitignore` + gitleaks no CI + só `.env.example` versionado |
 | **Credencial de banco no bundle do cliente** | check de CI varrendo o build do Next.js. Catastrófico — só `apps/api`/workers têm connection string do Postgres |
-| **E-mail real disparado de staging** | provider recusa destinatário fora da allowlist quando `NODE_ENV !== production` |
+| **E-mail real disparado de staging** | `AllowlistGuard` embrulha o provider e recusa destinatário fora de `EMAIL_ALLOWLIST` quando `NODE_ENV !== production`. **Atenção:** o `Dockerfile` da API fixa `NODE_ENV=production` — um staging com a mesma imagem precisa sobrescrever `NODE_ENV`, senão a guarda fica aberta (`apps/api/CLAUDE.md`, Notificações) |
 | Rota sem checagem de papel | middleware deny-by-default em `apps/api`; rota sem papel declarado falha no CI |
 | SQL rodado à mão no painel de produção | só migration versionada |
 | Sem rate limiting | middleware deny-by-default; rota sem política declarada falha no CI |
