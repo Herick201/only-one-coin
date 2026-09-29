@@ -20,8 +20,8 @@ export function createAuth(config: Config) {
     // can "try it out" against /api/auth/* without an origin mismatch.
     trustedOrigins:
       config.NODE_ENV === "production"
-        ? [config.APP_PUBLIC_URL]
-        : [config.APP_PUBLIC_URL, `http://localhost:${config.PORT}`],
+        ? config.APP_PUBLIC_URLS
+        : [...config.APP_PUBLIC_URLS, `http://localhost:${config.PORT}`],
     emailAndPassword: {
       enabled: true,
     },

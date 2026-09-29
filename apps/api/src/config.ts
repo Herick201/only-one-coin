@@ -14,7 +14,15 @@ const ConfigSchema = z
     // better-auth
     BETTER_AUTH_URL: z.string().min(1),
     BETTER_AUTH_SECRET: z.string().min(32),
-    APP_PUBLIC_URL: z.string().min(1),
+    // Comma-separated origins apps/app is served from — student.* and
+    // backoffice.* are two domains on the same Vercel deploy (apps/app/CLAUDE.md,
+    // "Dois domínios, um deploy"), and better-auth's own origin check
+    // (trustedOrigins, betterAuth.ts) needs every one of them listed or it
+    // 403s any host not in the list.
+    APP_PUBLIC_URLS: z
+      .string()
+      .min(1)
+      .transform((val) => val.split(",").map((url) => url.trim()).filter(Boolean)),
 
     // e-mail (Brevo, behind NotificationProvider — CLAUDE.md §3). Without a
     // key, e-mails are rendered and logged, never sent — optional even in

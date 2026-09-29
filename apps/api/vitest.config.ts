@@ -26,7 +26,7 @@ export default defineConfig({
       DATABASE_URL: "postgres://ooc:ooc@localhost:5432/ooc_dev",
       BETTER_AUTH_URL: "http://localhost:3333/api/auth",
       BETTER_AUTH_SECRET: "test-secret-at-least-32-characters-long",
-      APP_PUBLIC_URL: "http://localhost:3000",
+      APP_PUBLIC_URLS: "http://localhost:3000",
     },
   },
 });
