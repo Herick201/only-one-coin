@@ -140,11 +140,13 @@ Sessão 7) já existem. Domínio e fila já existem, independentes dessa escolha
   pagamento com comprovante obrigatório, e revisão/envio — com **dois
   modos de entrada** na mesma tela: aberto da landing começa no passo 1, e
   aberto pelo link do vendedor (`?course=&group=&src=whatsapp`) chega com o
-  passo 1 respondido e cai no passo 2. A vaga é presa no checkout com relógio
-  curto (15 min, parâmetro do backoffice) e o rascunho sobrevive a recarregar a
-  página — sair pra pagar no app do banco não perde o preenchimento. A origem
-  do canal (`whatsapp`/`web`) é resolvida no servidor, na chegada, e carregada
-  até o envio. Desenho e regras em `docs/MATRICULA-CHECKOUT.md`. A landing já
+  passo 1 respondido e cai no passo 2. A vaga é presa **no servidor** ao sair do
+  passo 1 (`seat_holds`, relógio curto de 15 min editável em
+  `/backoffice/settings/receipts`) e volta sozinha pra turma quando o hold vence
+  sem envio; o rascunho sobrevive a recarregar a página — sair pra pagar no app
+  do banco não perde o preenchimento. A origem do canal (`whatsapp`/`web`) é
+  capturada na chegada, gravada no hold e copiada pelo servidor para a
+  matrícula no envio; a matrícula manual grava `whatsapp`. Desenho e regras em `docs/MATRICULA-CHECKOUT.md`. A landing já
   aponta pra ele: os CTAs são relativos (`/enrollment` no herói e nos cursos,
   `/login` no botão do header — quem chega da landing não tem sessão, então a
   porta do aluno é a tela de login, nunca o dashboard) e quem atravessa para o
@@ -313,7 +315,7 @@ o que é real:
 | Funcionalidades (`/backoffice/features`) | **Real** |
 | E-mails (`/backoffice/emails*`) | Mock |
 | Relatórios (`/backoffice/reports`) | Mock — a agregação roda no navegador porque o dataset é mockado; contra a API real vira query no servidor |
-| Configuração (`/backoffice/settings`) | Mock (constantes fixas — vira `GET /settings` quando a API existir) |
+| Configuração (`/backoffice/settings`) | Parcial: **Real** só a reserva durante o pagamento (`GET /settings`, `PUT /settings/checkout-hold`, com `audit_log`) — o resto são constantes fixas, alteradas só na tela |
 | Conta (`/backoffice/account`) | Estado local — toda escrita fica só na sessão do navegador |
 | Login do backoffice, convite e redefinição de senha | **Real** — fala direto com o Better Auth (`/api/auth/sign-in/email`). MFA ainda não (nenhum plugin `twoFactor` configurado) |
 | Login do aluno (`/login`) | Mock — qualquer submissão válida redireciona pro portal, sem checar credencial |
