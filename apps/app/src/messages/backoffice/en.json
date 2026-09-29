@@ -1478,7 +1478,9 @@
       "receipts_notice": "Changing a parameter applies to receipts arriving afterwards: it never revalidates a payment already settled.",
       "save": "Save changes",
       "cancel": "Discard",
-      "saved_toast": "Changes applied on screen only. No server is connected yet."
+      "saved_toast": "Changes applied on screen only. No server is connected yet.",
+      "receipts_saved_toast": "Checkout hold saved: it applies to the next holds. The other parameters on this screen still change on screen only.",
+      "receipts_save_failed_toast": "Could not save the checkout hold. Try again."
     },
     "features": {
       "title": "Features",

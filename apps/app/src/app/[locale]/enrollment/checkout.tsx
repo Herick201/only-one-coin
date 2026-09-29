@@ -37,8 +37,8 @@ const apiLocale: Record<Locale, 'es-PE' | 'en' | 'pt-BR'> = {
  * and the channel metric it would buy is bought instead by one attribution
  * field (`docs/MATRICULA-CHECKOUT.md` §1).
  *
- * Everything here is mockup state. The write is a usecase in `packages/domain`
- * behind `apps/api`, never the browser (`CLAUDE.md` §8).
+ * The seat hold and the submit are both `apps/api` calls; every write is a
+ * usecase in `packages/domain` behind it, never the browser (`CLAUDE.md` §8).
  */
 export function Checkout({
   catalog,
@@ -63,8 +63,12 @@ export function Checkout({
     goTo,
     holdSecondsLeft,
     holdExpired,
+    holdId,
+    holding,
+    holdError,
     startHold,
     settleHold,
+    expireHold,
     restart,
   } = useCheckout(catalog, initialDraft)
 
@@ -75,18 +79,20 @@ export function Checkout({
     review: t('step.review.short'),
   }
 
-  function leaveCourseStep() {
+  async function leaveCourseStep() {
     // The seat is taken the moment the class group is settled — before the
     // money, on purpose. The reader is about to be sent to their banking app,
     // and coming back to a full class group has no remedy in a business with
     // no refund flow (`docs/MATRICULA-CHECKOUT.md` §3).
-    if (draft.course.classGroupId) startHold(draft.course.classGroupId)
-    goTo('student')
+    if (!draft.course.classGroupId) return
+    const outcome = await startHold(draft.course.classGroupId)
+    // No seat, no step 2: the reason is on screen and the reader picks again.
+    if (outcome === 'held') goTo('student')
   }
 
   async function submit() {
     const plan = planOfCourse(catalog, draft.course.courseId)
-    if (!draft.course.classGroupId || !plan || !draft.payment.method) {
+    if (!draft.course.classGroupId || !plan || !draft.payment.method || !holdId) {
       throw new Error('Checkout draft is missing a required field at submit')
     }
 
@@ -94,6 +100,9 @@ export function Checkout({
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        // The seat and the channel travel as this one id: the server reads
+        // both off the hold, never off this body.
+        holdId,
         classGroupId: draft.course.classGroupId,
         planId: plan.id,
         student: {
@@ -134,6 +143,16 @@ export function Checkout({
     })
 
     if (!response.ok) {
+      // The server says the hold is gone — expired, or swept, while the
+      // reader was still typing. Same ending as the countdown reaching zero:
+      // the seat may already be somebody else's, and the attempt starts over.
+      if (response.status === 422) {
+        const body = (await response.json().catch(() => null)) as { reason?: string } | null
+        if (body?.reason === 'enrollment.seat_hold_expired') {
+          expireHold()
+          return
+        }
+      }
       throw new Error(`Submit failed: ${response.status}`)
     }
 
@@ -201,7 +220,9 @@ export function Checkout({
           catalog={catalog}
           draft={draft}
           setDraft={setDraft}
-          onContinue={leaveCourseStep}
+          holding={holding}
+          holdError={holdError}
+          onContinue={() => void leaveCourseStep()}
         />
       )}
 

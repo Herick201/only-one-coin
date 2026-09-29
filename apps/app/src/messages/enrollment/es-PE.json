@@ -97,7 +97,9 @@
     "hold": {
       "will_start": "Al continuar reservamos tu vacante por {minutes} minutos para que puedas pagar con tranquilidad.",
       "active": "Tu vacante está reservada mientras pagas",
-      "remaining": "Quedan {minutes} minutos y {seconds} segundos de reserva"
+      "remaining": "Quedan {minutes} minutos y {seconds} segundos de reserva",
+      "full": "Ese horario se acaba de llenar. Elige otro horario u otra fecha.",
+      "failed": "No pudimos reservar tu vacante. Revisa tu conexión e inténtalo de nuevo."
     },
     "expired": {
       "title": "Se acabó el tiempo",

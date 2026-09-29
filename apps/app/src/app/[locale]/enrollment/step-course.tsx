@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
-import type { CheckoutDraft, PublicCatalog } from '@/lib/enrollment/types'
+import type { CheckoutDraft, HoldOutcome, PublicCatalog } from '@/lib/enrollment/types'
 import {
   coursesOfLanguage,
   courseById,
@@ -57,11 +57,17 @@ export function StepCourse({
   catalog,
   draft,
   setDraft,
+  holding,
+  holdError,
   onContinue,
 }: {
   catalog: PublicCatalog
   draft: CheckoutDraft
   setDraft: (next: (prev: CheckoutDraft) => CheckoutDraft) => void
+  /** The seat is being asked for; continuing twice would ask twice. */
+  holding: boolean
+  /** Why the server did not hand over the seat, when it did not. */
+  holdError: Exclude<HoldOutcome, 'held'> | null
   onContinue: () => void
 }) {
   const t = useTranslations('enrollment')
@@ -329,8 +335,16 @@ export function StepCourse({
         </Card>
       )}
 
+      {/* The catalog on screen can be minutes old; the server's seat count is
+          the one that decides. */}
+      {holdError && (
+        <Note tone="danger">
+          {t(holdError === 'full' ? 'hold.full' : 'hold.failed')}
+        </Note>
+      )}
+
       <StepNav>
-        <PrimaryButton onClick={onContinue} disabled={selectedGroup === null}>
+        <PrimaryButton onClick={onContinue} disabled={selectedGroup === null || holding}>
           {t('action.continue')}
           <CheckoutIcon name="arrow-right" size={16} />
         </PrimaryButton>
