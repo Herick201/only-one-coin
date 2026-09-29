@@ -105,10 +105,6 @@
     "message": "Cargando…",
     "verifying_session": "Verificando tu sesión…"
   },
-  "home": {
-    "coming_soon": "Portal del Estudiante — próximamente.",
-    "go_to_login": "Ir a iniciar sesión"
-  },
   "language": {
     "label": "Idioma",
     "es": "Español",
