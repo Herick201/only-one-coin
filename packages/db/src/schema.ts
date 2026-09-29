@@ -382,6 +382,72 @@ export const enrollments = pgTable(
   ],
 );
 
+// The checkout hold — the short clock of apps/api/CLAUDE.md "Dois relógios".
+// A seat is taken from the class group the moment the public checkout settles
+// on one, before anybody has typed a name: the person is about to leave for
+// their banking app, and coming back to a full class group has no remedy.
+// There is no student yet, so this cannot be an `enrollments` row; the hold
+// lives here until the submit consumes it (the seat passes to the enrollment,
+// never counted twice) or the sweep expires it (the seat goes back).
+//
+// active → consumed (the submit landed) | released (the checkout let go of
+// it, e.g. picked another class group) | expired (the sweep). Released and
+// expired are kept apart on purpose: the expiry rate in production is what
+// decides whether the configured minutes change again
+// (docs/MATRICULA-CHECKOUT.md §3).
+//
+// `expires_at` is stamped from the database clock at claim time, and every
+// comparison against it uses the database clock too — the client's countdown
+// is comfort, never authority.
+//
+// `id` is `gen_random_uuid()` (v4), not the uuidv7 every other table uses:
+// the id is the only thing the anonymous checkout holds to consume or release
+// this seat, and a time-ordered id is partly guessable.
+//
+// `origin` is the channel the checkout was entered through, carried here from
+// first access and copied onto the enrollment by the submit — the submit
+// never takes it from its own body.
+//
+// No `deleted_at`: `status` tells the row's whole life.
+export const seatHolds = pgTable(
+  "seat_holds",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    classGroupId: uuid("class_group_id")
+      .notNull()
+      .references(() => classGroups.id, { onDelete: "restrict" }),
+    origin: text("origin").notNull(),
+    status: text("status").notNull().default("active"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    // Set when the hold leaves `active`, whichever way it leaves.
+    settledAt: timestamp("settled_at", { withTimezone: true }),
+    enrollmentId: uuid("enrollment_id").references(() => enrollments.id, { onDelete: "restrict" }),
+    ...timestamps(),
+  },
+  (table) => [
+    check("seat_holds_origin_check", sql`${table.origin} in ('whatsapp', 'web')`),
+    check(
+      "seat_holds_status_check",
+      sql`${table.status} in ('active', 'consumed', 'released', 'expired')`,
+    ),
+    // A consumed hold always says which enrollment took its seat, and only a
+    // consumed one does.
+    check(
+      "seat_holds_enrollment_check",
+      sql`(${table.status} = 'consumed') = (${table.enrollmentId} is not null)`,
+    ),
+    check(
+      "seat_holds_settled_check",
+      sql`(${table.status} = 'active') = (${table.settledAt} is null)`,
+    ),
+    // The sweep's only query: active holds, soonest to expire first.
+    index("seat_holds_active_expires_at_idx")
+      .on(table.expiresAt)
+      .where(sql`${table.status} = 'active'`),
+    index("seat_holds_class_group_id_idx").on(table.classGroupId),
+  ],
+);
+
 // payments is agnostic of origin (CLAUDE.md §5) — scoped to enrollments only
 // for now, since that is what both target forms (new-student-form.tsx,
 // new-enrollment-form.tsx) need. Paid procedures (constancia and the rest of
@@ -658,5 +724,36 @@ export const outbox = pgTable(
     index("outbox_pending_created_at_idx")
       .on(table.createdAt)
       .where(sql`${table.status} = 'pending'`),
+  ],
+);
+
+// The numbers the platform runs on that the backoffice may change without a
+// deploy (apps/api/CLAUDE.md: "configuráveis no backoffice, nunca constante no
+// código"). One row, enforced by the primary key itself: `id` is a boolean
+// that can only be `true`. Typed columns rather than a key/value bag, so each
+// setting carries its own CHECK — a setting the database cannot bound is one
+// a bad request can set to zero.
+//
+// Only the checkout hold lives here so far. The review window, the value
+// tolerance and the OCR confidence floor are still screen-only in the
+// backoffice; each lands as its own column when something server-side reads it.
+//
+// `updated_by` is Better Auth's "user".id (text), no FK — same situation as
+// `feature_flag_overrides.updated_by`. Who changed what is answered by
+// `audit_log`, which every write here also appends to.
+export const platformSettings = pgTable(
+  "platform_settings",
+  {
+    id: boolean("id").primaryKey().default(true),
+    checkoutHoldMinutes: integer("checkout_hold_minutes").notNull().default(15),
+    updatedBy: text("updated_by"),
+    ...timestamps(),
+  },
+  (table) => [
+    check("platform_settings_singleton_check", sql`${table.id}`),
+    check(
+      "platform_settings_checkout_hold_minutes_check",
+      sql`${table.checkoutHoldMinutes} between 5 and 60`,
+    ),
   ],
 );

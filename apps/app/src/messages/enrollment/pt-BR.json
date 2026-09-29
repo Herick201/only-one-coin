@@ -97,7 +97,9 @@
     "hold": {
       "will_start": "Ao continuar, reservamos sua vaga por {minutes} minutos para você pagar com calma.",
       "active": "Sua vaga está reservada enquanto você paga",
-      "remaining": "Restam {minutes} minutos e {seconds} segundos de reserva"
+      "remaining": "Restam {minutes} minutos e {seconds} segundos de reserva",
+      "full": "Esse horário acabou de lotar. Escolha outro horário ou outra data.",
+      "failed": "Não conseguimos reservar sua vaga. Verifique sua conexão e tente de novo."
     },
     "expired": {
       "title": "Tempo excedido",

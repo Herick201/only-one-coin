@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { CheckoutDraft, PublicCatalog, SeatHold, StepId } from './types'
+import type { CheckoutDraft, HoldOutcome, PublicCatalog, SeatHold, StepId } from './types'
 import { STEP_ORDER } from './types'
 import { emptyDraft, groupById, hasSeat } from './checkout'
 
@@ -62,12 +62,46 @@ export interface CheckoutController {
    * the only way on is to start again.
    */
   holdExpired: boolean
-  /** Throws the expired attempt away and opens an empty checkout. */
+  /** The hold the submit consumes, or null when no seat is held. */
+  holdId: string | null
+  /** A request for a seat is in flight. */
+  holding: boolean
+  /** Why the last request for a seat did not get one. */
+  holdError: Exclude<HoldOutcome, 'held'> | null
+  /** Throws the attempt away and opens an empty checkout. */
   restart: () => void
-  startHold: (classGroupId: string) => void
-  releaseHold: () => void
+  /**
+   * Asks the server for a seat in the class group. A live hold on the same
+   * class group is kept; one on another class group is given back first.
+   */
+  startHold: (classGroupId: string) => Promise<HoldOutcome>
   /** Freezes the hold once the receipt is in — the 5-day clock takes over. */
   settleHold: () => void
+  /** The server said the hold is gone (submit refused it): end the attempt. */
+  expireHold: () => void
+}
+
+/** The API's error envelope — only `reason` matters here. */
+async function reasonOf(response: Response): Promise<string | null> {
+  try {
+    const body = (await response.json()) as { reason?: unknown }
+    return typeof body.reason === 'string' ? body.reason : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Gives a seat back on the server. Best effort and never awaited by the
+ * screen: if it fails, the sweep hands the seat back when the hold runs out.
+ */
+function releaseOnServer(holdId: string): void {
+  void fetch(`/api/v1/seat-holds/${encodeURIComponent(holdId)}/release`, {
+    method: 'POST',
+    keepalive: true,
+  }).catch(() => {
+    /* see above — the sweep is the guarantee */
+  })
 }
 
 /**
@@ -80,11 +114,15 @@ export interface CheckoutController {
  * reloaded on return. Losing twenty fields at that exact moment is losing the
  * enrollment.
  *
- * The **hold is the server's**, not this hook's. Here it is simulated for the
- * mockup, and the countdown on screen is comfort — when this talks to
- * `apps/api`, `expiresAt` arrives from the seat reservation and expiry is
- * decided there. A clock the client owns is a clock the client can stop
- * (`docs/MATRICULA-CHECKOUT.md` §3).
+ * The **hold is the server's**, not this hook's. `apps/api` takes the seat,
+ * stamps the deadline and hands the seat back when it passes; the countdown
+ * on screen is comfort. A clock the client owns is a clock the client can
+ * stop (`docs/MATRICULA-CHECKOUT.md` §3) — which is why the submit, not this
+ * countdown, is what finally says a hold is gone.
+ *
+ * The **channel** (`draft.source`) was resolved from the link on arrival and
+ * travels with the claim; the server keeps it on the hold and copies it onto
+ * the enrollment, so the submit never gets to say where it came from.
  */
 export function useCheckout(
   catalog: PublicCatalog,
@@ -94,9 +132,26 @@ export function useCheckout(
   const [step, setStep] = useState<StepId>(
     initialDraft.course.classGroupId ? 'student' : 'course',
   )
-  const [hold, setHold] = useState<SeatHold | null>(null)
+  const [hold, setHoldState] = useState<SeatHold | null>(null)
   const [now, setNow] = useState<number | null>(null)
   const [holdExpired, setHoldExpired] = useState(false)
+  const [holding, setHolding] = useState(false)
+  const [holdError, setHoldError] = useState<CheckoutController['holdError']>(null)
+  /** The same hold, readable from inside an async claim without a stale closure. */
+  const holdRef = useRef<SeatHold | null>(null)
+  const sourceRef = useRef(initialDraft.source)
+
+  /** State for the screen, ref for the async claim, storage for a reload. */
+  const setHold = useCallback((next: SeatHold | null) => {
+    holdRef.current = next
+    setHoldState(next)
+    if (next) writeStored(HOLD_KEY, next)
+    else clearStored(HOLD_KEY)
+  }, [])
+
+  useEffect(() => {
+    sourceRef.current = draft.source
+  }, [draft.source])
   const [restored, setRestored] = useState(false)
   const bootstrapped = useRef(false)
   /** The arrival as the server resolved it — frozen at first render. */
@@ -157,18 +212,24 @@ export function useCheckout(
 
     const storedHold = readStored<SeatHold>(HOLD_KEY)
     // A hold that belongs to a class group nobody is buying any more is not a
-    // hold — it is a countdown against the wrong seat.
+    // hold — it is a countdown against the wrong seat, so it goes back. One
+    // stored before holds had a server id (sessionStorage outlives a deploy)
+    // names nothing on the server and is simply dropped.
     if (storedHold) {
       const target = linkChose
         ? incoming.course.classGroupId
         : (stored?.course.classGroupId ?? null)
-      if (storedHold.classGroupId === target) setHold(storedHold)
-      else clearStored(HOLD_KEY)
+      if (storedHold.id && storedHold.classGroupId === target) {
+        setHold(storedHold)
+      } else {
+        if (storedHold.id) releaseOnServer(storedHold.id)
+        clearStored(HOLD_KEY)
+      }
     }
 
     setNow(Date.now())
     setRestored(true)
-  }, [])
+  }, [setHold])
 
   /**
    * Persist — but never before the restore has actually landed in state.
@@ -199,13 +260,10 @@ export function useCheckout(
     return Math.max(0, Math.round((Date.parse(hold.expiresAt) - now) / 1000))
   }, [hold, now])
 
-  const releaseHold = useCallback(() => {
-    setHold(null)
-    clearStored(HOLD_KEY)
-  }, [])
-
   /**
-   * Ran out. The seat went back to the class group, and the attempt ends here.
+   * Ran out. The seat is going back to the class group — the server's sweep
+   * does that, on its own clock; nothing is sent from here, so the hold is
+   * counted as `expired` rather than `released` — and the attempt ends here.
    *
    * Everything typed is discarded rather than kept warm for a retry. That is a
    * deliberate trade: a half-filled form sitting in a shared browser is a
@@ -213,67 +271,130 @@ export function useCheckout(
    * checkout has no session to tie it to anybody. Starting over costs a couple
    * of minutes; the other way costs somebody else's data.
    */
+  const expireHold = useCallback(() => {
+    setHoldExpired(true)
+    setHold(null)
+    clearStored(DRAFT_KEY)
+  }, [setHold])
+
   useEffect(() => {
-    if (holdSecondsLeft === 0) {
-      setHoldExpired(true)
-      releaseHold()
-      clearStored(DRAFT_KEY)
-    }
-  }, [holdSecondsLeft, releaseHold])
+    if (holdSecondsLeft === 0) expireHold()
+  }, [holdSecondsLeft, expireHold])
 
   const startHold = useCallback(
-    (classGroupId: string) => {
-      const group = groupById(catalog, classGroupId)
-      if (!group || !hasSeat(group)) return
-      const next: SeatHold = {
-        classGroupId,
-        expiresAt: new Date(
-          Date.now() + catalog.settings.holdMinutes * 60_000,
-        ).toISOString(),
+    async (classGroupId: string): Promise<HoldOutcome> => {
+      const current = holdRef.current
+      if (
+        current &&
+        current.classGroupId === classGroupId &&
+        Date.parse(current.expiresAt) > Date.now()
+      ) {
+        // Back to step 1 and on again with the same choice: still the same seat.
+        return 'held'
       }
-      setHold(next)
-      setHoldExpired(false)
-      setNow(Date.now())
-      writeStored(HOLD_KEY, next)
+
+      const group = groupById(catalog, classGroupId)
+      if (!group || !hasSeat(group)) {
+        setHoldError('full')
+        return 'full'
+      }
+
+      // Changing class group gives the previous seat back now, not in fifteen
+      // minutes — in a class group down to its last seats, that is somebody
+      // else's place.
+      if (current) {
+        releaseOnServer(current.id)
+        setHold(null)
+      }
+
+      setHolding(true)
+      setHoldError(null)
+      try {
+        const response = await fetch('/api/v1/seat-holds', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ classGroupId, origin: sourceRef.current }),
+        })
+
+        if (!response.ok) {
+          const reason = await reasonOf(response)
+          // Full, or no longer on offer: either way this class group cannot be
+          // had, and the reader has to pick another.
+          const outcome: HoldOutcome =
+            reason === 'enrollment.class_group_full' ||
+            reason === 'enrollment.class_group_not_found'
+              ? 'full'
+              : 'failed'
+          setHoldError(outcome)
+          return outcome
+        }
+
+        const body = (await response.json()) as {
+          holdId: string
+          classGroupId: string
+          secondsLeft: number
+        }
+        setHold({
+          id: body.holdId,
+          classGroupId: body.classGroupId,
+          expiresAt: new Date(Date.now() + body.secondsLeft * 1000).toISOString(),
+        })
+        setHoldExpired(false)
+        setNow(Date.now())
+        return 'held'
+      } catch {
+        setHoldError('failed')
+        return 'failed'
+      } finally {
+        setHolding(false)
+      }
     },
-    [catalog],
+    [catalog, setHold],
   )
 
   /**
    * The receipt landed. The seat stays `reserved` — sending proof is not the
    * same as having it approved (`CLAUDE.md` §5) — but it stops racing the short
-   * clock and starts waiting on the review window instead.
+   * clock and starts waiting on the review window instead. The server already
+   * consumed the hold in the same transaction as the enrollment.
    */
   const settleHold = useCallback(() => {
     setHold(null)
     setHoldExpired(false)
-    clearStored(HOLD_KEY)
-  }, [])
+  }, [setHold])
 
   /**
    * Somebody arriving on the seller's link lands past step 1 with the class
    * group already settled, so nothing ever pressed "continue" to claim the
    * seat. They still need one held: they have usually already paid, and a seat
    * filling up while they type their name is the exact failure the hold exists
-   * to prevent. Runs once, and only when no hold came back from a reload.
+   * to prevent. Runs once, and only when no hold came back from a reload. If
+   * the seat cannot be had, they land back on step 1 with the reason on screen.
    */
   useEffect(() => {
     if (!restored || bootstrapped.current) return
     bootstrapped.current = true
     if (!hold && draft.course.classGroupId && step !== 'course') {
-      startHold(draft.course.classGroupId)
+      void startHold(draft.course.classGroupId).then((outcome) => {
+        if (outcome !== 'held') setStep('course')
+      })
     }
   }, [restored, hold, draft.course.classGroupId, step, startHold])
 
   const restart = useCallback(() => {
+    // Starting over from the success screen finds no hold (the submit consumed
+    // it); starting over mid-checkout gives the seat back.
+    if (holdRef.current) releaseOnServer(holdRef.current.id)
     clearCheckoutStorage()
     bootstrapped.current = true
     setDraftState(emptyDraft(arrival.current.source))
     setHold(null)
     setHoldExpired(false)
+    setHoldError(null)
     setStep('course')
     if (typeof window !== 'undefined') window.scrollTo({ top: 0 })
-  }, [])
+  }, [setHold])
+
 
   const setDraft = useCallback(
     (next: CheckoutDraft | ((prev: CheckoutDraft) => CheckoutDraft)) => {
@@ -295,9 +416,12 @@ export function useCheckout(
     goTo,
     holdSecondsLeft,
     holdExpired,
+    holdId: hold?.id ?? null,
+    holding,
+    holdError,
     startHold,
-    releaseHold,
     settleHold,
+    expireHold,
     restart,
   }
 }

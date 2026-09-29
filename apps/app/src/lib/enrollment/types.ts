@@ -275,7 +275,16 @@ export interface CheckoutDraft {
  * (`docs/MATRICULA-CHECKOUT.md` §3).
  */
 export interface SeatHold {
+  /** The server's hold — what the submit consumes and a release names. */
+  id: string
   classGroupId: string
-  /** ISO 8601 UTC instant at which the seat goes back to the class group. */
+  /**
+   * ISO 8601 UTC instant at which the seat goes back to the class group, on
+   * this device's clock: the server's `secondsLeft` added to the local time it
+   * arrived at, so a phone set to the wrong time still counts down correctly.
+   */
   expiresAt: string
 }
+
+/** How asking the server for a seat can end. */
+export type HoldOutcome = 'held' | 'full' | 'failed'

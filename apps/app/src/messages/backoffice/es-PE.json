@@ -1478,7 +1478,9 @@
       "receipts_notice": "Cambiar un parámetro vale para los comprobantes que lleguen después: nunca revalida un pago ya resuelto.",
       "save": "Guardar cambios",
       "cancel": "Descartar",
-      "saved_toast": "Cambios aplicados solo en pantalla. Todavía no hay servidor conectado."
+      "saved_toast": "Cambios aplicados solo en pantalla. Todavía no hay servidor conectado.",
+      "receipts_saved_toast": "Reserva durante el pago guardada: vale para las próximas reservas. Los demás parámetros de esta pantalla todavía se cambian solo en pantalla.",
+      "receipts_save_failed_toast": "No se pudo guardar la reserva durante el pago. Inténtalo de nuevo."
     },
     "features": {
       "title": "Funcionalidades",

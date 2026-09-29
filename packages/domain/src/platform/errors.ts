@@ -1,4 +1,5 @@
 import { ForbiddenError } from "../shared/base/errors/ForbiddenError.js";
+import { UnableToProcessEntryError } from "../shared/base/errors/UnableToProcessEntryError.js";
 
 /**
  * The switchboard is the owners' own (CLAUDE.md §5): what is on the air is not
@@ -12,6 +13,17 @@ export class NotAPlatformOwnerError extends ForbiddenError {
     super({
       reason: "auth.not_a_platform_owner",
       message: "Only an account on the platform owners' e-mail domain may change a feature flag.",
+      ...params,
+    });
+  }
+}
+
+/** A setting outside the bounds the database itself enforces on it. */
+export class InvalidPlatformSettingError extends UnableToProcessEntryError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({
+      reason: "platform.invalid_setting",
+      message: "The setting is outside its allowed range.",
       ...params,
     });
   }

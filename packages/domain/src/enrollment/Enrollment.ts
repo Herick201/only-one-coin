@@ -5,6 +5,7 @@ import {
   SoftDeletableModel,
   SoftDeletableModelPropsSchema,
 } from "../shared/base/SoftDeletableModel.js";
+import { EnrollmentOriginSchema, type EnrollmentOrigin } from "./EnrollmentOrigin.js";
 
 export const SeatStatusSchema = z.enum(["reserved", "confirmed", "released"]);
 export type SeatStatus = z.infer<typeof SeatStatusSchema>;
@@ -16,6 +17,10 @@ export const EnrollmentPropsSchema = SoftDeletableModelPropsSchema.extend({
   // enrollment, never re-resolved afterwards (CLAUDE.md §5).
   planPriceId: z.string().uuid(),
   seatStatus: SeatStatusSchema,
+  // Channel attribution (apps/api/CLAUDE.md, "Origem da matrícula") — on the
+  // enrollment, not the student: the same person can come back through
+  // another channel next cycle.
+  origin: EnrollmentOriginSchema,
 });
 
 export type EnrollmentProps = z.infer<typeof EnrollmentPropsSchema>;
@@ -25,6 +30,7 @@ export class Enrollment extends SoftDeletableModel {
   public classGroupId: string;
   public planPriceId: string;
   public seatStatus: SeatStatus;
+  public origin: EnrollmentOrigin;
 
   constructor(props: EnrollmentProps) {
     super(props);
@@ -32,6 +38,7 @@ export class Enrollment extends SoftDeletableModel {
     this.classGroupId = props.classGroupId;
     this.planPriceId = props.planPriceId;
     this.seatStatus = props.seatStatus;
+    this.origin = props.origin;
   }
 
   /**
@@ -39,6 +46,9 @@ export class Enrollment extends SoftDeletableModel {
    * always reserved, never confirmed — confirmation only follows an
    * approved payment, and whoever opens the enrollment does not settle its
    * money.
+   *
+   * Origin is always `whatsapp`: the manual path exists for the sale that
+   * closed on WhatsApp and never reached the form (CLAUDE.md §1).
    */
   static createManual(params: { studentId: string; classGroupId: string; planPriceId: string }): Enrollment {
     return new Enrollment({
@@ -47,6 +57,7 @@ export class Enrollment extends SoftDeletableModel {
       classGroupId: params.classGroupId,
       planPriceId: params.planPriceId,
       seatStatus: "reserved",
+      origin: "whatsapp",
     });
   }
 
@@ -56,14 +67,23 @@ export class Enrollment extends SoftDeletableModel {
    * — kept as its own factory rather than reused so each call site names
    * which flow it belongs to, the way `Payment.createManual` /
    * `createFromPublicCheckout` do.
+   *
+   * `origin` is the one recorded on the seat hold at first access, never one
+   * the submit body claims.
    */
-  static createFromPublicCheckout(params: { studentId: string; classGroupId: string; planPriceId: string }): Enrollment {
+  static createFromPublicCheckout(params: {
+    studentId: string;
+    classGroupId: string;
+    planPriceId: string;
+    origin: EnrollmentOrigin;
+  }): Enrollment {
     return new Enrollment({
       id: uuid(),
       studentId: params.studentId,
       classGroupId: params.classGroupId,
       planPriceId: params.planPriceId,
       seatStatus: "reserved",
+      origin: params.origin,
     });
   }
 }

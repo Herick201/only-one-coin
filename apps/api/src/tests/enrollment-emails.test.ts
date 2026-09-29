@@ -9,6 +9,7 @@ import {
   type IEnrollmentRepository,
   type IPlanPriceLookup,
   type IPublicEnrollmentRepository,
+  type ISeatHoldRepository,
   type PublicEnrollmentContext,
   type SubmitPublicEnrollmentParams,
 } from "@ooc/domain";
@@ -24,6 +25,7 @@ import { describe, expect, it } from "vitest";
 
 const STUDENT_ID = "018f2b5c-3000-7000-8000-000000000001";
 const CLASS_GROUP_ID = "018f2b5c-3000-7000-8000-000000000002";
+const HOLD_ID = "5b0e7a52-3c1d-4f7e-9a61-2f3c4d5e6f70";
 const PLAN_ID = "018f2b5c-3000-7000-8000-000000000003";
 const PLAN_PRICE_ID = "018f2b5c-3000-7000-8000-000000000004";
 
@@ -147,12 +149,24 @@ class FakePublicEnrollmentRepository implements IPublicEnrollmentRepository {
   }
 }
 
+/** A hold that is alive for `classGroupId` — the submit only reads its origin. */
+function heldSeat(classGroupId: string): ISeatHoldRepository {
+  const hold = { id: HOLD_ID, classGroupId, origin: "web" as const, expiresAt: new Date(Date.now() + 60_000) };
+  return {
+    claim: async () => ({ kind: "held", hold }),
+    find: async (id) => (id === HOLD_ID ? hold : null),
+    release: async () => true,
+    expireDue: async () => 0,
+  };
+}
+
 describe("SubmitPublicEnrollmentUseCase e-mails", () => {
   it("writes to the student and the minor's guardian in the locale the form was filled in", async () => {
     const repository = new FakePublicEnrollmentRepository();
-    const useCase = new SubmitPublicEnrollmentUseCase(repository);
+    const useCase = new SubmitPublicEnrollmentUseCase(repository, heldSeat(CLASS_GROUP_ID));
 
     await useCase.run({
+      seatHoldId: HOLD_ID,
       classGroupId: CLASS_GROUP_ID,
       planId: PLAN_ID,
       student: {

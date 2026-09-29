@@ -14,6 +14,8 @@ import { getStudentRoute } from "@/http/student/GetStudentRoute.js";
 import { createManualEnrollmentRoute } from "@/http/enrollment/CreateManualEnrollmentRoute.js";
 import { listEnrollmentsRoute } from "@/http/enrollment/ListEnrollmentsRoute.js";
 import { submitPublicEnrollmentRoute } from "@/http/enrollment/SubmitPublicEnrollmentRoute.js";
+import { claimSeatHoldRoute } from "@/http/enrollment/ClaimSeatHoldRoute.js";
+import { releaseSeatHoldRoute } from "@/http/enrollment/ReleaseSeatHoldRoute.js";
 import { listOpenClassGroupsRoute } from "@/http/catalog/ListOpenClassGroupsRoute.js";
 import { getPublicCatalogRoute } from "@/http/catalog/GetPublicCatalogRoute.js";
 import { retireCatalogEntryRoute } from "@/http/catalog/RetireCatalogEntryRoute.js";
@@ -37,6 +39,8 @@ import { completeStaffPasswordResetRoute } from "@/http/identity/CompleteStaffPa
 import { getFeatureFlagStateRoute } from "@/http/platform/GetFeatureFlagStateRoute.js";
 import { listFeatureFlagsRoute } from "@/http/platform/ListFeatureFlagsRoute.js";
 import { setFeatureFlagRoute } from "@/http/platform/SetFeatureFlagRoute.js";
+import { getPlatformSettingsRoute } from "@/http/platform/GetPlatformSettingsRoute.js";
+import { updateCheckoutHoldMinutesRoute } from "@/http/platform/UpdateCheckoutHoldMinutesRoute.js";
 import { container } from "@/container.js";
 
 export async function buildApp(): Promise<FastifyInstance> {
@@ -78,6 +82,8 @@ export async function buildApp(): Promise<FastifyInstance> {
         instance.withTypeProvider<ZodTypeProvider>().route(createManualEnrollmentRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(listEnrollmentsRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(submitPublicEnrollmentRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(claimSeatHoldRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(releaseSeatHoldRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(listOpenClassGroupsRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(getPublicCatalogRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(retireCatalogEntryRoute);
@@ -101,6 +107,8 @@ export async function buildApp(): Promise<FastifyInstance> {
         instance.withTypeProvider<ZodTypeProvider>().route(getFeatureFlagStateRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(listFeatureFlagsRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(setFeatureFlagRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(getPlatformSettingsRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(updateCheckoutHoldMinutesRoute);
         done();
       },
       { prefix: "/api/v1" },

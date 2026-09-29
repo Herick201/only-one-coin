@@ -1478,7 +1478,9 @@
       "receipts_notice": "Mudar um parâmetro vale para os comprovantes que chegarem depois: nunca revalida um pagamento já resolvido.",
       "save": "Salvar alterações",
       "cancel": "Descartar",
-      "saved_toast": "Alterações aplicadas só na tela. Ainda não há servidor conectado."
+      "saved_toast": "Alterações aplicadas só na tela. Ainda não há servidor conectado.",
+      "receipts_saved_toast": "Reserva durante o pagamento salva: vale para as próximas reservas. Os demais parâmetros desta tela ainda mudam só na tela.",
+      "receipts_save_failed_toast": "Não foi possível salvar a reserva durante o pagamento. Tente de novo."
     },
     "features": {
       "title": "Funcionalidades",

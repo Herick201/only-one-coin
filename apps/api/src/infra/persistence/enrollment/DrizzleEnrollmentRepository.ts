@@ -3,6 +3,7 @@ import {
   Enrollment,
   Payment,
   type EmailNotification,
+  type EnrollmentOrigin,
   type IEnrollmentRepository,
   type PaymentMethod,
   type PaymentStatus,
@@ -55,6 +56,7 @@ export class DrizzleEnrollmentRepository implements IEnrollmentRepository {
           classGroupId: enrollment.classGroupId,
           planPriceId: enrollment.planPriceId,
           seatStatus: enrollment.seatStatus,
+          origin: enrollment.origin,
         })
         .returning();
 
@@ -91,6 +93,7 @@ export class DrizzleEnrollmentRepository implements IEnrollmentRepository {
           classGroupId: enrollmentRow.classGroupId,
           planPriceId: enrollmentRow.planPriceId,
           seatStatus: enrollmentRow.seatStatus as SeatStatus,
+          origin: enrollmentRow.origin as EnrollmentOrigin,
         }),
         payment: new Payment({
           id: paymentRow.id,

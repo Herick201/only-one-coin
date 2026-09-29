@@ -14,17 +14,36 @@ import { Notice, Row, SettingsActions, numberClass } from '../settings-ui'
  * clocks. Settings rather than constants for the reason CLAUDE.md §5 gives
  * about the tolerance: changing what a rule means must not require a deploy.
  *
- * Nothing is submitted yet: there is no API behind this screen, and the save
- * button says so.
+ * Only the checkout hold reaches the server so far (`PUT /settings/checkout-
+ * hold`, which appends to `audit_log`); the other three still change on screen
+ * only, and the toast after saving says so.
  */
 export function ReceiptSettingsForm({ settings }: { settings: PaymentSettings }) {
   const t = useTranslations('bo')
   const locale = useLocale() as Locale
 
+  const [saved, setSaved] = useState<PaymentSettings>(settings)
   const [draft, setDraft] = useState<PaymentSettings>(settings)
   const [toast, setToast] = useState<string | null>(null)
 
-  const dirty = JSON.stringify(draft) !== JSON.stringify(settings)
+  const dirty = JSON.stringify(draft) !== JSON.stringify(saved)
+
+  async function save() {
+    if (draft.checkoutHoldMinutes !== saved.checkoutHoldMinutes) {
+      const response = await fetch('/api/v1/settings/checkout-hold', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ minutes: draft.checkoutHoldMinutes }),
+      }).catch(() => null)
+
+      if (!response?.ok) {
+        setToast(t('settings.receipts_save_failed_toast'))
+        return
+      }
+    }
+    setSaved(draft)
+    setToast(t('settings.receipts_saved_toast'))
+  }
 
   function set<K extends keyof PaymentSettings>(key: K, value: PaymentSettings[K]) {
     setDraft({ ...draft, [key]: value })
@@ -122,8 +141,8 @@ export function ReceiptSettingsForm({ settings }: { settings: PaymentSettings })
 
       <SettingsActions
         dirty={dirty}
-        onSave={() => setToast(t('settings.saved_toast'))}
-        onCancel={() => setDraft(settings)}
+        onSave={() => void save()}
+        onCancel={() => setDraft(saved)}
       />
 
       <Toast message={toast} onDismiss={() => setToast(null)} />

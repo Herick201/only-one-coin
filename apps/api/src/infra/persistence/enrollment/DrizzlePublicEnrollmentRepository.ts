@@ -1,9 +1,10 @@
 import {
-  ClassGroupFullError,
   Enrollment,
   Guardian,
   Payment,
+  SeatHoldExpiredError,
   Student,
+  type EnrollmentOrigin,
   type GuardianRelationship,
   type IPublicEnrollmentRepository,
   type NationalIdType,
@@ -14,8 +15,8 @@ import {
   type SubmitPublicEnrollmentParams,
   type SubmitPublicEnrollmentResult,
 } from "@ooc/domain";
-import { classGroups, consents, courses, enrollments, guardians, payments, planPrices, plans, students } from "@ooc/db";
-import { and, eq, isNull, lt, lte, desc, sql } from "drizzle-orm";
+import { classGroups, consents, courses, enrollments, guardians, payments, planPrices, plans, seatHolds, students } from "@ooc/db";
+import { and, eq, gt, isNull, lte, desc, sql } from "drizzle-orm";
 import type { Db } from "@/infra/db/client.js";
 import { insertOutboxEmails } from "@/infra/persistence/notification/DrizzleOutboxRepository.js";
 
@@ -85,18 +86,27 @@ export class DrizzlePublicEnrollmentRepository implements IPublicEnrollmentRepos
         return this.loadResult(tx, existingPayment.id);
       }
 
-      // The same atomic instruction CLAUDE.md §5 requires — seat validation
-      // never happens in application code, only in this WHERE clause.
-      const [reservedSeat] = await tx
-        .update(classGroups)
-        .set({ seatsTaken: sql`${classGroups.seatsTaken} + 1` })
+      // The seat was taken when the hold was claimed (DrizzleSeatHoldRepository
+      // .claim, the atomic `seats_taken + 1` of apps/api/CLAUDE.md). Here it
+      // only changes hands: the hold must still be alive on the database
+      // clock, and FOR UPDATE keeps the expiry sweep off it until this
+      // transaction ends — the sweep skips locked rows, so a submit that got
+      // here first is never undercut by a seat handed back underneath it.
+      const [liveHold] = await tx
+        .select({ id: seatHolds.id })
+        .from(seatHolds)
         .where(
-          and(eq(classGroups.id, params.enrollment.classGroupId), lt(classGroups.seatsTaken, classGroups.capacity)),
+          and(
+            eq(seatHolds.id, params.seatHoldId),
+            eq(seatHolds.classGroupId, params.enrollment.classGroupId),
+            eq(seatHolds.status, "active"),
+            gt(seatHolds.expiresAt, sql`now()`),
+          ),
         )
-        .returning({ seatsTaken: classGroups.seatsTaken });
+        .for("update");
 
-      if (!reservedSeat) {
-        throw new ClassGroupFullError();
+      if (!liveHold) {
+        throw new SeatHoldExpiredError();
       }
 
       // One person, one record (CLAUDE.md §1): the document decides, not the
@@ -239,12 +249,18 @@ export class DrizzlePublicEnrollmentRepository implements IPublicEnrollmentRepos
           classGroupId: params.enrollment.classGroupId,
           planPriceId: params.enrollment.planPriceId,
           seatStatus: params.enrollment.seatStatus,
+          origin: params.enrollment.origin,
         })
         .returning();
 
       if (!enrollmentRow) {
         throw new Error("Insert into enrollments returned no row");
       }
+
+      await tx
+        .update(seatHolds)
+        .set({ status: "consumed", enrollmentId: enrollmentRow.id, settledAt: sql`now()`, updatedAt: sql`now()` })
+        .where(eq(seatHolds.id, liveHold.id));
 
       const [paymentRow] = await tx
         .insert(payments)
@@ -290,6 +306,7 @@ export class DrizzlePublicEnrollmentRepository implements IPublicEnrollmentRepos
           classGroupId: enrollmentRow.classGroupId,
           planPriceId: enrollmentRow.planPriceId,
           seatStatus: enrollmentRow.seatStatus as SeatStatus,
+          origin: enrollmentRow.origin as EnrollmentOrigin,
         }),
         payment: new Payment({
           id: paymentRow.id,
@@ -352,6 +369,7 @@ export class DrizzlePublicEnrollmentRepository implements IPublicEnrollmentRepos
         classGroupId: enrollmentRow.classGroupId,
         planPriceId: enrollmentRow.planPriceId,
         seatStatus: enrollmentRow.seatStatus as SeatStatus,
+        origin: enrollmentRow.origin as EnrollmentOrigin,
       }),
       payment: new Payment({
         id: paymentRow.id,

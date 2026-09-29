@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { getStaffSession } from '@/lib/backoffice/session'
 import { getGeneralSettings } from '@/lib/backoffice/settings'
+import { getPlatformSettings } from '@/lib/backoffice/platform-settings'
 import { canConfigureSettings } from '@/lib/backoffice/permissions'
 import { EmptyState, PageHeader } from '@/components/backoffice/ui'
 import { SectionTabs } from '@/components/backoffice/section-tabs'
@@ -43,6 +44,14 @@ export default async function ReceiptSettingsPage({
     )
   }
 
+  // The checkout hold is the one number here `apps/api` already enforces, so it
+  // is read from there; the rest is still the screen-only defaults.
+  const platform = await getPlatformSettings()
+  const receipts = {
+    ...getGeneralSettings().receipts,
+    ...(platform ? { checkoutHoldMinutes: platform.checkoutHoldMinutes } : {}),
+  }
+
   return (
     <div className="flex flex-col gap-5">
       <PageHeader title={t('settings.title')} />
@@ -59,7 +68,7 @@ export default async function ReceiptSettingsPage({
           },
         ]}
       />
-      <ReceiptSettingsForm settings={getGeneralSettings().receipts} />
+      <ReceiptSettingsForm settings={receipts} />
     </div>
   )
 }

@@ -70,6 +70,15 @@ Enviado o comprovante, a vaga **continua `reserved`** e passa a correr no relóg
 
 Os dois prazos são **configuráveis no backoffice** (`/backoffice/settings`), nunca constante no código — mesma regra da tolerância de valor.
 
+**Como o hold curto está implementado (29/09/2026):**
+
+- A vaga é presa numa linha de `seat_holds`, não em `enrollments` — no passo da turma ainda não existe aluno. O claim faz o `UPDATE … seats_taken + 1` acima e grava o hold na mesma transação; o **submit consome o hold** (troca a vaga de mãos) e nunca incrementa `seats_taken` de novo.
+- **Um relógio só, o do Postgres.** `expires_at` é carimbado com `now()` do banco, e o submit e a varredura comparam com `now()` também. O contador do navegador é conforto; o submit recusa hold vencido (`enrollment.seat_hold_expired`) mesmo que a varredura ainda não tenha passado.
+- A varredura (`seat-hold-sweep`, BullMQ job scheduler no mesmo processo) expira e devolve em **uma instrução**, com `FOR UPDATE SKIP LOCKED` — o submit trava o hold com `FOR UPDATE`, então os dois nunca devolvem e consomem a mesma vaga.
+- `released` (o checkout trocou de turma) e `expired` (a varredura) são estados separados de propósito: a taxa de expiração é o dado que decide se os minutos mudam de novo.
+- Os minutos vivem em `platform_settings` (linha única, CHECK 5–60), mudam por usecase com `audit_log`, e valem para o próximo hold — nunca para um que já está correndo.
+- **O relógio longo (5 dias) ainda não tem cron.** A regra acima vale; a implementação é pendência.
+
 ## Origem da matrícula (atribuição de canal)
 
 Toda matrícula grava **de onde veio** — hoje `whatsapp` (link mandado pelo vendedor depois da venda fechada) ou `web` (a pessoa chegou sozinha pela landing). É campo do domínio, não analytics: fica na própria `enrollments`, não só no PostHog, porque a coordenação precisa responder "quantas matrículas o zap trouxe neste ciclo" dentro do backoffice, e porque analytics de borda se perde com bloqueador de anúncio.
@@ -77,7 +86,8 @@ Toda matrícula grava **de onde veio** — hoje `whatsapp` (link mandado pelo ve
 - Mora na **matrícula**, não no aluno. A mesma pessoa pode voltar por outro canal no ciclo seguinte; um campo no aluno perderia o histórico.
 - Capturado no **primeiro acesso** ao checkout e carregado até o submit — se a pessoa recarregar ou sair pra pagar, a origem não se perde.
 - Valor **nunca vem confiado do cliente** como texto livre: é união fechada, e qualquer coisa fora dela cai em `web`.
-- Os parâmetros de campanha (`utm_*`) andam junto, mas separados, para relatório — a origem é o dado de negócio, o `utm` é o detalhe da peça.
+- Os parâmetros de campanha (`utm_*`) andam junto, mas separados, para relatório — a origem é o dado de negócio, o `utm` é o detalhe da peça. **Ainda não gravados no servidor** (só no rascunho do navegador).
+- **Caminho da origem até a linha:** o navegador resolve `src` na chegada e manda com o claim do hold; o servidor guarda no `seat_holds.origin` e o submit copia **do hold** para `enrollments.origin` — o body do submit não tem campo de origem. Matrícula manual grava `whatsapp` (`Enrollment.createManual`).
 
 O link do WhatsApp é URL comum com `?course=&group=&src=whatsapp` — **prefill e atribuição, não token**: sem segredo, sem autenticação e sem preço embutido (o valor vem sempre do `plan_price` vigente, lido no servidor). Isso é o que o mantém compatível com `CLAUDE.md` §2, "sem links de matrícula tokenizados".
 
