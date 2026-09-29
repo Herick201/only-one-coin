@@ -11,6 +11,11 @@ const CONSENT_VERSION = "v1";
 
 const SubmitPublicEnrollmentBodySchema = z
   .object({
+    // The hold claimed when the checkout settled on the class group
+    // (ClaimSeatHoldRoute). Its seat and its channel become this
+    // enrollment's; an expired or unknown hold is a 422, and the checkout
+    // starts again from the class group step.
+    holdId: z.string().uuid(),
     classGroupId: z.string().uuid(),
     planId: z.string().uuid(),
     student: CreateStudentSchema,
@@ -56,7 +61,7 @@ export const submitPublicEnrollmentRoute = RouteBuilder.post("/enrollments/publi
     tags: ["Enrollments"],
     summary: "Submit the public enrollment checkout",
     description:
-      "Creates the student (and guardian, if a minor), claims a seat and opens the enrollment with its payment pending. Reduced slice: no receipt upload, no OCR.",
+      "Creates the student (and guardian, if a minor), turns the checkout seat hold into the enrollment and opens its payment pending. Reduced slice: no receipt upload, no OCR.",
   })
   .public()
   .body(SubmitPublicEnrollmentBodySchema)
@@ -65,9 +70,10 @@ export const submitPublicEnrollmentRoute = RouteBuilder.post("/enrollments/publi
   .response(404, ErrorResponseSchema)
   .response(422, ErrorResponseSchema)
   .handler(async (request, reply) => {
-    const { classGroupId, planId, student, guardian, payment, locale } = request.body;
+    const { holdId, classGroupId, planId, student, guardian, payment, locale } = request.body;
 
     const result = await container.useCases.enrollment.submitPublic.run({
+      seatHoldId: holdId,
       classGroupId,
       planId,
       student,

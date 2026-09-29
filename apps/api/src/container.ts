@@ -1,14 +1,17 @@
 import type { FastifyBaseLogger } from "fastify";
 import {
   CancelStaffInviteUseCase,
+  ClaimSeatHoldUseCase,
   CancelStaffPasswordResetUseCase,
   CompleteStaffInviteUseCase,
   CompleteStaffPasswordResetUseCase,
   CreateManualEnrollmentUseCase,
   CreateStaffInviteUseCase,
   CreateStaffPasswordResetUseCase,
+  ExpireSeatHoldsUseCase,
   PromoteUserRoleUseCase,
   RegisterStudentUseCase,
+  ReleaseSeatHoldUseCase,
   RetireCatalogEntryUseCase,
   RemoveStaffAccessUseCase,
   RenewStaffInviteUseCase,
@@ -17,6 +20,7 @@ import {
   RestoreStaffAccessUseCase,
   SetFeatureFlagOverrideUseCase,
   SubmitPublicEnrollmentUseCase,
+  UpdateCheckoutHoldMinutesUseCase,
   type IAuditLogRepository,
   type ICatalogEntryRepository,
   type ICurrentSessionPort,
@@ -25,7 +29,9 @@ import {
   type IFreshAuthVerifier,
   type IGuardianRepository,
   type IPlanPriceLookup,
+  type IPlatformSettingsRepository,
   type IPublicEnrollmentRepository,
+  type ISeatHoldRepository,
   type IStaffAccessRepository,
   type IStaffAccountProvisioner,
   type IStaffInviteRepository,
@@ -54,6 +60,7 @@ import { DrizzleGuardianRepository } from "./infra/persistence/student/DrizzleGu
 import { DrizzleEnrollmentRepository } from "./infra/persistence/enrollment/DrizzleEnrollmentRepository.js";
 import { DrizzlePublicEnrollmentRepository } from "./infra/persistence/enrollment/DrizzlePublicEnrollmentRepository.js";
 import { DrizzlePlanPriceLookup } from "./infra/persistence/enrollment/DrizzlePlanPriceLookup.js";
+import { DrizzleSeatHoldRepository } from "./infra/persistence/enrollment/DrizzleSeatHoldRepository.js";
 import { ListStudentsQuery } from "./infra/persistence/student/ListStudentsQuery.js";
 import { GetStudentQuery } from "./infra/persistence/student/GetStudentQuery.js";
 import { ListEnrollmentsQuery } from "./infra/persistence/enrollment/ListEnrollmentsQuery.js";
@@ -63,6 +70,7 @@ import { DrizzleCatalogEntryRepository } from "./infra/persistence/catalog/Drizz
 import { ListStaffQuery } from "./infra/persistence/identity/ListStaffQuery.js";
 import { ListStaffRoleChangesQuery } from "./infra/persistence/identity/ListStaffRoleChangesQuery.js";
 import { DrizzleFeatureFlagOverrideRepository } from "./infra/persistence/platform/DrizzleFeatureFlagOverrideRepository.js";
+import { DrizzlePlatformSettingsRepository } from "./infra/persistence/platform/DrizzlePlatformSettingsRepository.js";
 import { DrizzleEnrollmentEmailContextLookup } from "./infra/persistence/enrollment/DrizzleEnrollmentEmailContextLookup.js";
 import { DrizzleOutboxRepository, type IOutboxStore } from "./infra/persistence/notification/DrizzleOutboxRepository.js";
 import { createNotificationProvider } from "./infra/notification/createNotificationProvider.js";
@@ -74,10 +82,12 @@ export interface AppRepositories {
   guardian: IGuardianRepository;
   enrollment: IEnrollmentRepository;
   publicEnrollment: IPublicEnrollmentRepository;
+  seatHold: ISeatHoldRepository;
   planPriceLookup: IPlanPriceLookup;
   staffInvite: IStaffInviteRepository;
   staffPasswordReset: IStaffPasswordResetRepository;
   featureFlagOverride: IFeatureFlagOverrideRepository;
+  platformSettings: IPlatformSettingsRepository;
 }
 
 export interface AppUseCases {
@@ -87,6 +97,9 @@ export interface AppUseCases {
   enrollment: {
     createManual: CreateManualEnrollmentUseCase;
     submitPublic: SubmitPublicEnrollmentUseCase;
+    claimSeatHold: ClaimSeatHoldUseCase;
+    releaseSeatHold: ReleaseSeatHoldUseCase;
+    expireSeatHolds: ExpireSeatHoldsUseCase;
   };
   staff: {
     promoteRole: PromoteUserRoleUseCase;
@@ -103,6 +116,7 @@ export interface AppUseCases {
   };
   platform: {
     setFeatureFlag: SetFeatureFlagOverrideUseCase;
+    updateCheckoutHoldMinutes: UpdateCheckoutHoldMinutesUseCase;
   };
   catalog: {
     retire: RetireCatalogEntryUseCase;
@@ -168,6 +182,8 @@ function buildContainer(): AppContainer {
   const enrollmentRepository = new DrizzleEnrollmentRepository(db);
   const publicEnrollmentRepository = new DrizzlePublicEnrollmentRepository(db);
   const planPriceLookup = new DrizzlePlanPriceLookup(db);
+  const seatHoldRepository = new DrizzleSeatHoldRepository(db);
+  const platformSettingsRepository = new DrizzlePlatformSettingsRepository(db);
   const userRoleRepository = new DrizzleUserRoleRepository(db);
   const auditLogRepository = new DrizzleAuditLogRepository(db);
   const staffInviteRepository = new DrizzleStaffInviteRepository(db);
@@ -191,7 +207,10 @@ function buildContainer(): AppContainer {
     planPriceLookup,
     enrollmentEmailContextLookup,
   );
-  const submitPublicEnrollment = new SubmitPublicEnrollmentUseCase(publicEnrollmentRepository);
+  const submitPublicEnrollment = new SubmitPublicEnrollmentUseCase(publicEnrollmentRepository, seatHoldRepository);
+  const claimSeatHold = new ClaimSeatHoldUseCase(seatHoldRepository, platformSettingsRepository);
+  const releaseSeatHold = new ReleaseSeatHoldUseCase(seatHoldRepository);
+  const expireSeatHolds = new ExpireSeatHoldsUseCase(seatHoldRepository);
   const promoteRole = new PromoteUserRoleUseCase(freshAuthVerifier, userRoleRepository, auditLogRepository);
   const createInvite = new CreateStaffInviteUseCase(staffUserLookup, staffInviteRepository, auditLogRepository);
   const renewInvite = new RenewStaffInviteUseCase(staffInviteRepository, auditLogRepository);
@@ -209,6 +228,7 @@ function buildContainer(): AppContainer {
   );
 
   const setFeatureFlag = new SetFeatureFlagOverrideUseCase(featureFlagOverrideRepository, auditLogRepository);
+  const updateCheckoutHoldMinutes = new UpdateCheckoutHoldMinutesUseCase(platformSettingsRepository, auditLogRepository);
 
   const retireCatalogEntry = new RetireCatalogEntryUseCase(catalogEntryRepository, auditLogRepository);
   const restoreCatalogEntry = new RestoreCatalogEntryUseCase(catalogEntryRepository, auditLogRepository);
@@ -248,10 +268,12 @@ function buildContainer(): AppContainer {
       guardian: guardianRepository,
       enrollment: enrollmentRepository,
       publicEnrollment: publicEnrollmentRepository,
+      seatHold: seatHoldRepository,
       planPriceLookup,
       staffInvite: staffInviteRepository,
       staffPasswordReset: staffPasswordResetRepository,
       featureFlagOverride: featureFlagOverrideRepository,
+      platformSettings: platformSettingsRepository,
     },
     useCases: {
       student: {
@@ -260,6 +282,9 @@ function buildContainer(): AppContainer {
       enrollment: {
         createManual: createManualEnrollment,
         submitPublic: submitPublicEnrollment,
+        claimSeatHold,
+        releaseSeatHold,
+        expireSeatHolds,
       },
       staff: {
         promoteRole,
@@ -276,6 +301,7 @@ function buildContainer(): AppContainer {
       },
       platform: {
         setFeatureFlag,
+        updateCheckoutHoldMinutes,
       },
       catalog: {
         retire: retireCatalogEntry,

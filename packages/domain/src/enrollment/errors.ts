@@ -31,6 +31,22 @@ export class ClassGroupNotFoundError extends NotFoundError {
   }
 }
 
+/**
+ * The checkout hold is gone — it ran out, was released, or never existed —
+ * so the seat it held may already belong to somebody else. The checkout
+ * starts again from the class group step (apps/api/CLAUDE.md, "Dois
+ * relógios").
+ */
+export class SeatHoldExpiredError extends UnableToProcessEntryError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({
+      reason: "enrollment.seat_hold_expired",
+      message: "The seat hold expired or does not exist.",
+      ...params,
+    });
+  }
+}
+
 export class StudentBelowMinimumAgeError extends UnableToProcessEntryError {
   constructor(params?: { path?: string; cause?: unknown }) {
     super({

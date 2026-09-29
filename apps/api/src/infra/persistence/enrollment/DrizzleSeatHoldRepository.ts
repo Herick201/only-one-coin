@@ -1,0 +1,154 @@
+import type { ClaimSeatHoldResult, EnrollmentOrigin, ISeatHoldRepository, SeatHold } from "@ooc/domain";
+import { classGroups, courses, seatHolds } from "@ooc/db";
+import { and, eq, isNull, lt, sql } from "drizzle-orm";
+import type { Db } from "@/infra/db/client.js";
+
+/**
+ * The checkout hold against the class group's seat counter. Every seat taken
+ * or given back here is one atomic statement whose WHERE clause is the whole
+ * check (apps/api/CLAUDE.md, "Vagas — condição de corrida"); nothing reads the
+ * counter first and decides in application code.
+ *
+ * Lock order is always seat_holds → class_groups (release, expiry) or
+ * class_groups alone followed by a fresh insert (claim), and the submit only
+ * ever locks the hold — no two paths can wait on each other in a cycle.
+ */
+export class DrizzleSeatHoldRepository implements ISeatHoldRepository {
+  constructor(private readonly db: Db) {}
+
+  async claim(params: {
+    classGroupId: string;
+    origin: EnrollmentOrigin;
+    holdMinutes: number;
+  }): Promise<ClaimSeatHoldResult> {
+    return this.db.transaction(async (tx) => {
+      // What the public checkout may sell: open, not retired, and its course
+      // not retired either (CLAUDE.md §1, "Catálogo sai do ar, não some").
+      const onOffer = and(
+        eq(classGroups.id, params.classGroupId),
+        eq(classGroups.status, "enrolling"),
+        isNull(classGroups.deletedAt),
+        sql`exists (select 1 from ${courses} where ${courses.id} = ${classGroups.courseId} and ${courses.deletedAt} is null)`,
+      );
+
+      const [seat] = await tx
+        .update(classGroups)
+        .set({ seatsTaken: sql`${classGroups.seatsTaken} + 1` })
+        .where(and(onOffer, lt(classGroups.seatsTaken, classGroups.capacity)))
+        .returning({ id: classGroups.id });
+
+      if (!seat) {
+        // Only to tell "full" from "gone" — the decision was already the
+        // UPDATE's, and nothing is written on this path.
+        const [exists] = await tx.select({ id: classGroups.id }).from(classGroups).where(onOffer).limit(1);
+        return exists ? { kind: "full" } : { kind: "not_found" };
+      }
+
+      const [row] = await tx
+        .insert(seatHolds)
+        .values({
+          classGroupId: params.classGroupId,
+          origin: params.origin,
+          // The database clock, not this process's: the submit and the sweep
+          // compare against `now()` too, and one clock cannot disagree with
+          // itself.
+          expiresAt: sql`now() + make_interval(mins => ${params.holdMinutes}::int)`,
+        })
+        .returning();
+
+      if (!row) {
+        throw new Error("Insert into seat_holds returned no row");
+      }
+
+      return {
+        kind: "held",
+        hold: {
+          id: row.id,
+          classGroupId: row.classGroupId,
+          origin: row.origin as EnrollmentOrigin,
+          expiresAt: row.expiresAt,
+        },
+      };
+    });
+  }
+
+  async find(id: string): Promise<SeatHold | null> {
+    const [row] = await this.db
+      .select({
+        id: seatHolds.id,
+        classGroupId: seatHolds.classGroupId,
+        origin: seatHolds.origin,
+        expiresAt: seatHolds.expiresAt,
+      })
+      .from(seatHolds)
+      .where(eq(seatHolds.id, id))
+      .limit(1);
+
+    return row ? { ...row, origin: row.origin as EnrollmentOrigin } : null;
+  }
+
+  async release(id: string): Promise<boolean> {
+    // One statement: the hold leaves `active` and its seat goes back, or
+    // neither happens. A hold that already left `active` matches nothing, so
+    // a second release never hands back a second seat.
+    const result = await this.db.execute<{ id: string }>(sql`
+      with released as (
+        update ${seatHolds}
+           set "status" = 'released', "settled_at" = now(), "updated_at" = now()
+         where "id" = ${id} and "status" = 'active'
+        returning "class_group_id"
+      )
+      update ${classGroups} g
+         set "seats_taken" = g."seats_taken" - 1
+        from released
+       where g."id" = released."class_group_id"
+      returning g."id" as "id"
+    `);
+
+    return result.rows.length > 0;
+  }
+
+  async expireDue(limit: number): Promise<number> {
+    // One statement for the whole batch: the holds whose clock ran out become
+    // `expired` and their class groups get the seats back, grouped so a class
+    // group losing three holds at once is updated once.
+    //
+    // SKIP LOCKED is what keeps this out of a submit's way: a hold the submit
+    // has locked (FOR UPDATE in DrizzlePublicEnrollmentRepository) is left
+    // for the next tick, by which time it is either consumed or still due.
+    // Data-modifying CTEs always run to completion, whether or not the final
+    // SELECT reads them.
+    const result = await this.db.execute<{ expired: number }>(sql`
+      with due as (
+        select "id"
+          from ${seatHolds}
+         where "status" = 'active' and "expires_at" <= now()
+         order by "expires_at"
+         limit ${limit}
+           for update skip locked
+      ),
+      expired as (
+        update ${seatHolds} h
+           set "status" = 'expired', "settled_at" = now(), "updated_at" = now()
+          from due
+         where h."id" = due."id"
+        returning h."class_group_id"
+      ),
+      per_group as (
+        select "class_group_id", count(*)::int as n
+          from expired
+         group by "class_group_id"
+      ),
+      returned as (
+        update ${classGroups} g
+           set "seats_taken" = g."seats_taken" - per_group.n
+          from per_group
+         where g."id" = per_group."class_group_id"
+        returning g."id"
+      )
+      select count(*)::int as "expired" from expired
+    `);
+
+    return result.rows[0]?.expired ?? 0;
+  }
+}

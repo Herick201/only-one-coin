@@ -51,12 +51,14 @@ src/
     RootRoute.ts, HealthCheckRoute.ts
     auth/AuthCatchAllRoute.ts            # traduz erro nativo do Better Auth pro envelope do projeto
     catalog/                              # GetPublicCatalogRoute, ListOpenClassGroupsRoute, RetireCatalogEntryRoute, RestoreCatalogEntryRoute
-    enrollment/                           # SubmitPublicEnrollmentRoute (checkout público), CreateManualEnrollmentRoute e ListEnrollmentsRoute (backoffice)
+    enrollment/                           # ClaimSeatHoldRoute, ReleaseSeatHoldRoute e SubmitPublicEnrollmentRoute (checkout público), CreateManualEnrollmentRoute e ListEnrollmentsRoute (backoffice)
     identity/                             # staff: convite, promoção de cargo, acesso, redefinição de senha, bitácora
-    platform/                             # feature flags: Get/List/Set
+    platform/                             # feature flags: Get/List/Set; settings: GetPlatformSettings, UpdateCheckoutHoldMinutes
     student/                              # GetStudentRoute, ListStudentsRoute, RegisterStudentRoute
   workers/
-    send-email.worker.ts       # consome a fila send-email de @ooc/queue — hoje só loga (stub, ver Pendências)
+    outbox-relay.worker.ts     # a cada 5 s oferece as linhas pending da outbox à fila send-email
+    send-email.worker.ts       # entrega pelo NotificationProvider (Brevo, atrás da allowlist)
+    seat-hold-sweep.worker.ts  # a cada 30 s expira os holds de checkout vencidos e devolve as vagas
   infra/
     db/client.ts                  # pg.Pool + drizzle(), aponta pro Postgres local ou Neon via DATABASE_URL
     logger.ts                     # pino compartilhado (container.logger)
@@ -73,7 +75,8 @@ src/
     report-duplicate-students.ts                 # lista documento repetido e quantas matrículas cada cópia carrega — passo prévio ao índice único de (national_id_type, national_id), CLAUDE.md §1
     import-legacy-enrollments.ts, legacy-import/  # importador da base antiga (dry-run, deduplicação)
   tests/
-    register-student-dedupe.test.ts, soft-deletable-model.test.ts, retire-catalog-entry.test.ts, seed-students.test.ts, seed-enrollments.test.ts
+    register-student-dedupe.test.ts, soft-deletable-model.test.ts, retire-catalog-entry.test.ts, seed-students.test.ts, seed-enrollments.test.ts, seat-hold.test.ts, enrollment-emails.test.ts, …
+    (e ao lado dos repositórios: *.integration.test.ts, rodados por test:db contra Postgres migrado)
   shared/http/RouteBuilder.ts, ErrorResponseSchema.ts
 ```
 
@@ -103,10 +106,28 @@ substituída pelos bounded contexts reais acima.
   é o passo prévio (lista as duplicatas já na base) antes da migration do
   índice parcial.
 - **OCR**: não iniciado. O checkout público (`SubmitPublicEnrollmentRoute`)
-  já grava `payments`/`payment_receipts` e reserva a vaga atomicamente com
-  idempotency key, mas não enfileira job de extração, não tem upload por
-  signed URL, magic bytes nem Turnstile/rate limit — é uma fatia
-  deliberadamente reduzida do funil (`docs/ROADMAP.md`, Sessões 23/25/26).
+  já grava `payments`/`payment_receipts` com idempotency key, mas não
+  enfileira job de extração, não tem upload por signed URL, magic bytes nem
+  Turnstile/rate limit — é uma fatia deliberadamente reduzida do funil
+  (`docs/ROADMAP.md`, Sessões 23/25/26).
+- **Hold de checkout (relógio curto)**: real. `POST /seat-holds` prende a vaga
+  com o `UPDATE … WHERE seats_taken < capacity` atômico e grava a linha em
+  `seat_holds` com `expires_at` pelo relógio do Postgres (minutos lidos de
+  `platform_settings`, editáveis em `PUT /settings/checkout-hold`, com
+  `audit_log`). O submit exige `holdId` e **consome** o hold (não incrementa
+  a vaga de novo); hold vencido ou desconhecido → 422
+  `enrollment.seat_hold_expired`. `POST /seat-holds/:id/release` devolve a
+  vaga quando o checkout troca de turma; o `seat-hold-sweep.worker.ts` (a cada
+  30 s) expira os vencidos e devolve as vagas numa instrução só. Sem Turnstile
+  nem rate limit, um script consegue prender vagas pelo tempo de um hold — o
+  mesmo buraco que o submit já tinha, fechado na Sessão 25.
+- **Relógio longo (janela de revisão de 5 dias)**: não existe. Nenhum cron
+  devolve a vaga de uma matrícula `reserved` cujo pagamento ficou parado.
+- **Origem da matrícula**: real. O checkout manda a `source` resolvida na
+  chegada junto com o claim do hold; o servidor a guarda no hold e a copia
+  para `enrollments.origin` no submit (nunca do body do submit). A matrícula
+  manual grava `whatsapp`. Os `utm_*` ainda **não** são gravados — ficam só
+  no rascunho do navegador.
 - **E-mail transacional**: real. As duas matrículas (checkout público e manual)
   gravam o "matrícula recebida" na tabela `outbox` na mesma transação; o
   `outbox-relay.worker.ts` (a cada 5 s) oferece as linhas `pending` à fila

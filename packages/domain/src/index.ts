@@ -81,8 +81,19 @@ export {
   ClassGroupFullError,
   ClassGroupNotFoundError,
   PlanPriceNotFoundError,
+  SeatHoldExpiredError,
   StudentBelowMinimumAgeError,
 } from "./enrollment/errors.js";
+export {
+  EnrollmentOriginSchema,
+  EnrollmentOriginInputSchema,
+  type EnrollmentOrigin,
+} from "./enrollment/EnrollmentOrigin.js";
+export type { SeatHold } from "./enrollment/SeatHold.js";
+export type { ISeatHoldRepository, ClaimSeatHoldResult } from "./enrollment/SeatHoldRepository.js";
+export { ClaimSeatHoldUseCase, type ClaimSeatHoldInput } from "./enrollment/ClaimSeatHoldUseCase.js";
+export { ReleaseSeatHoldUseCase } from "./enrollment/ReleaseSeatHoldUseCase.js";
+export { ExpireSeatHoldsUseCase, EXPIRE_SEAT_HOLDS_BATCH } from "./enrollment/ExpireSeatHoldsUseCase.js";
 export {
   CreateManualEnrollmentUseCase,
   type CreateManualEnrollmentInput,
@@ -181,7 +192,18 @@ export type {
   FeatureFlagOverrideView,
 } from "./platform/FeatureFlagOverride.js";
 export type { IFeatureFlagOverrideRepository } from "./platform/ports/IFeatureFlagOverrideRepository.js";
-export { NotAPlatformOwnerError } from "./platform/errors.js";
+export { NotAPlatformOwnerError, InvalidPlatformSettingError } from "./platform/errors.js";
+export {
+  CHECKOUT_HOLD_MINUTES_MIN,
+  CHECKOUT_HOLD_MINUTES_MAX,
+  CheckoutHoldMinutesSchema,
+  type PlatformSettings,
+} from "./platform/PlatformSettings.js";
+export type { IPlatformSettingsRepository } from "./platform/ports/IPlatformSettingsRepository.js";
+export {
+  UpdateCheckoutHoldMinutesUseCase,
+  type UpdateCheckoutHoldMinutesInput,
+} from "./platform/UpdateCheckoutHoldMinutesUseCase.js";
 export {
   SetFeatureFlagOverrideUseCase,
   type SetFeatureFlagOverrideInput,

@@ -21,6 +21,10 @@ export interface PublicEnrollmentContext {
 }
 
 export interface SubmitPublicEnrollmentParams {
+  /** Consumed in the same transaction: it must still be `active`, unexpired
+   * on the database clock and for the same class group, or the submit fails
+   * with `SeatHoldExpiredError` and writes nothing. */
+  seatHoldId: string;
   student: Student;
   guardian: Guardian | null;
   /** Present only when `guardian` is — the guardian is who accepts,
@@ -42,13 +46,17 @@ export interface SubmitPublicEnrollmentResult {
 
 /**
  * One atomic unit, same reasoning as `IEnrollmentRepository`: student,
- * guardian, consent, the seat claim, the enrollment and the payment all
- * succeed together or none of them do — a self-enrollment can never leave a
- * student row behind with no seat to show for it.
+ * guardian, consent, consuming the seat hold, the enrollment and the payment
+ * all succeed together or none of them do — a self-enrollment can never leave
+ * a student row behind with no seat to show for it.
+ *
+ * The seat itself was already taken when the hold was claimed
+ * (`ISeatHoldRepository.claim`); the submit passes it to the enrollment and
+ * never touches `seats_taken` again.
  *
  * Idempotency (CLAUDE.md §5) is handled by checking `payment.idempotencyKey`
  * first, inside the same transaction: a retry with the same key returns the
- * row the first attempt already created instead of claiming a second seat.
+ * row the first attempt already created instead of consuming anything.
  *
  * Identity resolution belongs to the same transaction, for the same reason:
  * `params.student` is who the form says is enrolling, not necessarily a new

@@ -71,12 +71,12 @@ const PROVISIONAL_ACCOUNTS = [
   { method: "bcp" as const, holder: "Asociación Only One Coin Perú", number: "191-9999999-0-99", interbankCode: "00219199999999099", hasQr: false },
 ];
 
-// This reduced slice's hold is still client-side only (docs/ROADMAP.md
-// Sessão 24 not built) — holdMinutes/reservationDays travel with the
-// catalog anyway so the client never hardcodes them, even while nothing
-// server-side enforces the first one yet.
+// `holdMinutes` is not here: it is the backoffice's (platform_settings) and is
+// read per request below. It only tells the checkout how long the hold it is
+// about to claim will last — the deadline itself comes back from
+// ClaimSeatHoldRoute. The rest is still provisional: no server-side reader
+// of the review window yet.
 const PROVISIONAL_SETTINGS = {
-  holdMinutes: 15,
   reservationDays: 5,
   maxReceiptBytes: 8 * 1024 * 1024,
   consentVersion: "v1",
@@ -91,7 +91,10 @@ export const getPublicCatalogRoute = RouteBuilder.get("/catalog")
   .public()
   .response(200, GetPublicCatalogResponseSchema)
   .handler(async (_request, reply) => {
-    const catalog = await container.queries.getPublicCatalog.run();
+    const [catalog, platformSettings] = await Promise.all([
+      container.queries.getPublicCatalog.run(),
+      container.repositories.platformSettings.get(),
+    ]);
 
     const languages = [...new Map(catalog.courses.map((course) => [course.language, course.language])).keys()].map(
       (language) => ({ id: language, name: language }),
@@ -121,6 +124,6 @@ export const getPublicCatalogRoute = RouteBuilder.get("/catalog")
         seatsTaken: group.seatsTaken,
       })),
       accounts: PROVISIONAL_ACCOUNTS,
-      settings: PROVISIONAL_SETTINGS,
+      settings: { ...PROVISIONAL_SETTINGS, holdMinutes: platformSettings.checkoutHoldMinutes },
     });
   });
