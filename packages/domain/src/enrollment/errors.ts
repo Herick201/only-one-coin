@@ -56,3 +56,43 @@ export class StudentBelowMinimumAgeError extends UnableToProcessEntryError {
     });
   }
 }
+
+/** No receipt upload row with that id, or it belongs to a different seat
+ * hold — the two cases are indistinguishable on purpose (anti-IDOR, CLAUDE.md
+ * §8): a client fishing for someone else's upload id learns nothing it
+ * couldn't already guess. */
+export class ReceiptUploadNotFoundError extends NotFoundError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({
+      reason: "enrollment.receipt_upload_not_found",
+      message: "No receipt upload with that id for this checkout.",
+      ...params,
+    });
+  }
+}
+
+/** The confirm arrived before the object actually landed in the bucket — a
+ * client that PUT failed silently, or is still mid-upload. Retryable: the
+ * checkout tries the confirm again once the browser's upload finishes. */
+export class ReceiptNotUploadedError extends UnableToProcessEntryError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({
+      reason: "enrollment.receipt_not_uploaded",
+      message: "The receipt file has not reached storage yet.",
+      ...params,
+    });
+  }
+}
+
+/** The submit named a receipt upload that was never confirmed (still
+ * `pending`) or failed server-side validation (`rejected`) — the checkout
+ * cannot proceed without a receipt that actually made it to storage. */
+export class ReceiptNotReadyError extends UnableToProcessEntryError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({
+      reason: "enrollment.receipt_not_ready",
+      message: "The receipt upload is not confirmed for this checkout.",
+      ...params,
+    });
+  }
+}

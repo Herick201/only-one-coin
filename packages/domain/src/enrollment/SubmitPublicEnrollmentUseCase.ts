@@ -5,15 +5,26 @@ import { GuardianRequiredForMinorError } from "../student/errors.js";
 import { Guardian, type CreateGuardianDTO } from "../student/Guardian.js";
 import { Student, type CreateStudentDTO } from "../student/Student.js";
 import { Enrollment } from "./Enrollment.js";
-import { ClassGroupNotFoundError, SeatHoldExpiredError, StudentBelowMinimumAgeError } from "./errors.js";
+import {
+  ClassGroupNotFoundError,
+  ReceiptNotReadyError,
+  SeatHoldExpiredError,
+  StudentBelowMinimumAgeError,
+} from "./errors.js";
 import { Payment, type PaymentMethod } from "./Payment.js";
 import type { IPublicEnrollmentRepository, SubmitPublicEnrollmentResult } from "./PublicEnrollmentRepository.js";
+import type { IReceiptUploadRepository } from "./ReceiptUploadRepository.js";
 import type { ISeatHoldRepository } from "./SeatHoldRepository.js";
 
 export interface SubmitPublicEnrollmentInput {
   /** The hold claimed when the checkout settled on the class group. Its seat
    * becomes this enrollment's — the submit never takes a second one. */
   seatHoldId: string;
+  /** Minted by `RequestReceiptUploadUseCase` and confirmed by
+   * `ConfirmReceiptUploadUseCase` before this call — must belong to the same
+   * seat hold and be at least `uploaded`, or the submit fails with
+   * `ReceiptNotReadyError`. */
+  receiptUploadId: string;
   classGroupId: string;
   planId: string;
   student: CreateStudentDTO;
@@ -53,6 +64,7 @@ export class SubmitPublicEnrollmentUseCase extends BaseUseCase<
   constructor(
     private readonly repository: IPublicEnrollmentRepository,
     private readonly seatHolds: ISeatHoldRepository,
+    private readonly receiptUploads: IReceiptUploadRepository,
   ) {
     super();
   }
@@ -84,6 +96,14 @@ export class SubmitPublicEnrollmentUseCase extends BaseUseCase<
     const hold = await this.seatHolds.find(input.seatHoldId);
     if (!hold || hold.classGroupId !== input.classGroupId) {
       throw new SeatHoldExpiredError();
+    }
+
+    // Early, non-authoritative check — same shape as the hold's above: fast
+    // feedback before the heavier work, with the repository re-checking
+    // inside the submit transaction (DrizzlePublicEnrollmentRepository).
+    const receipt = await this.receiptUploads.findById(input.receiptUploadId);
+    if (!receipt || receipt.seatHoldId !== hold.id || (receipt.status !== "uploaded" && receipt.status !== "processed")) {
+      throw new ReceiptNotReadyError();
     }
 
     const guardian = input.guardian ? Guardian.create({ ...input.guardian, studentId: student.id }) : null;
@@ -126,6 +146,7 @@ export class SubmitPublicEnrollmentUseCase extends BaseUseCase<
           : null,
       enrollment,
       payment,
+      receiptUploadId: receipt.id,
       notifications,
     });
   }

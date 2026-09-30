@@ -16,6 +16,10 @@ const SubmitPublicEnrollmentBodySchema = z
     // enrollment's; an expired or unknown hold is a 422, and the checkout
     // starts again from the class group step.
     holdId: z.string().uuid(),
+    // Minted by RequestReceiptUploadRoute and confirmed by
+    // ConfirmReceiptUploadRoute before this call — must belong to the same
+    // hold and have actually landed in the bucket, or this is a 422.
+    receiptUploadId: z.string().uuid(),
     classGroupId: z.string().uuid(),
     planId: z.string().uuid(),
     student: CreateStudentSchema,
@@ -53,15 +57,15 @@ const SubmitPublicEnrollmentResponseSchema = z.object({
 });
 
 // Public — this IS the front door of the funnel (CLAUDE.md §1). No
-// Turnstile, no rate limit, no signed-URL upload yet (docs/ROADMAP.md
-// Sessões 23/25) — a deliberately reduced first slice, not safe to point
-// real traffic at until those land.
+// Turnstile, no rate limit yet (docs/ROADMAP.md Sessão 25) — a deliberately
+// reduced slice, not safe to point real traffic at until that lands.
+// Signed-URL upload landed in OOC-19: no OCR yet past the normalize step.
 export const submitPublicEnrollmentRoute = RouteBuilder.post("/enrollments/public")
   .docs({
     tags: ["Enrollments"],
     summary: "Submit the public enrollment checkout",
     description:
-      "Creates the student (and guardian, if a minor), turns the checkout seat hold into the enrollment and opens its payment pending. Reduced slice: no receipt upload, no OCR.",
+      "Creates the student (and guardian, if a minor), turns the checkout seat hold into the enrollment, opens its payment pending and links the confirmed receipt upload to it. Reduced slice: no OCR yet.",
   })
   .public()
   .body(SubmitPublicEnrollmentBodySchema)
@@ -70,10 +74,11 @@ export const submitPublicEnrollmentRoute = RouteBuilder.post("/enrollments/publi
   .response(404, ErrorResponseSchema)
   .response(422, ErrorResponseSchema)
   .handler(async (request, reply) => {
-    const { holdId, classGroupId, planId, student, guardian, payment, locale } = request.body;
+    const { holdId, receiptUploadId, classGroupId, planId, student, guardian, payment, locale } = request.body;
 
     const result = await container.useCases.enrollment.submitPublic.run({
       seatHoldId: holdId,
+      receiptUploadId,
       classGroupId,
       planId,
       student,

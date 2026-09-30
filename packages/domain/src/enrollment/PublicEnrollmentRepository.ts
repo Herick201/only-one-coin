@@ -32,6 +32,12 @@ export interface SubmitPublicEnrollmentParams {
   consent: { version: string; acceptedAt: Date; ip: string } | null;
   enrollment: Enrollment;
   payment: Payment;
+  /** The receipt the checkout uploaded before submit — must belong to this
+   * same seat hold and be at least `uploaded` (OOC-19), or the submit fails
+   * with `ReceiptNotReadyError` and writes nothing. Linked to the new
+   * payment in the same transaction, the way `seat_holds.enrollment_id`
+   * is filled. */
+  receiptUploadId: string;
   /** Written to the outbox in the same transaction. An idempotent retry
    * writes nothing: the first attempt already did. */
   notifications: EmailNotification[];
