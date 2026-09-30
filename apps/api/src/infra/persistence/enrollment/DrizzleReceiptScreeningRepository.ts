@@ -53,8 +53,8 @@ export class DrizzleReceiptScreeningRepository implements IReceiptScreeningRepos
    * count — the same photo uploaded again in a new checkout after the hold
    * ran out has no payment behind the first copy, and is not a reuse.
    *
-   * A sequential scan over processed receipts, a few dozen popcounts per
-   * row: at 20k receipts a month that is milliseconds for years, and it
+   * A sequential scan over processed receipts, about a hundred popcounts
+   * per row (49 crops each way): at 20k receipts a month that is milliseconds for years, and it
    * runs in the worker, never on a request.
    */
   async findLookalikes(subject: ReceiptScreeningSubject): Promise<ReceiptLookalike[]> {

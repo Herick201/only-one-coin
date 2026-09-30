@@ -21,12 +21,12 @@ export interface ReceiptFingerprint {
 /**
  * Two hashes this close (Hamming distance, out of 64 bits) are "the same
  * picture" for the screening. Measured on synthetic Yape-style screenshots
- * (src/tests/receipt-fingerprint.test.ts): recompression, brightness,
- * resizing and cropping the status/navigation bars land at ≤ 6; a bank
- * transfer lands well beyond. What no threshold can do is tell two Yape
- * receipts apart — another student, even another price, lands at 0–4,
- * because the layout dominates a 32×32 hash — and a heavy crop between two
- * `CROP_BOXES` steps drifts to 12–16. That is why `similar_image` is
+ * (src/tests/receipt-fingerprint.test.ts, three fonts): recompression,
+ * brightness, resizing and top/bottom crops up to 20% land at 0–6; a bank
+ * transfer lands at ~22. What no threshold can do is tell two Yape receipts
+ * apart — another student, even another price, lands at 0–4, because the
+ * layout dominates a 32×32 hash — and a crop outside `CROP_BOXES` (past 20%,
+ * or side trims between steps) drifts to 10–16. That is why `similar_image` is
  * evidence for the reviewer and never routes a payment (decision
  * 30/09/2026, packages/domain/src/enrollment/ReceiptScreening.ts).
  */
@@ -37,12 +37,13 @@ export const SIMILAR_IMAGE_MAX_DISTANCE = 6;
  * that was cropped is, give or take half a step, one of these rectangles of
  * the original — so its whole-image hash lands near one of the original's
  * crop hashes. Screenshots are cropped mostly top and bottom (status bar,
- * navigation bar), hence the finer vertical steps; sides are trimmed
- * symmetrically, since a one-sided side crop of a centred receipt layout is
- * rare. The whole image (0, 0, 0) is `phash`, not repeated here.
+ * navigation bar), hence the finer vertical steps — 5%, not 10%: at 10% a
+ * status-bar crop (~5%) fell right between two steps and drifted to 8–10
+ * with some fonts; sides are trimmed symmetrically, since a one-sided
+ * side crop of a centred receipt layout is rare. The whole image (0, 0, 0) is `phash`, not repeated here.
  */
-const CROP_BOXES: ReadonlyArray<readonly [top: number, bottom: number, sides: number]> = [0, 0.1, 0.2]
-  .flatMap((top) => [0, 0.1, 0.2].flatMap((bottom) => [0, 0.08].map((sides) => [top, bottom, sides] as const)))
+const CROP_BOXES: ReadonlyArray<readonly [top: number, bottom: number, sides: number]> = [0, 0.05, 0.1, 0.15, 0.2]
+  .flatMap((top) => [0, 0.05, 0.1, 0.15, 0.2].flatMap((bottom) => [0, 0.08].map((sides) => [top, bottom, sides] as const)))
   .filter(([top, bottom, sides]) => top + bottom + sides > 0);
 
 const HASH_INPUT = 32;
