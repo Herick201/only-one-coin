@@ -81,6 +81,9 @@ export {
   ClassGroupFullError,
   ClassGroupNotFoundError,
   PlanPriceNotFoundError,
+  ReceiptNotReadyError,
+  ReceiptNotUploadedError,
+  ReceiptUploadNotFoundError,
   SeatHoldExpiredError,
   StudentBelowMinimumAgeError,
 } from "./enrollment/errors.js";
@@ -94,6 +97,21 @@ export type { ISeatHoldRepository, ClaimSeatHoldResult } from "./enrollment/Seat
 export { ClaimSeatHoldUseCase, type ClaimSeatHoldInput } from "./enrollment/ClaimSeatHoldUseCase.js";
 export { ReleaseSeatHoldUseCase } from "./enrollment/ReleaseSeatHoldUseCase.js";
 export { ExpireSeatHoldsUseCase, EXPIRE_SEAT_HOLDS_BATCH } from "./enrollment/ExpireSeatHoldsUseCase.js";
+export type { ReceiptUpload, ReceiptUploadStatus } from "./enrollment/ReceiptUpload.js";
+export type { IReceiptUploadRepository } from "./enrollment/ReceiptUploadRepository.js";
+export type { IReceiptStorage, PresignedReceiptUpload, StoredObjectHead } from "./enrollment/ReceiptStorage.js";
+export {
+  RequestReceiptUploadUseCase,
+  RECEIPT_CONTENT_TYPES,
+  type ReceiptContentType,
+  type RequestReceiptUploadInput,
+  type RequestReceiptUploadOutput,
+} from "./enrollment/RequestReceiptUploadUseCase.js";
+export {
+  ConfirmReceiptUploadUseCase,
+  type ConfirmReceiptUploadInput,
+  type ConfirmReceiptUploadOutput,
+} from "./enrollment/ConfirmReceiptUploadUseCase.js";
 export {
   CreateManualEnrollmentUseCase,
   type CreateManualEnrollmentInput,

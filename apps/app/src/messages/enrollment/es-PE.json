@@ -76,8 +76,9 @@
         "proof_label": "Tu comprobante",
         "proof_hint": "Sube la captura o el voucher del pago. Sin comprobante no podemos registrar tu matrícula.",
         "operation_hint": "Aparece en tu constancia de pago como número de operación.",
-        "receipt_hint": "Imagen o PDF, hasta {size}.",
+        "receipt_hint": "Imagen, hasta {size}.",
         "receipt_preview_alt": "Vista previa del comprobante que subiste",
+        "uploading_receipt": "Subiendo…",
         "qr_example": "Ejemplo — QR de prueba"
       },
       "review": {
@@ -183,8 +184,9 @@
       "consent_required": "Necesitamos la autorización del apoderado para continuar.",
       "operation_format": "El número de operación tiene entre 6 y 20 caracteres.",
       "receipt_required": "Sube tu comprobante de pago para continuar.",
-      "receipt_type": "Sube una imagen (JPG, PNG, WEBP, HEIC) o un PDF.",
+      "receipt_type": "Sube una imagen (JPG, PNG o HEIC).",
       "receipt_size": "El archivo pesa demasiado. Prueba con una captura más liviana.",
+      "receipt_upload_failed": "El envío falló. Revisa tu conexión e inténtalo de nuevo.",
       "fix_fields": "Revisa los campos marcados antes de continuar."
     },
     "submitted": {

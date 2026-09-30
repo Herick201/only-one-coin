@@ -19,7 +19,7 @@ const TICK_MS = 1000
 
 type StoredDraft = Omit<CheckoutDraft, 'payment'> & {
   payment: Omit<CheckoutDraft['payment'], 'receipt'> & {
-    receipt: { fileName: string; sizeBytes: number } | null
+    receipt: { fileName: string; sizeBytes: number; receiptUploadId: string | null } | null
   }
 }
 

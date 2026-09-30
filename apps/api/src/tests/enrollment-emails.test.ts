@@ -9,8 +9,10 @@ import {
   type IEnrollmentRepository,
   type IPlanPriceLookup,
   type IPublicEnrollmentRepository,
+  type IReceiptUploadRepository,
   type ISeatHoldRepository,
   type PublicEnrollmentContext,
+  type ReceiptUpload,
   type SubmitPublicEnrollmentParams,
 } from "@ooc/domain";
 import { describe, expect, it } from "vitest";
@@ -26,6 +28,7 @@ import { describe, expect, it } from "vitest";
 const STUDENT_ID = "018f2b5c-3000-7000-8000-000000000001";
 const CLASS_GROUP_ID = "018f2b5c-3000-7000-8000-000000000002";
 const HOLD_ID = "5b0e7a52-3c1d-4f7e-9a61-2f3c4d5e6f70";
+const RECEIPT_UPLOAD_ID = "018f2b5c-3000-7000-8000-000000000005";
 const PLAN_ID = "018f2b5c-3000-7000-8000-000000000003";
 const PLAN_PRICE_ID = "018f2b5c-3000-7000-8000-000000000004";
 
@@ -160,13 +163,36 @@ function heldSeat(classGroupId: string): ISeatHoldRepository {
   };
 }
 
+/** Uploaded and confirmed for `HOLD_ID` — these tests only exercise which
+ * e-mails queue, never the receipt itself. */
+function confirmedReceipt(): IReceiptUploadRepository {
+  const receipt: ReceiptUpload = {
+    id: RECEIPT_UPLOAD_ID,
+    seatHoldId: HOLD_ID,
+    paymentId: null,
+    objectKey: `receipts/raw/${HOLD_ID}/${RECEIPT_UPLOAD_ID}`,
+    status: "uploaded",
+    processedObjectKey: null,
+  };
+  return {
+    create: async () => {
+      throw new Error("not exercised by these tests");
+    },
+    findById: async (id) => (id === RECEIPT_UPLOAD_ID ? receipt : null),
+    markUploaded: async () => {
+      throw new Error("not exercised by these tests");
+    },
+  };
+}
+
 describe("SubmitPublicEnrollmentUseCase e-mails", () => {
   it("writes to the student and the minor's guardian in the locale the form was filled in", async () => {
     const repository = new FakePublicEnrollmentRepository();
-    const useCase = new SubmitPublicEnrollmentUseCase(repository, heldSeat(CLASS_GROUP_ID));
+    const useCase = new SubmitPublicEnrollmentUseCase(repository, heldSeat(CLASS_GROUP_ID), confirmedReceipt());
 
     await useCase.run({
       seatHoldId: HOLD_ID,
+      receiptUploadId: RECEIPT_UPLOAD_ID,
       classGroupId: CLASS_GROUP_ID,
       planId: PLAN_ID,
       student: {

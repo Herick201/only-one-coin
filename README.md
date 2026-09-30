@@ -39,7 +39,11 @@ backoffice ainda é mockada e não precisa de banco — mas várias telas já fa
 com `apps/api` de verdade (alunos, equipe, funcionalidades, matrícula manual e
 o livro de matrículas; ver "Estado atual" abaixo) e ficam com erro de rede sem
 ela. Para essas telas, ou qualquer coisa do lado do servidor: `pnpm db:up` +
-`pnpm dev:api`.
+`pnpm dev:api`. O `db:up` sobe o `compose.yml` inteiro: Postgres, Redis (filas
+do BullMQ) e um S3 compatível (LocalStack, no lugar do Tigris — o bucket
+`ooc-dev-receipts` do upload de comprovante é criado sozinho na subida, já com
+a regra de CORS pra `localhost:3000`). O `apps/api/.env.example` já aponta pros
+três.
 
 Para trabalhar com uma lista de verdade — paginação, busca, filtro de menores
 — há um seed de gente inventada:
@@ -327,7 +331,7 @@ o que é real:
   vocabulário de erro HTTP reutilizável (`shared/base/errors/`).
 - `packages/queue` — contrato de fila compartilhado (BullMQ/Redis).
 - `packages/db` — Postgres local via `compose.yml` (`postgres:18-alpine`) +
-  schema/migrations com Drizzle Kit (`docs/ARCHITECTURE.md` §5.8). Doze
+  schema/migrations com Drizzle Kit (`docs/ARCHITECTURE.md` §5.8). Quinze
   migrations além da baseline: schema do Better Auth
   (`0001_better_auth_core.sql`), o modelo acadêmico e de pessoas inteiro —
   `academic_periods`, `courses`, `plans`, `plan_prices`, `class_groups`,
@@ -344,8 +348,12 @@ o que é real:
   `packages/db/tests/privileges.test.ts`; e `deleted_at` no catálogo,
   na matrícula e no apoderado (`0012`), completando o par da trava —
   `students` já tinha, e `plan_prices`/`consents`/`audit_log` ficam de fora
-  por serem append-only; e a `outbox` de notificações (`0013`), uma linha
-  por e-mail a enviar. Ainda
+  por serem append-only; a `outbox` de notificações (`0013`), uma linha
+  por e-mail a enviar; `seat_holds` e `platform_settings` (`0014`), o hold
+  curto do checkout e os parâmetros que o backoffice ajusta; e
+  `receipt_uploads` (`0015`), a custódia do arquivo do comprovante entre o
+  upload direto ao bucket e a matrícula que ainda não existe naquele momento
+  (OOC-19). Ainda
   não existem: `teachers`, `campaigns`, `attendance`, `grades`,
   `materials`, `certificates` — essas entram nas próximas sessões do
   `ROADMAP.md`.
@@ -359,12 +367,23 @@ o que é real:
   (`container.logger`) via `infra/plugins/`, incluindo a tradução dos erros
   do Better Auth pro mesmo envelope e a autorização deny-by-default (rota sem
   `.roles()`/`.owners()`/`.public()` falha o **boot**, não só o CI —
-  `infra/plugins/authorization.ts`).
+  `infra/plugins/authorization.ts`). **Upload de comprovante via signed URL
+  (OOC-19):** `POST /receipt-uploads` mina um alvo de POST assinado
+  (`@aws-sdk/s3-presigned-post`, `infra/storage/`) escopado pelo `seat_hold`
+  — o arquivo nunca passa pela função da rota; `POST
+  /receipt-uploads/:id/confirm` faz só um HEAD pra saber que o objeto chegou.
+  Dali, o `receipt-upload-relay` (BullMQ, mesmo padrão do `outbox-relay`)
+  oferece a linha `uploaded` ao worker `receipt-normalize`, que baixa o
+  arquivo, valida os magic bytes (`file-type`), converte HEIC
+  (`heic-convert`) e normaliza com `sharp` (downscale ~1000px, escala de
+  cinza, EXIF removido por padrão) antes de gravar a versão processada e
+  apagar a bruta.
 
 **Autorização e domínio de negócio já não dependem de Neon de staging/produção
 provisionado** — rodam sobre o Postgres local. **A reconstruir** quando
-staging/produção tiverem seus próprios dados de verdade: storage, OCR e
-notificações reais (hoje só o comprovante do checkout público grava
-`payments`/`payment_receipts`; não há worker de OCR nem envio de e-mail real
-— `send-email.worker.ts` só loga o payload). Autorização é feita na camada de
+staging/produção tiverem seus próprios dados de verdade: OCR e notificações
+reais (o comprovante do checkout público já sobe via signed URL e é
+normalizado de verdade — acima —, mas a extração por IA em si,
+`packages/ocr`, ainda não existe; não há envio de e-mail real —
+`send-email.worker.ts` só loga o payload). Autorização é feita na camada de
 aplicação (`apps/api`), não em RLS — ver `CLAUDE.md` §8.

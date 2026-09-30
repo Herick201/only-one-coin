@@ -2,6 +2,7 @@ import {
   Enrollment,
   Guardian,
   Payment,
+  ReceiptNotReadyError,
   SeatHoldExpiredError,
   Student,
   type EnrollmentOrigin,
@@ -15,8 +16,20 @@ import {
   type SubmitPublicEnrollmentParams,
   type SubmitPublicEnrollmentResult,
 } from "@ooc/domain";
-import { classGroups, consents, courses, enrollments, guardians, payments, planPrices, plans, seatHolds, students } from "@ooc/db";
-import { and, eq, gt, isNull, lte, desc, sql } from "drizzle-orm";
+import {
+  classGroups,
+  consents,
+  courses,
+  enrollments,
+  guardians,
+  payments,
+  planPrices,
+  plans,
+  receiptUploads,
+  seatHolds,
+  students,
+} from "@ooc/db";
+import { and, eq, gt, inArray, isNull, lte, desc, sql } from "drizzle-orm";
 import type { Db } from "@/infra/db/client.js";
 import { insertOutboxEmails } from "@/infra/persistence/notification/DrizzleOutboxRepository.js";
 
@@ -107,6 +120,26 @@ export class DrizzlePublicEnrollmentRepository implements IPublicEnrollmentRepos
 
       if (!liveHold) {
         throw new SeatHoldExpiredError();
+      }
+
+      // The authoritative check, same reasoning as the hold above: the
+      // usecase already looked once, this is the one inside the transaction
+      // that actually decides. FOR UPDATE keeps a racing confirm or the
+      // normalize worker's own write off this row until the transaction ends.
+      const [receiptRow] = await tx
+        .select({ id: receiptUploads.id })
+        .from(receiptUploads)
+        .where(
+          and(
+            eq(receiptUploads.id, params.receiptUploadId),
+            eq(receiptUploads.seatHoldId, params.seatHoldId),
+            inArray(receiptUploads.status, ["uploaded", "processed"]),
+          ),
+        )
+        .for("update");
+
+      if (!receiptRow) {
+        throw new ReceiptNotReadyError();
       }
 
       // One person, one record (CLAUDE.md §1): the document decides, not the
@@ -279,6 +312,13 @@ export class DrizzlePublicEnrollmentRepository implements IPublicEnrollmentRepos
       if (!paymentRow) {
         throw new Error("Insert into payments returned no row");
       }
+
+      // Filled the moment the payment exists — same moment `seat_holds.
+      // enrollment_id` is filled above.
+      await tx
+        .update(receiptUploads)
+        .set({ paymentId: paymentRow.id, updatedAt: sql`now()` })
+        .where(eq(receiptUploads.id, receiptRow.id));
 
       // Same transaction as everything above: the "enrollment received"
       // e-mail exists exactly when the enrollment does. The idempotent-retry

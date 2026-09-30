@@ -539,6 +539,52 @@ export const paymentReceipts = pgTable(
   ],
 );
 
+// The receipt image's file custody, scoped to the seat hold rather than the
+// payment — at the point the checkout uploads a photo, the hold is the only
+// server-minted id that exists (OOC-19; enrollment and payment are only born
+// at submit, apps/api/CLAUDE.md "Upload"). `payment_id` is filled the same
+// way `seat_holds.enrollment_id` is: null while the checkout is still being
+// filled in, set once inside the submit transaction that consumes the hold.
+//
+// The row never holds the raw bytes — only where they live in the bucket.
+// `object_key` is the upload the client PUT to (server-minted, unguessable,
+// scoped by `seat_hold_id`); `processed_object_key` is filled by the
+// normalize worker once it downscales/greyscales/strips EXIF and is the only
+// version CLAUDE.md's 5-year retention rule keeps — the raw key is deleted
+// from the bucket the moment the processed one lands, so this table always
+// says which key is actually still in storage.
+export const receiptUploads = pgTable(
+  "receipt_uploads",
+  {
+    id: uuidPk(),
+    seatHoldId: uuid("seat_hold_id")
+      .notNull()
+      .references(() => seatHolds.id, { onDelete: "restrict" }),
+    paymentId: uuid("payment_id").references(() => payments.id, { onDelete: "restrict" }),
+    objectKey: text("object_key").notNull(),
+    status: text("status").notNull().default("pending"),
+    contentType: text("content_type"),
+    byteSize: integer("byte_size"),
+    processedObjectKey: text("processed_object_key"),
+    rejectionReason: text("rejection_reason"),
+    ...timestamps(),
+  },
+  (table) => [
+    uniqueIndex("receipt_uploads_object_key_uidx").on(table.objectKey),
+    check(
+      "receipt_uploads_status_check",
+      sql`${table.status} in ('pending', 'uploaded', 'processed', 'rejected')`,
+    ),
+    check(
+      "receipt_uploads_processed_check",
+      sql`(${table.status} = 'processed') = (${table.processedObjectKey} is not null)`,
+    ),
+    index("receipt_uploads_seat_hold_id_idx").on(table.seatHoldId),
+    // The normalize relay's only query: uploads waiting to be picked up.
+    index("receipt_uploads_uploaded_idx").on(table.createdAt).where(sql`${table.status} = 'uploaded'`),
+  ],
+);
+
 // One row per student waiting on a full class_group (Sessão 22, not built
 // yet — this is just the queue table the roadmap bundles into Sessão 6).
 // FIFO by created_at; the unique pair stops the same student from queuing

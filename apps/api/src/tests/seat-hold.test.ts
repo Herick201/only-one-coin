@@ -15,8 +15,10 @@ import {
   type IAuditLogRepository,
   type IPlatformSettingsRepository,
   type IPublicEnrollmentRepository,
+  type IReceiptUploadRepository,
   type ISeatHoldRepository,
   type PublicEnrollmentContext,
+  type ReceiptUpload,
   type SeatHold,
   type SubmitPublicEnrollmentInput,
   type SubmitPublicEnrollmentParams,
@@ -35,6 +37,7 @@ const OTHER_CLASS_GROUP_ID = "018f2b5c-4000-7000-8000-000000000002";
 const PLAN_ID = "018f2b5c-4000-7000-8000-000000000003";
 const PLAN_PRICE_ID = "018f2b5c-4000-7000-8000-000000000004";
 const HOLD_ID = "9f1c2d3e-4a5b-4c6d-8e7f-0a1b2c3d4e5f";
+const RECEIPT_UPLOAD_ID = "018f2b5c-4000-7000-8000-000000000005";
 
 class FakeSeatHolds implements ISeatHoldRepository {
   claims: { classGroupId: string; origin: EnrollmentOrigin; holdMinutes: number }[] = [];
@@ -117,8 +120,37 @@ function hold(origin: EnrollmentOrigin, classGroupId = CLASS_GROUP_ID): SeatHold
   return { id: HOLD_ID, classGroupId, origin, expiresAt: new Date(Date.now() + 60_000) };
 }
 
+/** Uploaded and confirmed, same fixture shape `ConfirmReceiptUploadUseCase`
+ * would have produced — the usecase-level tests only need it findable and
+ * `uploaded`, never the file itself. */
+class FakeReceiptUploads implements IReceiptUploadRepository {
+  constructor(private readonly onFile: ReceiptUpload | null) {}
+
+  async create(): Promise<ReceiptUpload> {
+    throw new Error("not exercised by these tests");
+  }
+
+  async findById(id: string) {
+    return this.onFile && this.onFile.id === id ? this.onFile : null;
+  }
+
+  async markUploaded(): Promise<ReceiptUpload | null> {
+    throw new Error("not exercised by these tests");
+  }
+}
+
+const UPLOADED_RECEIPT: ReceiptUpload = {
+  id: RECEIPT_UPLOAD_ID,
+  seatHoldId: HOLD_ID,
+  paymentId: null,
+  objectKey: `receipts/raw/${HOLD_ID}/${RECEIPT_UPLOAD_ID}`,
+  status: "uploaded",
+  processedObjectKey: null,
+};
+
 const SUBMIT: SubmitPublicEnrollmentInput = {
   seatHoldId: HOLD_ID,
+  receiptUploadId: RECEIPT_UPLOAD_ID,
   classGroupId: CLASS_GROUP_ID,
   planId: PLAN_ID,
   student: {
@@ -192,7 +224,11 @@ describe("ClaimSeatHoldUseCase", () => {
 describe("SubmitPublicEnrollmentUseCase and the hold", () => {
   it("writes the origin recorded on the hold onto the enrollment", async () => {
     const repository = new FakePublicEnrollments();
-    const useCase = new SubmitPublicEnrollmentUseCase(repository, new FakeSeatHolds(hold("whatsapp")));
+    const useCase = new SubmitPublicEnrollmentUseCase(
+      repository,
+      new FakeSeatHolds(hold("whatsapp")),
+      new FakeReceiptUploads(UPLOADED_RECEIPT),
+    );
 
     await useCase.run(SUBMIT);
 
@@ -202,7 +238,11 @@ describe("SubmitPublicEnrollmentUseCase and the hold", () => {
 
   it("refuses a hold that does not exist", async () => {
     const repository = new FakePublicEnrollments();
-    const useCase = new SubmitPublicEnrollmentUseCase(repository, new FakeSeatHolds(null));
+    const useCase = new SubmitPublicEnrollmentUseCase(
+      repository,
+      new FakeSeatHolds(null),
+      new FakeReceiptUploads(UPLOADED_RECEIPT),
+    );
 
     await expect(useCase.run(SUBMIT)).rejects.toBeInstanceOf(SeatHoldExpiredError);
     expect(repository.params).toBeNull();
@@ -213,6 +253,7 @@ describe("SubmitPublicEnrollmentUseCase and the hold", () => {
     const useCase = new SubmitPublicEnrollmentUseCase(
       repository,
       new FakeSeatHolds(hold("web", OTHER_CLASS_GROUP_ID)),
+      new FakeReceiptUploads(UPLOADED_RECEIPT),
     );
 
     await expect(useCase.run(SUBMIT)).rejects.toBeInstanceOf(SeatHoldExpiredError);

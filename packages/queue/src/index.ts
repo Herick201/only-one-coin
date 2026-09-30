@@ -8,3 +8,13 @@ export { SEND_EMAIL_ATTEMPTS, createSendEmailQueue, enqueueSendEmail } from "./p
 export { createOutboxRelayQueue, scheduleOutboxRelay } from "./producers/outbox-relay.producer.js";
 export { SEAT_HOLD_SWEEP_QUEUE, SEAT_HOLD_SWEEP_EVERY_MS } from "./jobs/seat-hold-sweep.job.js";
 export { createSeatHoldSweepQueue, scheduleSeatHoldSweep } from "./producers/seat-hold-sweep.producer.js";
+
+export { RECEIPT_UPLOAD_RELAY_QUEUE, RECEIPT_UPLOAD_RELAY_EVERY_MS } from "./jobs/receipt-upload-relay.job.js";
+export { createReceiptUploadRelayQueue, scheduleReceiptUploadRelay } from "./producers/receipt-upload-relay.producer.js";
+export { RECEIPT_NORMALIZE_QUEUE, ReceiptNormalizePayloadSchema } from "./jobs/receipt-normalize.job.js";
+export type { ReceiptNormalizePayload } from "./jobs/receipt-normalize.job.js";
+export {
+  RECEIPT_NORMALIZE_ATTEMPTS,
+  createReceiptNormalizeQueue,
+  enqueueReceiptNormalize,
+} from "./producers/receipt-normalize.producer.js";

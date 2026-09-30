@@ -76,8 +76,9 @@
         "proof_label": "Your receipt",
         "proof_hint": "Upload the screenshot or voucher of the payment. Without a receipt we cannot register your enrolment.",
         "operation_hint": "It appears on your payment record as the operation number.",
-        "receipt_hint": "Image or PDF, up to {size}.",
+        "receipt_hint": "Image, up to {size}.",
         "receipt_preview_alt": "Preview of the receipt you uploaded",
+        "uploading_receipt": "Uploading…",
         "qr_example": "Example — test QR"
       },
       "review": {
@@ -183,8 +184,9 @@
       "consent_required": "We need the guardian's authorisation to continue.",
       "operation_format": "The operation number is between 6 and 20 characters.",
       "receipt_required": "Upload your payment receipt to continue.",
-      "receipt_type": "Upload an image (JPG, PNG, WEBP, HEIC) or a PDF.",
+      "receipt_type": "Upload an image (JPG, PNG or HEIC).",
       "receipt_size": "That file is too large. Try a lighter screenshot.",
+      "receipt_upload_failed": "The upload failed. Check your connection and try again.",
       "fix_fields": "Please check the highlighted fields before continuing."
     },
     "submitted": {

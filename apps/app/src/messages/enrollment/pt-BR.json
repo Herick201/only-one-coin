@@ -76,8 +76,9 @@
         "proof_label": "Seu comprovante",
         "proof_hint": "Envie o print ou o comprovante do pagamento. Sem comprovante não conseguimos registrar sua matrícula.",
         "operation_hint": "Aparece no seu comprovante como número da operação.",
-        "receipt_hint": "Imagem ou PDF, até {size}.",
+        "receipt_hint": "Imagem, até {size}.",
         "receipt_preview_alt": "Prévia do comprovante que você enviou",
+        "uploading_receipt": "Enviando…",
         "qr_example": "Exemplo — QR de teste"
       },
       "review": {
@@ -183,8 +184,9 @@
       "consent_required": "Precisamos da autorização do responsável para continuar.",
       "operation_format": "O número da operação tem entre 6 e 20 caracteres.",
       "receipt_required": "Envie seu comprovante de pagamento para continuar.",
-      "receipt_type": "Envie uma imagem (JPG, PNG, WEBP, HEIC) ou um PDF.",
+      "receipt_type": "Envie uma imagem (JPG, PNG ou HEIC).",
       "receipt_size": "O arquivo está pesado demais. Tente um print mais leve.",
+      "receipt_upload_failed": "O envio falhou. Verifique sua conexão e tente de novo.",
       "fix_fields": "Confira os campos marcados antes de continuar."
     },
     "submitted": {

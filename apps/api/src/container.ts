@@ -5,6 +5,7 @@ import {
   CancelStaffPasswordResetUseCase,
   CompleteStaffInviteUseCase,
   CompleteStaffPasswordResetUseCase,
+  ConfirmReceiptUploadUseCase,
   CreateManualEnrollmentUseCase,
   CreateStaffInviteUseCase,
   CreateStaffPasswordResetUseCase,
@@ -12,6 +13,7 @@ import {
   PromoteUserRoleUseCase,
   RegisterStudentUseCase,
   ReleaseSeatHoldUseCase,
+  RequestReceiptUploadUseCase,
   RetireCatalogEntryUseCase,
   RemoveStaffAccessUseCase,
   RenewStaffInviteUseCase,
@@ -31,6 +33,7 @@ import {
   type IPlanPriceLookup,
   type IPlatformSettingsRepository,
   type IPublicEnrollmentRepository,
+  type IReceiptUploadRepository,
   type ISeatHoldRepository,
   type IStaffAccessRepository,
   type IStaffAccountProvisioner,
@@ -61,6 +64,13 @@ import { DrizzleEnrollmentRepository } from "./infra/persistence/enrollment/Driz
 import { DrizzlePublicEnrollmentRepository } from "./infra/persistence/enrollment/DrizzlePublicEnrollmentRepository.js";
 import { DrizzlePlanPriceLookup } from "./infra/persistence/enrollment/DrizzlePlanPriceLookup.js";
 import { DrizzleSeatHoldRepository } from "./infra/persistence/enrollment/DrizzleSeatHoldRepository.js";
+import {
+  DrizzleReceiptUploadRepository,
+  type IReceiptNormalizationStore,
+} from "./infra/persistence/enrollment/DrizzleReceiptUploadRepository.js";
+import { createS3Client } from "./infra/storage/s3Client.js";
+import { TigrisReceiptStorage } from "./infra/storage/TigrisReceiptStorage.js";
+import { ReceiptObjectStore } from "./infra/storage/ReceiptObjectStore.js";
 import { ListStudentsQuery } from "./infra/persistence/student/ListStudentsQuery.js";
 import { GetStudentQuery } from "./infra/persistence/student/GetStudentQuery.js";
 import { ListEnrollmentsQuery } from "./infra/persistence/enrollment/ListEnrollmentsQuery.js";
@@ -83,6 +93,11 @@ export interface AppRepositories {
   enrollment: IEnrollmentRepository;
   publicEnrollment: IPublicEnrollmentRepository;
   seatHold: ISeatHoldRepository;
+  /** Widened past the domain port: the normalize worker's own read/write
+   * shape (`IReceiptNormalizationStore`) lives here too, the same way
+   * `AppNotifications.outbox` is `IOutboxStore` rather than a domain port —
+   * this is infra a worker consumes directly, not a usecase's dependency. */
+  receiptUpload: IReceiptUploadRepository & IReceiptNormalizationStore;
   planPriceLookup: IPlanPriceLookup;
   staffInvite: IStaffInviteRepository;
   staffPasswordReset: IStaffPasswordResetRepository;
@@ -100,6 +115,8 @@ export interface AppUseCases {
     claimSeatHold: ClaimSeatHoldUseCase;
     releaseSeatHold: ReleaseSeatHoldUseCase;
     expireSeatHolds: ExpireSeatHoldsUseCase;
+    requestReceiptUpload: RequestReceiptUploadUseCase;
+    confirmReceiptUpload: ConfirmReceiptUploadUseCase;
   };
   staff: {
     promoteRole: PromoteUserRoleUseCase;
@@ -151,6 +168,14 @@ export interface AppNotifications {
   provider: NotificationProvider;
 }
 
+/** What the receipt normalize worker needs — the raw bucket GET/PUT/DELETE
+ * (OOC-19). Not `IReceiptStorage`: that port is scoped to the two
+ * HTTP-facing usecases (mint a target, HEAD it), never to downloading or
+ * writing bytes. */
+export interface AppStorage {
+  objectStore: ReceiptObjectStore;
+}
+
 export interface AppContainer {
   production: boolean;
   config: Config;
@@ -159,6 +184,7 @@ export interface AppContainer {
   db: Db;
   identity: AppIdentity;
   notifications: AppNotifications;
+  storage: AppStorage;
   repositories: AppRepositories;
   useCases: AppUseCases;
   queries: AppQueries;
@@ -183,6 +209,7 @@ function buildContainer(): AppContainer {
   const publicEnrollmentRepository = new DrizzlePublicEnrollmentRepository(db);
   const planPriceLookup = new DrizzlePlanPriceLookup(db);
   const seatHoldRepository = new DrizzleSeatHoldRepository(db);
+  const receiptUploadRepository = new DrizzleReceiptUploadRepository(db);
   const platformSettingsRepository = new DrizzlePlatformSettingsRepository(db);
   const userRoleRepository = new DrizzleUserRoleRepository(db);
   const auditLogRepository = new DrizzleAuditLogRepository(db);
@@ -200,6 +227,11 @@ function buildContainer(): AppContainer {
   const outboxRepository = new DrizzleOutboxRepository(db);
   const notificationProvider = createNotificationProvider(config, logger);
 
+  // Storage (Tigris/S3-compatible — OOC-19)
+  const s3Client = createS3Client(config);
+  const receiptStorage = new TigrisReceiptStorage(s3Client, config.BUCKET_NAME);
+  const receiptObjectStore = new ReceiptObjectStore(s3Client, config.BUCKET_NAME);
+
   // Use cases
   const registerStudent = new RegisterStudentUseCase(studentRepository, guardianRepository);
   const createManualEnrollment = new CreateManualEnrollmentUseCase(
@@ -207,10 +239,21 @@ function buildContainer(): AppContainer {
     planPriceLookup,
     enrollmentEmailContextLookup,
   );
-  const submitPublicEnrollment = new SubmitPublicEnrollmentUseCase(publicEnrollmentRepository, seatHoldRepository);
+  const submitPublicEnrollment = new SubmitPublicEnrollmentUseCase(
+    publicEnrollmentRepository,
+    seatHoldRepository,
+    receiptUploadRepository,
+  );
   const claimSeatHold = new ClaimSeatHoldUseCase(seatHoldRepository, platformSettingsRepository);
   const releaseSeatHold = new ReleaseSeatHoldUseCase(seatHoldRepository);
   const expireSeatHolds = new ExpireSeatHoldsUseCase(seatHoldRepository);
+  const requestReceiptUpload = new RequestReceiptUploadUseCase(
+    seatHoldRepository,
+    receiptUploadRepository,
+    receiptStorage,
+    config.RECEIPT_MAX_UPLOAD_BYTES,
+  );
+  const confirmReceiptUpload = new ConfirmReceiptUploadUseCase(receiptUploadRepository, receiptStorage);
   const promoteRole = new PromoteUserRoleUseCase(freshAuthVerifier, userRoleRepository, auditLogRepository);
   const createInvite = new CreateStaffInviteUseCase(staffUserLookup, staffInviteRepository, auditLogRepository);
   const renewInvite = new RenewStaffInviteUseCase(staffInviteRepository, auditLogRepository);
@@ -262,6 +305,9 @@ function buildContainer(): AppContainer {
       outbox: outboxRepository,
       provider: notificationProvider,
     },
+    storage: {
+      objectStore: receiptObjectStore,
+    },
     repositories: {
       catalogEntry: catalogEntryRepository,
       student: studentRepository,
@@ -269,6 +315,7 @@ function buildContainer(): AppContainer {
       enrollment: enrollmentRepository,
       publicEnrollment: publicEnrollmentRepository,
       seatHold: seatHoldRepository,
+      receiptUpload: receiptUploadRepository,
       planPriceLookup,
       staffInvite: staffInviteRepository,
       staffPasswordReset: staffPasswordResetRepository,
@@ -285,6 +332,8 @@ function buildContainer(): AppContainer {
         claimSeatHold,
         releaseSeatHold,
         expireSeatHolds,
+        requestReceiptUpload,
+        confirmReceiptUpload,
       },
       staff: {
         promoteRole,
