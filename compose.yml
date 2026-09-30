@@ -16,5 +16,36 @@ services:
       timeout: 5s
       retries: 5
 
+  # BullMQ queues/workers run inside apps/api (CLAUDE.md §3) — Upstash in prod.
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # S3-compatible stand-in for Tigris (receipt uploads, OOC-19). LocalStack
+  # rather than MinIO: the minio/minio images stopped being publicly pullable.
+  # The init hook creates the receipts bucket on every start.
+  s3:
+    image: localstack/localstack:3
+    restart: unless-stopped
+    environment:
+      SERVICES: s3
+      DEFAULT_REGION: us-east-1
+    ports:
+      - "4566:4566"
+    volumes:
+      - ./compose/localstack/ready.d:/etc/localstack/init/ready.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "awslocal s3api head-bucket --bucket ooc-dev-receipts"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
 volumes:
   postgres_data:
