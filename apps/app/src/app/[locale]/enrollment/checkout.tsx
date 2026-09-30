@@ -92,7 +92,8 @@ export function Checkout({
 
   async function submit() {
     const plan = planOfCourse(catalog, draft.course.courseId)
-    if (!draft.course.classGroupId || !plan || !draft.payment.method || !holdId) {
+    const receiptUploadId = draft.payment.receipt?.receiptUploadId ?? null
+    if (!draft.course.classGroupId || !plan || !draft.payment.method || !holdId || !receiptUploadId) {
       throw new Error('Checkout draft is missing a required field at submit')
     }
 
@@ -103,6 +104,10 @@ export function Checkout({
         // The seat and the channel travel as this one id: the server reads
         // both off the hold, never off this body.
         holdId,
+        // Minted and confirmed in step 3 (RequestReceiptUploadRoute,
+        // ConfirmReceiptUploadRoute) — the server checks it belongs to this
+        // same hold and actually landed in the bucket.
+        receiptUploadId,
         classGroupId: draft.course.classGroupId,
         planId: plan.id,
         student: {
@@ -241,6 +246,7 @@ export function Checkout({
           catalog={catalog}
           draft={draft}
           setDraft={setDraft}
+          holdId={holdId}
           onBack={() => goTo('student')}
           onContinue={() => goTo('review')}
         />

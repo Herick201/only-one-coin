@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useRef, useState } from 'react'
+import { requestReceiptUpload } from '@/lib/enrollment/receipt-upload'
 import { useLocale, useTranslations } from 'next-intl'
 import type { CheckoutDraft, PublicCatalog } from '@/lib/enrollment/types'
 import { hasErrors, planOfCourse, validatePayment } from '@/lib/enrollment/checkout'
@@ -22,19 +23,14 @@ import { QrPlaceholder } from '@/components/enrollment/qr-placeholder'
 import { AutoGrid } from '@/components/layout/auto-grid'
 
 /**
- * What the browser will hand up. The real gate is magic bytes on the server
- * (`CLAUDE.md` §8) — an `accept` attribute is a file-picker filter, not a
- * check. HEIC is here because half the receipts arrive from an iPhone.
+ * What the browser will hand up. The real gate is magic bytes, sniffed
+ * server-side by the normalize worker once the file lands in the bucket
+ * (`apps/api/CLAUDE.md`, "Upload") — an `accept` attribute is a file-picker
+ * filter, not a check. HEIC is here because half the receipts arrive from an
+ * iPhone; matches `RECEIPT_CONTENT_TYPES` in `packages/domain`.
  */
-const ACCEPTED = 'image/jpeg,image/png,image/webp,image/heic,image/heif,application/pdf'
-const ACCEPTED_TYPES = new Set([
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/heic',
-  'image/heif',
-  'application/pdf',
-])
+const ACCEPTED = 'image/jpeg,image/png,image/heic,image/heif'
+const ACCEPTED_TYPES = new Set(['image/jpeg', 'image/png', 'image/heic', 'image/heif'])
 
 /**
  * Step 3 — pay outside, prove it inside.
@@ -51,19 +47,26 @@ const ACCEPTED_TYPES = new Set([
  * point of this platform over a Google Form is that the proof arrives with the
  * data, not three WhatsApp messages later.
  *
- * In production the file goes straight to storage on a signed URL and never
- * passes through our function (`CLAUDE.md` §5). Here it stays in the browser.
+ * The file goes straight to storage on a signed URL and never passes through
+ * `apps/api`'s own function (`CLAUDE.md` §6, OOC-19): `pickFile` mints the
+ * target, PUTs the file to the bucket, then confirms it landed — three
+ * network calls this component drives, none of which touch our backend with
+ * the bytes themselves.
  */
 export function StepPayment({
   catalog,
   draft,
   setDraft,
+  holdId,
   onBack,
   onContinue,
 }: {
   catalog: PublicCatalog
   draft: CheckoutDraft
   setDraft: (next: (prev: CheckoutDraft) => CheckoutDraft) => void
+  /** The checkout's seat hold — every receipt upload is scoped to it (no
+   * enrollment or payment exists yet at this point in the checkout). */
+  holdId: string | null
   onBack: () => void
   onContinue: () => void
 }) {
@@ -73,6 +76,10 @@ export function StepPayment({
   const [touched, setTouched] = useState(false)
   const [copied, setCopied] = useState<string | null>(null)
   const [fileError, setFileError] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  /** Bumped on every pick/drop so a stale upload's result is ignored once a
+   * newer one (or a drop) has superseded it. */
+  const attemptRef = useRef(0)
 
   const plan = planOfCourse(catalog, draft.course.courseId)
   const errors = useMemo(() => validatePayment(draft.payment), [draft.payment])
@@ -94,7 +101,7 @@ export function StepPayment({
     }
   }
 
-  function pickFile(file: File | null) {
+  async function pickFile(file: File | null) {
     if (!file) return
     if (!ACCEPTED_TYPES.has(file.type)) {
       setFileError('receipt_type')
@@ -104,21 +111,57 @@ export function StepPayment({
       setFileError('receipt_size')
       return
     }
+    if (!holdId) {
+      // Should not happen — this step is only reached with a live hold — but
+      // an upload scoped to nothing is worse than a visible error.
+      setFileError('receipt_upload_failed')
+      return
+    }
+
+    const attempt = ++attemptRef.current
+    const previewUrl = URL.createObjectURL(file)
     setFileError(null)
+    setUploading(true)
+    // Shown immediately, without a confirmed id: `validatePayment` still
+    // blocks "continue" until `receiptUploadId` lands below.
     setDraft((prev) => ({
       ...prev,
       payment: {
         ...prev.payment,
-        receipt: {
-          fileName: file.name,
-          sizeBytes: file.size,
-          previewUrl: file.type === 'application/pdf' ? null : URL.createObjectURL(file),
-        },
+        receipt: { fileName: file.name, sizeBytes: file.size, previewUrl, receiptUploadId: null },
       },
     }))
+
+    const outcome = await requestReceiptUpload({ seatHoldId: holdId, file })
+
+    // A newer pick or a drop happened while this was in flight — its result
+    // belongs to a receipt that is no longer attached.
+    if (attemptRef.current !== attempt) return
+    setUploading(false)
+
+    if (!outcome.ok) {
+      URL.revokeObjectURL(previewUrl)
+      setFileError('receipt_upload_failed')
+      setDraft((prev) => ({ ...prev, payment: { ...prev.payment, receipt: null } }))
+      return
+    }
+
+    setDraft((prev) =>
+      prev.payment.receipt?.previewUrl === previewUrl
+        ? {
+            ...prev,
+            payment: {
+              ...prev.payment,
+              receipt: { ...prev.payment.receipt, receiptUploadId: outcome.receiptUploadId },
+            },
+          }
+        : prev,
+    )
   }
 
   function dropReceipt() {
+    attemptRef.current += 1
+    setUploading(false)
     if (draft.payment.receipt?.previewUrl) {
       URL.revokeObjectURL(draft.payment.receipt.previewUrl)
     }
@@ -286,7 +329,7 @@ export function StepPayment({
               type="file"
               accept={ACCEPTED}
               className="sr-only"
-              onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
+              onChange={(e) => void pickFile(e.target.files?.[0] ?? null)}
             />
             {draft.payment.receipt ? (
               <div className="flex items-center gap-3 rounded-lg border border-emerald-600/25 bg-emerald-50 px-3 py-2.5">
@@ -300,7 +343,9 @@ export function StepPayment({
                     {draft.payment.receipt.fileName}
                   </span>
                   <span className="text-xs text-emerald-800">
-                    {formatFileSize(draft.payment.receipt.sizeBytes, locale)}
+                    {uploading
+                      ? t('step.payment.uploading_receipt')
+                      : formatFileSize(draft.payment.receipt.sizeBytes, locale)}
                   </span>
                 </span>
                 {/* Red, though it sits in the green "attached" panel: the

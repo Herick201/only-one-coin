@@ -243,12 +243,20 @@ export interface GuardianDraft {
  * The receipt as the browser knows it. The file itself never travels through
  * our function — it goes straight to storage on a signed URL (`CLAUDE.md` §5),
  * so what the wizard state keeps is the description, not the bytes.
+ *
+ * `receiptUploadId` only exists once the direct-to-bucket PUT and the
+ * confirm both succeeded (`RequestReceiptUploadRoute` /
+ * `ConfirmReceiptUploadRoute`, OOC-19) — it is what the submit sends, not the
+ * file description. A `ReceiptDraft` the reader sees attached but whose
+ * upload never confirmed does not carry one, and the step blocks on it the
+ * same way it blocks on a missing `operationNumber`.
  */
 export interface ReceiptDraft {
   fileName: string
   sizeBytes: number
   /** Object URL for the local preview; not persisted across a reload. */
   previewUrl: string | null
+  receiptUploadId: string | null
 }
 
 export interface PaymentDraft {

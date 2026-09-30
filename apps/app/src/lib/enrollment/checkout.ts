@@ -330,8 +330,13 @@ export function validatePayment(draft: PaymentDraft): FieldErrors<PaymentField> 
 
   // The hard one. Without the image there is nothing for the OCR ladder to
   // read (`CLAUDE.md` §5) and the enrollment is a line nobody can ever settle,
-  // so it blocks the step rather than warning about it.
-  if (draft.receipt === null) errors.receipt = 'receipt_required'
+  // so it blocks the step rather than warning about it. A file the reader
+  // attached but whose direct-to-bucket upload never confirmed (still
+  // uploading, or failed) is the same as no file: `receiptUploadId` is what
+  // the submit actually sends.
+  if (draft.receipt === null || draft.receipt.receiptUploadId === null) {
+    errors.receipt = 'receipt_required'
+  }
 
   return errors
 }
