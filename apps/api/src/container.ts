@@ -14,6 +14,7 @@ import {
   RegisterStudentUseCase,
   ReleaseSeatHoldUseCase,
   RequestReceiptUploadUseCase,
+  ScreenReceiptUploadUseCase,
   RetireCatalogEntryUseCase,
   RemoveStaffAccessUseCase,
   RenewStaffInviteUseCase,
@@ -68,6 +69,7 @@ import {
   DrizzleReceiptUploadRepository,
   type IReceiptNormalizationStore,
 } from "./infra/persistence/enrollment/DrizzleReceiptUploadRepository.js";
+import { DrizzleReceiptScreeningRepository } from "./infra/persistence/enrollment/DrizzleReceiptScreeningRepository.js";
 import { createS3Client } from "./infra/storage/s3Client.js";
 import { TigrisReceiptStorage } from "./infra/storage/TigrisReceiptStorage.js";
 import { ReceiptObjectStore } from "./infra/storage/ReceiptObjectStore.js";
@@ -117,6 +119,8 @@ export interface AppUseCases {
     expireSeatHolds: ExpireSeatHoldsUseCase;
     requestReceiptUpload: RequestReceiptUploadUseCase;
     confirmReceiptUpload: ConfirmReceiptUploadUseCase;
+    /** Run by the `receipt-screen` worker, never a route (OOC-22). */
+    screenReceiptUpload: ScreenReceiptUploadUseCase;
   };
   staff: {
     promoteRole: PromoteUserRoleUseCase;
@@ -210,6 +214,7 @@ function buildContainer(): AppContainer {
   const planPriceLookup = new DrizzlePlanPriceLookup(db);
   const seatHoldRepository = new DrizzleSeatHoldRepository(db);
   const receiptUploadRepository = new DrizzleReceiptUploadRepository(db);
+  const receiptScreeningRepository = new DrizzleReceiptScreeningRepository(db);
   const platformSettingsRepository = new DrizzlePlatformSettingsRepository(db);
   const userRoleRepository = new DrizzleUserRoleRepository(db);
   const auditLogRepository = new DrizzleAuditLogRepository(db);
@@ -254,6 +259,7 @@ function buildContainer(): AppContainer {
     config.RECEIPT_MAX_UPLOAD_BYTES,
   );
   const confirmReceiptUpload = new ConfirmReceiptUploadUseCase(receiptUploadRepository, receiptStorage);
+  const screenReceiptUpload = new ScreenReceiptUploadUseCase(receiptScreeningRepository);
   const promoteRole = new PromoteUserRoleUseCase(freshAuthVerifier, userRoleRepository, auditLogRepository);
   const createInvite = new CreateStaffInviteUseCase(staffUserLookup, staffInviteRepository, auditLogRepository);
   const renewInvite = new RenewStaffInviteUseCase(staffInviteRepository, auditLogRepository);
@@ -334,6 +340,7 @@ function buildContainer(): AppContainer {
         expireSeatHolds,
         requestReceiptUpload,
         confirmReceiptUpload,
+        screenReceiptUpload,
       },
       staff: {
         promoteRole,

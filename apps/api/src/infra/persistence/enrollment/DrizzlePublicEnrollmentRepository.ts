@@ -32,6 +32,7 @@ import {
 import { and, eq, gt, inArray, isNull, lte, desc, sql } from "drizzle-orm";
 import type { Db } from "@/infra/db/client.js";
 import { insertOutboxEmails } from "@/infra/persistence/notification/DrizzleOutboxRepository.js";
+import { assertOperationNumberUnused } from "./operationNumberGuard.js";
 
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
 
@@ -141,6 +142,13 @@ export class DrizzlePublicEnrollmentRepository implements IPublicEnrollmentRepos
       if (!receiptRow) {
         throw new ReceiptNotReadyError();
       }
+
+      // Before any write: a refused operation number leaves the hold, the
+      // student and everything else exactly as they were (OOC-22).
+      await assertOperationNumberUnused(tx, {
+        method: params.payment.method,
+        operationNumber: params.payment.operationNumber ?? "",
+      });
 
       // One person, one record (CLAUDE.md §1): the document decides, not the
       // id the usecase proposed. A returning student re-typing their name with
