@@ -59,6 +59,9 @@ src/
     outbox-relay.worker.ts     # a cada 5 s oferece as linhas pending da outbox à fila send-email
     send-email.worker.ts       # entrega pelo NotificationProvider (Brevo, atrás da allowlist)
     seat-hold-sweep.worker.ts  # a cada 30 s expira os holds de checkout vencidos e devolve as vagas
+    receipt-upload-relay.worker.ts  # a cada 5 s oferece comprovantes `uploaded` ao normalize e os `processed` + ligados a pagamento ao screen
+    receipt-normalize.worker.ts     # magic bytes, HEIC, downscale/cinza/strip EXIF + impressão digital (sha256, pHash, EXIF)
+    receipt-screen.worker.ts        # antifraude nível 0: compara com comprovantes de outros pagamentos, grava os sinais
   infra/
     db/client.ts                  # pg.Pool + drizzle(), aponta pro Postgres local ou Neon via DATABASE_URL
     logger.ts                     # pino compartilhado (container.logger)
@@ -105,11 +108,14 @@ substituída pelos bounded contexts reais acima.
   de aplicação no `RegisterStudentUseCase`. `scripts/report-duplicate-students.ts`
   é o passo prévio (lista as duplicatas já na base) antes da migration do
   índice parcial.
-- **OCR**: não iniciado. O checkout público (`SubmitPublicEnrollmentRoute`)
-  já grava `payments`/`payment_receipts` com idempotency key, mas não
-  enfileira job de extração, não tem upload por signed URL, magic bytes nem
-  Turnstile/rate limit — é uma fatia deliberadamente reduzida do funil
-  (`docs/ROADMAP.md`, Sessões 23/25/26).
+- **OCR**: extração não iniciada. O checkout público
+  (`SubmitPublicEnrollmentRoute`) grava `payments` com idempotency key e já
+  tem upload por signed URL com magic bytes e normalização no worker
+  (OOC-19), mais o antifraude nível 0 (OOC-22: nº de operação único por meio
+  no submit, triagem por sha256/pHash/EXIF no `receipt-screen` —
+  `CLAUDE.md` deste app, "Antifraude do comprovante"). Ainda não enfileira
+  extração por IA, não escreve `payment_receipts` e não tem
+  Turnstile/rate limit (`docs/ROADMAP.md`, Sessões 25/26).
 - **Hold de checkout (relógio curto)**: real. `POST /seat-holds` prende a vaga
   com o `UPDATE … WHERE seats_taken < capacity` atômico e grava a linha em
   `seat_holds` com `expires_at` pelo relógio do Postgres (minutos lidos de

@@ -377,7 +377,15 @@ o que é real:
   arquivo, valida os magic bytes (`file-type`), converte HEIC
   (`heic-convert`) e normaliza com `sharp` (downscale ~1000px, escala de
   cinza, EXIF removido por padrão) antes de gravar a versão processada e
-  apagar a bruta.
+  apagar a bruta. **Antifraude do comprovante (OOC-22):** o submit (checkout
+  e matrícula manual) recusa nº de operação já usado no mesmo meio de
+  pagamento (422 `enrollment.operation_number_already_used`); o worker de
+  normalização grava sha256, pHash com recortes e EXIF, e o
+  `receipt-screen` compara com os comprovantes de outros pagamentos e grava
+  os sinais em `receipt_uploads.fraud_signals` — arquivo idêntico ou EXIF de
+  editor mandam o pagamento pra `under_review`; pHash parecido só registra
+  (regra e medição em `apps/api/CLAUDE.md`, "Antifraude do comprovante"). Os
+  sinais ainda não aparecem na tela — a fila de revisão do backoffice é mock.
 
 **Autorização e domínio de negócio já não dependem de Neon de staging/produção
 provisionado** — rodam sobre o Postgres local. **A reconstruir** quando
