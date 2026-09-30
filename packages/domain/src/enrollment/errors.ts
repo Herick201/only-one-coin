@@ -96,3 +96,18 @@ export class ReceiptNotReadyError extends UnableToProcessEntryError {
     });
   }
 }
+
+/** The operation number was already used by another payment of the same
+ * method (OOC-22, decision 30/09/2026 — unique per method, compared by
+ * `normalizeOperationNumber`). The one hard block of the receipt antifraud:
+ * a real operation can only pay for one enrollment, and a resent receipt —
+ * cropped or not — still carries the number of the payment it came from. */
+export class OperationNumberAlreadyUsedError extends UnableToProcessEntryError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({
+      reason: "enrollment.operation_number_already_used",
+      message: "That operation number was already used by another payment.",
+      ...params,
+    });
+  }
+}

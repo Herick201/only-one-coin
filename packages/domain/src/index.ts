@@ -80,6 +80,7 @@ export type {
 export {
   ClassGroupFullError,
   ClassGroupNotFoundError,
+  OperationNumberAlreadyUsedError,
   PlanPriceNotFoundError,
   ReceiptNotReadyError,
   ReceiptNotUploadedError,
@@ -100,6 +101,27 @@ export { ExpireSeatHoldsUseCase, EXPIRE_SEAT_HOLDS_BATCH } from "./enrollment/Ex
 export type { ReceiptUpload, ReceiptUploadStatus } from "./enrollment/ReceiptUpload.js";
 export type { IReceiptUploadRepository } from "./enrollment/ReceiptUploadRepository.js";
 export type { IReceiptStorage, PresignedReceiptUpload, StoredObjectHead } from "./enrollment/ReceiptStorage.js";
+export {
+  exifSignals,
+  normalizeOperationNumber,
+  payerNameMatches,
+  routesToHumanReview,
+  type OperationNumberClaim,
+  type ReceiptExifFacts,
+  type ReceiptFraudSignal,
+  type ReceiptFraudSignalKind,
+} from "./enrollment/ReceiptScreening.js";
+export type {
+  IReceiptScreeningRepository,
+  ReceiptLookalike,
+  ReceiptScreeningSubject,
+} from "./enrollment/ReceiptScreeningRepository.js";
+export {
+  ScreenReceiptUploadUseCase,
+  MAX_LOOKALIKE_SIGNALS,
+  type ScreenReceiptUploadInput,
+  type ScreenReceiptUploadOutput,
+} from "./enrollment/ScreenReceiptUploadUseCase.js";
 export {
   RequestReceiptUploadUseCase,
   RECEIPT_CONTENT_TYPES,
