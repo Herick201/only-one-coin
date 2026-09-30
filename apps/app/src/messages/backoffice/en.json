@@ -528,6 +528,7 @@
       "cancel": "Cancel",
       "created": "Enrollment created.",
       "submit_error": "Could not create the enrollment. Try again.",
+      "operation_number_used": "That operation number already paid for another enrollment with the same payment method. Check the receipt.",
       "missing_fields": "Fill in the required fields to create the enrollment."
     },
     "seat_status": {

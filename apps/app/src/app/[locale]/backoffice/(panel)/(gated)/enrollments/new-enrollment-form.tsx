@@ -121,7 +121,9 @@ export function NewEnrollmentForm({
   const [operationNumber, setOperationNumber] = useState('')
   const [receiptAttached, setReceiptAttached] = useState(false)
   const [pending, setPending] = useState(false)
-  const [submitError, setSubmitError] = useState(false)
+  // A refused operation number is its own message: retrying the same number
+  // gets the same answer, so "try again" would be the wrong advice (OOC-22).
+  const [submitError, setSubmitError] = useState<'failed' | 'operation_number_used' | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -193,7 +195,7 @@ export function NewEnrollmentForm({
   async function submit() {
     if (!ready || !selectedStudent || !group) return
     setPending(true)
-    setSubmitError(false)
+    setSubmitError(null)
 
     try {
       const response = await fetch('/api/v1/enrollments', {
@@ -211,7 +213,10 @@ export function NewEnrollmentForm({
       })
 
       if (!response.ok) {
-        setSubmitError(true)
+        const body = (await response.json().catch(() => null)) as { reason?: string } | null
+        setSubmitError(
+          body?.reason === 'enrollment.operation_number_already_used' ? 'operation_number_used' : 'failed',
+        )
         return
       }
 
@@ -222,7 +227,7 @@ export function NewEnrollmentForm({
          and the whole thing gone on reload. The caller re-reads instead. */
       onCreate()
     } catch {
-      setSubmitError(true)
+      setSubmitError('failed')
     } finally {
       setPending(false)
     }
@@ -524,7 +529,9 @@ export function NewEnrollmentForm({
         )}
         {submitError && (
           <span className="text-xs font-medium text-red-600">
-            {t('new_enrollment.submit_error')}
+            {submitError === 'operation_number_used'
+              ? t('new_enrollment.operation_number_used')
+              : t('new_enrollment.submit_error')}
           </span>
         )}
       </div>

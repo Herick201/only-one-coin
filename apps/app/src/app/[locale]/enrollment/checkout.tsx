@@ -15,7 +15,7 @@ import { HoldTimer } from '@/components/enrollment/hold-timer'
 import { StepCourse } from './step-course'
 import { StepStudent } from './step-student'
 import { StepPayment } from './step-payment'
-import { StepReview } from './step-review'
+import { StepReview, type SubmitOutcome } from './step-review'
 import { Submitted } from './submitted'
 import { Expired } from './expired'
 
@@ -90,7 +90,7 @@ export function Checkout({
     if (outcome === 'held') goTo('student')
   }
 
-  async function submit() {
+  async function submit(): Promise<SubmitOutcome> {
     const plan = planOfCourse(catalog, draft.course.courseId)
     const receiptUploadId = draft.payment.receipt?.receiptUploadId ?? null
     if (!draft.course.classGroupId || !plan || !draft.payment.method || !holdId || !receiptUploadId) {
@@ -148,14 +148,20 @@ export function Checkout({
     })
 
     if (!response.ok) {
-      // The server says the hold is gone — expired, or swept, while the
-      // reader was still typing. Same ending as the countdown reaching zero:
-      // the seat may already be somebody else's, and the attempt starts over.
       if (response.status === 422) {
         const body = (await response.json().catch(() => null)) as { reason?: string } | null
+        // The server says the hold is gone — expired, or swept, while the
+        // reader was still typing. Same ending as the countdown reaching zero:
+        // the seat may already be somebody else's, and the attempt starts over.
         if (body?.reason === 'enrollment.seat_hold_expired') {
           expireHold()
-          return
+          return 'sent'
+        }
+        // Another enrollment already paid with this operation number (OOC-22).
+        // Nothing was written and the hold is intact: the reader fixes a typo,
+        // or it was not their receipt to send.
+        if (body?.reason === 'enrollment.operation_number_already_used') {
+          return 'operation_number_used'
         }
       }
       throw new Error(`Submit failed: ${response.status}`)
@@ -168,6 +174,7 @@ export function Checkout({
     setReference(referenceFrom(draft))
     clearCheckoutStorage()
     window.scrollTo({ top: 0 })
+    return 'sent'
   }
 
   if (reference) {
