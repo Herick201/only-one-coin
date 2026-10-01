@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import type { CatalogErrorKey, CourseRow, PlanDetail } from '@/lib/backoffice/types'
 import { catalogWrite } from '@/lib/backoffice/catalog-client'
@@ -48,14 +48,27 @@ export function CoursePlansSheet({
   const [loadFailed, setLoadFailed] = useState(false)
   const [notice, setNotice] = useState<Notice | null>(null)
 
+  // Only the newest request may write state: a slow answer for a course the
+  // user already left must never land under another course's title.
+  const currentId = useRef<string | null>(null)
+  currentId.current = course?.id ?? null
+  const inflight = useRef<AbortController | null>(null)
+
   const load = useCallback(async (id: string) => {
+    inflight.current?.abort()
+    const controller = new AbortController()
+    inflight.current = controller
     setLoadFailed(false)
     try {
-      const response = await fetch(`/api/v1/catalog/courses/${id}`)
+      const response = await fetch(`/api/v1/catalog/courses/${id}`, {
+        signal: controller.signal,
+      })
       if (!response.ok) throw new Error(String(response.status))
       const body = (await response.json()) as { plans: PlanDetail[] }
+      if (inflight.current !== controller) return
       setPlans(body.plans)
     } catch {
+      if (controller.signal.aborted || inflight.current !== controller) return
       setLoadFailed(true)
     }
   }, [])
@@ -64,11 +77,17 @@ export function CoursePlansSheet({
     setPlans(null)
     setNotice(null)
     if (course) void load(course.id)
+    return () => {
+      inflight.current?.abort()
+      inflight.current = null
+    }
   }, [course, load])
 
-  async function changed(next: Notice | null) {
+  async function changed(next: Notice | null, writtenId: string) {
+    // A write that finished after the sheet moved on must not touch the new course.
+    if (currentId.current !== writtenId) return
     setNotice(next)
-    if (next?.kind !== 'error' && course) await load(course.id)
+    if (next?.kind !== 'error') await load(writtenId)
   }
 
   return (
@@ -123,11 +142,11 @@ export function CoursePlansSheet({
               )}
 
               {plans?.map((plan) => (
-                <PlanCard key={plan.id} plan={plan} canManage={canManage} onChanged={changed} />
+                <PlanCard key={plan.id} plan={plan} canManage={canManage} onChanged={(next) => changed(next, course.id)} />
               ))}
 
               {canManage && plans && (
-                <NewPlanForm courseId={course.id} onChanged={changed} />
+                <NewPlanForm courseId={course.id} onChanged={(next) => changed(next, course.id)} />
               )}
             </div>
           </>
