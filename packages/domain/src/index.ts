@@ -257,7 +257,17 @@ export {
   type CatalogEntryState,
 } from "./catalog/CatalogEntry.js";
 export type { ICatalogEntryRepository } from "./catalog/ports/ICatalogEntryRepository.js";
-export { CatalogEntryNotFoundError, CourseNotFoundError } from "./catalog/errors.js";
+export {
+  CatalogEntryNotFoundError,
+  CourseNotFoundError,
+  PlanNotFoundError,
+  PriceInPastError,
+} from "./catalog/errors.js";
+export { Plan, PlanPrice, PRICE_PAST_TOLERANCE_MS, type PlanProps, type PlanPriceProps } from "./catalog/Plan.js";
+export type { IPlanRepository } from "./catalog/ports/IPlanRepository.js";
+export { CreatePlanUseCase, type CreatePlanInput } from "./catalog/CreatePlanUseCase.js";
+export { RenamePlanUseCase, type RenamePlanInput } from "./catalog/RenamePlanUseCase.js";
+export { SchedulePlanPriceUseCase, type SchedulePlanPriceInput } from "./catalog/SchedulePlanPriceUseCase.js";
 export {
   Course,
   CertificateRuleSchema,

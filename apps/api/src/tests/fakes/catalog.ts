@@ -1,4 +1,12 @@
-import type { AuditLogEntry, Course, IAuditLogRepository, ICourseRepository } from "@ooc/domain";
+import type {
+  AuditLogEntry,
+  Course,
+  IAuditLogRepository,
+  ICourseRepository,
+  IPlanRepository,
+  Plan,
+  PlanPrice,
+} from "@ooc/domain";
 
 /**
  * In-memory stand-ins for the catalog ports. Shared by every catalog usecase
@@ -27,5 +35,27 @@ export class FakeCourseRepository implements ICourseRepository {
   async update(course: Course): Promise<Course> {
     this.rows.set(course.id, course);
     return course;
+  }
+}
+
+export class FakePlanRepository implements IPlanRepository {
+  public readonly plans = new Map<string, Plan>();
+  public readonly prices: PlanPrice[] = [];
+
+  async createWithPrice(plan: Plan, price: PlanPrice): Promise<void> {
+    this.plans.set(plan.id, plan);
+    this.prices.push(price);
+  }
+
+  async findById(id: string): Promise<Plan | null> {
+    return this.plans.get(id) ?? null;
+  }
+
+  async rename(plan: Plan): Promise<void> {
+    this.plans.set(plan.id, plan);
+  }
+
+  async addPrice(price: PlanPrice): Promise<void> {
+    this.prices.push(price);
   }
 }
