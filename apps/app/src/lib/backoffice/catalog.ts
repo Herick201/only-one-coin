@@ -1,5 +1,11 @@
 import { apiFetch } from './api-client'
-import type { CourseDetail, CourseRow } from './types'
+import type {
+  AcademicPeriodItem,
+  ClassGroupItem,
+  CourseDetail,
+  CourseRow,
+  WaitlistItem,
+} from './types'
 
 /** The API's course item; `language` is a plain name there (no languages table). */
 interface ApiCourse extends Omit<CourseRow, 'language'> {
@@ -35,6 +41,55 @@ export async function getCatalogCourse(id: string): Promise<CourseDetail | null>
     if (!response.ok) return null
     const body = (await response.json()) as { course: ApiCourse; plans: CourseDetail['plans'] }
     return { course: toCourseRow(body.course), plans: body.plans }
+  } catch {
+    return null
+  }
+}
+
+/** Sales periods, newest first. `null` = the API failed. */
+export async function listCatalogPeriods(): Promise<AcademicPeriodItem[] | null> {
+  try {
+    const response = await apiFetch('/api/v1/catalog/periods')
+    if (!response.ok) return null
+    const body = (await response.json()) as { items: AcademicPeriodItem[] }
+    return body.items
+  } catch {
+    return null
+  }
+}
+
+/** Class groups, optionally of one period. `null` = the API failed. */
+export async function listCatalogClassGroups(periodId?: string): Promise<ClassGroupItem[] | null> {
+  try {
+    const query = periodId ? `?periodId=${encodeURIComponent(periodId)}` : ''
+    const response = await apiFetch(`/api/v1/catalog/class-groups${query}`)
+    if (!response.ok) return null
+    const body = (await response.json()) as { items: ClassGroupItem[] }
+    return body.items
+  } catch {
+    return null
+  }
+}
+
+export async function getCatalogClassGroup(id: string): Promise<ClassGroupItem | null> {
+  try {
+    const response = await apiFetch(`/api/v1/catalog/class-groups/${encodeURIComponent(id)}`)
+    if (!response.ok) return null
+    return (await response.json()) as ClassGroupItem
+  } catch {
+    return null
+  }
+}
+
+/** Who is waiting for a seat in a full class group. `null` = the API failed. */
+export async function listCatalogWaitlist(id: string): Promise<WaitlistItem[] | null> {
+  try {
+    const response = await apiFetch(
+      `/api/v1/catalog/class-groups/${encodeURIComponent(id)}/waitlist`,
+    )
+    if (!response.ok) return null
+    const body = (await response.json()) as { items: WaitlistItem[] }
+    return body.items
   } catch {
     return null
   }

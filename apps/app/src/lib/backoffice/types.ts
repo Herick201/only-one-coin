@@ -437,12 +437,15 @@ export interface SeatWatchItem {
 /* -------------------------------------------------------------------------- */
 
 /**
- * `finished` = classes are over but certificates are still owed. `closed` =
- * everyone who qualified already got theirs. A failed student never gets one,
- * so "all certificates issued" can never be the gate — it would leave any class
- * group with a failure open forever.
+ * `draft` = opened in the panel but not on sale yet — dates may be missing and
+ * the checkout never offers it (OOC-35). `finished` = classes are over but
+ * certificates are still owed. `closed` = everyone who qualified already got
+ * theirs. A failed student never gets one, so "all certificates issued" can
+ * never be the gate — it would leave any class group with a failure open
+ * forever.
  */
 export type ClassGroupStatus =
+  | 'draft'
   | 'enrolling'
   | 'in_progress'
   | 'finished'
@@ -518,6 +521,60 @@ export interface ClassGroupRow {
    * is not counted: they left the roster, not a grade behind.
    */
   pendingGrades: number
+}
+
+/** One weekly meeting of a class group, `HH:mm` in America/Lima. */
+export interface WeeklySlotItem {
+  weekday: Weekday
+  startTime: string
+  endTime: string
+}
+
+/** A class group as the catalog API answers it (OOC-35). */
+export interface ClassGroupItem {
+  id: string
+  code: string
+  courseId: string
+  courseName: string
+  /** Catalog text ("Inglés"), not a code — the screen folds by it. */
+  language: string
+  courseActive: boolean
+  academicPeriodId: string
+  academicPeriodName: string
+  teacherName: string
+  slots: WeeklySlotItem[]
+  /** Null only on a draft. */
+  startsOn: string | null
+  endsOn: string | null
+  /** Null = no limit on that side of the enrollment window. */
+  enrollmentOpensAt: string | null
+  enrollmentClosesAt: string | null
+  capacity: number
+  seatsTaken: number
+  status: ClassGroupStatus
+  /** False once retired from the catalog — the row stays, off sale. */
+  active: boolean
+  waitlistCount: number
+}
+
+/** A sales period: its own class groups, start dates and seats (CLAUDE.md §1). */
+export interface AcademicPeriodItem {
+  id: string
+  name: string
+  startsOn: string
+  endsOn: string
+  active: boolean
+  classGroupCount: number
+}
+
+/** One student waiting for a seat in a full class group. */
+export interface WaitlistItem {
+  id: string
+  studentId: string
+  studentName: string
+  nationalIdType: NationalIdType
+  nationalId: string
+  joinedAt: string
 }
 
 /**
