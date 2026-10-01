@@ -1,6 +1,7 @@
 import {
   createOutboxRelayQueue,
   createReceiptNormalizeQueue,
+  createReceiptScreenQueue,
   createReceiptUploadRelayQueue,
   createRedisConnection,
   createSeatHoldSweepQueue,
@@ -13,6 +14,7 @@ import { buildApp } from "./app.js";
 import { container } from "./container.js";
 import { startOutboxRelayWorker } from "./workers/outbox-relay.worker.js";
 import { startReceiptNormalizeWorker } from "./workers/receipt-normalize.worker.js";
+import { startReceiptScreenWorker } from "./workers/receipt-screen.worker.js";
 import { startReceiptUploadRelayWorker } from "./workers/receipt-upload-relay.worker.js";
 import { startSeatHoldSweepWorker } from "./workers/seat-hold-sweep.worker.js";
 import { startSendEmailWorker } from "./workers/send-email.worker.js";
@@ -55,8 +57,11 @@ const seatHoldSweepWorker = startSeatHoldSweepWorker(connection, logger, {
 
 // Receipt uploads (OOC-19): confirm flips a row to `uploaded`, the relay
 // offers it to the normalize queue, the worker downscales/greyscales/strips
-// EXIF/converts HEIC and writes back `processed` or `rejected`.
+// EXIF/converts HEIC and writes back `processed` or `rejected`. Once a
+// processed receipt is attached to a payment, the same relay offers it to the
+// screen queue (OOC-22, antifraud level 0).
 const receiptNormalizeQueue = createReceiptNormalizeQueue(connection);
+const receiptScreenQueue = createReceiptScreenQueue(connection);
 const receiptUploadRelayQueue = createReceiptUploadRelayQueue(connection);
 await scheduleReceiptUploadRelay(receiptUploadRelayQueue);
 const receiptNormalizeWorker = startReceiptNormalizeWorker(connection, logger, {
@@ -66,11 +71,15 @@ const receiptNormalizeWorker = startReceiptNormalizeWorker(connection, logger, {
 const receiptUploadRelayWorker = startReceiptUploadRelayWorker(connection, logger, {
   store: repositories.receiptUpload,
   normalizeQueue: receiptNormalizeQueue,
+  screenQueue: receiptScreenQueue,
+});
+const receiptScreenWorker = startReceiptScreenWorker(connection, logger, {
+  screenReceiptUpload: useCases.enrollment.screenReceiptUpload,
 });
 
 logger.info(
   { emailProvider: BREVO_API_KEY ? "brevo" : "log", allowlistEnforced: NODE_ENV !== "production" },
-  "Workers started: outbox-relay, send-email, seat-hold-sweep, receipt-upload-relay, receipt-normalize",
+  "Workers started: outbox-relay, send-email, seat-hold-sweep, receipt-upload-relay, receipt-normalize, receipt-screen",
 );
 if (NODE_ENV === "production" && !BREVO_API_KEY) {
   logger.warn("BREVO_API_KEY is not set: transactional e-mails are logged, not sent");
@@ -91,11 +100,13 @@ async function shutdown() {
   await seatHoldSweepWorker.close();
   await receiptUploadRelayWorker.close();
   await receiptNormalizeWorker.close();
+  await receiptScreenWorker.close();
   await outboxRelayQueue.close();
   await sendEmailQueue.close();
   await seatHoldSweepQueue.close();
   await receiptUploadRelayQueue.close();
   await receiptNormalizeQueue.close();
+  await receiptScreenQueue.close();
   await connection.quit();
   process.exit(0);
 }

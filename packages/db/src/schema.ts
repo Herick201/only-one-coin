@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  bigint,
   boolean,
   check,
   index,
@@ -491,6 +492,17 @@ export const payments = pgTable(
       sql`"method" in ('yape', 'plin', 'bcp', 'interbank', 'other')`,
     ),
     check("payments_amount_cents_check", sql`${table.amountCents} > 0`),
+    // The operation-number guard's lookup (OOC-22): one operation pays for
+    // one enrollment, per method. The expression is the SQL mirror of
+    // normalizeOperationNumber (packages/domain) and has to match
+    // operationNumberKey in apps/api/.../operationNumberGuard.ts character
+    // for character, or the planner stops using this index. Not unique yet —
+    // legacy-imported rows may already repeat, the same expand/contract
+    // reasoning as the students' national_id (CLAUDE.md §1); the guard takes
+    // an advisory lock instead.
+    index("payments_method_operation_key_idx")
+      .on(table.method, sql`upper(regexp_replace(${table.operationNumber}, '[^A-Za-z0-9]', '', 'g'))`)
+      .where(sql`${table.operationNumber} is not null`),
     check(
       "payments_method_detail_required_check",
       sql`"method" <> 'other' or "method_detail" is not null`,
@@ -503,9 +515,13 @@ export const payments = pgTable(
 // uploaded receipt image — a payment can carry more than one over time (a
 // rejected receipt gets replaced), so this is 1:N off payments, not 1:1.
 //
-// image_phash and operation_number each get a partial unique index (null
-// allowed, but no two non-null values may repeat) — the antifraude defense
-// against the same receipt cropped and resent (CLAUDE.md §5). tier /
+// operation_number gets a partial unique index (null allowed, but no two
+// non-null values may repeat). image_phash had one too until OOC-22
+// (30/09/2026): two different Yape receipts for the same price hash
+// identically — the only differences are text too small for a perceptual
+// hash — so a unique index there refuses the second honest student. It is a
+// plain index now; similarity is a screening signal for a human, never a
+// constraint (apps/api/CLAUDE.md, "Antifraude do comprovante"). tier /
 // model_name / model_version / extracted_fields mirror the columns CLAUDE.md
 // §5 requires ("gravar tier, model_name, model_version e confiança por campo
 // em toda extração") even though no worker fills them yet — packages/ocr and
@@ -529,7 +545,7 @@ export const paymentReceipts = pgTable(
     createdAt: createdAt(),
   },
   (table) => [
-    uniqueIndex("payment_receipts_image_phash_uidx")
+    index("payment_receipts_image_phash_idx")
       .on(table.imagePhash)
       .where(sql`${table.imagePhash} is not null`),
     uniqueIndex("payment_receipts_operation_number_uidx")
@@ -567,6 +583,23 @@ export const receiptUploads = pgTable(
     byteSize: integer("byte_size"),
     processedObjectKey: text("processed_object_key"),
     rejectionReason: text("rejection_reason"),
+    // The receipt's fingerprint (OOC-22), written by the normalize worker
+    // together with processed_object_key. sha256 is of the raw upload, so a
+    // byte-identical resend is exact; the pHash is of the normalized image
+    // (64 bits as a signed bigint — XOR and bit_count work on it in SQL),
+    // and the crops are the same hash over sub-rectangles of it, so a
+    // cropped resend still lands near one of them.
+    imageSha256: text("image_sha256"),
+    imagePhash: bigint("image_phash", { mode: "bigint" }),
+    imagePhashCrops: bigint("image_phash_crops", { mode: "bigint" }).array(),
+    // Software / capture / modify dates read from EXIF before the normalize
+    // step strips it. Never GPS or device ids — only what a signal is built
+    // from (ReceiptExifFacts).
+    exifFacts: jsonb("exif_facts"),
+    // Level 0 of the OCR ladder: the ReceiptFraudSignal[] the screening
+    // found, stamped once. Null screened_at = not screened yet.
+    fraudSignals: jsonb("fraud_signals"),
+    screenedAt: timestamp("screened_at", { withTimezone: true }),
     ...timestamps(),
   },
   (table) => [
@@ -582,6 +615,11 @@ export const receiptUploads = pgTable(
     index("receipt_uploads_seat_hold_id_idx").on(table.seatHoldId),
     // The normalize relay's only query: uploads waiting to be picked up.
     index("receipt_uploads_uploaded_idx").on(table.createdAt).where(sql`${table.status} = 'uploaded'`),
+    // The screening relay's only query: normalized, attached, not screened.
+    index("receipt_uploads_screen_pending_idx")
+      .on(table.createdAt)
+      .where(sql`${table.status} = 'processed' and ${table.paymentId} is not null and ${table.screenedAt} is null`),
+    index("receipt_uploads_image_sha256_idx").on(table.imageSha256).where(sql`${table.imageSha256} is not null`),
   ],
 );
 

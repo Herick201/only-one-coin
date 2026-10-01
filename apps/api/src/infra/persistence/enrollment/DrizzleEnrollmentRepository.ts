@@ -13,6 +13,7 @@ import { classGroups, enrollments, payments } from "@ooc/db";
 import { and, eq, isNull, lt, sql } from "drizzle-orm";
 import type { Db } from "@/infra/db/client.js";
 import { insertOutboxEmails } from "@/infra/persistence/notification/DrizzleOutboxRepository.js";
+import { assertOperationNumberUnused } from "./operationNumberGuard.js";
 
 export class DrizzleEnrollmentRepository implements IEnrollmentRepository {
   constructor(private readonly db: Db) {}
@@ -25,6 +26,14 @@ export class DrizzleEnrollmentRepository implements IEnrollmentRepository {
     const { enrollment, payment } = params;
 
     return this.db.transaction(async (tx) => {
+      // Staff typing an operation number that already paid for someone else
+      // is refused the same way the checkout is (OOC-22) — before the seat
+      // is taken, so a refusal costs nothing to undo.
+      await assertOperationNumberUnused(tx, {
+        method: payment.method,
+        operationNumber: payment.operationNumber ?? "",
+      });
+
       // The single atomic instruction CLAUDE.md §5 requires: seat validation
       // never happens in application code, only in this WHERE clause. Zero
       // rows back means the class group is full.

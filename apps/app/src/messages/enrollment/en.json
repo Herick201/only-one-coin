@@ -91,7 +91,8 @@
         "payment_section": "Payment",
         "consent_given": "Accepted (version {version})",
         "what_happens": "When you send, your seat is held and your receipt goes to review. You have up to {days} days for the payment to be approved; we will email you as soon as it is.",
-        "submit_failed": "We could not submit your enrollment. You can try again — it will not create a duplicate seat."
+        "submit_failed": "We could not submit your enrollment. You can try again — it will not create a duplicate seat.",
+        "operation_number_used": "That operation number was already used for another enrollment. Check it on the payment step; if it is right, message us on WhatsApp."
       }
     },
     "time_range": "{start} to {end}",

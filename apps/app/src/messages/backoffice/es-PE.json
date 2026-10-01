@@ -528,6 +528,7 @@
       "cancel": "Cancelar",
       "created": "Matrícula creada.",
       "submit_error": "No se pudo crear la matrícula. Intenta de nuevo.",
+      "operation_number_used": "Ese número de operación ya pagó otra matrícula con el mismo medio de pago. Revisa el comprobante.",
       "missing_fields": "Completa los campos obligatorios para crear la matrícula."
     },
     "seat_status": {

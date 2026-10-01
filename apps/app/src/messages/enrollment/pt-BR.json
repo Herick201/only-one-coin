@@ -91,7 +91,8 @@
         "payment_section": "Pagamento",
         "consent_given": "Aceito (versão {version})",
         "what_happens": "Ao enviar, sua vaga fica reservada e o comprovante entra em revisão. Você tem até {days} dias para o pagamento ser aprovado; avisamos por e-mail assim que estiver pronto.",
-        "submit_failed": "Não conseguimos enviar sua matrícula. Você pode tentar de novo — não vai criar uma vaga duplicada."
+        "submit_failed": "Não conseguimos enviar sua matrícula. Você pode tentar de novo — não vai criar uma vaga duplicada.",
+        "operation_number_used": "Esse número de operação já foi usado em outra matrícula. Confira no passo de pagamento; se estiver certo, fale com a gente pelo WhatsApp."
       }
     },
     "time_range": "{start} às {end}",

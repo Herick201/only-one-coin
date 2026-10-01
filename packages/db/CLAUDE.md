@@ -29,7 +29,7 @@ Carregado junto com o `CLAUDE.md` da raiz quando uma sessão trabalha aqui dentr
   - Coberto por `tests/privileges.test.ts`, que emite cada operação proibida direto no Postgres e exige a recusa (`pnpm test:db`, roda no job `migrations` do CI).
 - **`ooc_app` nasce `NOLOGIN`** — senha é credencial e não entra em migration versionada. Cada ambiente liga o papel uma vez, fora do Git (`ALTER ROLE ooc_app WITH LOGIN PASSWORD '<secret>'`), e só então a `DATABASE_URL` do `apps/api` passa a apontar pra ele em vez do dono. Enquanto esse passo não for dado, a camada GRANT está inerte e só o trigger segura.
 - Preço é **versionado, nunca editado**: `plan_prices` ganha uma linha nova por vigência, a linha antiga não muda. `enrollments` congela o `plan_price_id` vigente no momento da matrícula.
-- Índice único por `idempotency_key` em `payments` e por `image_phash` em `payment_receipts` — a aplicação não é a única linha de defesa contra duplicata.
+- Índice único por `idempotency_key` em `payments` e por `operation_number` em `payment_receipts` — a aplicação não é a única linha de defesa contra duplicata. `image_phash` **não** é único desde a `0016` (OOC-22): dois comprovantes Yape diferentes têm o mesmo hash, e o índice recusaria o aluno honesto (`apps/api/CLAUDE.md`, "Antifraude do comprovante"). O nº de operação digitado em `payments` também não tem índice único ainda — só o de expressão `payments_method_operation_key_idx` pra busca, com o lock consultivo da aplicação no lugar da unicidade até as duplicatas do legado serem consolidadas.
 - `CHECK (seats_taken <= capacity)` em `class_groups` é rede, não o mecanismo — a alocação atômica é regra de `apps/api` (`apps/api/CLAUDE.md`).
 
 ---

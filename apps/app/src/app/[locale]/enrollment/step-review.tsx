@@ -18,6 +18,12 @@ import {
 } from '@/components/enrollment/ui'
 import { CheckoutIcon } from '@/components/enrollment/icons'
 
+/** How a submit that did not throw ended. A refused operation number is not
+ * a failure to retry — sending the same number again gets the same answer. */
+export type SubmitOutcome = 'sent' | 'operation_number_used'
+
+type SubmitError = 'failed' | 'operation_number_used'
+
 /**
  * Step 4 — everything in one place, then send.
  *
@@ -42,12 +48,12 @@ export function StepReview({
   draft: CheckoutDraft
   onEdit: (step: StepId) => void
   onBack: () => void
-  onSubmit: () => Promise<void>
+  onSubmit: () => Promise<SubmitOutcome>
 }) {
   const t = useTranslations('enrollment')
   const locale = useLocale() as Locale
   const [sending, setSending] = useState(false)
-  const [submitFailed, setSubmitFailed] = useState(false)
+  const [submitError, setSubmitError] = useState<SubmitError | null>(null)
 
   const course = courseById(catalog, draft.course.courseId)
   const group = groupById(catalog, draft.course.classGroupId)
@@ -59,14 +65,19 @@ export function StepReview({
     // the guarantee is the idempotency key on the payment (`CLAUDE.md` §5).
     if (sending) return
     setSending(true)
-    setSubmitFailed(false)
+    setSubmitError(null)
     try {
-      await onSubmit()
+      if ((await onSubmit()) === 'operation_number_used') {
+        // Refused before anything was written: the reader corrects the
+        // number on the payment step and sends again.
+        setSending(false)
+        setSubmitError('operation_number_used')
+      }
     } catch {
       // Retriable: the idempotency key is stable across attempts, so a
       // second click is safe rather than a second seat.
       setSending(false)
-      setSubmitFailed(true)
+      setSubmitError('failed')
     }
   }
 
@@ -196,7 +207,10 @@ export function StepReview({
         {t('step.review.what_happens', { days: catalog.settings.reservationDays })}
       </Note>
 
-      {submitFailed && <Note tone="danger">{t('step.review.submit_failed')}</Note>}
+      {submitError === 'failed' && <Note tone="danger">{t('step.review.submit_failed')}</Note>}
+      {submitError === 'operation_number_used' && (
+        <Note tone="danger">{t('step.review.operation_number_used')}</Note>
+      )}
 
       <StepNav
         back={

@@ -1,7 +1,8 @@
-import type { IReceiptUploadRepository, ReceiptUpload, ReceiptUploadStatus } from "@ooc/domain";
+import type { IReceiptUploadRepository, ReceiptExifFacts, ReceiptUpload, ReceiptUploadStatus } from "@ooc/domain";
 import { receiptUploads } from "@ooc/db";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, isNotNull, isNull } from "drizzle-orm";
 import type { Db } from "@/infra/db/client.js";
+import type { ReceiptFingerprint } from "@/infra/storage/fingerprintReceiptImage.js";
 
 /**
  * The half of `receipt_uploads` only the normalize worker uses — same
@@ -11,7 +12,15 @@ import type { Db } from "@/infra/db/client.js";
  */
 export interface IReceiptNormalizationStore {
   listUploadedIds(limit: number): Promise<string[]>;
-  markProcessed(id: string, processedObjectKey: string): Promise<ReceiptUpload | null>;
+  /** Normalized, attached to a payment, not screened yet — what the relay
+   * offers to the `receipt-screen` queue (OOC-22). */
+  listScreenableIds(limit: number): Promise<string[]>;
+  /** The processed key and the fingerprint land in the same statement: a
+   * `processed` row always has what the screening compares. */
+  markProcessed(
+    id: string,
+    params: { processedObjectKey: string; fingerprint: ReceiptFingerprint; exif: ReceiptExifFacts | null },
+  ): Promise<ReceiptUpload | null>;
   markRejected(id: string, reason: string): Promise<ReceiptUpload | null>;
 }
 
@@ -62,10 +71,38 @@ export class DrizzleReceiptUploadRepository implements IReceiptUploadRepository,
     return rows.map((row) => row.id);
   }
 
-  async markProcessed(id: string, processedObjectKey: string): Promise<ReceiptUpload | null> {
+  async listScreenableIds(limit: number): Promise<string[]> {
+    const rows = await this.db
+      .select({ id: receiptUploads.id })
+      .from(receiptUploads)
+      .where(
+        and(
+          eq(receiptUploads.status, "processed"),
+          isNotNull(receiptUploads.paymentId),
+          isNull(receiptUploads.screenedAt),
+        ),
+      )
+      .orderBy(asc(receiptUploads.createdAt))
+      .limit(limit);
+
+    return rows.map((row) => row.id);
+  }
+
+  async markProcessed(
+    id: string,
+    params: { processedObjectKey: string; fingerprint: ReceiptFingerprint; exif: ReceiptExifFacts | null },
+  ): Promise<ReceiptUpload | null> {
     const [row] = await this.db
       .update(receiptUploads)
-      .set({ status: "processed", processedObjectKey, updatedAt: new Date() })
+      .set({
+        status: "processed",
+        processedObjectKey: params.processedObjectKey,
+        imageSha256: params.fingerprint.sha256,
+        imagePhash: params.fingerprint.phash,
+        imagePhashCrops: params.fingerprint.crops,
+        exifFacts: params.exif,
+        updatedAt: new Date(),
+      })
       .where(and(eq(receiptUploads.id, id), eq(receiptUploads.status, "uploaded")))
       .returning();
 
