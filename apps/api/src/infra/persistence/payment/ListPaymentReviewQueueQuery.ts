@@ -1,5 +1,5 @@
 import { classGroups, courses, enrollments, payments, planPrices, plans, receiptUploads, students } from "@ooc/db";
-import type { PaymentMethod, ReceiptFraudSignalKind } from "@ooc/domain";
+import { isReceiptFraudSignalKind, type PaymentMethod, type ReceiptFraudSignalKind } from "@ooc/domain";
 import { and, asc, desc, eq, inArray, isNotNull, isNull, sql, type SQL } from "drizzle-orm";
 import type { Db } from "@/infra/db/client.js";
 import { OPEN_STATUSES, PAYMENTS_PAGE_SIZE, paymentSearchCondition } from "./ListPaymentsQuery.js";
@@ -64,12 +64,12 @@ function receiptState(status: string | null): ReviewReceiptState {
 }
 
 /** The kinds in `receipt_uploads.fraud_signals`, once each, in the order the
- * screening wrote them. */
+ * screening wrote them. A kind this version does not know is dropped: the
+ * route's response schema is a closed enum, and one stray jsonb value must
+ * not turn the whole queue into a 500. */
 function signalKinds(raw: unknown): ReceiptFraudSignalKind[] {
   if (!Array.isArray(raw)) return [];
-  const kinds = raw
-    .map((signal) => (signal as { kind?: unknown } | null)?.kind)
-    .filter((kind): kind is ReceiptFraudSignalKind => typeof kind === "string");
+  const kinds = raw.map((signal) => (signal as { kind?: unknown } | null)?.kind).filter(isReceiptFraudSignalKind);
   return [...new Set(kinds)];
 }
 

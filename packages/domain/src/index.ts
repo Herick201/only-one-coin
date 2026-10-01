@@ -110,8 +110,10 @@ export type { IReceiptUploadRepository } from "./enrollment/ReceiptUploadReposit
 export type { IReceiptStorage, PresignedReceiptUpload, StoredObjectHead } from "./enrollment/ReceiptStorage.js";
 export {
   exifSignals,
+  isReceiptFraudSignalKind,
   normalizeOperationNumber,
   payerNameMatches,
+  RECEIPT_FRAUD_SIGNAL_KINDS,
   routesToHumanReview,
   type OperationNumberClaim,
   type ReceiptExifFacts,

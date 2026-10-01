@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { RECEIPT_FRAUD_SIGNAL_KINDS } from "@ooc/domain";
 import { RouteBuilder } from "@/shared/http/RouteBuilder.js";
 import { ErrorResponseSchema } from "@/shared/http/ErrorResponseSchema.js";
 import { container } from "@/container.js";
@@ -25,9 +26,7 @@ const ItemSchema = z.object({
   expectedAmountCents: z.number().int(),
   currency: z.literal("PEN"),
   receipt: z.enum(["missing", "uploading", "ready", "refused"]),
-  fraudSignals: z.array(
-    z.enum(["identical_file", "similar_image", "edited_with_software", "modified_after_capture", "payer_name_mismatch"]),
-  ),
+  fraudSignals: z.array(z.enum(RECEIPT_FRAUD_SIGNAL_KINDS)),
   submittedAt: z.string(),
   reviewDeadline: z.string(),
 });

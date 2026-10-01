@@ -180,6 +180,9 @@ async function seedPayments(tx: Tx): Promise<SeededPayments> {
     status: "processed",
     fraudSignals: [
       { kind: "identical_file", receiptUploadId: "018f2b5c-9000-7000-8000-0000000000aa", paymentId: "018f2b5c-9000-7000-8000-0000000000bb" },
+      // A kind this version does not know (a later screening, a hand edit):
+      // dropped on the way out, never passed to the route's closed enum.
+      { kind: "kind_from_a_later_version" },
     ],
     screenedAt: new Date(),
   });

@@ -40,6 +40,28 @@ export type ReceiptFraudSignal =
 
 export type ReceiptFraudSignalKind = ReceiptFraudSignal["kind"];
 
+/** Every kind the screening can write, once — for whatever reads
+ * `receipt_uploads.fraud_signals` back (a jsonb the database does not hold to
+ * the union) and for the response schemas that serve it. `satisfies` keeps
+ * the list from naming a kind the union lacks; `allKindsListed` keeps it from
+ * missing one. */
+export const RECEIPT_FRAUD_SIGNAL_KINDS = [
+  "identical_file",
+  "similar_image",
+  "edited_with_software",
+  "modified_after_capture",
+  "payer_name_mismatch",
+] as const satisfies readonly ReceiptFraudSignalKind[];
+
+const allKindsListed: Exclude<ReceiptFraudSignalKind, (typeof RECEIPT_FRAUD_SIGNAL_KINDS)[number]> extends never
+  ? true
+  : false = true;
+
+/** Whether a value read back from storage is a kind this version knows. */
+export function isReceiptFraudSignalKind(value: unknown): value is ReceiptFraudSignalKind {
+  return allKindsListed && (RECEIPT_FRAUD_SIGNAL_KINDS as readonly unknown[]).includes(value);
+}
+
 /** The signals specific enough to take a payment out of any automatic path.
  * `similar_image` is too common to (see above); `payer_name_mismatch` is
  * ordinary (a parent or relative paying) and only informs. */
