@@ -1,8 +1,9 @@
 'use client'
 
 import { useMemo, useState, type MouseEvent } from 'react'
+import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import type { CourseOptions, CourseRow } from '@/lib/backoffice/types'
+import type { CourseRow } from '@/lib/backoffice/types'
 import {
   Card,
   EmptyState,
@@ -39,8 +40,9 @@ export function CoursesView({
   canConfigure: boolean
 }) {
   const t = useTranslations('bo')
+  const router = useRouter()
 
-  const [courses, setCourses] = useState<CourseRow[]>(rows)
+  const courses = rows
   const [query, setQuery] = useState('')
   /**
    * Language groups the user opened. The catalog opens whole, unlike the class
@@ -52,7 +54,6 @@ export function CoursesView({
   ])
   const [configuring, setConfiguring] = useState<CourseRow | null>(null)
   const [creating, setCreating] = useState(false)
-  const [touched, setTouched] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
 
   const searching = query.trim().length > 0
@@ -87,14 +88,6 @@ export function CoursesView({
     setOpened((current) =>
       current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
     )
-  }
-
-  function saveOptions(course: CourseRow, options: CourseOptions) {
-    setCourses((current) =>
-      current.map((row) => (row.id === course.id ? { ...row, ...options } : row)),
-    )
-    setTouched(true)
-    setToast(t('courses.saved'))
   }
 
   function rowProps(course: CourseRow) {
@@ -143,21 +136,13 @@ export function CoursesView({
         <NewCourseForm
           languages={[...new Map(courses.map((row) => [row.language.id, row.language])).values()]}
           onCancel={() => setCreating(false)}
-          onCreate={(course) => {
-            setCourses((current) => [course, ...current])
+          onCreated={() => {
             setCreating(false)
             setQuery('')
-            setTouched(true)
             setToast(t('courses.created'))
+            router.refresh()
           }}
         />
-      )}
-
-      {touched && (
-        <p className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-          <BoIcon name="alert" size={14} className="mt-0.5 shrink-0" />
-          {t('courses.local_only')}
-        </p>
       )}
 
       {byLanguage.length === 0 ? (
@@ -315,7 +300,14 @@ export function CoursesView({
       <CourseOptionsSheet
         course={configuring}
         onClose={() => setConfiguring(null)}
-        onSave={saveOptions}
+        onSaved={(message, live) => {
+          setToast(
+            message === 'retired'
+              ? t('courses.retired_notice', { count: live ?? 0 })
+              : t(message === 'restored' ? 'courses.restored' : 'courses.saved'),
+          )
+          router.refresh()
+        }}
       />
 
       <Toast message={toast} onDismiss={() => setToast(null)} />

@@ -212,6 +212,20 @@ export function canBrowseEnrollments(role: StaffRole): boolean {
 }
 
 /**
+ * Who reads the catalog (courses, plans, class groups) — mirrors
+ * CATALOG_READ_ROLES in apps/api. Billing sees no academic data; a teacher
+ * reaches their own class groups through their own screen.
+ */
+export function canBrowseCatalog(role: StaffRole): boolean {
+  return canBrowseEnrollments(role)
+}
+
+/** Who opens a plan or puts a new price in force — money, so management only. */
+export function canManagePrices(role: StaffRole): boolean {
+  return isManagement(role)
+}
+
+/**
  * Who may read the reports — the ledger summed up. Management, the two
  * supervisors and the analyst; billing's own figure — what came in this ciclo —
  * is on the payments section, next to the receipts it settles.

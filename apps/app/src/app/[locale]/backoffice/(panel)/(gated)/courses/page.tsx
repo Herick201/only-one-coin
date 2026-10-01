@@ -1,8 +1,13 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { listCourses } from '@/lib/backoffice/mock-data'
+import { notFound } from 'next/navigation'
+import { listCatalogCourses } from '@/lib/backoffice/catalog'
 import { getStaffSession } from '@/lib/backoffice/session'
-import { canConfigureCourse, canCreateCourse } from '@/lib/backoffice/permissions'
-import { PageHeader } from '@/components/backoffice/ui'
+import {
+  canBrowseCatalog,
+  canConfigureCourse,
+  canCreateCourse,
+} from '@/lib/backoffice/permissions'
+import { Card, EmptyState, PageHeader } from '@/components/backoffice/ui'
 import { SectionTabs } from '@/components/backoffice/section-tabs'
 import { CoursesView } from './courses-view'
 
@@ -26,6 +31,8 @@ export default async function CoursesPage({
   const t = await getTranslations('bo')
 
   const staff = await getStaffSession()
+  if (!canBrowseCatalog(staff.role)) notFound()
+  const rows = await listCatalogCourses()
 
   return (
     <div className="flex flex-col gap-5">
@@ -36,11 +43,21 @@ export default async function CoursesPage({
           { href: '/backoffice/courses', label: t('courses.title') },
         ]}
       />
-      <CoursesView
-        rows={listCourses()}
-        canCreate={canCreateCourse(staff.role)}
-        canConfigure={canConfigureCourse(staff.role)}
-      />
+      {rows === null ? (
+        <Card className="p-4">
+          <EmptyState
+            icon="alert"
+            title={t('courses.load_error_title')}
+            body={t('courses.load_error_body')}
+          />
+        </Card>
+      ) : (
+        <CoursesView
+          rows={rows}
+          canCreate={canCreateCourse(staff.role)}
+          canConfigure={canConfigureCourse(staff.role)}
+        />
+      )}
     </div>
   )
 }

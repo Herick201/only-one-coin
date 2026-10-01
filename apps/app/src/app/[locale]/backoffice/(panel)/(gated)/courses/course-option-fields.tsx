@@ -23,11 +23,14 @@ export function CourseOptionFields({
   value,
   onChange,
   wide = false,
+  hideActive = false,
 }: {
   value: CourseOptions
   onChange: (options: CourseOptions) => void
   /** Three fields across instead of two — the create form has the room, the sheet does not. */
   wide?: boolean
+  /** A new course is born in the catalog — there is nothing to switch off yet. */
+  hideActive?: boolean
 }) {
   const t = useTranslations('bo')
 
@@ -126,14 +129,16 @@ export function CourseOptionFields({
         ))}
       </fieldset>
 
-      <div className="border-t border-line pt-4">
-        <Toggle
-          checked={value.active}
-          onChange={(next) => set('active', next)}
-          label={t('course_options.active')}
-          hint={t('course_options.active_hint')}
-        />
-      </div>
+      {!hideActive && (
+        <div className="border-t border-line pt-4">
+          <Toggle
+            checked={value.active}
+            onChange={(next) => set('active', next)}
+            label={t('course_options.active')}
+            hint={t('course_options.active_hint')}
+          />
+        </div>
+      )}
     </div>
   )
 }

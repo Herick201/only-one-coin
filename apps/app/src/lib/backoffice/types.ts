@@ -568,6 +568,51 @@ export type CourseOptions = Pick<
 >
 
 /**
+ * Every `reason` a catalog write can answer, as the locale knows it
+ * (`bo.catalog_errors.*`). Anything else falls back to `generic` — a code the
+ * screen does not know never reaches the reader (CLAUDE.md §4).
+ */
+export type CatalogErrorKey =
+  | 'generic'
+  | 'course_not_found'
+  | 'plan_not_found'
+  | 'price_in_past'
+  | 'period_not_found'
+  | 'class_group_not_found'
+  | 'invalid_date_range'
+  | 'invalid_status_transition'
+  | 'class_group_incomplete'
+  | 'capacity_below_seats_taken'
+  | 'class_group_course_locked'
+  | 'period_already_duplicated'
+  | 'duplicate_same_period'
+  | 'class_group_not_full'
+  | 'waitlist_already_joined'
+  | 'waitlist_already_enrolled'
+  | 'waitlist_student_not_found'
+  | 'waitlist_entry_closed'
+
+export interface PlanPriceItem {
+  id: string
+  amountCents: number
+  validFrom: string
+  createdAt: string
+}
+
+export interface PlanDetail {
+  id: string
+  name: string
+  active: boolean
+  currentPriceId: string | null
+  prices: PlanPriceItem[]
+}
+
+export interface CourseDetail {
+  course: CourseRow
+  plans: PlanDetail[]
+}
+
+/**
  * One dated observation the teacher leaves on a student of their class group —
  * "llegó tarde tres veces", "necesita refuerzo en listening". Free text, per
  * student per class group, teacher-authored. Append-only on screen: an

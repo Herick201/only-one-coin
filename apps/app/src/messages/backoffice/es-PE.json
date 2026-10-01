@@ -1103,11 +1103,16 @@
       "empty_body": "Todavía no hay cursos en el catálogo.",
       "empty_search_title": "Sin resultados",
       "empty_search_body": "Probá con otro curso, idioma o nivel.",
-      "local_only": "Los cambios son solo de pantalla. Todavía no hay servidor conectado.",
       "options_title": "Configuración del curso",
       "options_hint": "Todo esto se puede cambiar después en las opciones del curso.",
       "saved": "Cambios guardados",
-      "created": "Curso creado"
+      "created": "Curso creado",
+      "load_error_title": "No pudimos cargar los cursos",
+      "load_error_body": "Vuelve a intentar en unos segundos. Si sigue fallando, avisa a soporte.",
+      "field_language_hint": "Elige uno existente o escribe un idioma nuevo.",
+      "retired_notice": "{count, plural, =0 {Curso fuera de catálogo.} one {Curso fuera de catálogo. # matrícula sigue en curso.} other {Curso fuera de catálogo. # matrículas siguen en curso.}}",
+      "restored": "Curso de vuelta en el catálogo",
+      "plans": "Planes y precios"
     },
     "course_options": {
       "close": "Cerrar",
@@ -1559,6 +1564,26 @@
       "title": "Acá no hay nada",
       "body": "O esta sección está apagada en producción ahora mismo, o el enlace es viejo, o lo que señalaba ya no existe.",
       "back": "Volver al panel"
+    },
+    "catalog_errors": {
+      "generic": "No se pudo guardar. Intenta de nuevo.",
+      "course_not_found": "Ese curso ya no está en el catálogo.",
+      "plan_not_found": "Ese plan ya no está disponible.",
+      "price_in_past": "El precio no puede empezar en una fecha pasada.",
+      "period_not_found": "Ese período ya no está disponible.",
+      "class_group_not_found": "Esa aula ya no está disponible.",
+      "invalid_date_range": "La fecha de inicio debe ser anterior a la de término.",
+      "invalid_status_transition": "El aula ya cambió de estado. Recarga la página.",
+      "class_group_incomplete": "Faltan las fechas de inicio y término para abrir la matrícula.",
+      "capacity_below_seats_taken": "Las vacantes no pueden quedar por debajo de las ya ocupadas.",
+      "class_group_course_locked": "El curso solo se cambia en un aula en borrador y sin matriculados.",
+      "period_already_duplicated": "Las aulas de ese período ya se copiaron a este.",
+      "duplicate_same_period": "Elige un período de origen distinto.",
+      "class_group_not_full": "El aula todavía tiene vacantes: matricula directamente.",
+      "waitlist_already_joined": "El alumno ya está en la lista de espera.",
+      "waitlist_already_enrolled": "El alumno ya está matriculado en esta aula.",
+      "waitlist_student_not_found": "No encontramos a ese alumno.",
+      "waitlist_entry_closed": "Ese alumno ya salió de la lista."
     }
   }
 }

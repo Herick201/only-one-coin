@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import type { CourseOptions, CourseRow } from '@/lib/backoffice/types'
+import type { CatalogErrorKey, CourseOptions, CourseRow } from '@/lib/backoffice/types'
+import { catalogWrite } from '@/lib/backoffice/catalog-client'
 import { BoIcon } from '@/components/backoffice/icons'
 import {
   Sheet,
@@ -26,18 +27,21 @@ import { CourseOptionFields } from './course-option-fields'
 export function CourseOptionsSheet({
   course,
   onClose,
-  onSave,
+  onSaved,
 }: {
   course: CourseRow | null
   onClose: () => void
-  onSave: (course: CourseRow, options: CourseOptions) => void
+  onSaved: (message: 'saved' | 'retired' | 'restored', liveEnrollments?: number) => void
 }) {
   const t = useTranslations('bo')
   const [draft, setDraft] = useState<CourseOptions | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<CatalogErrorKey | null>(null)
 
   // The draft follows whichever course the sheet was opened on, and is thrown
   // away on close — a half-edited course must not leak into the next one.
   useEffect(() => {
+    setError(null)
     setDraft(
       course && {
         minAge: course.minAge,
@@ -50,6 +54,41 @@ export function CourseOptionsSheet({
       },
     )
   }, [course])
+
+  async function save(target: CourseRow, next: CourseOptions) {
+    setSaving(true)
+    setError(null)
+    const { active, ...options } = next
+    const changed = (Object.keys(options) as (keyof typeof options)[]).filter(
+      (key) => options[key] !== target[key],
+    )
+    if (changed.length > 0) {
+      const patch = Object.fromEntries(changed.map((key) => [key, options[key]]))
+      const result = await catalogWrite(`/courses/${target.id}/options`, 'PATCH', patch)
+      if (!result.ok) {
+        setSaving(false)
+        setError(result.error)
+        return
+      }
+    }
+    if (active !== target.active) {
+      const result = await catalogWrite<{ liveEnrollments: number }>(
+        `/course/${target.id}/${active ? 'restore' : 'retire'}`,
+        'POST',
+      )
+      setSaving(false)
+      if (!result.ok) {
+        setError(result.error)
+        return
+      }
+      onSaved(active ? 'restored' : 'retired', result.data.liveEnrollments)
+      onClose()
+      return
+    }
+    setSaving(false)
+    onSaved('saved')
+    onClose()
+  }
 
   return (
     <Sheet
@@ -85,11 +124,9 @@ export function CourseOptionsSheet({
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    onSave(course, draft)
-                    onClose()
-                  }}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-deep"
+                  disabled={saving}
+                  onClick={() => void save(course, draft)}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-deep disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-brand-blue"
                 >
                   <BoIcon name="check" size={16} />
                   {t('course_options.save')}
@@ -102,6 +139,12 @@ export function CourseOptionsSheet({
                   {t('course_options.cancel')}
                 </button>
               </div>
+
+              {error && (
+                <p role="alert" className="text-sm text-red-700">
+                  {t(`catalog_errors.${error}`)}
+                </p>
+              )}
             </div>
           </>
         )}

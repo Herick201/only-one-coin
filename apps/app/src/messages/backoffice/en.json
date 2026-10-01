@@ -1103,11 +1103,16 @@
       "empty_body": "The catalog has no courses yet.",
       "empty_search_title": "No results",
       "empty_search_body": "Try another course, language or level.",
-      "local_only": "Changes are screen-only. No server is connected yet.",
       "options_title": "Course configuration",
       "options_hint": "All of this can be changed later in the course options.",
       "saved": "Changes saved",
-      "created": "Course created"
+      "created": "Course created",
+      "load_error_title": "We couldn't load the courses",
+      "load_error_body": "Try again in a few seconds. If it keeps failing, let support know.",
+      "field_language_hint": "Pick an existing one or type a new language.",
+      "retired_notice": "{count, plural, =0 {Course taken off the catalog.} one {Course taken off the catalog. # enrollment is still running.} other {Course taken off the catalog. # enrollments are still running.}}",
+      "restored": "Course back in the catalog",
+      "plans": "Plans and prices"
     },
     "course_options": {
       "close": "Close",
@@ -1559,6 +1564,26 @@
       "title": "Nothing here",
       "body": "Either this section is off in production right now, the link is old, or whatever it pointed to no longer exists.",
       "back": "Back to the panel"
+    },
+    "catalog_errors": {
+      "generic": "Couldn't save. Try again.",
+      "course_not_found": "That course is no longer in the catalog.",
+      "plan_not_found": "That plan is no longer available.",
+      "price_in_past": "A price can't start on a past date.",
+      "period_not_found": "That period is no longer available.",
+      "class_group_not_found": "That class group is no longer available.",
+      "invalid_date_range": "The start date must come before the end date.",
+      "invalid_status_transition": "The class group already changed status. Reload the page.",
+      "class_group_incomplete": "Start and end dates are needed to open enrollment.",
+      "capacity_below_seats_taken": "Seats can't go below the ones already taken.",
+      "class_group_course_locked": "The course can only change on a draft class group with nobody enrolled.",
+      "period_already_duplicated": "That period's class groups were already copied here.",
+      "duplicate_same_period": "Pick a different source period.",
+      "class_group_not_full": "The class group still has seats: enroll directly.",
+      "waitlist_already_joined": "The student is already on the waitlist.",
+      "waitlist_already_enrolled": "The student is already enrolled in this class group.",
+      "waitlist_student_not_found": "We couldn't find that student.",
+      "waitlist_entry_closed": "That student already left the list."
     }
   }
 }

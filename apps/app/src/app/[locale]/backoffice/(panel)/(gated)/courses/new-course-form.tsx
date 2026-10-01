@@ -3,10 +3,11 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import type {
+  CatalogErrorKey,
   CourseLanguage,
   CourseOptions,
-  CourseRow,
 } from '@/lib/backoffice/types'
+import { catalogWrite } from '@/lib/backoffice/catalog-client'
 import { Card } from '@/components/backoffice/ui'
 import { BoIcon } from '@/components/backoffice/icons'
 import { CourseOptionFields, DEFAULT_COURSE_OPTIONS } from './course-option-fields'
@@ -27,44 +28,51 @@ const labelClass =
  * certificate rule and the procedures the course carries. A course created on
  * defaults is a course whose first class groups certify by the wrong rule.
  *
- * Screen-local, like the class group form: the real write is a usecase in
- * `packages/domain` behind `apps/api`, never the browser (CLAUDE.md §8).
+ * Writes through `POST /api/v1/catalog/courses` — the usecase lives in
+ * `packages/domain` behind `apps/api`, never in the browser (CLAUDE.md §8).
  */
 export function NewCourseForm({
   languages,
   onCancel,
-  onCreate,
+  onCreated,
 }: {
   languages: CourseLanguage[]
   onCancel: () => void
-  onCreate: (course: CourseRow) => void
+  onCreated: () => void
 }) {
   const t = useTranslations('bo')
 
   const [name, setName] = useState('')
-  const [languageId, setLanguageId] = useState(languages[0]?.id ?? '')
+  const [language, setLanguage] = useState('')
   const [level, setLevel] = useState('')
   const [summary, setSummary] = useState('')
-  const [options, setOptions] = useState<CourseOptions>(DEFAULT_COURSE_OPTIONS)
+  const [draftOptions, setDraftOptions] = useState<CourseOptions>(DEFAULT_COURSE_OPTIONS)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<CatalogErrorKey | null>(null)
 
   const ready =
     name.trim() !== '' &&
     level.trim() !== '' &&
     summary.trim() !== '' &&
-    languageId !== ''
+    language.trim() !== ''
 
-  function submit() {
-    const language = languages.find((item) => item.id === languageId)
-    if (!language) return
-    onCreate({
-      id: `crs_local_${name.trim().toLowerCase().replace(/\s+/g, '_')}`,
+  async function submit() {
+    setSaving(true)
+    setError(null)
+    const { active: _active, ...options } = draftOptions
+    const result = await catalogWrite('/courses', 'POST', {
       name: name.trim(),
-      language,
+      language: language.trim(),
       level: level.trim(),
       summary: summary.trim(),
       ...options,
-      classGroupCount: 0,
     })
+    setSaving(false)
+    if (!result.ok) {
+      setError(result.error)
+      return
+    }
+    onCreated()
   }
 
   return (
@@ -74,17 +82,20 @@ export function NewCourseForm({
       <AutoGrid min="15rem" gap="gap-3">
         <label className="flex flex-col gap-1">
           <span className={labelClass}>{t('courses.field_language')}</span>
-          <select
-            value={languageId}
-            onChange={(event) => setLanguageId(event.target.value)}
+          <input
+            list="course-languages"
+            value={language}
+            onChange={(event) => setLanguage(event.target.value)}
             className={fieldClass}
-          >
+          />
+          <datalist id="course-languages">
             {languages.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
+              <option key={item.id} value={item.name} />
             ))}
-          </select>
+          </datalist>
+          <span className="text-xs text-muted-foreground">
+            {t('courses.field_language_hint')}
+          </span>
         </label>
 
         <label className="flex flex-col gap-1">
@@ -123,7 +134,7 @@ export function NewCourseForm({
         <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {t('courses.options_title')}
         </p>
-        <CourseOptionFields value={options} onChange={setOptions} wide />
+        <CourseOptionFields value={draftOptions} onChange={setDraftOptions} wide hideActive />
       </div>
 
       <p className="mt-3 text-xs text-muted-foreground">{t('courses.options_hint')}</p>
@@ -131,8 +142,8 @@ export function NewCourseForm({
       <div className="mt-4 flex items-center gap-2">
         <button
           type="button"
-          disabled={!ready}
-          onClick={submit}
+          disabled={!ready || saving}
+          onClick={() => void submit()}
           className="inline-flex items-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-deep disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-brand-blue"
         >
           <BoIcon name="check" size={16} />
@@ -146,6 +157,12 @@ export function NewCourseForm({
           {t('courses.cancel')}
         </button>
       </div>
+
+      {error && (
+        <p role="alert" className="mt-3 text-sm text-red-700">
+          {t(`catalog_errors.${error}`)}
+        </p>
+      )}
     </Card>
   )
 }
