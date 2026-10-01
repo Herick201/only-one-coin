@@ -1012,7 +1012,44 @@
       "grades_hint": "Registre a nota final de 0 a 20; aprova a partir de {min}. Se o aluno não fez o exame final, marque «Não fez».",
       "grades_da": "Não fez",
       "grades_saved_local_only": "Notas salvas só na tela ({time}). Ainda não há servidor conectado.",
-      "grades_invalid": "Há notas fora do intervalo: vão de 0 a 20, sem decimais."
+      "grades_invalid": "Há notas fora do intervalo: vão de 0 a 20, sem decimais.",
+      "field_window": "Janela de inscrição",
+      "window_open_ended": "Sem limite"
+    },
+    "class_group_actions": {
+      "advance_enrolling": "Abrir inscrições",
+      "advance_in_progress": "Iniciar aulas",
+      "advance_finished": "Finalizar aulas",
+      "advance_closed": "Encerrar turma",
+      "confirm_enrolling": "A turma vai aparecer na matrícula dentro da janela.",
+      "confirm_in_progress": "A matrícula pública deixa de oferecer esta turma.",
+      "confirm_finished": "As aulas terminaram; os certificados ficam pendentes.",
+      "confirm_closed": "Todos os certificados devidos já foram emitidos.",
+      "confirm": "Confirmar",
+      "cancel": "Cancelar",
+      "edit": "Editar turma",
+      "close": "Fechar",
+      "saved": "Alterações salvas",
+      "status_changed": "Status atualizado",
+      "forward_only": "O status só avança. Turma aberta por engano sai do catálogo."
+    },
+    "waitlist": {
+      "title": "Lista de espera",
+      "empty": "Ninguém na espera.",
+      "add": "Adicionar à espera",
+      "search_placeholder": "Nome ou documento do aluno",
+      "no_students_found": "Nenhum aluno corresponde à busca.",
+      "joined_on": "Desde {date}",
+      "remove": "Retirar",
+      "remove_reason": "Por que sai da espera?",
+      "reason_withdrawn": "O aluno desistiu",
+      "reason_removed_by_staff": "Retirado pela coordenação",
+      "cancel": "Cancelar",
+      "seat_free": "{count, plural, one {Abriu # vaga.} other {Abriram # vagas.}}",
+      "enroll_first": "Matricular {name}",
+      "added": "Aluno adicionado à espera",
+      "removed": "Aluno retirado da espera",
+      "only_when_full": "A espera abre quando a turma lota."
     },
     "teacher_groups": {
       "certificates_link": "Emissão de certificados",
@@ -1652,7 +1689,8 @@
       "waitlist_already_joined": "O aluno já está na lista de espera.",
       "waitlist_already_enrolled": "O aluno já está matriculado nesta turma.",
       "waitlist_student_not_found": "Não encontramos esse aluno.",
-      "waitlist_entry_closed": "Esse aluno já saiu da lista."
+      "waitlist_entry_closed": "Esse aluno já saiu da lista.",
+      "waitlist_entry_not_found": "Esse registro de espera não existe mais."
     }
   }
 }

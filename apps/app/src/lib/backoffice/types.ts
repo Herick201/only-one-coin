@@ -648,6 +648,7 @@ export type CatalogErrorKey =
   | 'waitlist_already_enrolled'
   | 'waitlist_student_not_found'
   | 'waitlist_entry_closed'
+  | 'waitlist_entry_not_found'
 
 export interface PlanPriceItem {
   id: string
