@@ -1,5 +1,5 @@
-import { students, waitlistEntries } from "@ooc/db";
-import { and, asc, eq, isNull } from "drizzle-orm";
+import { enrollments, students, waitlistEntries } from "@ooc/db";
+import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import type { Db } from "@/infra/db/client.js";
 
 export interface WaitlistItem {
@@ -15,6 +15,11 @@ export interface WaitlistItem {
 /**
  * Who is still waiting for a class group, first come first served (OOC-35).
  * Read-only shaping, so it lives beside the repository and not in the domain.
+ *
+ * A student who already holds a live seat in the class group (not retired,
+ * not released — the same "enrolled" as `DrizzleWaitlistRepository
+ * .studentStanding`) is not waiting, even with the entry still open: the
+ * manual enrollment closes the entry, the public checkout does not.
  */
 export class ListWaitlistQuery {
   constructor(private readonly db: Db) {}
@@ -32,7 +37,13 @@ export class ListWaitlistQuery {
       })
       .from(waitlistEntries)
       .innerJoin(students, eq(students.id, waitlistEntries.studentId))
-      .where(and(eq(waitlistEntries.classGroupId, classGroupId), isNull(waitlistEntries.leftAt)))
+      .where(
+        and(
+          eq(waitlistEntries.classGroupId, classGroupId),
+          isNull(waitlistEntries.leftAt),
+          sql`not exists (select 1 from ${enrollments} e where e.student_id = ${waitlistEntries.studentId} and e.class_group_id = ${waitlistEntries.classGroupId} and e.deleted_at is null and e.seat_status <> 'released')`,
+        ),
+      )
       // uuid v7 ids are time-ordered: the tie-break keeps two entries born in
       // the same transaction in the order they were written.
       .orderBy(asc(waitlistEntries.createdAt), asc(waitlistEntries.id));

@@ -186,6 +186,26 @@ describe("waitlist", { timeout: 30_000 }, () => {
     });
   });
 
+  it("leaves out a student who got a seat some other way, until that seat is given back", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      await seed(tx);
+      const now = Date.now();
+      // ENROLLED queued, then enrolled through the public checkout — which
+      // does not close waitlist entries — so the entry is still open.
+      await tx.insert(waitlistEntries).values([
+        { studentId: ENROLLED, classGroupId: FULL, createdAt: new Date(now - 3 * DAY) },
+        { studentId: WAITING, classGroupId: FULL, createdAt: new Date(now - 2 * DAY) },
+      ]);
+
+      const query = new ListWaitlistQuery(tx);
+      expect((await query.run(FULL)).map((row) => row.studentId)).toEqual([WAITING]);
+
+      // A seat given back no longer counts as being in.
+      await tx.update(enrollments).set({ seatStatus: "released" }).where(eq(enrollments.studentId, ENROLLED));
+      expect((await query.run(FULL)).map((row) => row.studentId)).toEqual([ENROLLED, WAITING]);
+    });
+  });
+
   it("the manual enrollment closes the student's place in the queue", async () => {
     await inRolledBackTransaction(async (tx) => {
       await seed(tx);
