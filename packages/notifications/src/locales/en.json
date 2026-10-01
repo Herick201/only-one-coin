@@ -27,8 +27,7 @@
       "preheader": "Classes start on {startsOn}.",
       "paragraphs": [
         "We approved the payment for {studentName}'s enrollment in {courseName}. The enrollment is confirmed!",
-        "Classes start on {startsOn}.",
-        "The student portal login details will arrive in a separate e-mail."
+        "Classes start on {startsOn}."
       ]
     },
     "payment_rejected": {

@@ -27,8 +27,7 @@
       "preheader": "As aulas começam em {startsOn}.",
       "paragraphs": [
         "Aprovamos o pagamento da matrícula de {studentName} em {courseName}. A matrícula está confirmada!",
-        "As aulas começam em {startsOn}.",
-        "Os dados de acesso ao portal do aluno chegarão em um e-mail separado."
+        "As aulas começam em {startsOn}."
       ]
     },
     "payment_rejected": {
