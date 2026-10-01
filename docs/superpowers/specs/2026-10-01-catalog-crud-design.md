@@ -190,3 +190,14 @@ de erro novo.
 - `packages/db/CLAUDE.md` — migration `0017`.
 - `README.md` "Estado atual" — cursos e turmas deixam de ser mock.
 - `docs/ROADMAP.md` — **só sinalizar** (Sessão 35 avança; Sessão 22 continua aberta). Não editar sem confirmação.
+
+## 5. Ajustes feitos no plano
+
+Desvios assumidos na implementação em relação ao desenho acima:
+
+1. **Duas migrations em vez de uma:** `0017` (cursos + trava de `plan_prices`) no PR do OOC-36 e `0018` (turmas + espera) no PR do OOC-35. Cada PR leva o schema que usa.
+2. **A edição de curso vira duas rotas:** `PATCH /catalog/courses/:id` (identidade + opções, `master`/`admin`) e `PATCH /catalog/courses/:id/options` (só opções, + `enrollment_supervisor`). É o que faz a regra "renomear curso é de quem cria" valer na API, não só na tela.
+3. **Escritas devolvem `{ id }`** (mais o dado específico: status, contagens de duplicação, matrículas vivas); a tela relê com `router.refresh()`.
+4. **A tela de turmas filtra período pela API** (`?periodId=`); busca por texto e idioma filtram em memória dentro do período (~40 linhas). A API aceita `courseId`, `status` e `q` também.
+5. **Turma criada/editada pelo painel grava `schedule = ''`** e o horário só em `slots` (`{ weekday, startTime, endTime }[]`). `schedule` texto fica como legado de seed; o seletor da matrícula manual formata por `slots`.
+6. **A janela de inscrição também vale no claim do checkout** (`sellableClassGroup()`), não no submit e não no caminho manual do staff. Hold preso dentro da janela sobrevive ao fechamento dela.

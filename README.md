@@ -159,7 +159,8 @@ Sessão 7) já existem. Domínio e fila já existem, independentes dessa escolha
   domínio do app é o Vercel em produção (`vercel.json`, 302 com a query
   string preservada) e o dev server no local (ver **Rodar local**).
   No backoffice já existem: alunos (`/backoffice/students`, com ficha, histórico e edição),
-  turmas (`/backoffice/class-groups`, com lista paginada, ficha da turma,
+  turmas (`/backoffice/class-groups`, real desde o OOC-35: períodos, rascunho,
+  duplicação de período, ciclo de vida e lista de espera; lista paginada, ficha da turma,
   emissão de certificados em lote e procedimentos por matrícula — mover,
   congelar, retirar), cursos (`/backoffice/courses`, catálogo com opções por
   curso) e pagamentos (`/backoffice/payments`: livro de todos os pagamentos —
@@ -316,7 +317,7 @@ o que é real:
 | Reservas de vaga (`/backoffice/enrollments/reservations`) | Mock |
 | Pagamentos e fila de revisão (`/backoffice/payments`, `/payments/review`) | Mock — não existe ainda ação em lote nem endpoint de pagamento avulso |
 | Cursos (`/backoffice/courses`) | **Real**: lista (aposentados inclusos, sinalizados), criar curso, opções (resumo, regra de certificado, congelamento, transferência), sair do catálogo/voltar com aviso de matrícula viva, e planos com preço agendado (`/api/v1/catalog`, com `audit_log`). A coluna `courses.local_only` deixou de existir |
-| Turmas (`/backoffice/class-groups`) | Mock — `apps/api` só expõe leitura (`GET /class-groups`); não há rota de criar/editar turma |
+| Turmas (`/backoffice/class-groups`) | **Real**: lista por período, períodos (criar, duplicar), criar/editar turma, rascunho e ciclo de vida (`draft → enrolling → in_progress → finished → closed`), ficha da turma e lista de espera manual (`/api/v1/catalog`, com `audit_log`). Continua mock: visão do docente (precisa de `teachers`, Sessão 36), roster, notas e certificados |
 | Docentes (`/backoffice/teachers`) | Mock — não existe tabela `teachers` ainda (decisão deliberada, `docs/ROADMAP.md` Sessão 36) |
 | Equipe (`/backoffice/team`) | **Real**: listagem, criação, convite, redefinição de senha e a bitácora de troca de cargo (lida do `audit_log`) |
 | Funcionalidades (`/backoffice/features`) | **Real** |
