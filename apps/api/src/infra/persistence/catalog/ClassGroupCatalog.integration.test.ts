@@ -20,6 +20,8 @@ import type { Db } from "@/infra/db/client.js";
 import { DrizzleAuditLogRepository } from "@/infra/identity/DrizzleAuditLogRepository.js";
 import { DrizzleAcademicPeriodRepository } from "./DrizzleAcademicPeriodRepository.js";
 import { DrizzleClassGroupRepository } from "./DrizzleClassGroupRepository.js";
+import { ListClassGroupsQuery } from "./ListClassGroupsQuery.js";
+import { ListPeriodsQuery } from "./ListPeriodsQuery.js";
 
 /**
  * The OOC-35 acceptance criterion, checked where it is written: duplicating a
@@ -219,6 +221,68 @@ describe("class group catalog", { timeout: 30_000 }, () => {
       expect(saved.name).toBe("Ciclo A renombrado (class group catalog integration)");
       expect(saved.isDeleted).toBe(false);
       expect(await periods.findById("018f2b5c-5b00-7000-8000-0000000000ff")).toBeNull();
+    });
+  });
+
+  it("lists class groups of a period with course, waitlist count and retired flags", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      await seed(tx);
+      const items = await new ListClassGroupsQuery(tx).run({ periodId: PERIOD_A });
+
+      // retired class groups stay listed, flagged; order is language, course name, start, code
+      expect(items.map((item) => item.id).sort()).toEqual([T1, T2, T3].sort());
+      const t1 = items.find((item) => item.id === T1)!;
+      expect(t1).toMatchObject({
+        code: "CGCAT-01",
+        courseId: C1,
+        courseName: "Curso vivo (class group catalog integration)",
+        language: "Lengua de prueba",
+        courseActive: true,
+        academicPeriodId: PERIOD_A,
+        academicPeriodName: "Ciclo A (class group catalog integration)",
+        teacherName: "Docente de prueba",
+        slots: [{ weekday: "mon", startTime: "19:00", endTime: "20:30" }],
+        capacity: 25,
+        seatsTaken: 1,
+        status: "in_progress",
+        active: true,
+        waitlistCount: 1,
+      });
+      expect(typeof t1.startsOn).toBe("string");
+      expect(items.find((item) => item.id === T2)).toMatchObject({ active: false, waitlistCount: 0 });
+      expect(items.find((item) => item.id === T3)).toMatchObject({ courseActive: false, active: true });
+
+      expect(await new ListClassGroupsQuery(tx).run({ id: T1 })).toHaveLength(1);
+      expect(await new ListClassGroupsQuery(tx).run({ periodId: PERIOD_A, status: "enrolling" })).toHaveLength(2);
+      expect(await new ListClassGroupsQuery(tx).run({ periodId: PERIOD_A, courseId: C2 })).toHaveLength(1);
+      expect(await new ListClassGroupsQuery(tx).run({ periodId: PERIOD_B })).toEqual([]);
+    });
+  });
+
+  it("matches the search term against code, course and teacher, case-insensitively, without wildcards", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      await seed(tx);
+      const query = new ListClassGroupsQuery(tx);
+      expect(await query.run({ periodId: PERIOD_A, q: "cgcat-01" })).toHaveLength(3);
+      expect(await query.run({ periodId: PERIOD_A, q: "CURSO RETIRADO" })).toHaveLength(1);
+      expect(await query.run({ periodId: PERIOD_A, q: "docente de PRUEBA" })).toHaveLength(3);
+      expect(await query.run({ periodId: PERIOD_A, q: "nobody" })).toEqual([]);
+      // % and _ are literal characters, not LIKE wildcards
+      expect(await query.run({ periodId: PERIOD_A, q: "%" })).toEqual([]);
+      expect(await query.run({ periodId: PERIOD_A, q: "CGCAT_01" })).toEqual([]);
+    });
+  });
+
+  it("counts only live class groups per period, newest period first", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      await seed(tx);
+      const items = await new ListPeriodsQuery(tx).run();
+      const a = items.find((item) => item.id === PERIOD_A)!;
+      const b = items.find((item) => item.id === PERIOD_B)!;
+      expect(a).toMatchObject({ name: "Ciclo A (class group catalog integration)", active: true, classGroupCount: 2 });
+      expect(typeof a.startsOn).toBe("string");
+      expect(b.classGroupCount).toBe(0);
+      expect(items.indexOf(b)).toBeLessThan(items.indexOf(a));
     });
   });
 });

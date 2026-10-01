@@ -24,6 +24,18 @@ const CASES: [string, string, Role][] = [
   ["POST", `/api/v1/catalog/courses/${ID}/plans`, "enrollment_supervisor"],
   ["PATCH", `/api/v1/catalog/plans/${ID}`, "enrollment_supervisor"],
   ["POST", `/api/v1/catalog/plans/${ID}/prices`, "billing"],
+  ["GET", "/api/v1/catalog/periods", "billing"],
+  ["POST", "/api/v1/catalog/periods", "academic_supervisor"],
+  ["PATCH", `/api/v1/catalog/periods/${ID}`, "sales"],
+  ["POST", `/api/v1/catalog/periods/${ID}/duplicate`, "academic_supervisor"],
+  ["GET", "/api/v1/catalog/class-groups", "teacher"],
+  ["GET", `/api/v1/catalog/class-groups/${ID}`, "billing"],
+  ["POST", "/api/v1/catalog/class-groups", "academic_supervisor"],
+  ["PATCH", `/api/v1/catalog/class-groups/${ID}`, "support"],
+  ["POST", `/api/v1/catalog/class-groups/${ID}/status`, "analyst"],
+  ["GET", `/api/v1/catalog/class-groups/${ID}/waitlist`, "billing"],
+  ["POST", `/api/v1/catalog/class-groups/${ID}/waitlist`, "sales"],
+  ["POST", `/api/v1/catalog/waitlist/${ID}/leave`, "support"],
 ];
 
 let app: FastifyInstance;

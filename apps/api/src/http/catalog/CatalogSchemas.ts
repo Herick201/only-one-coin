@@ -1,4 +1,4 @@
-import { CertificateRuleSchema } from "@ooc/domain";
+import { CertificateRuleSchema, ClassGroupStatusSchema, WeeklySlotSchema as ValidWeeklySlotSchema } from "@ooc/domain";
 import { z } from "zod";
 
 export const IdParamsSchema = z.object({ id: z.string().uuid() });
@@ -49,3 +49,70 @@ export const WeeklySlotSchema = z.object({
   startTime: z.string(),
   endTime: z.string(),
 });
+
+export const PeriodListItemSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  startsOn: z.string().datetime(),
+  endsOn: z.string().datetime(),
+  active: z.boolean(),
+  classGroupCount: z.number().int(),
+});
+
+export const ClassGroupItemSchema = z.object({
+  id: z.string().uuid(),
+  code: z.string(),
+  courseId: z.string().uuid(),
+  courseName: z.string(),
+  language: z.string(),
+  courseActive: z.boolean(),
+  academicPeriodId: z.string().uuid(),
+  academicPeriodName: z.string(),
+  teacherName: z.string(),
+  slots: z.array(WeeklySlotSchema),
+  startsOn: z.string().datetime().nullable(),
+  endsOn: z.string().datetime().nullable(),
+  enrollmentOpensAt: z.string().datetime().nullable(),
+  enrollmentClosesAt: z.string().datetime().nullable(),
+  capacity: z.number().int(),
+  seatsTaken: z.number().int(),
+  status: ClassGroupStatusSchema,
+  active: z.boolean(),
+  waitlistCount: z.number().int(),
+});
+
+export const WaitlistItemSchema = z.object({
+  id: z.string().uuid(),
+  studentId: z.string().uuid(),
+  studentName: z.string(),
+  nationalIdType: z.string(),
+  nationalId: z.string(),
+  joinedAt: z.string().datetime(),
+});
+
+/** A date as the screen sends it: ISO 8601 with an offset (midnight America/Lima is -05:00). */
+export const DateTimeSchema = z.string().datetime({ offset: true });
+
+/** Optional on create; on PATCH an explicit null clears the field. */
+export const DateTimeOrNull = DateTimeSchema.nullable().optional();
+
+export const toDate = (value: string | null | undefined): Date | null | undefined =>
+  value === undefined ? undefined : value === null ? null : new Date(value);
+
+export const CreateClassGroupBodySchema = z.object({
+  courseId: z.string().uuid(),
+  academicPeriodId: z.string().uuid(),
+  code: z.string().trim().min(1),
+  teacherName: z.string().trim(),
+  slots: z.array(ValidWeeklySlotSchema).min(1),
+  capacity: z.number().int().positive(),
+  startsOn: DateTimeOrNull,
+  endsOn: DateTimeOrNull,
+  enrollmentOpensAt: DateTimeOrNull,
+  enrollmentClosesAt: DateTimeOrNull,
+  publish: z.boolean(),
+});
+
+export const UpdateClassGroupBodySchema = CreateClassGroupBodySchema.omit({ academicPeriodId: true, publish: true })
+  .partial()
+  .refine((patch) => Object.keys(patch).length > 0);
