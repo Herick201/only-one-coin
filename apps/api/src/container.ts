@@ -6,12 +6,15 @@ import {
   CompleteStaffInviteUseCase,
   CompleteStaffPasswordResetUseCase,
   ConfirmReceiptUploadUseCase,
+  CreateCourseUseCase,
   CreateManualEnrollmentUseCase,
+  CreatePlanUseCase,
   CreateStaffInviteUseCase,
   CreateStaffPasswordResetUseCase,
   ExpireSeatHoldsUseCase,
   PromoteUserRoleUseCase,
   RegisterStudentUseCase,
+  RenamePlanUseCase,
   ReleaseSeatHoldUseCase,
   RequestReceiptUploadUseCase,
   ScreenReceiptUploadUseCase,
@@ -21,17 +24,21 @@ import {
   RenewStaffPasswordResetUseCase,
   RestoreCatalogEntryUseCase,
   RestoreStaffAccessUseCase,
+  SchedulePlanPriceUseCase,
   SetFeatureFlagOverrideUseCase,
   SubmitPublicEnrollmentUseCase,
   UpdateCheckoutHoldMinutesUseCase,
+  UpdateCourseUseCase,
   type IAuditLogRepository,
   type ICatalogEntryRepository,
+  type ICourseRepository,
   type ICurrentSessionPort,
   type IEnrollmentRepository,
   type IFeatureFlagOverrideRepository,
   type IFreshAuthVerifier,
   type IGuardianRepository,
   type IPlanPriceLookup,
+  type IPlanRepository,
   type IPlatformSettingsRepository,
   type IPublicEnrollmentRepository,
   type IReceiptUploadRepository,
@@ -79,6 +86,10 @@ import { ListEnrollmentsQuery } from "./infra/persistence/enrollment/ListEnrollm
 import { ListOpenClassGroupsQuery } from "./infra/persistence/catalog/ListOpenClassGroupsQuery.js";
 import { GetPublicCatalogQuery } from "./infra/persistence/catalog/GetPublicCatalogQuery.js";
 import { DrizzleCatalogEntryRepository } from "./infra/persistence/catalog/DrizzleCatalogEntryRepository.js";
+import { DrizzleCourseRepository } from "./infra/persistence/catalog/DrizzleCourseRepository.js";
+import { DrizzlePlanRepository } from "./infra/persistence/catalog/DrizzlePlanRepository.js";
+import { ListCoursesQuery } from "./infra/persistence/catalog/ListCoursesQuery.js";
+import { GetCourseQuery } from "./infra/persistence/catalog/GetCourseQuery.js";
 import { ListStaffQuery } from "./infra/persistence/identity/ListStaffQuery.js";
 import { ListStaffRoleChangesQuery } from "./infra/persistence/identity/ListStaffRoleChangesQuery.js";
 import { DrizzleFeatureFlagOverrideRepository } from "./infra/persistence/platform/DrizzleFeatureFlagOverrideRepository.js";
@@ -90,6 +101,8 @@ import type { NotificationProvider } from "@ooc/notifications";
 
 export interface AppRepositories {
   catalogEntry: ICatalogEntryRepository;
+  course: ICourseRepository;
+  plan: IPlanRepository;
   student: IStudentRepository;
   guardian: IGuardianRepository;
   enrollment: IEnrollmentRepository;
@@ -142,6 +155,11 @@ export interface AppUseCases {
   catalog: {
     retire: RetireCatalogEntryUseCase;
     restore: RestoreCatalogEntryUseCase;
+    createCourse: CreateCourseUseCase;
+    updateCourse: UpdateCourseUseCase;
+    createPlan: CreatePlanUseCase;
+    renamePlan: RenamePlanUseCase;
+    schedulePlanPrice: SchedulePlanPriceUseCase;
   };
 }
 
@@ -151,6 +169,8 @@ export interface AppQueries {
   getStudent: GetStudentQuery;
   listOpenClassGroups: ListOpenClassGroupsQuery;
   getPublicCatalog: GetPublicCatalogQuery;
+  listCourses: ListCoursesQuery;
+  getCourse: GetCourseQuery;
   listStaff: ListStaffQuery;
   listStaffRoleChanges: ListStaffRoleChangesQuery;
 }
@@ -226,6 +246,8 @@ function buildContainer(): AppContainer {
   const staffPasswordSetter = new BetterAuthStaffPasswordSetter(db);
   const featureFlagOverrideRepository = new DrizzleFeatureFlagOverrideRepository(db);
   const catalogEntryRepository = new DrizzleCatalogEntryRepository(db);
+  const courseRepository = new DrizzleCourseRepository(db);
+  const planRepository = new DrizzlePlanRepository(db);
   const enrollmentEmailContextLookup = new DrizzleEnrollmentEmailContextLookup(db);
 
   // Notifications
@@ -281,6 +303,11 @@ function buildContainer(): AppContainer {
 
   const retireCatalogEntry = new RetireCatalogEntryUseCase(catalogEntryRepository, auditLogRepository);
   const restoreCatalogEntry = new RestoreCatalogEntryUseCase(catalogEntryRepository, auditLogRepository);
+  const createCourse = new CreateCourseUseCase(courseRepository, auditLogRepository);
+  const updateCourse = new UpdateCourseUseCase(courseRepository, auditLogRepository);
+  const createPlan = new CreatePlanUseCase(courseRepository, planRepository, auditLogRepository);
+  const renamePlan = new RenamePlanUseCase(planRepository, auditLogRepository);
+  const schedulePlanPrice = new SchedulePlanPriceUseCase(planRepository, auditLogRepository);
 
   // Queries (read-only, no domain invariant to protect — see class docs)
   const listStudents = new ListStudentsQuery(db);
@@ -288,6 +315,8 @@ function buildContainer(): AppContainer {
   const listEnrollments = new ListEnrollmentsQuery(db);
   const listOpenClassGroups = new ListOpenClassGroupsQuery(db);
   const getPublicCatalog = new GetPublicCatalogQuery(db);
+  const listCourses = new ListCoursesQuery(db);
+  const getCourse = new GetCourseQuery(db);
   const listStaff = new ListStaffQuery(db);
   const listStaffRoleChanges = new ListStaffRoleChangesQuery(db);
 
@@ -316,6 +345,8 @@ function buildContainer(): AppContainer {
     },
     repositories: {
       catalogEntry: catalogEntryRepository,
+      course: courseRepository,
+      plan: planRepository,
       student: studentRepository,
       guardian: guardianRepository,
       enrollment: enrollmentRepository,
@@ -362,6 +393,11 @@ function buildContainer(): AppContainer {
       catalog: {
         retire: retireCatalogEntry,
         restore: restoreCatalogEntry,
+        createCourse,
+        updateCourse,
+        createPlan,
+        renamePlan,
+        schedulePlanPrice,
       },
     },
     queries: {
@@ -370,6 +406,8 @@ function buildContainer(): AppContainer {
       listEnrollments,
       listOpenClassGroups,
       getPublicCatalog,
+      listCourses,
+      getCourse,
       listStaff,
       listStaffRoleChanges,
     },
