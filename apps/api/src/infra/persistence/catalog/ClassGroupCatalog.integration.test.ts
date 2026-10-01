@@ -11,7 +11,12 @@ import {
   students,
   waitlistEntries,
 } from "@ooc/db";
-import { CapacityBelowSeatsTakenError, DuplicateClassGroupsUseCase, PeriodAlreadyDuplicatedError } from "@ooc/domain";
+import {
+  CapacityBelowSeatsTakenError,
+  ClassGroup,
+  DuplicateClassGroupsUseCase,
+  PeriodAlreadyDuplicatedError,
+} from "@ooc/domain";
 import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
@@ -164,6 +169,7 @@ describe("class group catalog", { timeout: 30_000 }, () => {
         code: "CGCAT-01",
         teacherName: "Docente de prueba",
         slots: [{ weekday: "mon", startTime: "19:00", endTime: "20:30" }],
+        schedule: "Lun 19:00-20:30",
         sourceClassGroupId: T1,
         deletedAt: null,
       });
@@ -188,6 +194,55 @@ describe("class group catalog", { timeout: 30_000 }, () => {
         }),
       ).rejects.toBeInstanceOf(PeriodAlreadyDuplicatedError);
       expect(await tx.select().from(classGroups).where(eq(classGroups.academicPeriodId, PERIOD_B))).toHaveLength(1);
+    });
+  });
+
+  it("keeps the schedule text in step with the slots on create and edit", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      await seed(tx);
+      const groups = new DrizzleClassGroupRepository(tx);
+      const created = await groups.create(
+        ClassGroup.create({
+          courseId: C1,
+          academicPeriodId: PERIOD_A,
+          code: "CGCAT-SCHEDULE",
+          teacherName: "",
+          slots: [
+            { weekday: "mon", startTime: "18:00", endTime: "19:30" },
+            { weekday: "wed", startTime: "18:00", endTime: "19:30" },
+          ],
+          capacity: 20,
+        }),
+      );
+      const [afterCreate] = await tx.select().from(classGroups).where(eq(classGroups.id, created.id));
+      expect(afterCreate?.schedule).toBe("Lun/Mié 18:00-19:30");
+
+      created.update({ slots: [{ weekday: "sat", startTime: "09:00", endTime: "12:00" }] });
+      await groups.update(created);
+      const [afterEdit] = await tx.select().from(classGroups).where(eq(classGroups.id, created.id));
+      expect(afterEdit?.schedule).toBe("Sáb 09:00-12:00");
+    });
+  });
+
+  it("leaves a legacy schedule text alone when the class group has no slots", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      await seed(tx);
+      await tx.update(classGroups).set({ slots: [], schedule: "Mar/Jue 18:00-19:00" }).where(eq(classGroups.id, T1));
+      const groups = new DrizzleClassGroupRepository(tx);
+
+      const legacy = (await groups.findById(T1))!;
+      legacy.update({ capacity: 30 });
+      await groups.update(legacy);
+      const [afterEdit] = await tx.select().from(classGroups).where(eq(classGroups.id, T1));
+      expect(afterEdit?.schedule).toBe("Mar/Jue 18:00-19:00");
+
+      await new DuplicateClassGroupsUseCase(
+        new DrizzleAcademicPeriodRepository(tx),
+        groups,
+        new DrizzleAuditLogRepository(tx),
+      ).run({ actorId: ACTOR, sourcePeriodId: PERIOD_A, targetPeriodId: PERIOD_B });
+      const [copy] = await tx.select().from(classGroups).where(eq(classGroups.academicPeriodId, PERIOD_B));
+      expect(copy?.schedule).toBe("Mar/Jue 18:00-19:00");
     });
   });
 

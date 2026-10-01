@@ -7,8 +7,9 @@ import {
   type WeeklySlot,
 } from "@ooc/domain";
 import { academicPeriods, classGroups, courses } from "@ooc/db";
-import { aliasedTable, and, eq, sql } from "drizzle-orm";
+import { aliasedTable, and, eq, inArray, sql } from "drizzle-orm";
 import type { Db } from "@/infra/db/client.js";
+import { scheduleTextFromSlots } from "./scheduleText.js";
 
 type Row = typeof classGroups.$inferSelect;
 
@@ -34,14 +35,17 @@ export function classGroupFromRow(row: Row): ClassGroup {
   });
 }
 
-function insertValues(group: ClassGroup) {
+/**
+ * `slots` is the source of truth; `schedule` is its text twin, written on every
+ * save so the ledger search and the legacy import find panel-made class groups
+ * too. A legacy class group with no slots keeps the text it came with.
+ */
+function insertValues(group: ClassGroup, legacySchedule = "") {
   return {
     id: group.id,
     courseId: group.courseId,
     academicPeriodId: group.academicPeriodId,
-    // Panel-made class groups keep the schedule in `slots` only; `schedule`
-    // is the seed-era text column and stays empty (OOC-35).
-    schedule: "",
+    schedule: group.slots.length > 0 ? scheduleTextFromSlots(group.slots) : legacySchedule,
     slots: group.slots,
     code: group.code,
     teacherName: group.teacherName,
@@ -83,6 +87,7 @@ export class DrizzleClassGroupRepository implements IClassGroupRepository {
         code: group.code,
         teacherName: group.teacherName,
         slots: group.slots,
+        ...(group.slots.length > 0 ? { schedule: scheduleTextFromSlots(group.slots) } : {}),
         startsOn: group.startsOn,
         endsOn: group.endsOn,
         enrollmentOpensAt: group.enrollmentOpensAt,
@@ -127,7 +132,27 @@ export class DrizzleClassGroupRepository implements IClassGroupRepository {
         .limit(1);
       if (already) throw new PeriodAlreadyDuplicatedError();
 
-      if (copies.length > 0) await tx.insert(classGroups).values(copies.map(insertValues));
+      if (copies.length === 0) return;
+
+      // A legacy source has its schedule only as text — carry it over rather
+      // than leave the copy with no schedule at all.
+      const legacySourceIds = copies
+        .filter((copy) => copy.slots.length === 0 && copy.sourceClassGroupId !== null)
+        .map((copy) => copy.sourceClassGroupId!);
+      const legacySchedules = new Map(
+        legacySourceIds.length === 0
+          ? []
+          : (
+              await tx
+                .select({ id: classGroups.id, schedule: classGroups.schedule })
+                .from(classGroups)
+                .where(inArray(classGroups.id, legacySourceIds))
+            ).map((row) => [row.id, row.schedule] as const),
+      );
+
+      await tx
+        .insert(classGroups)
+        .values(copies.map((copy) => insertValues(copy, legacySchedules.get(copy.sourceClassGroupId ?? "") ?? "")));
     });
   }
 }
