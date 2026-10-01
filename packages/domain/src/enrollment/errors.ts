@@ -1,3 +1,4 @@
+import { ConflictError } from "../shared/base/errors/ConflictError.js";
 import { NotFoundError } from "../shared/base/errors/NotFoundError.js";
 import { UnableToProcessEntryError } from "../shared/base/errors/UnableToProcessEntryError.js";
 
@@ -109,5 +110,26 @@ export class OperationNumberAlreadyUsedError extends UnableToProcessEntryError {
       message: "That operation number was already used by another payment.",
       ...params,
     });
+  }
+}
+
+export class PaymentNotFoundError extends NotFoundError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "payment.not_found", message: "No payment with that id.", ...params });
+  }
+}
+
+/** Somebody — or the same click twice — already decided this payment. */
+export class PaymentAlreadySettledError extends ConflictError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "payment.already_settled", message: "The payment was already approved or rejected.", ...params });
+  }
+}
+
+/** Approving money for a seat that was already handed back would enroll
+ * somebody into a place another student may now hold. */
+export class PaymentSeatReleasedError extends ConflictError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "payment.seat_released", message: "The enrollment's seat was already released.", ...params });
   }
 }

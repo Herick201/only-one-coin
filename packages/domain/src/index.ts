@@ -68,6 +68,9 @@ export type {
 export {
   enrollmentRecipients,
   enrollmentReceivedEmails,
+  paymentApprovedEmails,
+  paymentRejectedEmails,
+  type PaymentEmailFacts,
   type EnrollmentEmailFacts,
   type EnrollmentRecipient,
   type EnrollmentRecipientKind,
@@ -82,6 +85,9 @@ export {
   ClassGroupFullError,
   ClassGroupNotFoundError,
   OperationNumberAlreadyUsedError,
+  PaymentAlreadySettledError,
+  PaymentNotFoundError,
+  PaymentSeatReleasedError,
   PlanPriceNotFoundError,
   ReceiptNotReadyError,
   ReceiptNotUploadedError,
@@ -354,3 +360,11 @@ export {
   type RestoreCatalogEntryInput,
   type RestoreCatalogEntryOutput,
 } from "./catalog/RestoreCatalogEntryUseCase.js";
+export {
+  PaymentRejectionReasonSchema,
+  type PaymentRejectionReason,
+  type PaymentDecision,
+  type PaymentToSettle,
+  type IPaymentSettlementRepository,
+} from "./enrollment/PaymentSettlement.js";
+export { SettlePaymentUseCase, type SettlePaymentInput, type SettlePaymentOutput } from "./enrollment/SettlePaymentUseCase.js";
