@@ -122,6 +122,18 @@ describe("application role (GRANT layer)", () => {
     );
   });
 
+  // Price is versioned, never edited (apps/api/CLAUDE.md): plan_prices only
+  // receives INSERT.
+  it("refuses UPDATE on plan_prices", async () => {
+    expect(
+      await answerTo(`update plan_prices set amount_cents = amount_cents where id = '${NO_SUCH_ID}'`),
+    ).toBe(DENIED_BY_GRANT);
+  });
+
+  it("refuses DELETE on plan_prices", async () => {
+    expect(await answerTo(deleteFrom("plan_prices"))).toBe(DENIED_BY_GRANT);
+  });
+
   it("refuses TRUNCATE on audit_log", async () => {
     expect(await answerTo("truncate audit_log")).toBe(DENIED_BY_GRANT);
   });
@@ -160,6 +172,18 @@ describe("table owner (TRIGGER layer)", () => {
     expect(await answerTo(`update audit_log set action = 'tampered' where id = '${NO_SUCH_ID}'`)).toBe(
       DENIED_BY_TRIGGER,
     );
+  });
+
+  // Price is versioned, never edited (apps/api/CLAUDE.md): plan_prices only
+  // receives INSERT.
+  it("refuses UPDATE on plan_prices", async () => {
+    expect(
+      await answerTo(`update plan_prices set amount_cents = amount_cents where id = '${NO_SUCH_ID}'`),
+    ).toBe(DENIED_BY_TRIGGER);
+  });
+
+  it("refuses DELETE on plan_prices", async () => {
+    expect(await answerTo(deleteFrom("plan_prices"))).toBe(DENIED_BY_TRIGGER);
   });
 
   // TRUNCATE is checked on `audit_log` alone: it is the only locked table with

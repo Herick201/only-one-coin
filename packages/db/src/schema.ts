@@ -109,9 +109,22 @@ export const courses = pgTable(
     level: text("level").notNull().default(""),
     modules: integer("modules").notNull().default(1),
     totalHours: integer("total_hours").notNull().default(0),
+    // What the course is, in the student's words — the portal shows it under
+    // "Sobre el curso". Default '' only so the column lands aditively.
+    summary: text("summary").notNull().default(""),
+    // How the certificate is earned (docs/REGRAS-NEGOCIO.md §6). Config, never
+    // inferred from the course name (CLAUDE.md §1).
+    certificateRule: text("certificate_rule").notNull().default("automatic"),
+    // Which paid procedures the course offers (docs/REGRAS-NEGOCIO.md §5).
+    allowsFreeze: boolean("allows_freeze").notNull().default(true),
+    allowsTransfer: boolean("allows_transfer").notNull().default(false),
     ...softDeletable(),
   },
   (table) => [
+    check(
+      "courses_certificate_rule_check",
+      sql`${table.certificateRule} in ('automatic', 'exam_required')`,
+    ),
     check("courses_min_age_check", sql`${table.minAge} > 0`),
     check("courses_modules_check", sql`${table.modules} > 0`),
     check("courses_total_hours_check", sql`${table.totalHours} >= 0`),
