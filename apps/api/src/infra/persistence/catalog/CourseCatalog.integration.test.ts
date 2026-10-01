@@ -3,7 +3,7 @@ import { academicPeriods, classGroups } from "@ooc/db";
 import { Course, Plan, PlanPrice } from "@ooc/domain";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Db } from "@/infra/db/client.js";
 import { DrizzleCourseRepository } from "./DrizzleCourseRepository.js";
 import { DrizzlePlanRepository } from "./DrizzlePlanRepository.js";
@@ -34,12 +34,26 @@ beforeAll(() => {
 afterAll(async () => {
   await pool.end();
 });
-beforeEach(async () => {
-  await pool.query("begin");
-});
-afterEach(async () => {
-  await pool.query("rollback");
-});
+
+class RollBack extends Error {}
+
+/**
+ * Runs `fn` against a transaction that never commits. Handing the repositories
+ * this transaction (not the pool) matters: DrizzlePlanRepository opens its own
+ * transaction, which would COMMIT a hand-rolled outer BEGIN on the single
+ * connection. On a transaction it becomes a savepoint, so the rollback undoes
+ * everything — plan_prices rows cannot be deleted afterwards (migration 0017).
+ */
+async function inRolledBackTransaction(fn: (tx: Db) => Promise<void>): Promise<void> {
+  await db
+    .transaction(async (tx) => {
+      await fn(tx as unknown as Db);
+      throw new RollBack();
+    })
+    .catch((error: unknown) => {
+      if (!(error instanceof RollBack)) throw error;
+    });
+}
 
 function aCourse(): Course {
   return Course.create({
@@ -58,59 +72,67 @@ function aCourse(): Course {
 
 describe("course catalog storage", () => {
   it("round-trips every course column", async () => {
-    const repository = new DrizzleCourseRepository(db);
-    const created = await repository.create(aCourse());
-    const read = await repository.findById(created.id);
+    await inRolledBackTransaction(async (tx) => {
+      const repository = new DrizzleCourseRepository(tx);
+      const created = await repository.create(aCourse());
+      const read = await repository.findById(created.id);
 
-    expect(read).toMatchObject({
-      name: "Italiano (integration)",
-      certificateRule: "exam_required",
-      allowsFreeze: false,
-      allowsTransfer: true,
-      deletedAt: null,
+      expect(read).toMatchObject({
+        name: "Italiano (integration)",
+        certificateRule: "exam_required",
+        allowsFreeze: false,
+        allowsTransfer: true,
+        deletedAt: null,
+      });
     });
   });
 
   it("lists a new course as live, and a class group can be opened on it", async () => {
-    const course = await new DrizzleCourseRepository(db).create(aCourse());
+    await inRolledBackTransaction(async (tx) => {
+      const course = await new DrizzleCourseRepository(tx).create(aCourse());
 
-    const listed = (await new ListCoursesQuery(db).run()).find((item) => item.id === course.id);
-    expect(listed).toMatchObject({ active: true, classGroupCount: 0, language: "Italiano" });
+      const listed = (await new ListCoursesQuery(tx).run()).find((item) => item.id === course.id);
+      expect(listed).toMatchObject({ active: true, classGroupCount: 0, language: "Italiano" });
 
-    const [period] = await db
-      .insert(academicPeriods)
-      .values({ name: "Ciclo (integration)", startsOn: new Date("2026-11-01T05:00:00Z"), endsOn: new Date("2027-02-28T05:00:00Z") })
-      .returning();
-    await db.insert(classGroups).values({
-      courseId: course.id,
-      academicPeriodId: period!.id,
-      schedule: "",
-      startsOn: new Date("2026-11-02T05:00:00Z"),
-      endsOn: new Date("2027-01-30T05:00:00Z"),
-      capacity: 30,
+      const [period] = await tx
+        .insert(academicPeriods)
+        .values({ name: "Ciclo (integration)", startsOn: new Date("2026-11-01T05:00:00Z"), endsOn: new Date("2027-02-28T05:00:00Z") })
+        .returning();
+      await tx.insert(classGroups).values({
+        courseId: course.id,
+        academicPeriodId: period!.id,
+        schedule: "",
+        startsOn: new Date("2026-11-02T05:00:00Z"),
+        endsOn: new Date("2027-01-30T05:00:00Z"),
+        capacity: 30,
+      });
+
+      const relisted = (await new ListCoursesQuery(tx).run()).find((item) => item.id === course.id);
+      expect(relisted?.classGroupCount).toBe(1);
     });
-
-    const relisted = (await new ListCoursesQuery(db).run()).find((item) => item.id === course.id);
-    expect(relisted?.classGroupCount).toBe(1);
   });
 
   it("keeps price history and names the current price", async () => {
-    const course = await new DrizzleCourseRepository(db).create(aCourse());
-    const plans = new DrizzlePlanRepository(db);
-    const plan = Plan.create({ courseId: course.id, name: "Paquete completo" });
-    const first = PlanPrice.schedule({ planId: plan.id, amountCents: 8000 });
-    await plans.createWithPrice(plan, first);
-    const future = PlanPrice.schedule({ planId: plan.id, amountCents: 9000, validFrom: new Date(Date.now() + 30 * DAY) });
-    await plans.addPrice(future);
+    await inRolledBackTransaction(async (tx) => {
+      const course = await new DrizzleCourseRepository(tx).create(aCourse());
+      const plans = new DrizzlePlanRepository(tx);
+      const plan = Plan.create({ courseId: course.id, name: "Paquete completo" });
+      const first = PlanPrice.schedule({ planId: plan.id, amountCents: 8000 });
+      await plans.createWithPrice(plan, first);
+      const future = PlanPrice.schedule({ planId: plan.id, amountCents: 9000, validFrom: new Date(Date.now() + 30 * DAY) });
+      await plans.addPrice(future);
 
-    const detail = await new GetCourseQuery(db).run(course.id);
+      const detail = await new GetCourseQuery(tx).run(course.id);
 
-    expect(detail?.plans).toHaveLength(1);
-    expect(detail?.plans[0]?.prices.map((price) => price.amountCents)).toEqual([9000, 8000]);
-    expect(detail?.plans[0]?.currentPriceId).toBe(first.id);
+      expect(detail?.plans).toHaveLength(1);
+      expect(detail?.plans[0]?.prices.map((price) => price.amountCents)).toEqual([9000, 8000]);
+      expect(detail?.plans[0]?.currentPriceId).toBe(first.id);
+    });
   });
 
   it("answers null for a course not on file", async () => {
-    expect(await new GetCourseQuery(db).run("018f2b5c-1000-7000-8000-0000000000ff")).toBeNull();
+    await inRolledBackTransaction(async (tx) => {
+      expect(await new GetCourseQuery(tx).run("018f2b5c-1000-7000-8000-0000000000ff")).toBeNull();
+    });
   });
 });
