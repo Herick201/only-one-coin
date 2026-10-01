@@ -115,7 +115,8 @@ export interface StudentListPage {
  * comment on `students.ts` ("derived, not a stored column"). This is a
  * first-pass rule: it does not know about payment or grading yet, since
  * neither is queried here, so a student who paid but whose seat hasn't
- * flipped to `confirmed` still reads `under_review`.
+ * flipped to `confirmed` still reads `under_review` — a status the picker shows,
+ * since the directory itself no longer lists such a student (see above).
  */
 export class ListStudentsQuery {
   constructor(private readonly db: Db) {}

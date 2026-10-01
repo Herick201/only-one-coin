@@ -2,7 +2,7 @@ import * as schema from "@ooc/db";
 import { academicPeriods, classGroups, courses, enrollments, planPrices, plans, students } from "@ooc/db";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { Db } from "@/infra/db/client.js";
 import { ListStudentsQuery } from "./ListStudentsQuery.js";
 
@@ -143,5 +143,90 @@ describe("manual enrollment picker (q)", () => {
 
       expect(found.items.map((row) => row.id)).toContain(idOf.get("SoloReservada"));
     });
+  });
+});
+
+/**
+ * Regression for "the students directory stalls around page 3": `created_at`
+ * carries microsecond precision, but a bulk insert evaluates `now()` once per
+ * statement, so many rows share one non-zero-microsecond timestamp. A cursor
+ * built from a millisecond `Date` cannot reconstruct that boundary, so the
+ * tie-break by `id` never engages and the rest of the tie vanishes from the
+ * next page. Rows go in through the raw pool, not Drizzle's typed insert:
+ * binding a JS `Date` would re-truncate the timestamp on the way in.
+ * Runs with the OOC-55 HAVING in place, so it also covers cursor paging with it.
+ */
+describe("pagination across rows that share one timestamp", () => {
+  const TIED_ROW_COUNT = 70;
+  const TIED_CREATED_AT = "2026-09-07 18:32:28.541523+00";
+
+  let tiePool: pg.Pool;
+  let tieQuery: ListStudentsQuery;
+
+  beforeAll(() => {
+    tiePool = new Pool({ connectionString: DATABASE_URL, max: 1 });
+    tieQuery = new ListStudentsQuery(drizzle(tiePool, { schema, casing: "snake_case" }));
+  });
+
+  afterAll(async () => {
+    await tiePool.end();
+  });
+
+  beforeEach(async () => {
+    await tiePool.query("begin");
+  });
+
+  afterEach(async () => {
+    await tiePool.query("rollback");
+  });
+
+  async function seedTiedBatch(count: number): Promise<string[]> {
+    const ids: string[] = [];
+    for (let i = 0; i < count; i++) {
+      const row = await tiePool.query<{ id: string }>(
+        `insert into students
+           (first_name, last_name, national_id_type, national_id, email, phone, birth_date, country, city, created_at, updated_at)
+         values
+           ($1, 'Tied', 'DNI', $2, $3, '+51900000000', '2000-01-01T00:00:00.000Z', 'PE', 'Lima', $4::timestamptz, $4::timestamptz)
+         returning id`,
+        [`Row${i}`, `TIEDBATCH${i}`, `tied.${i}@gmail.com`, TIED_CREATED_AT],
+      );
+      ids.push(row.rows[0]!.id);
+    }
+    return ids;
+  }
+
+  it("walks the whole tied batch, in full, across pages", async () => {
+    const seededIds = await seedTiedBatch(TIED_ROW_COUNT);
+
+    const seen = new Set<string>();
+    let cursor: string | undefined;
+    let guard = 0;
+
+    do {
+      const page = await tieQuery.run(undefined, cursor);
+      for (const item of page.items) seen.add(item.id);
+      cursor = page.nextCursor ?? undefined;
+      guard += 1;
+    } while (cursor && guard < 10);
+
+    // The dev database may hold other students, so count only ours.
+    expect(seededIds.filter((id) => seen.has(id))).toHaveLength(seededIds.length);
+    for (const id of seededIds) expect(seen.has(id)).toBe(true);
+  });
+
+  it("advances the cursor past a boundary row that shares its timestamp with the next page", async () => {
+    const seededIds = await seedTiedBatch(TIED_ROW_COUNT);
+
+    const first = await tieQuery.run();
+    expect(first.nextCursor).not.toBeNull();
+    expect(first.items.length).toBeGreaterThan(0);
+    expect(first.items.length).toBeLessThan(seededIds.length);
+
+    const second = await tieQuery.run(undefined, first.nextCursor ?? undefined);
+    expect(second.items.length).toBeGreaterThan(0);
+
+    const firstIds = new Set(first.items.map((row) => row.id));
+    for (const row of second.items) expect(firstIds.has(row.id)).toBe(false);
   });
 });
