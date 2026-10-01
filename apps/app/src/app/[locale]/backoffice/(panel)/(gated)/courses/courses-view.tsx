@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, type MouseEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import type { CourseRow } from '@/lib/backoffice/types'
@@ -17,6 +17,7 @@ import {
 import { BoIcon } from '@/components/backoffice/icons'
 import { Toast } from '@/components/backoffice/controls'
 import { CourseOptionsSheet } from './course-options-sheet'
+import { CoursePlansSheet } from './course-plans-sheet'
 import { NewCourseForm } from './new-course-form'
 
 /**
@@ -34,10 +35,12 @@ export function CoursesView({
   rows,
   canCreate,
   canConfigure,
+  canManagePrices,
 }: {
   rows: CourseRow[]
   canCreate: boolean
   canConfigure: boolean
+  canManagePrices: boolean
 }) {
   const t = useTranslations('bo')
   const router = useRouter()
@@ -52,7 +55,22 @@ export function CoursesView({
   const [opened, setOpened] = useState<string[]>(() => [
     ...new Set(rows.map((row) => row.language.id)),
   ])
+  /**
+   * A language that first shows up after a refresh (a course created in a new
+   * language) opens too, or the course just created would sit behind a closed
+   * fold. Languages the user already saw keep whatever state they left them in.
+   */
+  const knownLanguages = useRef(new Set(rows.map((row) => row.language.id)))
+  useEffect(() => {
+    const fresh = [...new Set(rows.map((row) => row.language.id))].filter(
+      (id) => !knownLanguages.current.has(id),
+    )
+    if (fresh.length === 0) return
+    fresh.forEach((id) => knownLanguages.current.add(id))
+    setOpened((current) => [...current, ...fresh])
+  }, [rows])
   const [configuring, setConfiguring] = useState<CourseRow | null>(null)
+  const [pricing, setPricing] = useState<CourseRow | null>(null)
   const [creating, setCreating] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
 
@@ -181,14 +199,16 @@ export function CoursesView({
                 t('courses.col_load'),
                 t('courses.col_class_groups'),
                 t('courses.col_status'),
+                t('courses.plans'),
               ]}
             >
               <colgroup>
-                <col className="w-[36%]" />
+                <col className="w-[30%]" />
                 <col className="w-[12%]" />
                 <col className="w-[16%]" />
                 <col className="w-[12%]" />
-                <col className="w-[24%]" />
+                <col className="w-[22%]" />
+                <col className="w-[8%]" />
               </colgroup>
               <thead>
                 <tr>
@@ -198,6 +218,9 @@ export function CoursesView({
                   <th className={thClass}>{t('courses.col_load')}</th>
                   <th className={thClass}>{t('courses.col_class_groups')}</th>
                   <th className={thClass}>{t('courses.col_status')}</th>
+                  <th className={thClass}>
+                    <span className="sr-only">{t('courses.plans')}</span>
+                  </th>
                 </tr>
               </thead>
               {byLanguage.map((entry) => {
@@ -213,7 +236,7 @@ export function CoursesView({
                     {/* Language divider doubles as the fold control. One table
                         for every language keeps the columns aligned. */}
                     <tr>
-                      <td colSpan={5} className="border-y border-line bg-slate-50/80 p-0">
+                      <td colSpan={6} className="border-y border-line bg-slate-50/80 p-0">
                         {searching ? (
                           <span className="flex w-full items-center gap-2 px-4 py-1.5">
                             <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -287,6 +310,20 @@ export function CoursesView({
                               />
                             )}
                           </td>
+                          <td className={tdClass}>
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                setPricing(course)
+                              }}
+                              aria-label={`${t('courses.plans')} · ${course.name}`}
+                              title={t('courses.plans')}
+                              className="-my-2 grid min-h-tap min-w-tap place-items-center rounded-lg text-muted-foreground transition hover:bg-sky hover:text-brand-blue"
+                            >
+                              <BoIcon name="payments" size={18} />
+                            </button>
+                          </td>
                         </tr>
                       ))}
                   </tbody>
@@ -308,6 +345,12 @@ export function CoursesView({
           )
           router.refresh()
         }}
+      />
+
+      <CoursePlansSheet
+        course={pricing}
+        canManage={canManagePrices}
+        onClose={() => setPricing(null)}
       />
 
       <Toast message={toast} onDismiss={() => setToast(null)} />
