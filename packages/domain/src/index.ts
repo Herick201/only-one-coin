@@ -17,6 +17,7 @@ export type { HttpErrorParams } from "./shared/base/errors/HttpError.js";
 export { UnauthorizedError } from "./shared/base/errors/UnauthorizedError.js";
 export { ForbiddenError } from "./shared/base/errors/ForbiddenError.js";
 export { NotFoundError } from "./shared/base/errors/NotFoundError.js";
+export { ConflictError } from "./shared/base/errors/ConflictError.js";
 export { UnableToProcessEntryError } from "./shared/base/errors/UnableToProcessEntryError.js";
 
 export {
@@ -256,7 +257,21 @@ export {
   type CatalogEntryState,
 } from "./catalog/CatalogEntry.js";
 export type { ICatalogEntryRepository } from "./catalog/ports/ICatalogEntryRepository.js";
-export { CatalogEntryNotFoundError } from "./catalog/errors.js";
+export { CatalogEntryNotFoundError, CourseNotFoundError } from "./catalog/errors.js";
+export {
+  Course,
+  CertificateRuleSchema,
+  CourseOptionsSchema,
+  CreateCourseSchema,
+  UpdateCourseSchema,
+  type CertificateRule,
+  type CourseProps,
+  type CreateCourseDTO,
+  type UpdateCourseDTO,
+} from "./catalog/Course.js";
+export type { ICourseRepository } from "./catalog/ports/ICourseRepository.js";
+export { CreateCourseUseCase, type CreateCourseInput } from "./catalog/CreateCourseUseCase.js";
+export { UpdateCourseUseCase, type UpdateCourseInput } from "./catalog/UpdateCourseUseCase.js";
 export {
   RetireCatalogEntryUseCase,
   type RetireCatalogEntryInput,
