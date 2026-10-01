@@ -27,6 +27,7 @@ import {
   RequestReceiptUploadUseCase,
   ScreenReceiptUploadUseCase,
   RetireCatalogEntryUseCase,
+  SettlePaymentUseCase,
   RemoveStaffAccessUseCase,
   RenewStaffInviteUseCase,
   RenewStaffPasswordResetUseCase,
@@ -93,6 +94,10 @@ import { TigrisReceiptStorage } from "./infra/storage/TigrisReceiptStorage.js";
 import { ReceiptObjectStore } from "./infra/storage/ReceiptObjectStore.js";
 import { ListStudentsQuery } from "./infra/persistence/student/ListStudentsQuery.js";
 import { GetStudentQuery } from "./infra/persistence/student/GetStudentQuery.js";
+import { DrizzlePaymentSettlementRepository } from "./infra/persistence/payment/DrizzlePaymentSettlementRepository.js";
+import { ListPaymentsQuery } from "./infra/persistence/payment/ListPaymentsQuery.js";
+import { ListPaymentReviewQueueQuery } from "./infra/persistence/payment/ListPaymentReviewQueueQuery.js";
+import { PaymentReceiptImageQuery } from "./infra/persistence/payment/PaymentReceiptImageQuery.js";
 import { ListEnrollmentsQuery } from "./infra/persistence/enrollment/ListEnrollmentsQuery.js";
 import { ListOpenClassGroupsQuery } from "./infra/persistence/catalog/ListOpenClassGroupsQuery.js";
 import { GetPublicCatalogQuery } from "./infra/persistence/catalog/GetPublicCatalogQuery.js";
@@ -155,6 +160,9 @@ export interface AppUseCases {
     /** Run by the `receipt-screen` worker, never a route (OOC-22). */
     screenReceiptUpload: ScreenReceiptUploadUseCase;
   };
+  payment: {
+    settlePayment: SettlePaymentUseCase;
+  };
   staff: {
     promoteRole: PromoteUserRoleUseCase;
     createInvite: CreateStaffInviteUseCase;
@@ -194,6 +202,9 @@ export interface AppUseCases {
 export interface AppQueries {
   listStudents: ListStudentsQuery;
   listEnrollments: ListEnrollmentsQuery;
+  listPayments: ListPaymentsQuery;
+  listPaymentReviewQueue: ListPaymentReviewQueueQuery;
+  paymentReceiptImage: PaymentReceiptImageQuery;
   getStudent: GetStudentQuery;
   listOpenClassGroups: ListOpenClassGroupsQuery;
   getPublicCatalog: GetPublicCatalogQuery;
@@ -283,6 +294,7 @@ function buildContainer(): AppContainer {
   const classGroupRepository = new DrizzleClassGroupRepository(db);
   const waitlistRepository = new DrizzleWaitlistRepository(db);
   const enrollmentEmailContextLookup = new DrizzleEnrollmentEmailContextLookup(db);
+  const paymentSettlementRepository = new DrizzlePaymentSettlementRepository(db);
 
   // Notifications
   const outboxRepository = new DrizzleOutboxRepository(db);
@@ -356,10 +368,15 @@ function buildContainer(): AppContainer {
   const joinWaitlist = new JoinWaitlistUseCase(classGroupRepository, waitlistRepository, auditLogRepository);
   const leaveWaitlist = new LeaveWaitlistUseCase(waitlistRepository, auditLogRepository);
 
+  const settlePayment = new SettlePaymentUseCase(paymentSettlementRepository, enrollmentEmailContextLookup);
+
   // Queries (read-only, no domain invariant to protect — see class docs)
   const listStudents = new ListStudentsQuery(db);
   const getStudent = new GetStudentQuery(db);
   const listEnrollments = new ListEnrollmentsQuery(db);
+  const listPayments = new ListPaymentsQuery(db);
+  const listPaymentReviewQueue = new ListPaymentReviewQueueQuery(db);
+  const paymentReceiptImage = new PaymentReceiptImageQuery(db, receiptObjectStore);
   const listOpenClassGroups = new ListOpenClassGroupsQuery(db);
   const getPublicCatalog = new GetPublicCatalogQuery(db);
   const listCourses = new ListCoursesQuery(db);
@@ -426,6 +443,9 @@ function buildContainer(): AppContainer {
         confirmReceiptUpload,
         screenReceiptUpload,
       },
+      payment: {
+        settlePayment,
+      },
       staff: {
         promoteRole,
         createInvite,
@@ -465,6 +485,9 @@ function buildContainer(): AppContainer {
       listStudents,
       getStudent,
       listEnrollments,
+      listPayments,
+      listPaymentReviewQueue,
+      paymentReceiptImage,
       listOpenClassGroups,
       getPublicCatalog,
       listCourses,
