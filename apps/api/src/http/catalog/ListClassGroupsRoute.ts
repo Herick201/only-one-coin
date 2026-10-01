@@ -13,6 +13,7 @@ const ListClassGroupsQuerySchema = z.object({
   q: z.string().trim().max(100).optional(),
 });
 
+// No rate limit yet (docs/ROADMAP.md Sessão 25).
 export const listClassGroupsRoute = RouteBuilder.get("/catalog/class-groups")
   .docs({
     tags: ["Catalog"],

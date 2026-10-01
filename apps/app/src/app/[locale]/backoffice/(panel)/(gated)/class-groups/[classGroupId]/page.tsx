@@ -64,8 +64,8 @@ export default async function ClassGroupDetailPage({
     return <TeacherClassGroupDetail staff={staff} classGroupId={classGroupId} locale={locale as Locale} t={t} />
   }
 
-  /* Billing sees no academic data: the page answers 404 like the catalog API
-     does. The role on the route in `apps/api` is what enforces it (CLAUDE.md §8). */
+  /* Billing sees no academic data: the page answers 404 (the catalog API
+     answers it 403). The role on the route in `apps/api` is what enforces it (CLAUDE.md §8). */
   if (!canBrowseCatalog(staff.role)) notFound()
   const group = await getCatalogClassGroup(classGroupId)
   if (!group) notFound()

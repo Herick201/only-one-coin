@@ -4,6 +4,7 @@ import { container } from "@/container.js";
 import { CATALOG_READ_ROLES } from "./catalogRoles.js";
 import { PeriodListItemSchema } from "./CatalogSchemas.js";
 
+// No rate limit yet (docs/ROADMAP.md Sessão 25).
 export const listPeriodsRoute = RouteBuilder.get("/catalog/periods")
   .docs({
     tags: ["Catalog"],

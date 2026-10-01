@@ -4,6 +4,7 @@ import { container } from "@/container.js";
 import { CATALOG_READ_ROLES } from "./catalogRoles.js";
 import { CourseListItemSchema } from "./CatalogSchemas.js";
 
+// No rate limit yet (docs/ROADMAP.md Sessão 25).
 export const listCoursesRoute = RouteBuilder.get("/catalog/courses")
   .docs({
     tags: ["Catalog"],

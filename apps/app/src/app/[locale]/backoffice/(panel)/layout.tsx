@@ -173,8 +173,8 @@ export default async function BackofficePanelLayout({
              read together — a course is what a class group is an instance of —
              and two sibling items reading "Turmas" and "Cursos" looked like
              the same destination twice. The tab strip on the pages carries
-             the split. Billing sees no academic data: the catalog answers it
-             404, so the link is not drawn either. */
+             the split. Billing sees no academic data: the catalog API answers
+             it 403 (and the pages answer 404), so the link is not drawn either. */
           key: 'class_groups' as const,
           href: '/backoffice/class-groups',
           alsoMatches: ['/backoffice/courses'],

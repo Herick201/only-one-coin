@@ -68,7 +68,7 @@ Nunca validar vaga na aplicação. Instrução atômica única:
 ```sql
 UPDATE class_groups
    SET seats_taken = seats_taken + 1
- WHERE id = $1 AND seats_taken < capacity
+ WHERE id = $1 AND seats_taken < capacity AND status <> 'draft'
 RETURNING seats_taken;
 ```
 
@@ -102,9 +102,9 @@ Os dois prazos são **configuráveis no backoffice** (`/backoffice/settings`), n
 
 - **Rascunho nunca toma vaga.** Os dois UPDATEs atômicos (claim do checkout e matrícula manual) levam `status <> 'draft'` no `WHERE`.
 - **`sellableClassGroup()` é a definição única de "à venda"** (`infra/persistence/catalog/sellableClassGroup.ts`): status `enrolling`, não aposentada, dentro da janela opcional, e com **período e curso não aposentados** (`exists` correlacionado, então vale também dentro do `UPDATE` do claim). Usada pelo catálogo público (`GET /catalog`), pelo seletor da matrícula manual (`GET /class-groups`) e pelo claim do checkout (`DrizzleSeatHoldRepository.claim`). Não reescrever o filtro em outro lugar.
-- **A janela vale no claim, não no submit nem no caminho manual.** Hold preso dentro da janela sobrevive ao fechamento dela; a matrícula manual do staff (`createWithPayment`) ignora a janela de propósito.
+- **A janela vale no claim, não no submit nem no caminho manual.** Hold preso dentro da janela sobrevive ao fechamento dela; a matrícula manual do staff (`createWithPayment`) ignora a janela de propósito — exceção que só vale para chamada direta à API, porque o próprio seletor da matrícula manual (`GET /class-groups`) já lê por `sellableClassGroup()` e não oferece turma fora da janela.
 - **Redução de capacidade é UPDATE condicional**, `WHERE seats_taken <= capacidade nova` — nunca ler, comparar e gravar. Usecase de catálogo não escreve `seats_taken`.
-- **Lista de espera:** só entra turma cheia; saída grava `left_at` + motivo (`enrolled`, `withdrawn`, `removed_by_staff`). A matrícula manual fecha a entrada ativa com `enrolled` na mesma transação.
+- **Lista de espera:** só entra turma cheia; saída grava `left_at` + motivo (`enrolled`, `withdrawn`, `removed_by_staff`). A matrícula manual fecha a entrada ativa com `enrolled` na mesma transação. O checkout público não fecha, então a leitura da fila (`ListWaitlistQuery`) deixa de fora quem já tem vaga viva na turma. Turma `finished`/`closed` não aceita entrada (404, como turma fora de oferta). A leitura traz o DNI, então é dos papéis de escrita do catálogo (`master`, `admin`, `enrollment_supervisor`), não de todos os leitores.
 
 ## Origem da matrícula (atribuição de canal)
 
