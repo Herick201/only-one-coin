@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition, type MouseEvent, type ReactNode } f
 import { usePathname, useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
-import type { EnrollmentRow, EnrollmentStatus, SeatStatus } from '@/lib/backoffice/types'
+import type { EnrollmentRow } from '@/lib/backoffice/types'
 import type { EnrollmentLedger } from '@/lib/backoffice/enrollments'
 import {
   enrollmentLedgerSearchParams,
@@ -42,16 +42,6 @@ export interface EnrollmentPreselect {
   student: StudentSearchResult | null
   classGroupId: string | null
 }
-
-/** The states as they are worked, not alphabetically: open ones first. */
-const STATUS_FILTERS: EnrollmentStatus[] = [
-  'under_review',
-  'active',
-  'completed',
-  'rejected',
-]
-
-const SEAT_FILTERS: SeatStatus[] = ['reserved', 'confirmed', 'released']
 
 /** Long enough to finish a word, short enough to feel like typing. */
 const SEARCH_DEBOUNCE_MS = 350
@@ -141,7 +131,7 @@ export function EnrollmentsView({
 
   const { items: pageRows, total, pageSize, metrics, filterOptions } = ledger
 
-  const activeFilters = [query.status, query.seat, query.language, query.period].filter(
+  const activeFilters = [query.language, query.period].filter(
     (value) => value !== null,
   ).length
   const narrowed = activeFilters > 0 || query.q !== ''
@@ -180,25 +170,6 @@ export function EnrollmentsView({
           value={String(metrics.active)}
           hint={t('enrollments.metric_active_hint')}
         />
-        {/* The reservation count carries its own deadline: a seat held is a
-            seat nobody else can buy, and the number only means something next
-            to how soon it comes back. */}
-        <StatCard
-          icon="clock"
-          tone="warning"
-          label={t('enrollments.metric_reserved')}
-          value={String(metrics.reserved)}
-          hint={t('enrollments.metric_reserved_hint', {
-            count: metrics.expiringSoon,
-          })}
-        />
-        <StatCard
-          icon="seat"
-          tone="neutral"
-          label={t('enrollments.metric_released')}
-          value={String(metrics.released)}
-          hint={t('enrollments.metric_released_hint')}
-        />
       </AutoGrid>
 
       {/* Toolbar */}
@@ -227,36 +198,6 @@ export function EnrollmentsView({
             count={activeFilters}
             panelClassName="flex-col gap-3"
           >
-            <FilterRow label={t('enrollments.filter_status')}>
-              <Chip
-                active={query.status === null}
-                onClick={() => navigate({ status: null })}
-                label={t('enrollments.filter_all')}
-              />
-              {STATUS_FILTERS.map((value) => (
-                <Chip
-                  key={value}
-                  active={query.status === value}
-                  onClick={() => navigate({ status: value })}
-                  label={t(`enrollment_status.${value}`)}
-                />
-              ))}
-            </FilterRow>
-            <FilterRow label={t('enrollments.filter_seat')}>
-              <Chip
-                active={query.seat === null}
-                onClick={() => navigate({ seat: null })}
-                label={t('enrollments.filter_all')}
-              />
-              {SEAT_FILTERS.map((value) => (
-                <Chip
-                  key={value}
-                  active={query.seat === value}
-                  onClick={() => navigate({ seat: value })}
-                  label={t(`seat_status.${value}`)}
-                />
-              ))}
-            </FilterRow>
             {/* Language is catalogue data, never a translated enum — the
                 Asociación opens new ones and nothing language-specific belongs
                 in the code (CLAUDE.md §1). The options come from the catalog,
@@ -327,9 +268,10 @@ export function EnrollmentsView({
           onCancel={() => setCreating(false)}
           onCreate={() => {
             setCreating(false)
-            setToast(t('new_enrollment.created'))
-            /* Re-runs the server component, so the new seat arrives as the
-               ledger has it — with the student's real file behind it. */
+            /* A manual enrollment is born reserved and this ledger lists only
+               confirmed seats, so the row will not show up here: the notice
+               says where it went. */
+            setToast(t('enrollments.created_sent_to_payments'))
             router.refresh()
           }}
         />

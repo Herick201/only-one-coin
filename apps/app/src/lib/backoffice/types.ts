@@ -1105,43 +1105,6 @@ export interface EnrollmentMetrics {
   periodName: string
   total: number
   active: number
-  /** Seats held by an enrollment whose payment is not settled yet. */
-  reserved: number
-  /** Of those, the ones the cron releases within a day. */
-  expiringSoon: number
-  /** Seats already handed back — a rejected payment or an expired reservation. */
-  released: number
-}
-
-/**
- * A seat held while the money is still open. The reservation expires after
- * `PaymentSettings.reservationDays` and a cron hands the seat back
- * (CLAUDE.md §5) — which is why this is a screen and not a filter: nobody
- * chases a deadline they have to remember to filter for.
- */
-export interface SeatReservation {
-  enrollmentId: string
-  studentId: string
-  studentName: string
-  courseName: string
-  classGroupName: string
-  classGroupId: string | null
-  paymentStatus: PaymentStatus
-  /** Why the receipt is sitting with a human, when it is. */
-  flag: ReviewFlag | null
-  /**
-   * The queued receipt holding this seat up, when there is one. It is what
-   * lets the row open that receipt instead of dropping the reader into the
-   * whole queue to find it again. Null while nobody has uploaded anything.
-   */
-  reviewId: string | null
-  amountCents: number
-  currency: 'PEN'
-  reservedAt: string
-  /** When the cron releases the seat if nothing settles the payment. */
-  expiresAt: string
-  /** Whole hours to `expiresAt`; negative once the deadline has passed. */
-  hoursLeft: number
 }
 
 /** A plan as the enrollment form reads it: the price in force, never editable. */

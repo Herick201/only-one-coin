@@ -21,9 +21,9 @@ import { BoIcon } from '@/components/backoffice/icons'
 import { FiltersDropdown } from '@/components/backoffice/filters-dropdown'
 import { NewStudentForm } from './new-student-form'
 
-type StatusFilter = StudentStatus | 'all'
+type StatusFilter = Exclude<StudentStatus, 'under_review'> | 'all'
 
-const STATUS_FILTERS: StatusFilter[] = ['all', 'active', 'under_review', 'inactive']
+const STATUS_FILTERS: StatusFilter[] = ['all', 'active', 'inactive']
 
 /**
  * Guards `directory` against a page fetched twice ending up twice on screen —
@@ -241,7 +241,6 @@ export function StudentsTable({
     return {
       all: directory.length,
       active: directory.filter((r) => r.status === 'active').length,
-      under_review: directory.filter((r) => r.status === 'under_review').length,
       inactive: directory.filter((r) => r.status === 'inactive').length,
     } satisfies Record<StatusFilter, number>
   }, [directory])

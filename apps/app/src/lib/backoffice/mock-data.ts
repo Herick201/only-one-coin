@@ -5,7 +5,6 @@ import type {
   CourseLanguage,
   CourseRow,
   DashboardMetrics,
-  EnrollmentMetrics,
   EnrollmentRow,
   EmailDeliveryIssue,
   EmailFlow,
@@ -20,7 +19,6 @@ import type {
   ReceiptExtraction,
   ReviewFlag,
   ReviewQueueItem,
-  SeatReservation,
   SeatWatchItem,
   StaffUser,
   StudentDetail,
@@ -800,72 +798,6 @@ export function listEnrollments(): EnrollmentRow[] {
   }
 
   return rows.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-}
-
-/** An hour, in milliseconds — the unit the reservation countdown is read in. */
-const HOUR_MS = 3_600_000
-
-/** Inside this many hours of expiry, a reservation is worth chasing today. */
-export const RESERVATION_WARNING_HOURS = 24
-
-/**
- * The seats currently held by an unsettled payment, soonest to expire first.
- * The deadline is the reservation window from the payment settings
- * (CLAUDE.md §5) counted from when the seat was taken — the same number the
- * cron releases against, read from one place so the screen cannot promise a
- * day the job does not honour.
- *
- * `now` is a parameter so the page passes the request's clock: computing it
- * inside a component would hydrate a different countdown than it rendered.
- */
-export function listSeatReservations(now: Date = new Date()): SeatReservation[] {
-  const windowMs = getPaymentSettings().reservationDays * 24 * HOUR_MS
-  const queue = listReviewQueue()
-
-  return listEnrollments()
-    .filter((row) => row.seatStatus === 'reserved')
-    .map((row) => {
-      const expiresAt = new Date(new Date(row.createdAt).getTime() + windowMs)
-      const open = queue.find(
-        (item) =>
-          item.studentId === row.studentId && item.courseName === row.courseName,
-      )
-      return {
-        enrollmentId: row.id,
-        studentId: row.studentId,
-        studentName: row.studentName,
-        courseName: row.courseName,
-        classGroupName: row.classGroupName,
-        classGroupId: row.classGroupId,
-        paymentStatus: row.paymentStatus,
-        flag: open?.flag ?? null,
-        // The queued receipt itself, so the row can open that one instead of
-        // handing the reader the whole queue back.
-        reviewId: open?.id ?? null,
-        amountCents: row.amountCents,
-        currency: row.currency,
-        reservedAt: row.createdAt,
-        expiresAt: expiresAt.toISOString(),
-        hoursLeft: Math.floor((expiresAt.getTime() - now.getTime()) / HOUR_MS),
-      }
-    })
-    .sort((a, b) => a.expiresAt.localeCompare(b.expiresAt))
-}
-
-/** Period figures for the section header. */
-export function getEnrollmentMetrics(now: Date = new Date()): EnrollmentMetrics {
-  const rows = listEnrollments()
-  const reservations = listSeatReservations(now)
-  return {
-    periodName: PERIOD,
-    total: rows.length,
-    active: rows.filter((row) => row.status === 'active').length,
-    reserved: reservations.length,
-    expiringSoon: reservations.filter(
-      (item) => item.hoursLeft <= RESERVATION_WARNING_HOURS,
-    ).length,
-    released: rows.filter((row) => row.seatStatus === 'released').length,
-  }
 }
 
 /* -------------------------------------------------------------------------- */

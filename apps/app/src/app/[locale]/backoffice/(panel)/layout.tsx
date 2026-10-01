@@ -15,7 +15,6 @@ import {
 } from '@/lib/backoffice/permissions'
 import {
   getDashboardMetrics,
-  getEnrollmentMetrics,
   getTeacher,
 } from '@/lib/backoffice/mock-data'
 import { getStaffSession } from '@/lib/backoffice/session'
@@ -61,7 +60,6 @@ export default async function BackofficePanelLayout({
   // (CLAUDE.md §5).
   const staff = await getStaffSession()
   const { pendingReview } = getDashboardMetrics()
-  const { expiringSoon: expiringReservations } = getEnrollmentMetrics()
   const monogram = initials(staff.firstName, staff.lastName)
 
   // shadcn writes this cookie from the trigger; reading it here avoids the
@@ -144,14 +142,9 @@ export default async function BackofficePanelLayout({
             ]
           : []),
         ...(flags['backoffice.enrollments'] ? [{
-          /* One entry for the two screens of the section — the ledger and the
-             seats still held by an open payment. The badge is the reservations
-             about to expire: a seat nobody chased is a seat the cron hands
-             back with the money already paid. */
           key: 'enrollments' as const,
           href: '/backoffice/enrollments',
           label: t('nav.enrollments'),
-          badge: expiringReservations,
         }] : []),
         ...(flags['backoffice.payments'] ? [{
           /* One entry for the three screens of the section — the ledger, the
