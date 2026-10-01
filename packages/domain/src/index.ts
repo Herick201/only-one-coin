@@ -271,6 +271,12 @@ export {
   ClassGroupCourseLockedError,
   PeriodAlreadyDuplicatedError,
   DuplicateSamePeriodError,
+  ClassGroupNotFullError,
+  WaitlistAlreadyJoinedError,
+  WaitlistAlreadyEnrolledError,
+  WaitlistStudentNotFoundError,
+  WaitlistEntryClosedError,
+  WaitlistEntryNotFoundError,
 } from "./catalog/errors.js";
 export {
   AcademicPeriod,
@@ -307,6 +313,18 @@ export {
   AdvanceClassGroupStatusUseCase,
   type AdvanceClassGroupStatusInput,
 } from "./catalog/AdvanceClassGroupStatusUseCase.js";
+export {
+  WaitlistEntry,
+  WaitlistEntryPropsSchema,
+  WaitlistLeaveReasonSchema,
+  StaffWaitlistLeaveReasonSchema,
+  type WaitlistEntryProps,
+  type WaitlistLeaveReason,
+  type StaffWaitlistLeaveReason,
+} from "./catalog/WaitlistEntry.js";
+export type { IWaitlistRepository, WaitlistStudentStanding } from "./catalog/ports/IWaitlistRepository.js";
+export { JoinWaitlistUseCase, type JoinWaitlistInput } from "./catalog/JoinWaitlistUseCase.js";
+export { LeaveWaitlistUseCase, type LeaveWaitlistInput } from "./catalog/LeaveWaitlistUseCase.js";
 export { Plan, PlanPrice, PRICE_PAST_TOLERANCE_MS, type PlanProps, type PlanPriceProps } from "./catalog/Plan.js";
 export type { IPlanRepository } from "./catalog/ports/IPlanRepository.js";
 export { CreatePlanUseCase, type CreatePlanInput } from "./catalog/CreatePlanUseCase.js";

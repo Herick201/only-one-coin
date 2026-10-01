@@ -1,6 +1,7 @@
 import {
   CapacityBelowSeatsTakenError,
   PeriodAlreadyDuplicatedError,
+  WaitlistAlreadyJoinedError,
   type AcademicPeriod,
   type AuditLogEntry,
   type ClassGroup,
@@ -10,8 +11,11 @@ import {
   type IClassGroupRepository,
   type ICourseRepository,
   type IPlanRepository,
+  type IWaitlistRepository,
   type Plan,
   type PlanPrice,
+  type WaitlistEntry,
+  type WaitlistStudentStanding,
 } from "@ooc/domain";
 
 /**
@@ -122,5 +126,32 @@ export class FakeClassGroupRepository implements IClassGroupRepository {
     );
     if (already) throw new PeriodAlreadyDuplicatedError();
     for (const copy of copies) this.rows.set(copy.id, copy);
+  }
+}
+
+export class FakeWaitlistRepository implements IWaitlistRepository {
+  /** Keyed `${studentId}:${classGroupId}`; absent means "free". */
+  public readonly standing = new Map<string, WaitlistStudentStanding>();
+  public readonly rows = new Map<string, WaitlistEntry>();
+
+  async studentStanding(studentId: string, classGroupId: string): Promise<WaitlistStudentStanding> {
+    return this.standing.get(`${studentId}:${classGroupId}`) ?? "free";
+  }
+
+  async join(entry: WaitlistEntry): Promise<WaitlistEntry> {
+    const active = [...this.rows.values()].some(
+      (row) => row.classGroupId === entry.classGroupId && row.studentId === entry.studentId && row.leftAt === null,
+    );
+    if (active) throw new WaitlistAlreadyJoinedError();
+    this.rows.set(entry.id, entry);
+    return entry;
+  }
+
+  async findById(id: string): Promise<WaitlistEntry | null> {
+    return this.rows.get(id) ?? null;
+  }
+
+  async leave(entry: WaitlistEntry): Promise<void> {
+    this.rows.set(entry.id, entry);
   }
 }

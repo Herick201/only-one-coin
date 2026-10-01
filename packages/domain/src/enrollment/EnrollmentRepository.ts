@@ -16,6 +16,10 @@ import type { Payment } from "./Payment.js";
  *
  * `notifications` land in the outbox inside the same transaction — the
  * e-mail about an enrollment exists exactly when the enrollment does.
+ *
+ * The same transaction also closes the student's active waitlist entry for
+ * that class group, if there is one (left_reason 'enrolled', OOC-35) — the
+ * queue never shows somebody who already holds the seat.
  */
 export interface IEnrollmentRepository {
   createWithPayment(params: {

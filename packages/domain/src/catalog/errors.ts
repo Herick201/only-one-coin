@@ -83,3 +83,39 @@ export class DuplicateSamePeriodError extends UnableToProcessEntryError {
     super({ reason: "catalog.duplicate_same_period", message: "Source and target periods must differ.", ...params });
   }
 }
+
+export class ClassGroupNotFullError extends UnableToProcessEntryError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "catalog.class_group_not_full", message: "Only a full class group has a waitlist.", ...params });
+  }
+}
+
+export class WaitlistAlreadyJoinedError extends ConflictError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "catalog.waitlist_already_joined", message: "That student is already waiting for that class group.", ...params });
+  }
+}
+
+export class WaitlistAlreadyEnrolledError extends UnableToProcessEntryError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "catalog.waitlist_already_enrolled", message: "That student already holds a seat in that class group.", ...params });
+  }
+}
+
+export class WaitlistStudentNotFoundError extends NotFoundError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "catalog.waitlist_student_not_found", message: "No live student with that id.", ...params });
+  }
+}
+
+export class WaitlistEntryClosedError extends ConflictError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "catalog.waitlist_entry_closed", message: "That place in the waitlist was already closed.", ...params });
+  }
+}
+
+export class WaitlistEntryNotFoundError extends NotFoundError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "catalog.waitlist_entry_not_found", message: "No waitlist entry with that id.", ...params });
+  }
+}
