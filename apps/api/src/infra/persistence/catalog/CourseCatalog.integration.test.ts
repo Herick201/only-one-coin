@@ -130,6 +130,32 @@ describe("course catalog storage", () => {
     });
   });
 
+  it("tells whether a course has a price in force — no price, no checkout", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const course = await new DrizzleCourseRepository(tx).create(aCourse());
+      const listed = async () => (await new ListCoursesQuery(tx).run()).find((item) => item.id === course.id);
+
+      expect(await listed()).toMatchObject({ planCount: 0, hasPriceInForce: false });
+
+      const plans = new DrizzlePlanRepository(tx);
+      const scheduled = Plan.create({ courseId: course.id, name: "Mensual" });
+      await plans.createWithPrice(
+        scheduled,
+        PlanPrice.schedule({ planId: scheduled.id, amountCents: 4000, validFrom: new Date(Date.now() + 30 * DAY) }),
+      );
+      expect(await listed()).toMatchObject({ planCount: 1, hasPriceInForce: false });
+      expect((await new GetCourseQuery(tx).run(course.id))?.course).toMatchObject({ planCount: 1, hasPriceInForce: false });
+
+      // In force since an hour ago: inside a transaction Postgres' now() is the
+      // moment it opened, earlier than a price stamped "now" by the app.
+      const anHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      const priced = Plan.create({ courseId: course.id, name: "Paquete completo" });
+      await plans.createWithPrice(priced, PlanPrice.schedule({ planId: priced.id, amountCents: 8000 }, anHourAgo));
+      expect(await listed()).toMatchObject({ planCount: 2, hasPriceInForce: true });
+      expect((await new GetCourseQuery(tx).run(course.id))?.course).toMatchObject({ planCount: 2, hasPriceInForce: true });
+    });
+  });
+
   it("answers null for a course not on file", async () => {
     await inRolledBackTransaction(async (tx) => {
       expect(await new GetCourseQuery(tx).run("018f2b5c-1000-7000-8000-0000000000ff")).toBeNull();

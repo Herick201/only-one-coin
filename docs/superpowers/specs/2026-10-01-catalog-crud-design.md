@@ -154,6 +154,12 @@ Desativar/reativar chama retire/restore e mostra as matrículas vivas como aviso
 **Folha "Planos e preços"** por curso: planos, preço vigente, histórico
 ("vigente desde") e preço agendado; `master`/`admin` têm "Novo plano" e "Lançar
 preço" (valor + data, padrão hoje, recusa passado); sem editar nem apagar preço.
+A folha abre pela coluna **Planos** da tabela ("N planos", ou "Adicionar plano"
+quando não há nenhum) e por um atalho na folha de opções, que é onde o clique
+na linha cai. Curso no catálogo **sem preço vigente** leva o selo "Sem preço ·
+fora da venda": o `/enrollment` só oferece curso com plano de preço vigente e
+turma à venda (`GetPublicCatalogQuery`), então turma em inscrição não basta.
+A listagem traz `planCount` e `hasPriceInForce` para isso (01/10/2026).
 
 **Turmas** — lê `/catalog/class-groups` e `/catalog/periods`; busca e filtros
 vão para a query da API (padrão: período mais recente). Seletor de período com

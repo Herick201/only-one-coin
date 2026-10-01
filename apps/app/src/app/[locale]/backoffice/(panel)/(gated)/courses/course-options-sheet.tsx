@@ -28,10 +28,13 @@ export function CourseOptionsSheet({
   course,
   onClose,
   onSaved,
+  onOpenPlans,
 }: {
   course: CourseRow | null
   onClose: () => void
   onSaved: (message: 'saved' | 'retired' | 'restored', liveEnrollments?: number) => void
+  /** Clicking the row lands here, so plans must be one step away, not hidden behind another control. */
+  onOpenPlans: (course: CourseRow) => void
 }) {
   const t = useTranslations('bo')
   const [draft, setDraft] = useState<CourseOptions | null>(null)
@@ -118,6 +121,22 @@ export function CourseOptionsSheet({
                 <BoIcon name="alert" size={14} className="mt-0.5 shrink-0" />
                 {t('course_options.applies_forward')}
               </p>
+
+              <button
+                type="button"
+                onClick={() => onOpenPlans(course)}
+                className="flex min-h-tap items-center gap-2 rounded-lg border border-line px-3.5 py-2 text-left text-sm font-semibold text-ink transition hover:bg-sky-soft"
+              >
+                <BoIcon name="payments" size={16} className="shrink-0 text-muted-foreground" />
+                <span className="flex-1">{t('courses.plans')}</span>
+                <span
+                  className={`text-xs font-normal ${course.hasPriceInForce ? 'text-muted-foreground' : 'text-amber-700'}`}
+                >
+                  {course.hasPriceInForce
+                    ? t('courses.plan_count', { count: course.planCount })
+                    : t('courses.no_price_badge')}
+                </span>
+              </button>
 
               <CourseOptionFields value={draft} onChange={setDraft} />
 

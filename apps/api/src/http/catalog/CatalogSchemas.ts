@@ -20,6 +20,8 @@ export const CourseListItemSchema = z.object({
   allowsTransfer: z.boolean(),
   active: z.boolean(),
   classGroupCount: z.number().int(),
+  planCount: z.number().int(),
+  hasPriceInForce: z.boolean(),
 });
 
 export const PlanDetailSchema = z.object({

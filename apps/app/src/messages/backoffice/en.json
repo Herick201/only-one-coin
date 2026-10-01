@@ -1196,7 +1196,11 @@
       "field_language_hint": "Pick an existing one or type a new language.",
       "retired_notice": "{count, plural, =0 {Course taken off the catalog.} one {Course taken off the catalog. # enrollment is still running.} other {Course taken off the catalog. # enrollments are still running.}}",
       "restored": "Course back in the catalog",
-      "plans": "Plans and prices"
+      "plans": "Plans and prices",
+      "plan_count": "{count, plural, one {# plan} other {# plans}}",
+      "add_plan": "Add plan",
+      "no_price_badge": "No price · not on sale",
+      "no_price_hint": "With no plan priced from today or earlier, the course does not appear on the enrollment form, even with class groups enrolling."
     },
     "plans": {
       "title": "Plans and prices",

@@ -203,12 +203,12 @@ export function CoursesView({
               ]}
             >
               <colgroup>
-                <col className="w-[30%]" />
-                <col className="w-[12%]" />
-                <col className="w-[16%]" />
-                <col className="w-[12%]" />
+                <col className="w-[26%]" />
+                <col className="w-[11%]" />
+                <col className="w-[14%]" />
+                <col className="w-[10%]" />
                 <col className="w-[22%]" />
-                <col className="w-[8%]" />
+                <col className="w-[17%]" />
               </colgroup>
               <thead>
                 <tr>
@@ -218,9 +218,7 @@ export function CoursesView({
                   <th className={thClass}>{t('courses.col_load')}</th>
                   <th className={thClass}>{t('courses.col_class_groups')}</th>
                   <th className={thClass}>{t('courses.col_status')}</th>
-                  <th className={thClass}>
-                    <span className="sr-only">{t('courses.plans')}</span>
-                  </th>
+                  <th className={thClass}>{t('courses.plans')}</th>
                 </tr>
               </thead>
               {byLanguage.map((entry) => {
@@ -298,7 +296,15 @@ export function CoursesView({
                               a badge: a pill worn by almost every row stops
                               carrying information. */}
                           <td className={tdClass}>
-                            {course.active ? (
+                            {course.active && !course.hasPriceInForce ? (
+                              // In the catalog but not for sale: /enrollment
+                              // only offers a course with a price in force.
+                              <StatusBadge
+                                tone="warning"
+                                label={t('courses.no_price_badge')}
+                                title={t('courses.no_price_hint')}
+                              />
+                            ) : course.active ? (
                               <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
                                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
                                 {t('courses.active')}
@@ -318,10 +324,14 @@ export function CoursesView({
                                 setPricing(course)
                               }}
                               aria-label={`${t('courses.plans')} · ${course.name}`}
-                              title={t('courses.plans')}
-                              className="-my-2 grid min-h-tap min-w-tap place-items-center rounded-lg text-muted-foreground transition hover:bg-sky hover:text-brand-blue"
+                              className={`-my-2 inline-flex min-h-tap items-center gap-1.5 whitespace-nowrap rounded-lg px-2 text-sm transition hover:bg-sky hover:text-brand-blue ${
+                                course.planCount === 0 ? 'font-semibold text-amber-700' : 'text-muted-foreground'
+                              }`}
                             >
-                              <BoIcon name="payments" size={18} />
+                              <BoIcon name={course.planCount === 0 ? 'plus' : 'payments'} size={16} />
+                              {course.planCount === 0
+                                ? t('courses.add_plan')
+                                : t('courses.plan_count', { count: course.planCount })}
                             </button>
                           </td>
                         </tr>
@@ -345,12 +355,20 @@ export function CoursesView({
           )
           router.refresh()
         }}
+        onOpenPlans={(course) => {
+          setConfiguring(null)
+          setPricing(course)
+        }}
       />
 
       <CoursePlansSheet
         course={pricing}
         canManage={canManagePrices}
-        onClose={() => setPricing(null)}
+        onClose={() => {
+          setPricing(null)
+          // The row's plan count and price warning come from the server.
+          router.refresh()
+        }}
       />
 
       <Toast message={toast} onDismiss={() => setToast(null)} />

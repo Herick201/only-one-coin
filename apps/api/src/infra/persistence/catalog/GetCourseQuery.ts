@@ -47,24 +47,31 @@ export class GetCourseQuery {
             .where(inArray(planPrices.planId, planRows.map((plan) => plan.id)))
             .orderBy(desc(planPrices.validFrom), desc(planPrices.createdAt));
 
+    const planDetails: PlanDetail[] = planRows.map((plan) => {
+      const prices = priceRows.filter((price) => price.planId === plan.id);
+      const current = prices.find((price) => price.validFrom.getTime() <= now.getTime());
+      return {
+        id: plan.id,
+        name: plan.name,
+        active: plan.deletedAt === null,
+        currentPriceId: current?.id ?? null,
+        prices: prices.map((price) => ({
+          id: price.id,
+          amountCents: price.amountCents,
+          validFrom: price.validFrom.toISOString(),
+          createdAt: price.createdAt.toISOString(),
+        })),
+      };
+    });
+    const livePlans = planDetails.filter((plan) => plan.active);
+
     return {
-      course: toCourseListItem(course, count?.value ?? 0),
-      plans: planRows.map((plan) => {
-        const prices = priceRows.filter((price) => price.planId === plan.id);
-        const current = prices.find((price) => price.validFrom.getTime() <= now.getTime());
-        return {
-          id: plan.id,
-          name: plan.name,
-          active: plan.deletedAt === null,
-          currentPriceId: current?.id ?? null,
-          prices: prices.map((price) => ({
-            id: price.id,
-            amountCents: price.amountCents,
-            validFrom: price.validFrom.toISOString(),
-            createdAt: price.createdAt.toISOString(),
-          })),
-        };
+      course: toCourseListItem(course, {
+        classGroupCount: count?.value ?? 0,
+        planCount: livePlans.length,
+        hasPriceInForce: livePlans.some((plan) => plan.currentPriceId !== null),
       }),
+      plans: planDetails,
     };
   }
 }

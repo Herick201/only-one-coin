@@ -1196,7 +1196,11 @@
       "field_language_hint": "Elige uno existente o escribe un idioma nuevo.",
       "retired_notice": "{count, plural, =0 {Curso fuera de catálogo.} one {Curso fuera de catálogo. # matrícula sigue en curso.} other {Curso fuera de catálogo. # matrículas siguen en curso.}}",
       "restored": "Curso de vuelta en el catálogo",
-      "plans": "Planes y precios"
+      "plans": "Planes y precios",
+      "plan_count": "{count, plural, one {# plan} other {# planes}}",
+      "add_plan": "Agregar plan",
+      "no_price_badge": "Sin precio · fuera de venta",
+      "no_price_hint": "Sin un plan con precio vigente, el curso no aparece en el formulario de matrícula, aunque tenga aulas en inscripción."
     },
     "plans": {
       "title": "Planes y precios",

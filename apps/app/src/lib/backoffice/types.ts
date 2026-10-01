@@ -610,6 +610,13 @@ export interface CourseRow {
   active: boolean
   /** Class groups already opened from this course. */
   classGroupCount: number
+  /** Plans on it that are not retired. */
+  planCount: number
+  /**
+   * A live plan has a price already in force. Without one the course never
+   * reaches /enrollment, however many class groups are enrolling.
+   */
+  hasPriceInForce: boolean
 }
 
 /** The subset of a course that coordination may change. */
