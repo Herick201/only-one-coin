@@ -15,6 +15,7 @@ backoffice administrativo e módulo de e-mail.
 - [`docs/PROMPT-arranque-claude-code.md`](docs/PROMPT-arranque-claude-code.md) — prompt de arranque da primeira sessão.
 - [`docs/FRONTEND-CONSOLIDACAO.md`](docs/FRONTEND-CONSOLIDACAO.md) — avaliação em aberto (não decidido): unificar `landing` + `app` num projeto só.
 - [`docs/OPEN-FINANCE-PERU.md`](docs/OPEN-FINANCE-PERU.md) — pesquisa (não decisão): regulação de Open Finance no Peru, provedores de API existentes e custos — e por que a maioria esbarra na regra de "sem pasarela de pago" (`CLAUDE.md` §2).
+- [`docs/superpowers/specs/2026-10-01-catalog-crud-design.md`](docs/superpowers/specs/2026-10-01-catalog-crud-design.md) — desenho do CRUD real de cursos e turmas (OOC-36/OOC-35): turma em rascunho, janela de inscrição, duplicar período, lista de espera manual, preço agendado.
 - [`docs/DNS-MIGRATION-CLOUDFLARE.md`](docs/DNS-MIGRATION-CLOUDFLARE.md) — plano (em andamento): corte de nameservers para o Cloudflare sem downtime, preservando o e-mail no Google Workspace.
 
 ## Stack
