@@ -302,6 +302,7 @@ export { CreateAcademicPeriodUseCase, type CreateAcademicPeriodInput } from "./c
 export { UpdateAcademicPeriodUseCase, type UpdateAcademicPeriodInput } from "./catalog/UpdateAcademicPeriodUseCase.js";
 export { CreateClassGroupUseCase, type CreateClassGroupInput } from "./catalog/CreateClassGroupUseCase.js";
 export { UpdateClassGroupUseCase, type UpdateClassGroupInput } from "./catalog/UpdateClassGroupUseCase.js";
+export { DuplicateClassGroupsUseCase, type DuplicateClassGroupsInput } from "./catalog/DuplicateClassGroupsUseCase.js";
 export {
   AdvanceClassGroupStatusUseCase,
   type AdvanceClassGroupStatusInput,
