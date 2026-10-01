@@ -17,6 +17,7 @@ export type { HttpErrorParams } from "./shared/base/errors/HttpError.js";
 export { UnauthorizedError } from "./shared/base/errors/UnauthorizedError.js";
 export { ForbiddenError } from "./shared/base/errors/ForbiddenError.js";
 export { NotFoundError } from "./shared/base/errors/NotFoundError.js";
+export { ConflictError } from "./shared/base/errors/ConflictError.js";
 export { UnableToProcessEntryError } from "./shared/base/errors/UnableToProcessEntryError.js";
 
 export {
@@ -256,7 +257,93 @@ export {
   type CatalogEntryState,
 } from "./catalog/CatalogEntry.js";
 export type { ICatalogEntryRepository } from "./catalog/ports/ICatalogEntryRepository.js";
-export { CatalogEntryNotFoundError } from "./catalog/errors.js";
+export {
+  CatalogEntryNotFoundError,
+  CourseNotFoundError,
+  PlanNotFoundError,
+  PriceInPastError,
+  PeriodNotFoundError,
+  CatalogClassGroupNotFoundError,
+  InvalidDateRangeError,
+  InvalidStatusTransitionError,
+  ClassGroupIncompleteError,
+  CapacityBelowSeatsTakenError,
+  ClassGroupCourseLockedError,
+  PeriodAlreadyDuplicatedError,
+  DuplicateSamePeriodError,
+  ClassGroupNotFullError,
+  WaitlistAlreadyJoinedError,
+  WaitlistAlreadyEnrolledError,
+  WaitlistStudentNotFoundError,
+  WaitlistEntryClosedError,
+  WaitlistEntryNotFoundError,
+} from "./catalog/errors.js";
+export {
+  AcademicPeriod,
+  AcademicPeriodPropsSchema,
+  CreateAcademicPeriodSchema,
+  UpdateAcademicPeriodSchema,
+  type AcademicPeriodProps,
+  type CreateAcademicPeriodDTO,
+  type UpdateAcademicPeriodDTO,
+} from "./catalog/AcademicPeriod.js";
+export {
+  ClassGroup,
+  ClassGroupPropsSchema,
+  ClassGroupStatusSchema,
+  CreateClassGroupSchema,
+  UpdateClassGroupSchema,
+  NEXT_CLASS_GROUP_STATUS,
+  WeekdaySchema,
+  WeeklySlotSchema,
+  type ClassGroupProps,
+  type ClassGroupStatus,
+  type CreateClassGroupDTO,
+  type UpdateClassGroupDTO,
+  type WeeklySlot,
+} from "./catalog/ClassGroup.js";
+export type { IAcademicPeriodRepository } from "./catalog/ports/IAcademicPeriodRepository.js";
+export type { IClassGroupRepository } from "./catalog/ports/IClassGroupRepository.js";
+export { CreateAcademicPeriodUseCase, type CreateAcademicPeriodInput } from "./catalog/CreateAcademicPeriodUseCase.js";
+export { UpdateAcademicPeriodUseCase, type UpdateAcademicPeriodInput } from "./catalog/UpdateAcademicPeriodUseCase.js";
+export { CreateClassGroupUseCase, type CreateClassGroupInput } from "./catalog/CreateClassGroupUseCase.js";
+export { UpdateClassGroupUseCase, type UpdateClassGroupInput } from "./catalog/UpdateClassGroupUseCase.js";
+export { DuplicateClassGroupsUseCase, type DuplicateClassGroupsInput } from "./catalog/DuplicateClassGroupsUseCase.js";
+export {
+  AdvanceClassGroupStatusUseCase,
+  type AdvanceClassGroupStatusInput,
+} from "./catalog/AdvanceClassGroupStatusUseCase.js";
+export {
+  WaitlistEntry,
+  WaitlistEntryPropsSchema,
+  WaitlistLeaveReasonSchema,
+  StaffWaitlistLeaveReasonSchema,
+  type WaitlistEntryProps,
+  type WaitlistLeaveReason,
+  type StaffWaitlistLeaveReason,
+} from "./catalog/WaitlistEntry.js";
+export type { IWaitlistRepository, WaitlistStudentStanding } from "./catalog/ports/IWaitlistRepository.js";
+export { JoinWaitlistUseCase, type JoinWaitlistInput } from "./catalog/JoinWaitlistUseCase.js";
+export { LeaveWaitlistUseCase, type LeaveWaitlistInput } from "./catalog/LeaveWaitlistUseCase.js";
+export { Plan, PlanPrice, PRICE_PAST_TOLERANCE_MS, type PlanProps, type PlanPriceProps } from "./catalog/Plan.js";
+export type { IPlanRepository } from "./catalog/ports/IPlanRepository.js";
+export { CreatePlanUseCase, type CreatePlanInput } from "./catalog/CreatePlanUseCase.js";
+export { RenamePlanUseCase, type RenamePlanInput } from "./catalog/RenamePlanUseCase.js";
+export { SchedulePlanPriceUseCase, type SchedulePlanPriceInput } from "./catalog/SchedulePlanPriceUseCase.js";
+export {
+  Course,
+  CertificateRuleSchema,
+  CourseOptionsSchema,
+  CreateCourseSchema,
+  UpdateCourseSchema,
+  type CertificateRule,
+  type CourseProps,
+  type CreateCourseDTO,
+  type UpdateCourseDTO,
+} from "./catalog/Course.js";
+export type { ICourseRepository } from "./catalog/ports/ICourseRepository.js";
+export { CreateCourseUseCase, type CreateCourseInput } from "./catalog/CreateCourseUseCase.js";
+export { UpdateCourseUseCase, type UpdateCourseInput } from "./catalog/UpdateCourseUseCase.js";
 export {
   RetireCatalogEntryUseCase,
   type RetireCatalogEntryInput,

@@ -59,13 +59,14 @@ function isManagement(role: StaffRole): boolean {
   return role === 'master' || role === 'admin'
 }
 
-/** Only management and the enrollment side open a class group. */
+/**
+ * Who opens and runs class groups — the same roles the API declares on every
+ * catalog write (CATALOG_WRITE_ROLES; CLAUDE.md §1, "quem abre turma é
+ * admin/enrollment_supervisor"). The academic supervisor follows the teachers,
+ * not the catalog: they read class groups, they do not open or edit them.
+ */
 export function canCreateClassGroup(role: StaffRole): boolean {
-  return (
-    isManagement(role) ||
-    role === 'enrollment_supervisor' ||
-    role === 'academic_supervisor'
-  )
+  return isManagement(role) || role === 'enrollment_supervisor'
 }
 
 /**
@@ -209,6 +210,20 @@ export function canBrowseEnrollments(role: StaffRole): boolean {
     role === 'sales' ||
     role === 'support'
   )
+}
+
+/**
+ * Who reads the catalog (courses, plans, class groups) — mirrors
+ * CATALOG_READ_ROLES in apps/api. Billing sees no academic data; a teacher
+ * reaches their own class groups through their own screen.
+ */
+export function canBrowseCatalog(role: StaffRole): boolean {
+  return canBrowseEnrollments(role)
+}
+
+/** Who opens a plan or puts a new price in force — money, so management only. */
+export function canManagePrices(role: StaffRole): boolean {
+  return isManagement(role)
 }
 
 /**

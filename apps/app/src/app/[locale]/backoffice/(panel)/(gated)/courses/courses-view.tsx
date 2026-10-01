@@ -1,8 +1,9 @@
 'use client'
 
-import { useMemo, useState, type MouseEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
+import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import type { CourseOptions, CourseRow } from '@/lib/backoffice/types'
+import type { CourseRow } from '@/lib/backoffice/types'
 import {
   Card,
   EmptyState,
@@ -16,6 +17,7 @@ import {
 import { BoIcon } from '@/components/backoffice/icons'
 import { Toast } from '@/components/backoffice/controls'
 import { CourseOptionsSheet } from './course-options-sheet'
+import { CoursePlansSheet } from './course-plans-sheet'
 import { NewCourseForm } from './new-course-form'
 
 /**
@@ -33,14 +35,17 @@ export function CoursesView({
   rows,
   canCreate,
   canConfigure,
+  canManagePrices,
 }: {
   rows: CourseRow[]
   canCreate: boolean
   canConfigure: boolean
+  canManagePrices: boolean
 }) {
   const t = useTranslations('bo')
+  const router = useRouter()
 
-  const [courses, setCourses] = useState<CourseRow[]>(rows)
+  const courses = rows
   const [query, setQuery] = useState('')
   /**
    * Language groups the user opened. The catalog opens whole, unlike the class
@@ -50,9 +55,23 @@ export function CoursesView({
   const [opened, setOpened] = useState<string[]>(() => [
     ...new Set(rows.map((row) => row.language.id)),
   ])
+  /**
+   * A language that first shows up after a refresh (a course created in a new
+   * language) opens too, or the course just created would sit behind a closed
+   * fold. Languages the user already saw keep whatever state they left them in.
+   */
+  const knownLanguages = useRef(new Set(rows.map((row) => row.language.id)))
+  useEffect(() => {
+    const fresh = [...new Set(rows.map((row) => row.language.id))].filter(
+      (id) => !knownLanguages.current.has(id),
+    )
+    if (fresh.length === 0) return
+    fresh.forEach((id) => knownLanguages.current.add(id))
+    setOpened((current) => [...current, ...fresh])
+  }, [rows])
   const [configuring, setConfiguring] = useState<CourseRow | null>(null)
+  const [pricing, setPricing] = useState<CourseRow | null>(null)
   const [creating, setCreating] = useState(false)
-  const [touched, setTouched] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
 
   const searching = query.trim().length > 0
@@ -87,14 +106,6 @@ export function CoursesView({
     setOpened((current) =>
       current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
     )
-  }
-
-  function saveOptions(course: CourseRow, options: CourseOptions) {
-    setCourses((current) =>
-      current.map((row) => (row.id === course.id ? { ...row, ...options } : row)),
-    )
-    setTouched(true)
-    setToast(t('courses.saved'))
   }
 
   function rowProps(course: CourseRow) {
@@ -143,21 +154,13 @@ export function CoursesView({
         <NewCourseForm
           languages={[...new Map(courses.map((row) => [row.language.id, row.language])).values()]}
           onCancel={() => setCreating(false)}
-          onCreate={(course) => {
-            setCourses((current) => [course, ...current])
+          onCreated={() => {
             setCreating(false)
             setQuery('')
-            setTouched(true)
             setToast(t('courses.created'))
+            router.refresh()
           }}
         />
-      )}
-
-      {touched && (
-        <p className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-          <BoIcon name="alert" size={14} className="mt-0.5 shrink-0" />
-          {t('courses.local_only')}
-        </p>
       )}
 
       {byLanguage.length === 0 ? (
@@ -196,14 +199,16 @@ export function CoursesView({
                 t('courses.col_load'),
                 t('courses.col_class_groups'),
                 t('courses.col_status'),
+                t('courses.plans'),
               ]}
             >
               <colgroup>
-                <col className="w-[36%]" />
-                <col className="w-[12%]" />
-                <col className="w-[16%]" />
-                <col className="w-[12%]" />
-                <col className="w-[24%]" />
+                <col className="w-[26%]" />
+                <col className="w-[11%]" />
+                <col className="w-[14%]" />
+                <col className="w-[10%]" />
+                <col className="w-[22%]" />
+                <col className="w-[17%]" />
               </colgroup>
               <thead>
                 <tr>
@@ -213,6 +218,7 @@ export function CoursesView({
                   <th className={thClass}>{t('courses.col_load')}</th>
                   <th className={thClass}>{t('courses.col_class_groups')}</th>
                   <th className={thClass}>{t('courses.col_status')}</th>
+                  <th className={thClass}>{t('courses.plans')}</th>
                 </tr>
               </thead>
               {byLanguage.map((entry) => {
@@ -228,7 +234,7 @@ export function CoursesView({
                     {/* Language divider doubles as the fold control. One table
                         for every language keeps the columns aligned. */}
                     <tr>
-                      <td colSpan={5} className="border-y border-line bg-slate-50/80 p-0">
+                      <td colSpan={6} className="border-y border-line bg-slate-50/80 p-0">
                         {searching ? (
                           <span className="flex w-full items-center gap-2 px-4 py-1.5">
                             <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -290,7 +296,15 @@ export function CoursesView({
                               a badge: a pill worn by almost every row stops
                               carrying information. */}
                           <td className={tdClass}>
-                            {course.active ? (
+                            {course.active && !course.hasPriceInForce ? (
+                              // In the catalog but not for sale: /enrollment
+                              // only offers a course with a price in force.
+                              <StatusBadge
+                                tone="warning"
+                                label={t('courses.no_price_badge')}
+                                title={t('courses.no_price_hint')}
+                              />
+                            ) : course.active ? (
                               <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
                                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
                                 {t('courses.active')}
@@ -301,6 +315,24 @@ export function CoursesView({
                                 label={t('courses.inactive')}
                               />
                             )}
+                          </td>
+                          <td className={tdClass}>
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                setPricing(course)
+                              }}
+                              aria-label={`${t('courses.plans')} · ${course.name}`}
+                              className={`-my-2 inline-flex min-h-tap items-center gap-1.5 whitespace-nowrap rounded-lg px-2 text-sm transition hover:bg-sky hover:text-brand-blue ${
+                                course.planCount === 0 ? 'font-semibold text-amber-700' : 'text-muted-foreground'
+                              }`}
+                            >
+                              <BoIcon name={course.planCount === 0 ? 'plus' : 'payments'} size={16} />
+                              {course.planCount === 0
+                                ? t('courses.add_plan')
+                                : t('courses.plan_count', { count: course.planCount })}
+                            </button>
                           </td>
                         </tr>
                       ))}
@@ -315,7 +347,28 @@ export function CoursesView({
       <CourseOptionsSheet
         course={configuring}
         onClose={() => setConfiguring(null)}
-        onSave={saveOptions}
+        onSaved={(message, live) => {
+          setToast(
+            message === 'retired'
+              ? t('courses.retired_notice', { count: live ?? 0 })
+              : t(message === 'restored' ? 'courses.restored' : 'courses.saved'),
+          )
+          router.refresh()
+        }}
+        onOpenPlans={(course) => {
+          setConfiguring(null)
+          setPricing(course)
+        }}
+      />
+
+      <CoursePlansSheet
+        course={pricing}
+        canManage={canManagePrices}
+        onClose={() => {
+          setPricing(null)
+          // The row's plan count and price warning come from the server.
+          router.refresh()
+        }}
       />
 
       <Toast message={toast} onDismiss={() => setToast(null)} />

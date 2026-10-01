@@ -15,6 +15,8 @@ backoffice administrativo e módulo de e-mail.
 - [`docs/PROMPT-arranque-claude-code.md`](docs/PROMPT-arranque-claude-code.md) — prompt de arranque da primeira sessão.
 - [`docs/FRONTEND-CONSOLIDACAO.md`](docs/FRONTEND-CONSOLIDACAO.md) — avaliação em aberto (não decidido): unificar `landing` + `app` num projeto só.
 - [`docs/OPEN-FINANCE-PERU.md`](docs/OPEN-FINANCE-PERU.md) — pesquisa (não decisão): regulação de Open Finance no Peru, provedores de API existentes e custos — e por que a maioria esbarra na regra de "sem pasarela de pago" (`CLAUDE.md` §2).
+- [`docs/superpowers/specs/2026-10-01-catalog-crud-design.md`](docs/superpowers/specs/2026-10-01-catalog-crud-design.md) — desenho do CRUD real de cursos e turmas (OOC-36/OOC-35): turma em rascunho, janela de inscrição, duplicar período, lista de espera manual, preço agendado.
+- [`docs/superpowers/plans/2026-10-01-catalog-crud.md`](docs/superpowers/plans/2026-10-01-catalog-crud.md) — plano de implementação desse desenho, em dois PRs (OOC-36 primeiro, depois OOC-35).
 - [`docs/DNS-MIGRATION-CLOUDFLARE.md`](docs/DNS-MIGRATION-CLOUDFLARE.md) — plano (em andamento): corte de nameservers para o Cloudflare sem downtime, preservando o e-mail no Google Workspace.
 
 ## Stack
@@ -157,9 +159,12 @@ Sessão 7) já existem. Domínio e fila já existem, independentes dessa escolha
   domínio do app é o Vercel em produção (`vercel.json`, 302 com a query
   string preservada) e o dev server no local (ver **Rodar local**).
   No backoffice já existem: alunos (`/backoffice/students`, com ficha, histórico e edição),
-  turmas (`/backoffice/class-groups`, com lista paginada, ficha da turma,
-  emissão de certificados em lote e procedimentos por matrícula — mover,
-  congelar, retirar), cursos (`/backoffice/courses`, catálogo com opções por
+  turmas (`/backoffice/class-groups`, real desde o OOC-35: períodos, rascunho,
+  duplicação de período, ciclo de vida, tirar do catálogo e voltar, e lista de espera;
+  lista paginada e ficha da turma.
+  Emissão de certificados em lote e procedimentos por matrícula — mover,
+  congelar, retirar — continuam mock e só aparecem na visão do docente, até as
+  Sessões 37/38), cursos (`/backoffice/courses`, catálogo com opções por
   curso) e pagamentos (`/backoffice/payments`: livro de todos os pagamentos —
   matrícula e trâmite — com métricas do ciclo, busca e filtros por estado, meio
   e conceito, e cada linha abrindo o comprovante e os dados do pagamento num
@@ -313,7 +318,8 @@ o que é real:
 | Matrículas (`/backoffice/enrollments`) | **Real**: listagem, métricas do ciclo e abertura manual (`GET`/`POST /api/v1/enrollments`) |
 | Reservas de vaga (`/backoffice/enrollments/reservations`) | Mock |
 | Pagamentos e fila de revisão (`/backoffice/payments`, `/payments/review`) | Mock — não existe ainda ação em lote nem endpoint de pagamento avulso |
-| Turmas (`/backoffice/class-groups`) | Mock — `apps/api` só expõe leitura (`GET /class-groups`); não há rota de criar/editar turma |
+| Cursos (`/backoffice/courses`) | **Real**: lista (aposentados inclusos, sinalizados), criar curso, opções (resumo, regra de certificado, congelamento, transferência), sair do catálogo/voltar com aviso de matrícula viva, e planos com preço agendado (`/api/v1/catalog`, com `audit_log`). A coluna `courses.local_only` deixou de existir |
+| Turmas (`/backoffice/class-groups`) | **Real**: lista por período, períodos (criar, duplicar), criar/editar turma, rascunho e ciclo de vida (`draft → enrolling → in_progress → finished → closed`), ficha da turma e lista de espera manual (`/api/v1/catalog`, com `audit_log`). Continua mock: visão do docente (precisa de `teachers`, Sessão 36), roster, notas e certificados |
 | Docentes (`/backoffice/teachers`) | Mock — não existe tabela `teachers` ainda (decisão deliberada, `docs/ROADMAP.md` Sessão 36) |
 | Equipe (`/backoffice/team`) | **Real**: listagem, criação, convite, redefinição de senha e a bitácora de troca de cargo (lida do `audit_log`) |
 | Funcionalidades (`/backoffice/features`) | **Real** |
@@ -331,7 +337,7 @@ o que é real:
   vocabulário de erro HTTP reutilizável (`shared/base/errors/`).
 - `packages/queue` — contrato de fila compartilhado (BullMQ/Redis).
 - `packages/db` — Postgres local via `compose.yml` (`postgres:18-alpine`) +
-  schema/migrations com Drizzle Kit (`docs/ARCHITECTURE.md` §5.8). Quinze
+  schema/migrations com Drizzle Kit (`docs/ARCHITECTURE.md` §5.8). Dezessete
   migrations além da baseline: schema do Better Auth
   (`0001_better_auth_core.sql`), o modelo acadêmico e de pessoas inteiro —
   `academic_periods`, `courses`, `plans`, `plan_prices`, `class_groups`,
@@ -347,13 +353,17 @@ o que é real:
   o dono das tabelas (`CLAUDE.md` §6/§8), cobertas por
   `packages/db/tests/privileges.test.ts`; e `deleted_at` no catálogo,
   na matrícula e no apoderado (`0012`), completando o par da trava —
-  `students` já tinha, e `plan_prices`/`consents`/`audit_log` ficam de fora
-  por serem append-only; a `outbox` de notificações (`0013`), uma linha
+  `students` já tinha, e `consents`/`audit_log` ficam de fora
+  por serem append-only (`plan_prices` também, mas ele entra na trava de
+  privilégio pela `0017`); a `outbox` de notificações (`0013`), uma linha
   por e-mail a enviar; `seat_holds` e `platform_settings` (`0014`), o hold
   curto do checkout e os parâmetros que o backoffice ajusta; e
   `receipt_uploads` (`0015`), a custódia do arquivo do comprovante entre o
   upload direto ao bucket e a matrícula que ainda não existe naquele momento
-  (OOC-19). Ainda
+  (OOC-19); `0016` (antifraude do comprovante); e `0017`, o catálogo de
+  cursos (`summary`, regra de certificado, congelamento e transferência em
+  `courses`) mais a trava de `plan_prices` — sem `UPDATE`/`DELETE`, com
+  trigger `plan_prices_append_only` (OOC-36). Ainda
   não existem: `teachers`, `campaigns`, `attendance`, `grades`,
   `materials`, `certificates` — essas entram nas próximas sessões do
   `ROADMAP.md`.

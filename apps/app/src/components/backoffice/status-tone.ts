@@ -88,6 +88,8 @@ export const deliveryTone: Record<EmailDeliveryStatus, Tone> = {
 }
 
 export const classGroupTone: Record<ClassGroupStatus, Tone> = {
+  // Not on sale yet: nothing to act on, nothing wrong.
+  draft: 'neutral',
   enrolling: 'info',
   in_progress: 'success',
   // Finished still owes certificates — it must not read as "done".

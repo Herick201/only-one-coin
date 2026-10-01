@@ -437,12 +437,15 @@ export interface SeatWatchItem {
 /* -------------------------------------------------------------------------- */
 
 /**
- * `finished` = classes are over but certificates are still owed. `closed` =
- * everyone who qualified already got theirs. A failed student never gets one,
- * so "all certificates issued" can never be the gate — it would leave any class
- * group with a failure open forever.
+ * `draft` = opened in the panel but not on sale yet — dates may be missing and
+ * the checkout never offers it (OOC-35). `finished` = classes are over but
+ * certificates are still owed. `closed` = everyone who qualified already got
+ * theirs. A failed student never gets one, so "all certificates issued" can
+ * never be the gate — it would leave any class group with a failure open
+ * forever.
  */
 export type ClassGroupStatus =
+  | 'draft'
   | 'enrolling'
   | 'in_progress'
   | 'finished'
@@ -520,6 +523,60 @@ export interface ClassGroupRow {
   pendingGrades: number
 }
 
+/** One weekly meeting of a class group, `HH:mm` in America/Lima. */
+export interface WeeklySlotItem {
+  weekday: Weekday
+  startTime: string
+  endTime: string
+}
+
+/** A class group as the catalog API answers it (OOC-35). */
+export interface ClassGroupItem {
+  id: string
+  code: string
+  courseId: string
+  courseName: string
+  /** Catalog text ("Inglés"), not a code — the screen folds by it. */
+  language: string
+  courseActive: boolean
+  academicPeriodId: string
+  academicPeriodName: string
+  teacherName: string
+  slots: WeeklySlotItem[]
+  /** Null only on a draft. */
+  startsOn: string | null
+  endsOn: string | null
+  /** Null = no limit on that side of the enrollment window. */
+  enrollmentOpensAt: string | null
+  enrollmentClosesAt: string | null
+  capacity: number
+  seatsTaken: number
+  status: ClassGroupStatus
+  /** False once retired from the catalog — the row stays, off sale. */
+  active: boolean
+  waitlistCount: number
+}
+
+/** A sales period: its own class groups, start dates and seats (CLAUDE.md §1). */
+export interface AcademicPeriodItem {
+  id: string
+  name: string
+  startsOn: string
+  endsOn: string
+  active: boolean
+  classGroupCount: number
+}
+
+/** One student waiting for a seat in a full class group. */
+export interface WaitlistItem {
+  id: string
+  studentId: string
+  studentName: string
+  nationalIdType: NationalIdType
+  nationalId: string
+  joinedAt: string
+}
+
 /**
  * A course as the catalog holds it. The class group is an instance of a course
  * with a schedule, a teacher and seats (`docs/REQUISITOS.md` RF09) — what lives
@@ -553,6 +610,13 @@ export interface CourseRow {
   active: boolean
   /** Class groups already opened from this course. */
   classGroupCount: number
+  /** Plans on it that are not retired. */
+  planCount: number
+  /**
+   * A live plan has a price already in force. Without one the course never
+   * reaches /enrollment, however many class groups are enrolling.
+   */
+  hasPriceInForce: boolean
 }
 
 /** The subset of a course that coordination may change. */
@@ -566,6 +630,53 @@ export type CourseOptions = Pick<
   | 'allowsTransfer'
   | 'active'
 >
+
+/**
+ * Every `reason` a catalog write can answer, as the locale knows it
+ * (`bo.catalog_errors.*`). Anything else falls back to `generic` — a code the
+ * screen does not know never reaches the reader (CLAUDE.md §4).
+ */
+export type CatalogErrorKey =
+  | 'generic'
+  | 'course_not_found'
+  | 'plan_not_found'
+  | 'price_in_past'
+  | 'period_not_found'
+  | 'class_group_not_found'
+  | 'invalid_date_range'
+  | 'invalid_status_transition'
+  | 'class_group_incomplete'
+  | 'capacity_below_seats_taken'
+  | 'class_group_course_locked'
+  | 'period_already_duplicated'
+  | 'duplicate_same_period'
+  | 'class_group_not_full'
+  | 'waitlist_already_joined'
+  | 'waitlist_already_enrolled'
+  | 'waitlist_student_not_found'
+  | 'waitlist_entry_closed'
+  | 'waitlist_entry_not_found'
+  | 'entry_not_found'
+
+export interface PlanPriceItem {
+  id: string
+  amountCents: number
+  validFrom: string
+  createdAt: string
+}
+
+export interface PlanDetail {
+  id: string
+  name: string
+  active: boolean
+  currentPriceId: string | null
+  prices: PlanPriceItem[]
+}
+
+export interface CourseDetail {
+  course: CourseRow
+  plans: PlanDetail[]
+}
 
 /**
  * One dated observation the teacher leaves on a student of their class group —

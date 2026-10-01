@@ -1,4 +1,6 @@
+import { ConflictError } from "../shared/base/errors/ConflictError.js";
 import { NotFoundError } from "../shared/base/errors/NotFoundError.js";
+import { UnableToProcessEntryError } from "../shared/base/errors/UnableToProcessEntryError.js";
 
 export class CatalogEntryNotFoundError extends NotFoundError {
   constructor(params?: { path?: string; cause?: unknown }) {
@@ -7,5 +9,113 @@ export class CatalogEntryNotFoundError extends NotFoundError {
       message: "No catalog entry of that kind with that id.",
       ...params,
     });
+  }
+}
+
+export class CourseNotFoundError extends NotFoundError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "catalog.course_not_found", message: "No live course with that id.", ...params });
+  }
+}
+
+export class PlanNotFoundError extends NotFoundError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "catalog.plan_not_found", message: "No live plan with that id.", ...params });
+  }
+}
+
+export class PriceInPastError extends UnableToProcessEntryError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "catalog.price_in_past", message: "A price cannot start in the past.", ...params });
+  }
+}
+
+export class PeriodNotFoundError extends NotFoundError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "catalog.period_not_found", message: "No live academic period with that id.", ...params });
+  }
+}
+
+export class CatalogClassGroupNotFoundError extends NotFoundError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "catalog.class_group_not_found", message: "No live class group with that id.", ...params });
+  }
+}
+
+export class InvalidDateRangeError extends UnableToProcessEntryError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "catalog.invalid_date_range", message: "A range must start before it ends.", ...params });
+  }
+}
+
+export class InvalidStatusTransitionError extends ConflictError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "catalog.invalid_status_transition", message: "A class group moves forward one step at a time.", ...params });
+  }
+}
+
+export class ClassGroupIncompleteError extends UnableToProcessEntryError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "catalog.class_group_incomplete", message: "Only a draft may lack start and end dates.", ...params });
+  }
+}
+
+export class CapacityBelowSeatsTakenError extends UnableToProcessEntryError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "catalog.capacity_below_seats_taken", message: "Capacity cannot drop below the seats already taken.", ...params });
+  }
+}
+
+export class ClassGroupCourseLockedError extends UnableToProcessEntryError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "catalog.class_group_course_locked", message: "The course only changes on an empty draft.", ...params });
+  }
+}
+
+export class PeriodAlreadyDuplicatedError extends ConflictError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "catalog.period_already_duplicated", message: "That period was already copied into this one.", ...params });
+  }
+}
+
+export class DuplicateSamePeriodError extends UnableToProcessEntryError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "catalog.duplicate_same_period", message: "Source and target periods must differ.", ...params });
+  }
+}
+
+export class ClassGroupNotFullError extends UnableToProcessEntryError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "catalog.class_group_not_full", message: "Only a full class group has a waitlist.", ...params });
+  }
+}
+
+export class WaitlistAlreadyJoinedError extends ConflictError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "catalog.waitlist_already_joined", message: "That student is already waiting for that class group.", ...params });
+  }
+}
+
+export class WaitlistAlreadyEnrolledError extends UnableToProcessEntryError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "catalog.waitlist_already_enrolled", message: "That student already holds a seat in that class group.", ...params });
+  }
+}
+
+export class WaitlistStudentNotFoundError extends NotFoundError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "catalog.waitlist_student_not_found", message: "No live student with that id.", ...params });
+  }
+}
+
+export class WaitlistEntryClosedError extends ConflictError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "catalog.waitlist_entry_closed", message: "That place in the waitlist was already closed.", ...params });
+  }
+}
+
+export class WaitlistEntryNotFoundError extends NotFoundError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "catalog.waitlist_entry_not_found", message: "No waitlist entry with that id.", ...params });
   }
 }

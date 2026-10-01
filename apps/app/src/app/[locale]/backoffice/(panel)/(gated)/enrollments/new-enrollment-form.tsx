@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
-import type { NationalIdType, PaymentMethod } from '@/lib/backoffice/types'
+import type { NationalIdType, PaymentMethod, WeeklySlotItem } from '@/lib/backoffice/types'
+import { slotsLabel } from '@/lib/backoffice/schedule'
 import { formatMoney, type Locale } from '@/lib/format'
 import { formatPaymentMethod } from '@/lib/payment-method'
 import {
@@ -36,7 +37,7 @@ const MIN_QUERY_LENGTH = 2
 /** Debounce so every keystroke doesn't fire its own request. */
 const SEARCH_DEBOUNCE_MS = 250
 
-interface StudentSearchResult {
+export interface StudentSearchResult {
   id: string
   firstName: string
   lastName: string
@@ -62,7 +63,9 @@ interface OpenClassGroup {
   courseId: string
   courseName: string
   academicPeriodName: string
+  /** Legacy free text — only seed rows carry it; the panel writes `slots`. */
   schedule: string
+  slots: WeeklySlotItem[]
   startsOn: string
   capacity: number
   seatsTaken: number
@@ -100,17 +103,26 @@ interface OpenClassGroup {
 export function NewEnrollmentForm({
   onCancel,
   onCreate,
+  initialStudent = null,
+  initialClassGroupId = null,
 }: {
   onCancel: () => void
   /** The seat was written. The caller re-reads the ledger from the server. */
   onCreate: () => void
+  /**
+   * Preselection from a link (the waitlist's "enroll the first in line").
+   * It only fills the two pickers: the price still comes from the open class
+   * group list the server sends, and everything else is asked as usual.
+   */
+  initialStudent?: StudentSearchResult | null
+  initialClassGroupId?: string | null
 }) {
   const t = useTranslations('bo')
   const locale = useLocale() as Locale
 
   const [studentQuery, setStudentQuery] = useState('')
   const [matches, setMatches] = useState<StudentSearchResult[]>([])
-  const [selectedStudent, setSelectedStudent] = useState<StudentSearchResult | null>(null)
+  const [selectedStudent, setSelectedStudent] = useState<StudentSearchResult | null>(initialStudent)
 
   const [openGroups, setOpenGroups] = useState<OpenClassGroup[]>([])
   const [groupsLoaded, setGroupsLoaded] = useState(false)
@@ -131,7 +143,13 @@ export function NewEnrollmentForm({
     fetch('/api/v1/class-groups')
       .then((response) => (response.ok ? (response.json() as Promise<OpenClassGroup[]>) : []))
       .then((data) => {
-        if (!cancelled) setOpenGroups(data)
+        if (cancelled) return
+        setOpenGroups(data)
+        // A preselected class group that is not open for sale (no seat yet,
+        // closed window, draft) is ignored — never forced into the picker.
+        if (initialClassGroupId && data.some((item) => item.id === initialClassGroupId)) {
+          setClassGroupId(initialClassGroupId)
+        }
       })
       .catch(() => {
         if (!cancelled) setOpenGroups([])
@@ -143,7 +161,7 @@ export function NewEnrollmentForm({
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [initialClassGroupId])
 
   useEffect(() => {
     const query = studentQuery.trim()
@@ -177,6 +195,10 @@ export function NewEnrollmentForm({
   }, [studentQuery])
 
   const group = openGroups.find((item) => item.id === classGroupId) ?? null
+
+  /** The panel writes `slots`; only legacy seed rows still carry text alone. */
+  const scheduleOf = (item: OpenClassGroup) =>
+    item.slots.length > 0 ? slotsLabel(item.slots, t) : item.schedule
 
   /**
    * Everything the form asks for is required, and the button is where that is
@@ -360,7 +382,7 @@ export function NewEnrollmentForm({
                 </option>
                 {openGroups.map((item) => (
                   <option key={item.id} value={item.id}>
-                    {`${item.courseName} — ${item.schedule}`}
+                    {`${item.courseName} — ${scheduleOf(item)}`}
                   </option>
                 ))}
               </select>
@@ -370,7 +392,7 @@ export function NewEnrollmentForm({
               <dl className="grid grid-cols-1 gap-x-4 gap-y-2 self-end rounded-lg border border-line bg-sky-soft px-3 py-2.5 @md/page:grid-cols-2">
                 <Summary
                   label={t('new_enrollment.field_schedule')}
-                  value={group.schedule}
+                  value={scheduleOf(group)}
                 />
                 <Summary
                   label={t('new_enrollment.field_period')}

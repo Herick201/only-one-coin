@@ -82,7 +82,8 @@ export class DrizzlePublicEnrollmentRepository implements IPublicEnrollmentRepos
       planPriceId: priceRow.id,
       amountCents: priceRow.amountCents,
       courseName: classGroupRow.courseName,
-      classGroupStartsOn: classGroupRow.classGroupStartsOn,
+      // Never null here: the query above only matches status = 'enrolling', and the 0018 check forbids a non-draft without dates.
+      classGroupStartsOn: classGroupRow.classGroupStartsOn!,
     };
   }
 

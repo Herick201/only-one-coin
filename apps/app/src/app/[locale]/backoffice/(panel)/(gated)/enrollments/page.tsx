@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { listEnrollments, parseEnrollmentLedgerQuery } from '@/lib/backoffice/enrollments'
+import { getStudent } from '@/lib/backoffice/students'
 import { getStaffSession } from '@/lib/backoffice/session'
 import {
   canCreateEnrollment,
@@ -7,7 +8,43 @@ import {
 } from '@/lib/backoffice/permissions'
 import { EmptyState, PageHeader } from '@/components/backoffice/ui'
 import { SectionTabs } from '@/components/backoffice/section-tabs'
-import { EnrollmentsView } from './enrollments-view'
+import { EnrollmentsView, type EnrollmentPreselect } from './enrollments-view'
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/** One value of a search param, only if it is an id worth asking the API about. */
+function idParam(value: string | string[] | undefined): string | null {
+  const first = Array.isArray(value) ? value[0] : value
+  return first && UUID.test(first) ? first : null
+}
+
+/**
+ * `?student=&classGroup=` — the waitlist's "enroll the first in line" link.
+ * The student is read from the API (a link carries an id, never a name to
+ * trust); the class group is only a hint the form checks against the open list
+ * the server sends. Neither carries a price: that stays the plan price in force
+ * (CLAUDE.md §1). Anything unreadable is dropped, and the form opens as usual.
+ */
+async function readPreselect(
+  params: Record<string, string | string[] | undefined>,
+): Promise<EnrollmentPreselect | null> {
+  const studentId = idParam(params.student)
+  const classGroupId = idParam(params.classGroup)
+  if (!studentId && !classGroupId) return null
+  const student = studentId ? await getStudent(studentId).catch(() => null) : null
+  return {
+    student: student
+      ? {
+          id: student.id,
+          firstName: student.firstName,
+          lastName: student.lastName,
+          nationalIdType: student.nationalIdType,
+          nationalId: student.nationalId,
+        }
+      : null,
+    classGroupId,
+  }
+}
 
 /**
  * Matrículas — every seat in the institution, in one list. Until now an
@@ -62,8 +99,13 @@ export default async function EnrollmentsPage({
   /* The ledger comes from `apps/api` (GET /enrollments). A failure is shown as
      a failure: an empty table would read as "nobody enrolled this ciclo",
      which is the one thing this screen must never say by accident. */
-  const query = parseEnrollmentLedgerQuery(await searchParams)
-  const ledger = await listEnrollments(query)
+  const search = await searchParams
+  const query = parseEnrollmentLedgerQuery(search)
+  const canCreate = canCreateEnrollment(staff.role)
+  const [ledger, preselect] = await Promise.all([
+    listEnrollments(query),
+    canCreate ? readPreselect(search) : Promise.resolve(null),
+  ])
 
   if (!ledger) {
     return (
@@ -99,7 +141,8 @@ export default async function EnrollmentsPage({
       <EnrollmentsView
         ledger={ledger}
         query={query}
-        canCreate={canCreateEnrollment(staff.role)}
+        canCreate={canCreate}
+        preselect={preselect}
       />
     </div>
   )

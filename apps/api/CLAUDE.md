@@ -10,7 +10,7 @@ Carregado junto com o `CLAUDE.md` da raiz quando uma sessão trabalha aqui dentr
 - Dados de extração ficam em `payment_receipts`, não em `payments`.
 - **`amount_cents INTEGER`.** Nunca float, nunca `numeric` de ponto flutuante (ver também `packages/db/CLAUDE.md`).
 - **Idempotency key em todo pagamento.** Duplo POST de celular ruim é certeza.
-- Preço é **versionado, nunca editado**. A matrícula congela o `plan_price_id` vigente. Corrigir a tabela de preços não pode revalidar histórico.
+- Preço é **versionado, nunca editado**. A matrícula congela o `plan_price_id` vigente. Corrigir a tabela de preços não pode revalidar histórico. Desde a `0017` o banco recusa `UPDATE`/`DELETE` em `plan_prices` (`packages/db/CLAUDE.md`). Preço novo pode ser **agendado** — `valid_from` futuro, nunca passado (tolerância de 60 s, `PRICE_PAST_TOLERANCE_MS`). Só `master`/`admin` criam plano e lançam preço (`POST /catalog/courses/:id/plans`, `POST /catalog/plans/:id/prices`).
 - Tolerância de validação **configurável no backoffice**, não constante no código.
 
 ## OCR — nunca síncrono
@@ -68,7 +68,7 @@ Nunca validar vaga na aplicação. Instrução atômica única:
 ```sql
 UPDATE class_groups
    SET seats_taken = seats_taken + 1
- WHERE id = $1 AND seats_taken < capacity
+ WHERE id = $1 AND seats_taken < capacity AND status <> 'draft'
 RETURNING seats_taken;
 ```
 
@@ -97,6 +97,15 @@ Os dois prazos são **configuráveis no backoffice** (`/backoffice/settings`), n
 - `released` (o checkout trocou de turma) e `expired` (a varredura) são estados separados de propósito: a taxa de expiração é o dado que decide se os minutos mudam de novo.
 - Os minutos vivem em `platform_settings` (linha única, CHECK 5–60), mudam por usecase com `audit_log`, e valem para o próximo hold — nunca para um que já está correndo.
 - **O relógio longo (5 dias) ainda não tem cron.** A regra acima vale; a implementação é pendência.
+
+**Turma em rascunho e janela de inscrição (OOC-35, 01/10/2026):**
+
+- **Rascunho nunca toma vaga.** Os dois UPDATEs atômicos (claim do checkout e matrícula manual) levam `status <> 'draft'` no `WHERE`.
+- **`sellableClassGroup()` é a definição única de "à venda"** (`infra/persistence/catalog/sellableClassGroup.ts`): status `enrolling`, não aposentada, dentro da janela opcional, e com **período e curso não aposentados** (`exists` correlacionado, então vale também dentro do `UPDATE` do claim). Usada pelo catálogo público (`GET /catalog`), pelo seletor da matrícula manual (`GET /class-groups`) e pelo claim do checkout (`DrizzleSeatHoldRepository.claim`). Não reescrever o filtro em outro lugar.
+- **Horário da turma: `slots` é a fonte, `class_groups.schedule` é derivado.** `DrizzleClassGroupRepository` regrava o texto a partir de `slots` em todo create/update/cópia (`infra/persistence/catalog/scheduleText.ts`, formato do seed/legado, em espanhol porque é dado, não tela). Turma legada sem `slots` mantém o texto. Nunca escrever `schedule` à mão nem ler `schedule` numa tela — tela formata `slots` pelo locale.
+- **A janela vale no claim, não no submit nem no caminho manual.** Hold preso dentro da janela sobrevive ao fechamento dela; a matrícula manual do staff (`createWithPayment`) ignora a janela de propósito — exceção que só vale para chamada direta à API, porque o próprio seletor da matrícula manual (`GET /class-groups`) já lê por `sellableClassGroup()` e não oferece turma fora da janela.
+- **Redução de capacidade é UPDATE condicional**, `WHERE seats_taken <= capacidade nova` — nunca ler, comparar e gravar. Usecase de catálogo não escreve `seats_taken`.
+- **Lista de espera:** só entra turma cheia; saída grava `left_at` + motivo (`enrolled`, `withdrawn`, `removed_by_staff`). A matrícula manual fecha a entrada ativa com `enrolled` na mesma transação. O checkout público não fecha, então a leitura da fila (`ListWaitlistQuery`) deixa de fora quem já tem vaga viva na turma. Turma `finished`/`closed` não aceita entrada (404, como turma fora de oferta). A leitura traz o DNI, então é dos papéis de escrita do catálogo (`master`, `admin`, `enrollment_supervisor`), não de todos os leitores.
 
 ## Origem da matrícula (atribuição de canal)
 

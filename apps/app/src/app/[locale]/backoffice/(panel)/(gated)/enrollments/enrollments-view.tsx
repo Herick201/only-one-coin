@@ -33,9 +33,15 @@ import {
 import { BoIcon } from '@/components/backoffice/icons'
 import { FiltersDropdown } from '@/components/backoffice/filters-dropdown'
 import { EnrollmentDetailDialog } from './enrollment-detail-dialog'
-import { NewEnrollmentForm } from './new-enrollment-form'
+import { NewEnrollmentForm, type StudentSearchResult } from './new-enrollment-form'
 import { AutoGrid } from '@/components/layout/auto-grid'
 
+
+/** What a link may preselect in the manual enrollment form — nothing priced. */
+export interface EnrollmentPreselect {
+  student: StudentSearchResult | null
+  classGroupId: string | null
+}
 
 /** The states as they are worked, not alphabetically: open ones first. */
 const STATUS_FILTERS: EnrollmentStatus[] = [
@@ -70,10 +76,16 @@ export function EnrollmentsView({
   ledger,
   query,
   canCreate,
+  preselect = null,
 }: {
   ledger: EnrollmentLedger
   query: EnrollmentLedgerQuery
   canCreate: boolean
+  /**
+   * A link that arrives to open an enrollment (the class group's waitlist,
+   * "enroll the first in line") — the form opens with these picked.
+   */
+  preselect?: EnrollmentPreselect | null
 }) {
   const t = useTranslations('bo')
   const locale = useLocale() as Locale
@@ -88,7 +100,7 @@ export function EnrollmentsView({
    * read from Postgres in the first place.
    */
   const router = useRouter()
-  const [creating, setCreating] = useState(false)
+  const [creating, setCreating] = useState(canCreate && preselect !== null)
   const [toast, setToast] = useState<string | null>(null)
 
   const [detail, setDetail] = useState<EnrollmentRow | null>(null)
@@ -310,6 +322,8 @@ export function EnrollmentsView({
 
       {creating && (
         <NewEnrollmentForm
+          initialStudent={preselect?.student ?? null}
+          initialClassGroupId={preselect?.classGroupId ?? null}
           onCancel={() => setCreating(false)}
           onCreate={() => {
             setCreating(false)

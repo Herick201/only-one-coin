@@ -76,6 +76,9 @@ const statusOrder: Record<ClassGroupDetail['status'], number> = {
   finished: 1,
   enrolling: 2,
   closed: 3,
+  // A draft is not on sale and has no roster; the mock never produces one, and
+  // if a real one ever reaches a teacher it goes last.
+  draft: 4,
 }
 
 const gradeInputClass = (invalid: boolean) =>

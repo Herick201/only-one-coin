@@ -28,7 +28,9 @@ export class DrizzleEnrollmentEmailContextLookup implements IEnrollmentEmailCont
       .innerJoin(courses, eq(courses.id, classGroups.courseId))
       .where(eq(classGroups.id, params.classGroupId));
 
-    if (!classGroupRow) return null;
+    // A draft has no start date yet (OOC-35) and cannot take an enrollment:
+    // no context, and the write's seat guard refuses it on its own.
+    if (!classGroupRow?.startsOn) return null;
 
     const [guardianRow] = await this.db
       .select({ firstName: guardians.firstName, email: guardians.email })

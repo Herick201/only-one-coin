@@ -9,8 +9,8 @@ import {
   type PaymentStatus,
   type SeatStatus,
 } from "@ooc/domain";
-import { classGroups, enrollments, payments } from "@ooc/db";
-import { and, eq, isNull, lt, sql } from "drizzle-orm";
+import { classGroups, enrollments, payments, waitlistEntries } from "@ooc/db";
+import { and, eq, isNull, lt, ne, sql } from "drizzle-orm";
 import type { Db } from "@/infra/db/client.js";
 import { insertOutboxEmails } from "@/infra/persistence/notification/DrizzleOutboxRepository.js";
 import { assertOperationNumberUnused } from "./operationNumberGuard.js";
@@ -49,6 +49,9 @@ export class DrizzleEnrollmentRepository implements IEnrollmentRepository {
             eq(classGroups.id, enrollment.classGroupId),
             lt(classGroups.seatsTaken, classGroups.capacity),
             isNull(classGroups.deletedAt),
+            // A draft has no dates and is not on sale (OOC-35); zero rows is the same answer as full, which the caller already handles.
+            // No enrollment-window check here on purpose: staff enrolling outside the window is the documented exception.
+            ne(classGroups.status, "draft"),
           ),
         )
         .returning({ seatsTaken: classGroups.seatsTaken });
@@ -90,6 +93,20 @@ export class DrizzleEnrollmentRepository implements IEnrollmentRepository {
       if (!paymentRow) {
         throw new Error("Insert into payments returned no row");
       }
+
+      // A seat taken from the waitlist closes the student's place in the
+      // queue in the same transaction (OOC-35) — the queue never shows
+      // somebody who is already in.
+      await tx
+        .update(waitlistEntries)
+        .set({ leftAt: sql`now()`, leftReason: "enrolled", updatedAt: sql`now()` })
+        .where(
+          and(
+            eq(waitlistEntries.classGroupId, enrollment.classGroupId),
+            eq(waitlistEntries.studentId, enrollment.studentId),
+            isNull(waitlistEntries.leftAt),
+          ),
+        );
 
       // Same transaction as the enrollment: the e-mail exists exactly when
       // the enrollment it talks about does (apps/api/CLAUDE.md, outbox).
