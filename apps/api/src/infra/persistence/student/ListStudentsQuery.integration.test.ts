@@ -1,122 +1,147 @@
 import * as schema from "@ooc/db";
+import { academicPeriods, classGroups, courses, enrollments, planPrices, plans, students } from "@ooc/db";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { ListStudentsQuery } from "./ListStudentsQuery.js";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Db } from "@/infra/db/client.js";
+import { ListStudentsQuery } from "./ListStudentsQuery.js";
 
 /**
- * Reproduces the production bug behind "the students directory stalls around
- * page 3": `created_at` carries microsecond precision (no explicit column
- * precision, `packages/db/src/schema.ts`), but a bulk insert — a seed script,
- * an import — evaluates `now()` once per statement, so many rows can share
- * the exact same, non-zero-microsecond timestamp. A cursor built from a
- * `Date` (millisecond precision only) can't reconstruct that boundary: it
- * fails both `<` and `=` against the real column value, so the tie-break by
- * `id` never engages and every row still waiting behind the boundary vanishes
- * from the next page — the API answers 200 with either a truncated page or,
- * when the whole rest of the tie is behind the boundary, zero rows.
+ * OOC-55: the student directory is people who got in, plus people registered
+ * by hand who have not enrolled yet. Someone whose only enrollment is still
+ * being settled in Payments is not listed — but the manual enrollment
+ * picker (`q`) still finds them, or staff would open a second file.
  *
- * Runs against a real, migrated Postgres — `pnpm db:up && pnpm db:migrate`,
- * then `DATABASE_URL=... pnpm test:api:db`. Rows are inserted with `pool`
- * directly, not through Drizzle's typed insert: binding a JS `Date` for
- * `created_at` would re-truncate it to milliseconds on the way in, the same
- * loss this test exists to catch on the way out.
+ * `students` is under the delete lock (migration 0011): every test runs in a
+ * transaction that is always rolled back. The rows are created in 2099 so
+ * they are the first page of a newest-first browse whatever else the
+ * database holds.
  */
 
 const { Pool } = pg;
-
 const DATABASE_URL = process.env.DATABASE_URL;
-
 if (!DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL is required: this suite exercises ListStudentsQuery against a real, migrated Postgres.",
-  );
+  throw new Error("DATABASE_URL is required: this suite exercises ListStudentsQuery against a real, migrated Postgres.");
 }
 
-// A row count comfortably past the query's page size on both sides of the
-// tie, so the boundary the fix has to survive is guaranteed to fall
-// mid-batch regardless of what that page size is set to.
-const TIED_ROW_COUNT = 70;
-const TIED_CREATED_AT = "2026-09-07 18:32:28.541523+00";
+const PERIOD = "018f2b5c-7000-7000-8000-000000000001";
+const COURSE = "018f2b5c-7000-7000-8000-000000000002";
+const PLAN = "018f2b5c-7000-7000-8000-000000000003";
+const PLAN_PRICE = "018f2b5c-7000-7000-8000-000000000004";
+const GROUP = "018f2b5c-7000-7000-8000-000000000005";
+
+type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
+class RolledBack extends Error {}
 
 let pool: pg.Pool;
 let db: Db;
-let query: ListStudentsQuery;
 
-beforeAll(async () => {
-  pool = new Pool({ connectionString: DATABASE_URL, max: 1 });
+beforeAll(() => {
+  pool = new Pool({ connectionString: DATABASE_URL, max: 2 });
   db = drizzle(pool, { schema, casing: "snake_case" });
-  query = new ListStudentsQuery(db);
 });
 
 afterAll(async () => {
   await pool.end();
 });
 
-beforeEach(async () => {
-  await pool.query("begin");
-});
-
-afterEach(async () => {
-  await pool.query("rollback");
-});
-
-async function seedTiedBatch(count: number): Promise<string[]> {
-  const ids: string[] = [];
-  for (let i = 0; i < count; i++) {
-    const row = await pool.query<{ id: string }>(
-      `insert into students
-         (first_name, last_name, national_id_type, national_id, email, phone, birth_date, country, city, created_at, updated_at)
-       values
-         ($1, 'Tied', 'DNI', $2, $3, '+51900000000', '2000-01-01T00:00:00.000Z', 'PE', 'Lima', $4::timestamptz, $4::timestamptz)
-       returning id`,
-      [`Row${i}`, `TIEDBATCH${i}`, `tied.${i}@gmail.com`, TIED_CREATED_AT],
-    );
-    ids.push(row.rows[0]!.id);
+async function rolledBack(fn: (tx: Tx) => Promise<void>): Promise<void> {
+  try {
+    await db.transaction(async (tx) => {
+      await fn(tx);
+      throw new RolledBack();
+    });
+  } catch (error) {
+    if (!(error instanceof RolledBack)) throw error;
   }
-  return ids;
 }
 
-describe("pagination across rows that share one timestamp", () => {
-  it("walks the whole tied batch, in full, across pages", async () => {
-    const seededIds = await seedTiedBatch(TIED_ROW_COUNT);
+/** One student per seat shape: none, reserved only, confirmed, released only, confirmed + reserved. */
+const SHAPES: { name: string; seats: ("reserved" | "confirmed" | "released")[]; listed: boolean }[] = [
+  { name: "SinMatricula", seats: [], listed: true },
+  { name: "SoloReservada", seats: ["reserved"], listed: false },
+  { name: "Confirmada", seats: ["confirmed"], listed: true },
+  { name: "SoloLiberada", seats: ["released"], listed: true },
+  { name: "ConfirmadaYReservada", seats: ["confirmed", "reserved"], listed: true },
+];
 
-    const seen = new Set<string>();
-    let cursor: string | undefined;
-    let guard = 0;
-
-    do {
-      const page = await query.run(undefined, cursor);
-      for (const item of page.items) seen.add(item.id);
-      cursor = page.nextCursor ?? undefined;
-      guard += 1;
-    } while (cursor && guard < 10);
-
-    // Every seeded row must be reachable exactly once, cursor never null
-    // before the batch is exhausted (a stalled page returning zero rows
-    // while a cursor with more of the tie still ahead of it is the bug).
-    expect(seen.size).toBe(seededIds.length);
-    for (const id of seededIds) expect(seen.has(id)).toBe(true);
+async function seed(tx: Tx): Promise<Map<string, string>> {
+  await tx.insert(academicPeriods).values({
+    id: PERIOD,
+    name: "Ciclo de prueba (students integration)",
+    startsOn: new Date("2026-03-01T00:00:00.000Z"),
+    endsOn: new Date("2026-07-31T00:00:00.000Z"),
+  });
+  await tx.insert(courses).values({ id: COURSE, name: "Curso (students integration)", language: "Prueba", minAge: 12 });
+  await tx.insert(plans).values({ id: PLAN, courseId: COURSE, name: "Paquete completo" });
+  await tx.insert(planPrices).values({ id: PLAN_PRICE, planId: PLAN, amountCents: 10000 });
+  await tx.insert(classGroups).values({
+    id: GROUP,
+    courseId: COURSE,
+    academicPeriodId: PERIOD,
+    schedule: "Lun/Mié 19:00",
+    startsOn: new Date("2026-03-02T00:00:00.000Z"),
+    endsOn: new Date("2026-06-30T00:00:00.000Z"),
+    capacity: 50,
   });
 
-  it("advances the cursor past a boundary row that shares its timestamp with the next page", async () => {
-    const seededIds = await seedTiedBatch(TIED_ROW_COUNT);
+  const rows = await tx
+    .insert(students)
+    .values(
+      SHAPES.map((shape, i) => ({
+        firstName: shape.name,
+        lastName: "Directorio",
+        nationalIdType: "DNI",
+        nationalId: `DIRTEST${i}`,
+        email: `dir.${i}@gmail.com`,
+        phone: "+51900000000",
+        birthDate: new Date("2000-01-01T00:00:00.000Z"),
+        country: "PE",
+        city: "Lima",
+        createdAt: new Date(Date.UTC(2099, 0, 1, 0, i)),
+      })),
+    )
+    .returning({ id: students.id, firstName: students.firstName });
+  const idOf = new Map(rows.map((row) => [row.firstName, row.id]));
 
-    const first = await query.run();
-    expect(first.nextCursor).not.toBeNull();
-    expect(first.items.length).toBeGreaterThan(0);
-    expect(first.items.length).toBeLessThan(seededIds.length);
+  const seats = SHAPES.flatMap((shape) =>
+    shape.seats.map((seatStatus) => ({
+      studentId: idOf.get(shape.name)!,
+      classGroupId: GROUP,
+      planPriceId: PLAN_PRICE,
+      seatStatus,
+    })),
+  );
+  await tx.insert(enrollments).values(seats);
 
-    const second = await query.run(undefined, first.nextCursor ?? undefined);
+  return idOf;
+}
 
-    // Before the fix: the boundary row's truncated-to-millisecond cursor
-    // can't match the real, microsecond-precise value of any row still
-    // waiting in the tie, so this page comes back empty even though rows
-    // are still on file.
-    expect(second.items.length).toBeGreaterThan(0);
+describe("student directory (no q)", () => {
+  it("leaves out a student whose only enrollment is still being settled", async () => {
+    await rolledBack(async (tx) => {
+      const query = new ListStudentsQuery(tx as unknown as Db);
+      const before = await query.run();
+      const idOf = await seed(tx);
+      const after = await query.run();
 
-    const firstIds = new Set(first.items.map((row) => row.id));
-    for (const row of second.items) expect(firstIds.has(row.id)).toBe(false);
+      const listed = new Set(after.items.map((row) => row.id));
+      for (const shape of SHAPES) {
+        expect(listed.has(idOf.get(shape.name)!), shape.name).toBe(shape.listed);
+      }
+      expect(after.total! - before.total!).toBe(SHAPES.filter((shape) => shape.listed).length);
+    });
+  });
+});
+
+describe("manual enrollment picker (q)", () => {
+  it("still finds the student under review, so nobody opens a second file", async () => {
+    await rolledBack(async (tx) => {
+      const query = new ListStudentsQuery(tx as unknown as Db);
+      const idOf = await seed(tx);
+      const found = await query.run("SoloReservada");
+
+      expect(found.items.map((row) => row.id)).toContain(idOf.get("SoloReservada"));
+    });
   });
 });

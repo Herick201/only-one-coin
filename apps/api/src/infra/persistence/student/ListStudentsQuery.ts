@@ -106,6 +106,10 @@ export interface StudentListPage {
  * segundo caminho") off the same query, since the underlying join is
  * identical either way.
  *
+ * The directory (no `q`) leaves out students whose only enrollments are still
+ * reserved: they are being settled in Payments (OOC-55). `under_review` only
+ * reaches the picker, which must still find them.
+ *
  * `status` is derived from `seatStatus` across the student's enrollments —
  * confirmed beats reserved beats "none of the above" — matching the schema
  * comment on `students.ts` ("derived, not a stored column"). This is a
@@ -141,6 +145,13 @@ export class ListStudentsQuery {
         )
       : undefined;
 
+    // OOC-55: a student whose only enrollments are still reserved is being
+    // settled in Payments, not enrolled — the directory leaves them out. The
+    // picker (`q`) does not: staff searching a national id must find the file
+    // that already exists, or they would register the person twice.
+    const underReviewOnly = sql`count(${enrollments.id}) filter (where ${enrollments.seatStatus} = 'confirmed') = 0
+      and count(${enrollments.id}) filter (where ${enrollments.seatStatus} = 'reserved') > 0`;
+
     /* Counted on the first page of a browse, and nowhere else — see `total`
        on StudentListPage. Started here rather than awaited after the rows,
        because the two ask different questions of different indexes and
@@ -150,8 +161,16 @@ export class ListStudentsQuery {
       !needle && !cursor
         ? this.db
             .select({ value: sql<number>`count(*)`.mapWith(Number) })
-            .from(students)
-            .where(isNull(students.deletedAt))
+            .from(
+              this.db
+                .select({ id: students.id })
+                .from(students)
+                .leftJoin(enrollments, and(eq(enrollments.studentId, students.id), isNull(enrollments.deletedAt)))
+                .where(isNull(students.deletedAt))
+                .groupBy(students.id)
+                .having(sql`not (${underReviewOnly})`)
+                .as("listed_students"),
+            )
         : null;
 
     const rowsPromise = this.db
@@ -191,6 +210,7 @@ export class ListStudentsQuery {
       .leftJoin(enrollments, and(eq(enrollments.studentId, students.id), isNull(enrollments.deletedAt)))
       .where(cursorFilter ? and(baseFilter, cursorFilter) : baseFilter)
       .groupBy(students.id)
+      .having(needle ? undefined : sql`not (${underReviewOnly})`)
       .orderBy(desc(students.createdAt), desc(students.id))
       // Fetch one extra row to learn whether another page follows, without
       // a second round-trip — sliced back off before mapping to output.
