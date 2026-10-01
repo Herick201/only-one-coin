@@ -115,7 +115,8 @@ Usecases (toda escrita grava no `audit_log`; ações `catalog.<entidade>.<verbo>
 
 | Rota | Papéis |
 | --- | --- |
-| `GET courses`, `GET courses/:id` (planos + histórico de preço), `GET periods`, `GET class-groups` (filtros período/curso/status/busca), `GET class-groups/:id`, `GET class-groups/:id/waitlist` | Os que hoje veem a tela em `permissions.ts` (conferido rota a rota na implementação) |
+| `GET courses`, `GET courses/:id` (planos + histórico de preço), `GET periods`, `GET class-groups` (filtros período/curso/status/busca), `GET class-groups/:id` | Os que hoje veem a tela em `permissions.ts` (conferido rota a rota na implementação) |
+| `GET class-groups/:id/waitlist` | `master`, `admin`, `enrollment_supervisor` — cada linha traz o DNI do aluno, então só quem lê o DNI em `GET /students`; para os demais a ficha da turma simplesmente não mostra o card da fila |
 | `POST courses` | `master`, `admin` |
 | `PATCH courses/:id` | `master`, `admin`, `enrollment_supervisor` |
 | `POST courses/:id/plans`, `PATCH plans/:id`, `POST plans/:id/prices` | `master`, `admin` |

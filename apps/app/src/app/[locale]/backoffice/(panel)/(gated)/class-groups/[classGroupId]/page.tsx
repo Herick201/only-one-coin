@@ -70,12 +70,15 @@ export default async function ClassGroupDetailPage({
   const group = await getCatalogClassGroup(classGroupId)
   if (!group) notFound()
 
+  const canManage = canCreateClassGroup(staff.role)
+
+  /* The waitlist carries each student's national id, so the API answers it
+     only to who runs class groups (the GET /students rule). Everyone else
+     never asks: the card is simply not there, same as a failed read. */
   const [waitlist, courses] = await Promise.all([
-    listCatalogWaitlist(group.id),
+    canManage ? listCatalogWaitlist(group.id) : Promise.resolve(null),
     listCatalogCourses(),
   ])
-
-  const canManage = canCreateClassGroup(staff.role)
   const schedule = slotsLabel(group.slots, t)
 
   /* The free certificate is owed within 25 business days of the end

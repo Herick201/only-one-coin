@@ -34,6 +34,9 @@ const CASES: [string, string, Role][] = [
   ["PATCH", `/api/v1/catalog/class-groups/${ID}`, "support"],
   ["POST", `/api/v1/catalog/class-groups/${ID}/status`, "analyst"],
   ["GET", `/api/v1/catalog/class-groups/${ID}/waitlist`, "billing"],
+  // The waitlist carries the national id: only who runs class groups reads it (same as GET /students).
+  ["GET", `/api/v1/catalog/class-groups/${ID}/waitlist`, "sales"],
+  ["GET", `/api/v1/catalog/class-groups/${ID}/waitlist`, "analyst"],
   ["POST", `/api/v1/catalog/class-groups/${ID}/waitlist`, "sales"],
   ["POST", `/api/v1/catalog/waitlist/${ID}/leave`, "support"],
 ];
