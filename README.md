@@ -170,7 +170,9 @@ Sessão 7) já existem. Domínio e fila já existem, independentes dessa escolha
   e conceito, e cada linha abrindo o comprovante e os dados do pagamento num
   modal; `/backoffice/payments/review`, a fila de revisão humana com a
   ficha de decisão do comprovante — extração campo a campo com confiança,
-  segunda leitura quando os modelos divergem, aprovar/recusar com motivo),
+  segunda leitura quando os modelos divergem, aprovar/recusar com motivo —
+  ambos leem e gravam via `apps/api`, e a fila mostra a imagem real do
+  comprovante, os sinais de fraude e o prazo de revisão),
   matrículas
   (`/backoffice/enrollments`: livro de todas as matrículas — aluno, curso/turma,
   estado da matrícula, da vaga e do pagamento — com métricas do ciclo, busca,
@@ -178,9 +180,8 @@ Sessão 7) já existem. Domínio e fila já existem, independentes dessa escolha
   matrícula sobre aluno já cadastrado (vaga reservada, preço vigente somente
   leitura, pagamento nunca aprovado dali, meio de pagamento com opção "outro"
   que pede o texto que o nomeia); e
-  `/backoffice/enrollments/reservations`, as vagas presas a um pagamento em
-  aberto, ordenadas pelo prazo em que o cron as devolve, com a linha abrindo
-  direto o comprovante que segura a vaga) e docentes
+  só quem entrou — vaga confirmada; o que ainda espera dinheiro vive em
+  Pagos, e a aba Reservas deixou de existir) e docentes
   (`/backoffice/teachers`: plantel em duas abas — **Geral** (ativos) e
   **Inativos** — com busca, filtro por idioma, "sem turma" e "contrato a
   vencer", coluna de contrato com o alerta de vencimento; cadastro de docente —
@@ -314,10 +315,9 @@ o que é real:
 
 | Tela | Estado |
 | --- | --- |
-| Alunos (`/backoffice/students`) | **Real**: listagem, ficha e criação chamam a API. Edição é stub de frontend (fica em estado local; a escrita real ainda não existe) |
-| Matrículas (`/backoffice/enrollments`) | **Real**: listagem, métricas do ciclo e abertura manual (`GET`/`POST /api/v1/enrollments`) |
-| Reservas de vaga (`/backoffice/enrollments/reservations`) | Mock |
-| Pagamentos e fila de revisão (`/backoffice/payments`, `/payments/review`) | Mock — não existe ainda ação em lote nem endpoint de pagamento avulso |
+| Alunos (`/backoffice/students`) | **Real**: listagem (sem quem só tem matrícula reservada), ficha e criação chamam a API. Edição é stub de frontend (fica em estado local; a escrita real ainda não existe) |
+| Matrículas (`/backoffice/enrollments`) | **Real**: só vagas confirmadas (quem pagou e foi aprovado), busca/filtros e abertura manual, que avisa que a matrícula foi enviada a Pagos (`GET`/`POST /api/v1/enrollments`). A aba Reservas foi removida |
+| Pagamentos e fila de revisão (`/backoffice/payments`, `/payments/review`) | **Real** (OOC-55): livro e fila leem `GET /api/v1/payments` e `/payments/review`; o comprovante abre por URL assinada (`audit_log`); aprovar (vaga `reserved → confirmed`) e rejeitar com motivo (vaga devolvida à turma) gravam e disparam o e-mail. Fora: credenciais do portal na aprovação, cron da janela de 5 dias, OCR, trâmites (constancia), ação em lote, ordenação por confiança e atalhos de teclado. O painel inicial (Home) continua mock |
 | Cursos (`/backoffice/courses`) | **Real**: lista (aposentados inclusos, sinalizados), criar curso, opções (resumo, regra de certificado, congelamento, transferência), sair do catálogo/voltar com aviso de matrícula viva, e planos com preço agendado (`/api/v1/catalog`, com `audit_log`). A coluna `courses.local_only` deixou de existir |
 | Turmas (`/backoffice/class-groups`) | **Real**: lista por período, períodos (criar, duplicar), criar/editar turma, rascunho e ciclo de vida (`draft → enrolling → in_progress → finished → closed`), ficha da turma e lista de espera manual (`/api/v1/catalog`, com `audit_log`). Continua mock: visão do docente (precisa de `teachers`, Sessão 36), roster, notas e certificados |
 | Docentes (`/backoffice/teachers`) | Mock — não existe tabela `teachers` ainda (decisão deliberada, `docs/ROADMAP.md` Sessão 36) |
@@ -395,7 +395,7 @@ o que é real:
   os sinais em `receipt_uploads.fraud_signals` — arquivo idêntico ou EXIF de
   editor mandam o pagamento pra `under_review`; pHash parecido só registra
   (regra e medição em `apps/api/CLAUDE.md`, "Antifraude do comprovante"). Os
-  sinais ainda não aparecem na tela — a fila de revisão do backoffice é mock.
+  sinais aparecem como texto na fila de revisão do backoffice (Pagos).
 
 **Autorização e domínio de negócio já não dependem de Neon de staging/produção
 provisionado** — rodam sobre o Postgres local. **A reconstruir** quando
