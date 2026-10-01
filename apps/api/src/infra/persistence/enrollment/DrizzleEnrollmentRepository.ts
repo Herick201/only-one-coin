@@ -50,6 +50,7 @@ export class DrizzleEnrollmentRepository implements IEnrollmentRepository {
             lt(classGroups.seatsTaken, classGroups.capacity),
             isNull(classGroups.deletedAt),
             // A draft has no dates and is not on sale (OOC-35); zero rows is the same answer as full, which the caller already handles.
+            // No enrollment-window check here on purpose: staff enrolling outside the window is the documented exception.
             ne(classGroups.status, "draft"),
           ),
         )

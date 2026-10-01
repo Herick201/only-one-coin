@@ -145,6 +145,21 @@ describe("class groups on sale", () => {
     });
   });
 
+  it("a class group outside its enrollment window never takes a seat either", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      await seed(tx);
+      const holds = new DrizzleSeatHoldRepository(tx);
+      for (const outside of [WINDOW_CLOSED, WINDOW_NOT_OPEN]) {
+        const result = await holds.claim({ classGroupId: outside, origin: "web", holdMinutes: 15 });
+        expect(result.kind).toBe("not_found");
+
+        const [row] = await tx.select({ seatsTaken: classGroups.seatsTaken }).from(classGroups).where(eq(classGroups.id, outside));
+        expect(row?.seatsTaken).toBe(0);
+      }
+      expect((await holds.claim({ classGroupId: ON_SALE, origin: "web", holdMinutes: 15 })).kind).toBe("held");
+    });
+  });
+
   it("a manual enrollment on a draft is refused like a full class group", async () => {
     await inRolledBackTransaction(async (tx) => {
       await seed(tx);

@@ -1,7 +1,8 @@
 import type { ClaimSeatHoldResult, EnrollmentOrigin, ISeatHoldRepository, SeatHold } from "@ooc/domain";
 import { classGroups, courses, seatHolds } from "@ooc/db";
-import { and, eq, isNull, lt, ne, sql } from "drizzle-orm";
+import { and, eq, lt, ne, sql } from "drizzle-orm";
 import type { Db } from "@/infra/db/client.js";
+import { sellableClassGroup } from "@/infra/persistence/catalog/sellableClassGroup.js";
 
 /**
  * The checkout hold against the class group's seat counter. Every seat taken
@@ -22,12 +23,15 @@ export class DrizzleSeatHoldRepository implements ISeatHoldRepository {
     holdMinutes: number;
   }): Promise<ClaimSeatHoldResult> {
     return this.db.transaction(async (tx) => {
-      // What the public checkout may sell: open, not retired, and its course
-      // not retired either (CLAUDE.md §1, "Catálogo sai do ar, não some").
+      // What the public checkout may sell: on sale right now (enrolling, not
+      // retired, inside its enrollment window — sellableClassGroup, the same
+      // definition the catalog reads list through), and its course not
+      // retired either (CLAUDE.md §1, "Catálogo sai do ar, não some"). The id
+      // comes from the client, so the window is checked here, not trusted
+      // from the page that offered it (CLAUDE.md §8).
       const onOffer = and(
         eq(classGroups.id, params.classGroupId),
-        eq(classGroups.status, "enrolling"),
-        isNull(classGroups.deletedAt),
+        sellableClassGroup(),
         sql`exists (select 1 from ${courses} where ${courses.id} = ${classGroups.courseId} and ${courses.deletedAt} is null)`,
       );
 
@@ -39,7 +43,7 @@ export class DrizzleSeatHoldRepository implements ISeatHoldRepository {
             onOffer,
             lt(classGroups.seatsTaken, classGroups.capacity),
             // A draft has no dates and is not on sale (OOC-35); zero rows is the same answer as full, which the caller already handles.
-            // Already implied by status = 'enrolling' above — spelled out so the rule survives a change to onOffer.
+            // Already implied by sellableClassGroup() above — spelled out so the rule survives a change to onOffer.
             ne(classGroups.status, "draft"),
           ),
         )
