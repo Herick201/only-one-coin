@@ -1,6 +1,6 @@
 import type { ClaimSeatHoldResult, EnrollmentOrigin, ISeatHoldRepository, SeatHold } from "@ooc/domain";
 import { classGroups, courses, seatHolds } from "@ooc/db";
-import { and, eq, isNull, lt, sql } from "drizzle-orm";
+import { and, eq, isNull, lt, ne, sql } from "drizzle-orm";
 import type { Db } from "@/infra/db/client.js";
 
 /**
@@ -34,7 +34,15 @@ export class DrizzleSeatHoldRepository implements ISeatHoldRepository {
       const [seat] = await tx
         .update(classGroups)
         .set({ seatsTaken: sql`${classGroups.seatsTaken} + 1` })
-        .where(and(onOffer, lt(classGroups.seatsTaken, classGroups.capacity)))
+        .where(
+          and(
+            onOffer,
+            lt(classGroups.seatsTaken, classGroups.capacity),
+            // A draft has no dates and is not on sale (OOC-35); zero rows is the same answer as full, which the caller already handles.
+            // Already implied by status = 'enrolling' above — spelled out so the rule survives a change to onOffer.
+            ne(classGroups.status, "draft"),
+          ),
+        )
         .returning({ id: classGroups.id });
 
       if (!seat) {

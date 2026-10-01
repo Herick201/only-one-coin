@@ -127,6 +127,13 @@
       "when": 1790874546064,
       "tag": "0017_catalog_courses",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790878020332,
+      "tag": "0018_catalog_class_groups",
+      "breakpoints": true
     }
   ]
 }

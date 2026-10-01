@@ -42,3 +42,10 @@ export const PriceBodySchema = z.object({
   amountCents: z.number().int().positive(),
   validFrom: z.string().datetime({ offset: true }).optional(),
 });
+
+/** One weekly meeting of a class group, as `class_groups.slots` stores it (jsonb). */
+export const WeeklySlotSchema = z.object({
+  weekday: z.enum(["mon", "tue", "wed", "thu", "fri", "sat", "sun"]),
+  startTime: z.string(),
+  endTime: z.string(),
+});

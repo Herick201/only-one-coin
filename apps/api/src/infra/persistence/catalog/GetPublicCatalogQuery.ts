@@ -1,6 +1,7 @@
-import { classGroups, courses, planPrices, plans } from "@ooc/db";
+import { academicPeriods, classGroups, courses, planPrices, plans } from "@ooc/db";
 import { and, desc, eq, isNull, lte, sql } from "drizzle-orm";
 import type { Db } from "@/infra/db/client.js";
+import { sellableClassGroup } from "./sellableClassGroup.js";
 
 export interface PublicCatalogCourse {
   id: string;
@@ -40,9 +41,10 @@ export interface PublicCatalog {
 
 /**
  * What `/enrollment` reads before anybody picks anything — no session, no
- * role (public route). Only `status = 'enrolling'` class groups are
- * offered; a full or closed one is never listed, matching the seat model
- * (CLAUDE.md §5).
+ * role (public route). Only class groups on sale are offered
+ * (`sellableClassGroup`: enrolling, not retired, inside the enrollment
+ * window; and the period not retired) — a draft or closed one is never
+ * listed, matching the seat model (CLAUDE.md §5).
  *
  * `languages` (`CatalogLanguage[]` on the frontend) is not a query of its
  * own — there is no `languages` table, only `courses.language` text — the
@@ -100,7 +102,7 @@ export class GetPublicCatalogQuery {
       planRows.push({ id: row.planId, courseId: row.courseId, name: row.name, planPriceId: row.planPriceId, amountCents: row.amountCents });
     }
 
-    const classGroupRows = await this.db
+    const classGroupResult = await this.db
       .select({
         id: classGroups.id,
         courseId: classGroups.courseId,
@@ -113,7 +115,17 @@ export class GetPublicCatalogQuery {
         seatsTaken: classGroups.seatsTaken,
       })
       .from(classGroups)
-      .where(and(eq(classGroups.status, "enrolling"), isNull(classGroups.deletedAt)));
+      // A class group in a retired period is not on offer either, same as
+      // the manual-enrollment picker (ListOpenClassGroupsQuery).
+      .innerJoin(academicPeriods, eq(classGroups.academicPeriodId, academicPeriods.id))
+      .where(and(sellableClassGroup(), isNull(academicPeriods.deletedAt)));
+
+    const classGroupRows: PublicCatalogClassGroup[] = classGroupResult.map((row) => ({
+      ...row,
+      // Never null here: sellableClassGroup excludes drafts, and the 0018 check forbids a non-draft without dates.
+      startsOn: row.startsOn!,
+      endsOn: row.endsOn!,
+    }));
 
     const courseIdsWithPrice = new Set(planRows.map((plan) => plan.courseId));
     const courseIdsWithOpenGroup = new Set(classGroupRows.map((group) => group.courseId));

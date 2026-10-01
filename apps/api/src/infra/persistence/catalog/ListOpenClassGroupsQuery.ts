@@ -1,6 +1,7 @@
 import { academicPeriods, classGroups, courses, planPrices, plans } from "@ooc/db";
 import { and, asc, desc, eq, gt, isNull, lte, sql } from "drizzle-orm";
 import type { Db } from "@/infra/db/client.js";
+import { sellableClassGroup } from "./sellableClassGroup.js";
 
 export interface OpenClassGroupResult {
   id: string;
@@ -8,6 +9,8 @@ export interface OpenClassGroupResult {
   courseName: string;
   academicPeriodName: string;
   schedule: string;
+  /** WeeklySlot[] as stored (jsonb) — the route's response schema names the shape. */
+  slots: unknown;
   startsOn: string;
   capacity: number;
   seatsTaken: number;
@@ -22,7 +25,8 @@ export interface OpenClassGroupResult {
  * Read-only listing for the manual enrollment form's class group picker —
  * outside packages/domain for the same reason as SearchStudentsQuery: no
  * invariant to protect, only a join to shape. Filters server-side to
- * `status = 'enrolling' AND seats_taken < capacity` (defense in depth — the
+ * on sale (`sellableClassGroup`: enrolling, not retired, inside its
+ * enrollment window) AND `seats_taken < capacity` (defense in depth — the
  * client filters too, but the server is the one that must not lie about
  * what has room).
  *
@@ -43,6 +47,7 @@ export class ListOpenClassGroupsQuery {
         courseName: courses.name,
         academicPeriodName: academicPeriods.name,
         schedule: classGroups.schedule,
+        slots: classGroups.slots,
         startsOn: classGroups.startsOn,
         capacity: classGroups.capacity,
         seatsTaken: classGroups.seatsTaken,
@@ -61,9 +66,8 @@ export class ListOpenClassGroupsQuery {
       // retired row on any of them takes the class group out (CLAUDE.md §6).
       .where(
         and(
-          eq(classGroups.status, "enrolling"),
+          sellableClassGroup(),
           gt(classGroups.capacity, classGroups.seatsTaken),
-          isNull(classGroups.deletedAt),
           isNull(courses.deletedAt),
           isNull(academicPeriods.deletedAt),
           isNull(plans.deletedAt),
@@ -80,7 +84,8 @@ export class ListOpenClassGroupsQuery {
     for (const row of rows) {
       if (seen.has(row.id)) continue;
       seen.add(row.id);
-      result.push({ ...row, startsOn: row.startsOn.toISOString() });
+      // Never null here: sellableClassGroup excludes drafts, and the 0018 check forbids a non-draft without dates.
+      result.push({ ...row, startsOn: row.startsOn!.toISOString() });
     }
 
     return result;

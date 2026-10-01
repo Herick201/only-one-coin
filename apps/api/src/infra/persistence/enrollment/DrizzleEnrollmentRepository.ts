@@ -10,7 +10,7 @@ import {
   type SeatStatus,
 } from "@ooc/domain";
 import { classGroups, enrollments, payments } from "@ooc/db";
-import { and, eq, isNull, lt, sql } from "drizzle-orm";
+import { and, eq, isNull, lt, ne, sql } from "drizzle-orm";
 import type { Db } from "@/infra/db/client.js";
 import { insertOutboxEmails } from "@/infra/persistence/notification/DrizzleOutboxRepository.js";
 import { assertOperationNumberUnused } from "./operationNumberGuard.js";
@@ -49,6 +49,8 @@ export class DrizzleEnrollmentRepository implements IEnrollmentRepository {
             eq(classGroups.id, enrollment.classGroupId),
             lt(classGroups.seatsTaken, classGroups.capacity),
             isNull(classGroups.deletedAt),
+            // A draft has no dates and is not on sale (OOC-35); zero rows is the same answer as full, which the caller already handles.
+            ne(classGroups.status, "draft"),
           ),
         )
         .returning({ seatsTaken: classGroups.seatsTaken });

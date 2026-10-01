@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   bigint,
   boolean,
   check,
@@ -179,7 +180,8 @@ export const planPrices = pgTable(
 //
 // status enum matches ClassGroupStatus in the backoffice mock
 // (apps/app/src/lib/backoffice/types.ts) — enrolling → in_progress →
-// finished | closed.
+// finished | closed, plus 'draft' (OOC-35) before enrolling: a class group
+// that exists but is not on sale and holds no seat.
 export const classGroups = pgTable(
   "class_groups",
   {
@@ -204,11 +206,24 @@ export const classGroups = pgTable(
     // Plain text, not a `teachers` FK — there is no `teachers` table yet
     // (docs/ROADMAP.md Sessão 36). Denormalized placeholder until then.
     teacherName: text("teacher_name").notNull().default(""),
-    startsOn: timestamp("starts_on", { withTimezone: true }).notNull(),
+    // Null only while the class group is a draft (OOC-35): a duplicated class group starts without dates on purpose.
+    startsOn: timestamp("starts_on", { withTimezone: true }),
     // A class group can end before its academic_period does (a 4-module
     // course inside a longer sales period) — CatalogClassGroup.endDate on
     // the public catalog needs its own date, not the period's.
-    endsOn: timestamp("ends_on", { withTimezone: true }).notNull(),
+    // Null only while the class group is a draft (OOC-35): a duplicated class group starts without dates on purpose.
+    endsOn: timestamp("ends_on", { withTimezone: true }),
+    // Optional enrollment window (OOC-35). Null on either side = no limit on
+    // that side; the class group sells while status = 'enrolling' and now is
+    // inside the window.
+    enrollmentOpensAt: timestamp("enrollment_opens_at", { withTimezone: true }),
+    enrollmentClosesAt: timestamp("enrollment_closes_at", { withTimezone: true }),
+    // The class group this one was copied from when a period was duplicated —
+    // the trail, and what stops the same copy from running twice.
+    sourceClassGroupId: uuid("source_class_group_id").references(
+      (): AnyPgColumn => classGroups.id,
+      { onDelete: "restrict" },
+    ),
     capacity: integer("capacity").notNull(),
     seatsTaken: integer("seats_taken").notNull().default(0),
     status: text("status").notNull().default("enrolling"),
@@ -227,8 +242,17 @@ export const classGroups = pgTable(
     // in the original migration, resolved here before anything shipped).
     check(
       "class_groups_status_check",
-      sql`${table.status} in ('enrolling', 'in_progress', 'finished', 'closed')`,
+      sql`${table.status} in ('draft', 'enrolling', 'in_progress', 'finished', 'closed')`,
     ),
+    check(
+      "class_groups_dates_check",
+      sql`${table.status} = 'draft' or (${table.startsOn} is not null and ${table.endsOn} is not null)`,
+    ),
+    check(
+      "class_groups_enrollment_window_check",
+      sql`${table.enrollmentOpensAt} is null or ${table.enrollmentClosesAt} is null or ${table.enrollmentOpensAt} < ${table.enrollmentClosesAt}`,
+    ),
+    index("class_groups_source_class_group_id_idx").on(table.sourceClassGroupId),
     index("class_groups_course_id_idx").on(table.courseId),
     index("class_groups_academic_period_id_idx").on(table.academicPeriodId),
   ],
@@ -636,10 +660,10 @@ export const receiptUploads = pgTable(
   ],
 );
 
-// One row per student waiting on a full class_group (Sessão 22, not built
-// yet — this is just the queue table the roadmap bundles into Sessão 6).
-// FIFO by created_at; the unique pair stops the same student from queuing
-// twice for the same class group.
+// One row per student waiting on a full class_group. Backoffice-only and
+// manual since OOC-35; the public checkout offering it is still Sessão 22.
+// FIFO by created_at; the partial unique pair stops the same student from
+// queuing twice for the same class group while still in the queue.
 export const waitlistEntries = pgTable(
   "waitlist_entries",
   {
@@ -651,12 +675,28 @@ export const waitlistEntries = pgTable(
       .notNull()
       .references(() => students.id, { onDelete: "restrict" }),
     createdAt: createdAt(),
+    // Leaving the queue is marked, never deleted (CLAUDE.md §6). 'enrolled' is
+    // written by the manual enrollment in the same transaction; the other two
+    // by staff.
+    leftAt: timestamp("left_at", { withTimezone: true }),
+    leftReason: text("left_reason"),
+    // The row changes once now (when it leaves the queue), so it carries
+    // updated_at like every table that changes (packages/db CLAUDE.md).
+    updatedAt: updatedAt(),
   },
   (table) => [
-    uniqueIndex("waitlist_entries_class_group_id_student_id_uidx").on(
-      table.classGroupId,
-      table.studentId,
+    uniqueIndex("waitlist_entries_active_uidx")
+      .on(table.classGroupId, table.studentId)
+      .where(sql`${table.leftAt} is null`),
+    check(
+      "waitlist_entries_left_reason_check",
+      sql`${table.leftReason} is null or ${table.leftReason} in ('enrolled', 'withdrawn', 'removed_by_staff')`,
     ),
+    check(
+      "waitlist_entries_left_check",
+      sql`(${table.leftAt} is null) = (${table.leftReason} is null)`,
+    ),
+    index("waitlist_entries_class_group_id_created_at_idx").on(table.classGroupId, table.createdAt),
   ],
 );
 
