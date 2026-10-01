@@ -21,6 +21,9 @@ import { ClassGroupForm } from '../class-group-form'
 const primaryButtonClass =
   'inline-flex min-h-tap items-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-deep disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-brand-blue'
 
+const dangerButtonClass =
+  'inline-flex min-h-tap items-center gap-1.5 rounded-lg border border-line bg-white px-3.5 py-2 text-sm font-semibold text-red-700 transition hover:border-red-200 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40'
+
 const secondaryButtonClass =
   'inline-flex min-h-tap items-center gap-1.5 rounded-lg border border-line bg-white px-3.5 py-2 text-sm font-semibold text-muted-foreground transition hover:text-ink disabled:cursor-not-allowed disabled:opacity-40'
 
@@ -46,14 +49,20 @@ function editBaseline(group: ClassGroupItem): string {
   ])
 }
 
+/** Which inline confirmation is open, if any. */
+type Confirming = 'advance' | 'retire' | 'restore' | null
+
 /**
- * The two things coordination does to a class group from its page: move it one
- * step forward and edit it.
+ * What coordination does to a class group from its page: move it one step
+ * forward, edit it, and take it off the catalog or put it back.
  *
  * Status only moves forward, one step, after an inline confirmation that says
  * what the step means — there is no way back, a class group opened by mistake
- * is retired from the catalog instead. Both writes go through `apps/api`, which
- * is what actually decides (CLAUDE.md §8); this re-reads the page afterwards.
+ * is retired from the catalog instead (CLAUDE.md §1, "Catálogo sai do ar, não
+ * some"). Retiring is never blocked by live enrollments: the toast says how
+ * many were still standing. A retired class group only offers to come back.
+ * Every write goes through `apps/api`, which is what actually decides
+ * (CLAUDE.md §8); this re-reads the page afterwards.
  */
 export function ClassGroupActions({
   group,
@@ -66,7 +75,7 @@ export function ClassGroupActions({
 }) {
   const t = useTranslations('bo')
   const router = useRouter()
-  const [confirming, setConfirming] = useState(false)
+  const [confirming, setConfirming] = useState<Confirming>(null)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<CatalogErrorKey | null>(null)
   const [editing, setEditing] = useState(false)
@@ -92,9 +101,66 @@ export function ClassGroupActions({
       setError(result.error)
       return
     }
-    setConfirming(false)
+    setConfirming(null)
     setToast(t('class_group_actions.status_changed'))
     router.refresh()
+  }
+
+  async function setOnCatalog(verb: 'retire' | 'restore') {
+    setPending(true)
+    setError(null)
+    const result = await catalogWrite<{ liveEnrollments: number }>(
+      `/class_group/${encodeURIComponent(group.id)}/${verb}`,
+      'POST',
+    )
+    setPending(false)
+    if (!result.ok) {
+      setError(result.error)
+      return
+    }
+    setConfirming(null)
+    setToast(
+      verb === 'retire'
+        ? t('class_group_actions.retired_notice', { count: result.data.liveEnrollments })
+        : t('class_group_actions.restored'),
+    )
+    router.refresh()
+  }
+
+  const errorLine = error && (
+    <p role="alert" className="mt-3 text-sm text-red-700">
+      {t(`catalog_errors.${error}`)}
+    </p>
+  )
+
+  if (!group.active) {
+    return (
+      <Card className="p-5">
+        {confirming === 'restore' ? (
+          <Confirmation
+            text={t('class_group_actions.confirm_restore')}
+            pending={pending}
+            onConfirm={() => void setOnCatalog('restore')}
+            onCancel={() => setConfirming(null)}
+          />
+        ) : (
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => {
+              setError(null)
+              setConfirming('restore')
+            }}
+            className={secondaryButtonClass}
+          >
+            <BoIcon name="check" size={16} />
+            {t('class_group_actions.restore')}
+          </button>
+        )}
+        {errorLine}
+        <Toast message={toast} onDismiss={() => setToast(null)} />
+      </Card>
+    )
   }
 
   function saved() {
@@ -106,13 +172,13 @@ export function ClassGroupActions({
   return (
     <Card className="p-5">
       <div className="flex flex-wrap items-center gap-2">
-        {next && !confirming && (
+        {next && confirming !== 'advance' && (
           <button
             type="button"
             disabled={missingDates || pending}
             onClick={() => {
               setError(null)
-              setConfirming(true)
+              setConfirming('advance')
             }}
             className={primaryButtonClass}
           >
@@ -128,30 +194,36 @@ export function ClassGroupActions({
           <BoIcon name="edit" size={16} />
           {t('class_group_actions.edit')}
         </button>
+        <button
+          type="button"
+          disabled={pending}
+          onClick={() => {
+            setError(null)
+            setConfirming('retire')
+          }}
+          className={dangerButtonClass}
+        >
+          <BoIcon name="close" size={16} />
+          {t('class_group_actions.retire')}
+        </button>
       </div>
 
-      {next && confirming && (
-        <div className="mt-3 flex flex-col gap-3 rounded-lg border border-line bg-sky-soft px-4 py-3">
-          <p className="text-sm text-ink">{t(`class_group_actions.confirm_${next}`)}</p>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() => void advance(next)}
-              className={primaryButtonClass}
-            >
-              {t('class_group_actions.confirm')}
-            </button>
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() => setConfirming(false)}
-              className={secondaryButtonClass}
-            >
-              {t('class_group_actions.cancel')}
-            </button>
-          </div>
-        </div>
+      {next && confirming === 'advance' && (
+        <Confirmation
+          text={t(`class_group_actions.confirm_${next}`)}
+          pending={pending}
+          onConfirm={() => void advance(next)}
+          onCancel={() => setConfirming(null)}
+        />
+      )}
+
+      {confirming === 'retire' && (
+        <Confirmation
+          text={t('class_group_actions.confirm_retire')}
+          pending={pending}
+          onConfirm={() => void setOnCatalog('retire')}
+          onCancel={() => setConfirming(null)}
+        />
       )}
 
       {next && missingDates && (
@@ -161,11 +233,7 @@ export function ClassGroupActions({
         </p>
       )}
 
-      {error && (
-        <p role="alert" className="mt-3 text-sm text-red-700">
-          {t(`catalog_errors.${error}`)}
-        </p>
-      )}
+      {errorLine}
 
       <p className="mt-3 text-xs text-muted-foreground">{t('class_group_actions.forward_only')}</p>
 
@@ -206,5 +274,33 @@ export function ClassGroupActions({
 
       <Toast message={toast} onDismiss={() => setToast(null)} />
     </Card>
+  )
+}
+
+/** The inline "are you sure" every action on this card goes through. */
+function Confirmation({
+  text,
+  pending,
+  onConfirm,
+  onCancel,
+}: {
+  text: string
+  pending: boolean
+  onConfirm: () => void
+  onCancel: () => void
+}) {
+  const t = useTranslations('bo')
+  return (
+    <div className="mt-3 flex flex-col gap-3 rounded-lg border border-line bg-sky-soft px-4 py-3">
+      <p className="text-sm text-ink">{text}</p>
+      <div className="flex flex-wrap gap-2">
+        <button type="button" disabled={pending} onClick={onConfirm} className={primaryButtonClass}>
+          {t('class_group_actions.confirm')}
+        </button>
+        <button type="button" disabled={pending} onClick={onCancel} className={secondaryButtonClass}>
+          {t('class_group_actions.cancel')}
+        </button>
+      </div>
+    </div>
   )
 }

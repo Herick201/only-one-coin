@@ -179,7 +179,8 @@ export default async function ClassGroupDetailPage({
       <ClassGroupActions
         group={group}
         courses={courses ?? []}
-        canManage={canManage && group.active}
+        // A retired class group still gets the card: it is where it comes back.
+        canManage={canManage}
       />
 
       {showWaitlist && (

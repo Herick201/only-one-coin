@@ -1031,7 +1031,13 @@
       "close": "Close",
       "saved": "Changes saved",
       "status_changed": "Status updated",
-      "forward_only": "Status only moves forward. A class group opened by mistake is taken off the catalog."
+      "forward_only": "Status only moves forward. A class group opened by mistake is taken off the catalog.",
+      "retire": "Take off the catalog",
+      "restore": "Put back in the catalog",
+      "confirm_retire": "Enrollment stops offering this class group. Enrollments already made stay as they are, in the ledger.",
+      "confirm_restore": "The class group goes back to the catalog with the status it had.",
+      "retired_notice": "{count, plural, =0 {Class group taken off the catalog.} one {Class group taken off the catalog. # enrollment is still running.} other {Class group taken off the catalog. # enrollments are still running.}}",
+      "restored": "Class group back in the catalog"
     },
     "waitlist": {
       "title": "Waitlist",
@@ -1690,7 +1696,8 @@
       "waitlist_already_enrolled": "The student is already enrolled in this class group.",
       "waitlist_student_not_found": "We couldn't find that student.",
       "waitlist_entry_closed": "That student already left the list.",
-      "waitlist_entry_not_found": "That waitlist entry no longer exists."
+      "waitlist_entry_not_found": "That waitlist entry no longer exists.",
+      "entry_not_found": "That catalog entry no longer exists."
     }
   }
 }
