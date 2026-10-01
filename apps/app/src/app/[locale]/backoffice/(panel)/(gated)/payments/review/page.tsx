@@ -20,8 +20,11 @@ import { ReviewQueueView } from './review-queue-view'
  *
  * `?receipt=` names one of them. It is how the other screens hand a specific
  * case over — the ledger's payment dialog — instead of leaving the reader to
- * find in the queue the row they were already looking at. An id that is not on
- * the loaded page just opens the queue: a stale link is not an error page.
+ * find in the queue the row they were already looking at. The ledger sends it
+ * with a `q` that narrows the queue to that payment (`reviewCaseSearchParams`),
+ * so the case is on the loaded page however deep in the queue it sits. An id
+ * that is not on the loaded page just opens the queue: a stale link is not an
+ * error page.
  */
 export default async function PaymentsReviewPage({
   params,

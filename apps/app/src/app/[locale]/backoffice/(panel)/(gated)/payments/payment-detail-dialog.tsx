@@ -3,6 +3,7 @@
 import { useLocale, useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import type { PaymentRow } from '@/lib/backoffice/types'
+import { reviewCaseSearchParams } from '@/lib/backoffice/payment-ledger-query'
 import { formatDateTime, formatMoney, type Locale } from '@/lib/format'
 import { formatPaymentMethod } from '@/lib/payment-method'
 import { SectionTitle, StatusBadge } from '@/components/backoffice/ui'
@@ -18,10 +19,10 @@ import {
 } from '@/components/ui/dialog'
 
 /**
- * One payment, opened from the ledger as a modal: the receipt the student uploaded and the
- * data behind the row. Read-only on purpose — a payment changes state in the
- * review queue, next to what the model read, because approving is a usecase
- * with its own audit entry and not a click on a list (CLAUDE.md §8).
+ * One payment, opened from the ledger as a modal: the data behind the row.
+ * Read-only on purpose — a payment changes state in the review queue, next to
+ * the receipt image, because approving is a usecase with its own audit entry
+ * and not a click on a list (CLAUDE.md §8).
  *
  * It exists so the row can stay a row. Rail, operation number and who settled
  * it are all worth one look each and none of them worth a column: in the table
@@ -85,16 +86,13 @@ export function PaymentDetailDialog({
                 <SectionTitle icon="doc">
                   {t('receipt_review.image_title')}
                 </SectionTitle>
-                {/* No storage is wired yet; in production this is a signed URL
-                    of 5 minutes, scoped to the student (CLAUDE.md §8). */}
-                <div className="mt-3 flex flex-col items-center gap-2 rounded-xl border border-dashed border-line bg-sky-soft px-6 py-10 text-center">
-                  <span className="grid h-11 w-11 place-items-center rounded-full bg-white text-brand-blue shadow-card">
-                    <BoIcon name="doc" size={20} />
-                  </span>
-                  <p className="max-w-xs text-xs text-muted-foreground">
-                    {t('receipt_review.image_placeholder')}
-                  </p>
-                </div>
+                {/* The ledger never asks for the image: every signed URL is an
+                    audited read (CLAUDE.md §8), and the queue is where a
+                    receipt is looked at — next to the decision it serves. */}
+                <p className="mt-3 flex items-start gap-2 rounded-lg border border-line bg-sky-soft px-3 py-2 text-xs text-muted-foreground">
+                  <BoIcon name="doc" size={14} className="mt-0.5 shrink-0 text-brand-blue" />
+                  {t('payments.detail_receipt_note')}
+                </p>
                 <p className="mt-2 text-xs text-muted-foreground">
                   {t('receipt_review.image_note')}
                 </p>
@@ -118,7 +116,7 @@ export function PaymentDetailDialog({
                     value={payment.operationNumber ?? t('payments.no_operation')}
                   />
                   <DataRow
-                    label={t('receipt_review.check_read')}
+                    label={t('payments.detail_amount')}
                     value={formatMoney(
                       payment.amountCents,
                       payment.currency,
@@ -172,12 +170,13 @@ export function PaymentDetailDialog({
             </div>
 
             {/* Still owed a decision: the way to where it is taken, next to
-                the receipt and what the model read. Full width, so on a phone
-                it is the one action under the data. */}
+                the receipt image. The link searches the queue down to this
+                payment, so it opens the case wherever the queue had it.
+                Full width, so on a phone it is the one action under the data. */}
             {undecided && canReview && (
               <DialogFooter className="border-t border-line p-5">
                 <Link
-                  href={`/backoffice/payments/review?receipt=${payment.id}`}
+                  href={`/backoffice/payments/review?${reviewCaseSearchParams(payment).toString()}`}
                   className="inline-flex min-h-tap w-full items-center justify-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-deep"
                 >
                   {t('payments.open_review')}
