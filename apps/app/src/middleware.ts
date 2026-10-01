@@ -26,6 +26,22 @@ function withBackofficePrefix(pathname: string): string {
   return pathname === '/' ? '/backoffice' : `/backoffice${pathname}`
 }
 
+// The receipt image in the backoffice review queue is a short-lived signed URL
+// served straight from the bucket (Tigris in production, LocalStack locally),
+// not from this origin: without the bucket origin in `img-src` the browser
+// refuses the image. Optional — unset, receipts simply do not render. Only a
+// bare origin (scheme + host + port, nothing after it) is accepted; anything
+// else is ignored rather than spliced into the policy.
+function receiptImageOrigin(): string {
+  const value = process.env.RECEIPT_IMAGE_ORIGIN
+  if (!value) return ''
+  try {
+    return new URL(value).origin === value ? ` ${value}` : ''
+  } catch {
+    return ''
+  }
+}
+
 // CSP com nonce por request (CLAUDE.md §8). Exige rendering dinâmico em toda
 // rota — natural aqui, porque apps/app inteiro fica atrás de login (portal +
 // backoffice, sem página pública indexada). O nonce só nonça os scripts que o
@@ -47,7 +63,7 @@ function buildCsp(nonce: string): string {
     default-src 'self';
     script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ''};
     style-src 'self' 'unsafe-inline';
-    img-src 'self' data:;
+    img-src 'self' data:${receiptImageOrigin()};
     font-src 'self';
     connect-src 'self';
     object-src 'none';

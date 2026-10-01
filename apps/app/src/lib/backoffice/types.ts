@@ -886,21 +886,6 @@ export type NewTeacher = Pick<
 /* -------------------------------------------------------------------------- */
 
 /**
- * What a payment is for. `payments` is agnostic of origin (CLAUDE.md §5): an
- * enrollment and a paid procedure (the constancia, `docs/REGRAS-NEGOCIO.md`
- * §5) travel the same states and the same OCR ladder. A discriminated union
- * instead of a loose string so the document type reaches the screen as a code
- * the locale resolves, never as text (CLAUDE.md §4).
- *
- * Only the review sheet's mock extraction still carries it: the real ledger
- * (`PaymentRow`) reads payments of enrollments alone, the only origin
- * `payments` has today.
- */
-export type PaymentConcept =
-  | { kind: 'course'; courseName: string }
-  | { kind: 'document'; type: DocumentType }
-
-/**
  * One line of the payment ledger, as `GET /api/v1/payments` serves it. Every
  * payment today belongs to an enrollment, so the course is what it was for.
  */
@@ -982,83 +967,6 @@ export interface PaymentReviewQueue {
   total: number
   page: number
   pageSize: number
-}
-
-/** A field the extraction reads off the receipt. */
-export type ExtractionField =
-  | 'operation_number'
-  | 'amount'
-  | 'paid_at'
-  | 'payer_name'
-  | 'method'
-
-/**
- * What the model read, kept as domain data rather than as a formatted string:
- * money is cents, an instant is ISO, the rail is a code. The sheet renders it
- * in the reader's locale (CLAUDE.md §4) — a mock that stores "S/ 69,90" would
- * print the same in the three languages.
- */
-export type ExtractedValue =
-  | { kind: 'text'; text: string }
-  | { kind: 'money'; amountCents: number; currency: 'PEN' }
-  | { kind: 'timestamp'; iso: string }
-  | { kind: 'method'; method: PaymentMethod }
-  /** The model could not read the field — that is a value, not a missing one. */
-  | { kind: 'unreadable' }
-
-export interface ExtractedField {
-  field: ExtractionField
-  value: ExtractedValue
-  /** Per-field confidence, 0–1 — recorded on every extraction (CLAUDE.md §5). */
-  confidence: number
-}
-
-/**
- * Everything a human needs to settle one receipt: the image, what the model
- * read off it, and what the system expected. Deciding is the one action that
- * cannot be taken from the student file — it is a usecase of its own with its
- * own audit entry (CLAUDE.md §8).
- */
-export interface ReceiptExtraction {
-  paymentId: string
-  studentId: string
-  studentName: string
-  concept: PaymentConcept
-  flag: ReviewFlag
-  /** OCR ladder tier that produced this extraction, 0–3. */
-  tier: number
-  /** Brand name of the model — a proper noun, like the payment rails. */
-  modelName: string
-  modelVersion: string
-  /**
-   * Processed image (downscaled, grayscale, EXIF stripped — CLAUDE.md §5) held
-   * for 5 years. In production a signed URL of 5 minutes, scoped to the
-   * student (CLAUDE.md §8); null here because no storage is wired yet.
-   */
-  imageUrl: string | null
-  fields: ExtractedField[]
-  amountCents: number
-  expectedAmountCents: number
-  /** Tolerance in force when the receipt was validated — a backoffice setting. */
-  toleranceCents: number
-  method: PaymentMethod
-  submittedAt: string
-  /** Tier 0: the pHash matched a receipt already approved. */
-  duplicateOf: {
-    studentName: string
-    operationNumber: string | null
-    approvedAt: string
-  } | null
-  /**
-   * Tier 2 reading from a model of another family. Agreement is the criterion,
-   * never the more expensive model (CLAUDE.md §5) — so both readings are shown
-   * side by side and the vendor is not what settles it.
-   */
-  secondOpinion: {
-    operationNumber: string | null
-    amountCents: number
-    confidence: number
-  } | null
 }
 
 /** Why a human turned a receipt down — recorded with the rejection. */

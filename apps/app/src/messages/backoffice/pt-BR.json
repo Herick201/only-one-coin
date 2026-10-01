@@ -99,17 +99,23 @@
       "empty_body": "Quando um comprovante precisar de revisão humana, ele aparece aqui.",
       "pending_count": "{count} na fila",
       "see_all": "Ver toda a fila",
-      "showing": "Mostrando {shown} de {total} comprovantes"
+      "showing": "Mostrando {shown} de {total} comprovantes",
+      "col_deadline": "Prazo",
+      "col_receipt": "Comprovante",
+      "col_signals": "Sinais",
+      "deadline_overdue": "Prazo vencido",
+      "approved_toast": "Pagamento aprovado. A matrícula ficou ativa.",
+      "rejected_toast": "Pagamento rejeitado. A vaga voltou para a turma.",
+      "already_settled_toast": "Outra pessoa já decidiu este pagamento. A fila foi atualizada.",
+      "seat_released_toast": "A vaga deste pagamento já foi liberada, então ele não pode ser aprovado. A fila foi atualizada.",
+      "load_error_title": "Não foi possível carregar a fila de revisão",
+      "load_error_body": "O sistema não respondeu. Recarregue a página; se continuar igual, avise a equipe técnica."
     },
     "review_queue": {
       "search_label": "Buscar comprovante",
       "search_placeholder": "Aluno, curso ou número da operação",
-      "filters": "Filtros",
-      "filter_all": "Todos",
-      "sort_oldest": "Mais antigos",
-      "sort_newest": "Mais recentes",
       "empty_search_title": "Nenhum resultado",
-      "empty_search_body": "Tente outro aluno, curso ou número de operação, ou remova o filtro de motivo.",
+      "empty_search_body": "Tente outro aluno, curso ou número de operação.",
       "page_prev": "Anteriores",
       "page_next": "Próximos",
       "page_status": "Página {page} de {pages}"
@@ -120,6 +126,19 @@
       "illegible": "Ilegível",
       "duplicate_phash": "Comprovante repetido",
       "model_divergence": "Modelos divergiram"
+    },
+    "receipt_state": {
+      "missing": "Sem comprovante",
+      "uploading": "Enviando",
+      "ready": "Recebido",
+      "refused": "Arquivo recusado"
+    },
+    "fraud_signal": {
+      "identical_file": "O mesmo arquivo já foi enviado em outro pagamento",
+      "similar_image": "A imagem se parece com outro comprovante",
+      "edited_with_software": "A imagem passou por um programa de edição",
+      "modified_after_capture": "A imagem foi modificada depois de tirada",
+      "payer_name_mismatch": "O titular do pagamento não confere com o aluno nem com o responsável"
     },
     "seats": {
       "title": "Vagas por turma",
@@ -368,21 +387,9 @@
       "image_title": "Comprovante",
       "image_placeholder": "A imagem chega por link assinado de 5 minutos. Ainda não há armazenamento conectado.",
       "image_note": "Guardamos a versão processada, nunca o arquivo original.",
-      "extraction_title": "O que a IA leu",
-      "extraction_source": "Nível {tier} · {model} {version}",
-      "field_confidence": "{value}% de confiança",
-      "unreadable": "Não deu para ler",
-      "check_title": "Com o que é comparado",
       "check_read": "Valor lido",
       "check_expected": "Preço congelado do plano",
       "check_difference": "Diferença de {amount}",
-      "check_tolerance": "Tolerância vigente: {amount}",
-      "second_opinion_title": "Segundo modelo, de outra família",
-      "second_opinion_note": "O que decide é os dois baterem, nunca o modelo mais caro.",
-      "second_opinion_operation": "Operação lida",
-      "second_opinion_amount": "Valor lido",
-      "duplicate_title": "A mesma imagem já foi usada",
-      "duplicate_body": "Aprovada para {name} em {date}.",
       "approve": "Aprovar pagamento",
       "reject": "Recusar",
       "reject_title": "Motivo da recusa",
@@ -391,18 +398,13 @@
       "reject_confirm": "Confirmar recusa",
       "cancel": "Cancelar",
       "audit_notice": "A decisão fica registrada com autor, data e motivo, e não dá para desfazer.",
-      "duplicate_warning": "Este comprovante está marcado como repetido: aprovar cobra duas vezes pela mesma imagem.",
-      "approved_toast": "Aprovado só na tela. Ainda não há servidor conectado.",
-      "rejected_toast": "Recusado só na tela. Ainda não há servidor conectado.",
-      "empty_title": "Nada para revisar",
-      "empty_body": "Escolha um comprovante da fila para vê-lo ao lado do que a IA leu."
-    },
-    "extraction_field": {
-      "operation_number": "Número de operação",
-      "amount": "Valor",
-      "paid_at": "Data do pagamento",
-      "payer_name": "Titular",
-      "method": "Meio"
+      "image_alt": "Comprovante de pagamento enviado pelo aluno",
+      "image_unavailable": "Não foi possível carregar a imagem do comprovante. Feche e abra de novo para tentar outra vez.",
+      "no_receipt_warning": "Aprovar sem comprovante: confirme o depósito no extrato antes.",
+      "declared_title": "O que o aluno declarou",
+      "signals_title": "Sinais da triagem antifraude",
+      "signals_none": "A triagem antifraude não encontrou nada.",
+      "decide_error": "Não foi possível registrar a decisão. Tente de novo; se continuar igual, avise a equipe técnica."
     },
     "rejection_reason": {
       "amount_mismatch": "O valor não corresponde",

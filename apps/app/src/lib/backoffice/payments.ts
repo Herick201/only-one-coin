@@ -1,12 +1,18 @@
 import { apiFetch } from './api-client'
 import type { PaymentMetrics, PaymentReviewQueue, PaymentRow } from './types'
 import {
-  MIN_SEARCH_LENGTH,
   paymentLedgerSearchParams,
+  reviewQueueSearchParams,
   type PaymentLedgerQuery,
+  type ReviewQueueQuery,
 } from './payment-ledger-query'
 
-export { parsePaymentLedgerQuery, type PaymentLedgerQuery } from './payment-ledger-query'
+export {
+  parsePaymentLedgerQuery,
+  parseReviewQueueQuery,
+  type PaymentLedgerQuery,
+  type ReviewQueueQuery,
+} from './payment-ledger-query'
 
 export interface PaymentLedger {
   items: PaymentRow[]
@@ -47,16 +53,11 @@ export async function listPayments(query: PaymentLedgerQuery): Promise<PaymentLe
 /**
  * One page of the review queue (`GET /api/v1/payments/review`): every payment
  * still owed a decision, oldest first. Same contract as `listPayments` — a
- * search under the API's floor is dropped rather than sent, and `null` is a
- * failure, never an empty queue.
+ * search under the API's floor is dropped rather than sent (by
+ * `parseReviewQueueQuery`), and `null` is a failure, never an empty queue.
  */
-export async function listPaymentReviewQueue(query: {
-  page: number
-  q: string
-}): Promise<PaymentReviewQueue | null> {
-  const search = new URLSearchParams()
-  if (query.page > 1) search.set('page', String(query.page))
-  const q = query.q.trim()
-  if (q.length >= MIN_SEARCH_LENGTH && q.length <= 100) search.set('q', q)
-  return readList<PaymentReviewQueue>('/api/v1/payments/review', search)
+export async function listPaymentReviewQueue(
+  query: ReviewQueueQuery,
+): Promise<PaymentReviewQueue | null> {
+  return readList<PaymentReviewQueue>('/api/v1/payments/review', reviewQueueSearchParams(query))
 }

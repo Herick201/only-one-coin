@@ -10,11 +10,9 @@ import type {
   EmailFlow,
   EmailMetrics,
   EmailSegment,
-  ExtractionField,
   PaymentMethod,
   PaymentSettings,
   PlanPrice,
-  ReceiptExtraction,
   ReviewFlag,
   ReviewQueueItem,
   SeatWatchItem,
@@ -118,7 +116,7 @@ const flaggedReceipts: ReviewQueueItem[] = []
  * the screen promises. Never a model's decision: tier 3 and divergence end
  * here by rule (CLAUDE.md §5).
  */
-export function listReviewQueue(): ReviewQueueItem[] {
+function listReviewQueue(): ReviewQueueItem[] {
   return [
     ...flaggedReceipts,
     ...pendingReceipts.map(
@@ -430,120 +428,6 @@ export function getPaymentSettings(): PaymentSettings {
     reservationDays: 5,
     checkoutHoldMinutes: 15,
   }
-}
-
-/** Thirty minutes before the upload — a receipt is photographed after paying. */
-function paidAtOf(submittedAt: string): string {
-  return new Date(new Date(submittedAt).getTime() - 30 * 60_000).toISOString()
-}
-
-/**
- * The extraction behind one queued receipt, built from the queue row itself so
- * the flag, the tier and the confidence on the list are the same ones the
- * reviewer sees when opening it.
- *
- * Every field carries its own confidence and every extraction carries its tier
- * and model (CLAUDE.md §5) — that is what tells a reviewer whether the doubt is
- * about the number or about the picture.
- */
-function extractionOf(item: ReviewQueueItem): ReceiptExtraction {
-  const { toleranceCents } = getPaymentSettings()
-  const unreadable = item.flag === 'illegible'
-  /**
-   * The queue row promises the lowest per-field confidence, so no field may
-   * read below it — a sheet full of higher numbers would make the list lie.
-   * The weak field is the one the flag is about: the amount when the value does
-   * not match, the operation number in every other case.
-   */
-  const atLeast = (value: number) => Math.max(value, item.confidence)
-  const weakField: ExtractionField =
-    item.flag === 'amount_mismatch' ? 'amount' : 'operation_number'
-
-  return {
-    paymentId: item.id,
-    studentId: item.studentId,
-    studentName: item.studentName,
-    concept: { kind: 'course', courseName: item.courseName },
-    flag: item.flag,
-    tier: item.tier,
-    modelName: 'Gemini 3.1 Flash-Lite',
-    modelVersion: '2026-05',
-    imageUrl: null,
-    amountCents: item.amountCents,
-    expectedAmountCents: item.expectedAmountCents,
-    toleranceCents,
-    method: item.method,
-    submittedAt: item.submittedAt,
-    fields: [
-      {
-        field: 'operation_number',
-        value: item.operationNumber
-          ? { kind: 'text', text: item.operationNumber }
-          : { kind: 'unreadable' },
-        confidence:
-          weakField === 'operation_number' ? item.confidence : atLeast(0.96),
-      },
-      {
-        field: 'amount',
-        value: { kind: 'money', amountCents: item.amountCents, currency: 'PEN' },
-        confidence: weakField === 'amount' ? item.confidence : atLeast(0.97),
-      },
-      {
-        field: 'paid_at',
-        value: unreadable
-          ? { kind: 'unreadable' }
-          : { kind: 'timestamp', iso: paidAtOf(item.submittedAt) },
-        confidence: unreadable ? item.confidence : atLeast(0.9),
-      },
-      {
-        field: 'payer_name',
-        value: unreadable
-          ? { kind: 'unreadable' }
-          : { kind: 'text', text: item.studentName },
-        confidence: unreadable ? item.confidence : atLeast(0.86),
-      },
-      {
-        field: 'method',
-        value: { kind: 'method', method: item.method },
-        confidence: atLeast(0.99),
-      },
-    ],
-    // Tier 0: the same picture was already approved for somebody else. It is a
-    // block, not a doubt — the reviewer is confirming a match, not reading a
-    // number.
-    duplicateOf:
-      item.flag === 'duplicate_phash'
-        ? {
-            studentName: 'Diego Huamán Ccopa',
-            operationNumber: item.operationNumber,
-            approvedAt: '2026-07-11T12:34:00Z',
-          }
-        : null,
-    // Tier 2: a model of another family read the same picture. Agreement is
-    // the criterion, never the more expensive model (CLAUDE.md §5) — so both
-    // readings are shown and neither vendor settles it.
-    secondOpinion:
-      item.flag === 'model_divergence'
-        ? {
-            // The whole case is the two readings differing: the digit has to
-            // change, whatever the original one was.
-            operationNumber: item.operationNumber
-              ? `${item.operationNumber.slice(0, -1)}${
-                  (Number(item.operationNumber.slice(-1)) + 1) % 10
-                }`
-              : null,
-            amountCents: item.amountCents,
-            confidence: 0.61,
-          }
-        : null,
-  }
-}
-
-/** Every queued receipt's extraction, keyed by the queue row it belongs to. */
-export function listReceiptExtractions(): Record<string, ReceiptExtraction> {
-  return Object.fromEntries(
-    listReviewQueue().map((item) => [item.id, extractionOf(item)]),
-  )
 }
 
 /* -------------------------------------------------------------------------- */

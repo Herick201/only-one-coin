@@ -73,3 +73,27 @@ export function paymentLedgerSearchParams(query: PaymentLedgerQuery): URLSearchP
   if (query.sort !== 'newest') search.set('sort', query.sort)
   return search
 }
+
+/**
+ * What the reader narrowed the review queue to. The queue has one order —
+ * oldest first, the order it is worked in — so only search and page travel.
+ */
+export interface ReviewQueueQuery {
+  page: number
+  q: string
+}
+
+/** Same rules as the ledger: whatever the API would refuse is dropped. */
+export function parseReviewQueueQuery(
+  params: Record<string, string | string[] | undefined>,
+): ReviewQueueQuery {
+  const { page, q } = parsePaymentLedgerQuery(params)
+  return { page, q }
+}
+
+export function reviewQueueSearchParams(query: ReviewQueueQuery): URLSearchParams {
+  const search = new URLSearchParams()
+  if (query.page > 1) search.set('page', String(query.page))
+  if (query.q) search.set('q', query.q)
+  return search
+}
