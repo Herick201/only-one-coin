@@ -18,8 +18,9 @@ export interface JoinWaitlistInput {
 
 /**
  * Staff queues a student on a full class group (OOC-35). Only a full one has a
- * queue: a class group with a seat left is enrolled into, not waited on. The
- * same student waits once per class group while still waiting — the
+ * queue: a class group with a seat left is enrolled into, not waited on, and
+ * one whose classes are over (finished, closed) has nothing left to wait for.
+ * The same student waits once per class group while still waiting — the
  * repository answers that from the partial unique index.
  */
 export class JoinWaitlistUseCase extends BaseUseCase<JoinWaitlistInput, WaitlistEntry> {
@@ -33,7 +34,11 @@ export class JoinWaitlistUseCase extends BaseUseCase<JoinWaitlistInput, Waitlist
 
   async run(input: JoinWaitlistInput): Promise<WaitlistEntry> {
     const group = await this.classGroups.findById(input.classGroupId);
-    if (!group || group.isDeleted) throw new CatalogClassGroupNotFoundError();
+    // Classes over (finished, closed): nothing left to wait for — answered
+    // like a class group that is not on offer at all.
+    if (!group || group.isDeleted || group.status === "finished" || group.status === "closed") {
+      throw new CatalogClassGroupNotFoundError();
+    }
     if (!group.isFull) throw new ClassGroupNotFullError();
 
     const standing = await this.waitlist.studentStanding(input.studentId, input.classGroupId);

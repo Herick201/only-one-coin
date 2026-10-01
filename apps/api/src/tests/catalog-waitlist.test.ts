@@ -91,6 +91,17 @@ describe("JoinWaitlistUseCase", () => {
     );
   });
 
+  it("refuses a finished or closed class group: it is no longer on offer", async () => {
+    for (const status of ["finished", "closed"] as const) {
+      const group = await groups.create(groupOf({ status }));
+      await expect(join().run({ actorId: ACTOR, classGroupId: group.id, studentId: STUDENT })).rejects.toBeInstanceOf(
+        CatalogClassGroupNotFoundError,
+      );
+    }
+    expect(waitlist.rows.size).toBe(0);
+    expect(auditLog.appended).toHaveLength(0);
+  });
+
   it("refuses a student not on file", async () => {
     const group = await groups.create(groupOf());
     waitlist.standing.set(`${STUDENT}:${group.id}`, "missing");
