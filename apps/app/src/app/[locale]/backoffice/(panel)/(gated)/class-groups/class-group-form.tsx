@@ -147,11 +147,25 @@ export function ClassGroupForm({
     endTime,
   }))
 
+  const scheduleTouched =
+    startTime !== loaded.startTime ||
+    endTime !== loaded.endTime ||
+    weekdays.length !== loaded.weekdays.length ||
+    weekdays.some((day) => !loaded.weekdays.includes(day))
+
+  /* A legacy class group (seeded: no slots, no code) can be edited without
+     retyping what it never had — the code and the days are required on create,
+     and on edit only if the group already had them or the schedule is being
+     rewritten. Whatever is not touched is not sent (`changes()`). */
+  const codeRequired = mode === 'create' || (initial?.code ?? '') !== ''
+  const weekdaysRequired =
+    mode === 'create' || scheduleTouched || (initial?.slots.length ?? 0) > 0
+
   const ready =
     courseId !== '' &&
     (mode === 'edit' || periodId !== '') &&
-    code.trim() !== '' &&
-    weekdays.length > 0 &&
+    (!codeRequired || code.trim() !== '') &&
+    (!weekdaysRequired || weekdays.length > 0) &&
     !timeInvalid &&
     capacityValid
   const hasDates = startsOn !== '' && endsOn !== ''
@@ -169,11 +183,6 @@ export function ClassGroupForm({
     if (courseId !== initial.courseId) patch.courseId = courseId
     if (code.trim() !== initial.code) patch.code = code.trim()
     if (teacherName.trim() !== initial.teacherName) patch.teacherName = teacherName.trim()
-    const scheduleTouched =
-      startTime !== loaded.startTime ||
-      endTime !== loaded.endTime ||
-      weekdays.length !== loaded.weekdays.length ||
-      weekdays.some((day) => !loaded.weekdays.includes(day))
     if (scheduleTouched) patch.slots = slots
     if (capacity !== initial.capacity) patch.capacity = capacity
     if (startsOn !== loaded.startsOn) patch.startsOn = dateOrNull(startsOn)
