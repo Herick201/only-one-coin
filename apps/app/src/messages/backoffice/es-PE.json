@@ -106,8 +106,6 @@
       "deadline_overdue": "Plazo vencido",
       "approved_toast": "Pago aprobado. La matrícula quedó activa.",
       "rejected_toast": "Pago rechazado. La vacante volvió a la sección.",
-      "already_settled_toast": "Otra persona ya resolvió este pago. La cola se actualizó.",
-      "seat_released_toast": "La vacante de este pago ya se liberó, así que no se puede aprobar. La cola se actualizó.",
       "load_error_title": "No se pudo cargar la cola de revisión",
       "load_error_body": "El sistema no respondió. Recarga la página; si sigue igual, avisa al equipo técnico."
     },
@@ -404,7 +402,10 @@
       "declared_title": "Lo que declaró el alumno",
       "signals_title": "Señales de la revisión antifraude",
       "signals_none": "La revisión antifraude no encontró nada.",
-      "decide_error": "No se pudo registrar la decisión. Inténtalo de nuevo; si sigue igual, avisa al equipo técnico."
+      "decide_error": "No se pudo registrar la decisión. Inténtalo de nuevo; si sigue igual, avisa al equipo técnico.",
+      "notice_already_settled": "Otra persona ya resolvió este pago, así que no queda nada por decidir aquí. La cola ya se actualizó.",
+      "notice_not_found": "Este pago ya no está en la cola. La cola ya se actualizó.",
+      "notice_seat_released": "La vacante de este pago ya se liberó, así que no se puede aprobar. Todavía puedes rechazarlo."
     },
     "rejection_reason": {
       "amount_mismatch": "El monto no corresponde",

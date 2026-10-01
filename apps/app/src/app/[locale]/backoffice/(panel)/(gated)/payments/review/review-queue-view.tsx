@@ -118,10 +118,8 @@ export function ReviewQueueView({
   const pageCount = Math.max(1, Math.ceil(total / pageSize))
   const currentPage = Math.min(query.page, pageCount) - 1
 
-  /** Closes the case, says why, and re-reads the queue from the server. */
-  function settled(message: string) {
-    setReviewing(null)
-    setToast(message)
+  /** Re-reads the queue from the server, keeping the table on screen meanwhile. */
+  function refreshQueue() {
     startTransition(() => {
       router.refresh()
     })
@@ -134,23 +132,23 @@ export function ReviewQueueView({
         : await rejectPayment(paymentId, decision.reason, decision.note)
 
     if (result.ok) {
-      settled(t(decision.kind === 'approve' ? 'review.approved_toast' : 'review.rejected_toast'))
+      setReviewing(null)
+      setToast(t(decision.kind === 'approve' ? 'review.approved_toast' : 'review.rejected_toast'))
+      refreshQueue()
       return { kind: 'done' }
     }
     switch (result.error) {
-      // Somebody else decided it first. Not an error of this reader: the case
-      // is closed and the queue is re-read so the row disappears.
+      // The case changed under the reader: somebody else decided it, it left
+      // the queue, or its seat went back to the class group. None of that is a
+      // success, so it is not a toast — the dialog stays open and says so,
+      // while the queue behind it is re-read.
       case 'already_settled':
       case 'not_found':
-        settled(t('review.already_settled_toast'))
-        return { kind: 'done' }
-      // The seat went back to the class group while the payment waited; the
-      // case changed under the reader, so the queue is re-read too.
       case 'seat_released':
-        settled(t('review.seat_released_toast'))
-        return { kind: 'done' }
+        refreshQueue()
+        return { kind: 'notice', notice: result.error }
       default:
-        return { kind: 'stay', error: result.error }
+        return { kind: 'error' }
     }
   }
 

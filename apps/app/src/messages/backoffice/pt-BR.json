@@ -106,8 +106,6 @@
       "deadline_overdue": "Prazo vencido",
       "approved_toast": "Pagamento aprovado. A matrícula ficou ativa.",
       "rejected_toast": "Pagamento rejeitado. A vaga voltou para a turma.",
-      "already_settled_toast": "Outra pessoa já decidiu este pagamento. A fila foi atualizada.",
-      "seat_released_toast": "A vaga deste pagamento já foi liberada, então ele não pode ser aprovado. A fila foi atualizada.",
       "load_error_title": "Não foi possível carregar a fila de revisão",
       "load_error_body": "O sistema não respondeu. Recarregue a página; se continuar igual, avise a equipe técnica."
     },
@@ -404,7 +402,10 @@
       "declared_title": "O que o aluno declarou",
       "signals_title": "Sinais da triagem antifraude",
       "signals_none": "A triagem antifraude não encontrou nada.",
-      "decide_error": "Não foi possível registrar a decisão. Tente de novo; se continuar igual, avise a equipe técnica."
+      "decide_error": "Não foi possível registrar a decisão. Tente de novo; se continuar igual, avise a equipe técnica.",
+      "notice_already_settled": "Outra pessoa já decidiu este pagamento, então não há mais nada a decidir aqui. A fila já foi atualizada.",
+      "notice_not_found": "Este pagamento não está mais na fila. A fila já foi atualizada.",
+      "notice_seat_released": "A vaga deste pagamento já foi liberada, então ele não pode ser aprovado. Ainda é possível rejeitá-lo."
     },
     "rejection_reason": {
       "amount_mismatch": "O valor não corresponde",

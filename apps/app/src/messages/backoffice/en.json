@@ -106,8 +106,6 @@
       "deadline_overdue": "Overdue",
       "approved_toast": "Payment approved. The enrollment is now active.",
       "rejected_toast": "Payment rejected. The seat went back to the class group.",
-      "already_settled_toast": "Someone else already decided this payment. The queue was refreshed.",
-      "seat_released_toast": "This payment's seat was already released, so it cannot be approved. The queue was refreshed.",
       "load_error_title": "The review queue could not be loaded",
       "load_error_body": "The system did not respond. Reload the page; if nothing changes, tell the tech team."
     },
@@ -404,7 +402,10 @@
       "declared_title": "What the student declared",
       "signals_title": "Antifraud screening signals",
       "signals_none": "The antifraud screening found nothing.",
-      "decide_error": "The decision could not be recorded. Try again; if nothing changes, tell the tech team."
+      "decide_error": "The decision could not be recorded. Try again; if nothing changes, tell the tech team.",
+      "notice_already_settled": "Someone else already decided this payment, so there is nothing left to decide here. The queue was refreshed.",
+      "notice_not_found": "This payment is no longer in the queue. The queue was refreshed.",
+      "notice_seat_released": "This payment's seat was already released, so it cannot be approved. You can still reject it."
     },
     "rejection_reason": {
       "amount_mismatch": "The amount does not match",

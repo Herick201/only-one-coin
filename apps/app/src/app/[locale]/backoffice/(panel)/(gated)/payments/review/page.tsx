@@ -1,5 +1,7 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { listPaymentReviewQueue, parseReviewQueueQuery } from '@/lib/backoffice/payments'
+import { reviewQueueSearchParams } from '@/lib/backoffice/payment-ledger-query'
+import { redirect } from '@/i18n/navigation'
 import { getStaffSession } from '@/lib/backoffice/session'
 import { canReviewPayments, canViewPayments } from '@/lib/backoffice/permissions'
 import { EmptyState, PageHeader } from '@/components/backoffice/ui'
@@ -82,6 +84,19 @@ export default async function PaymentsReviewPage({
         />
       </div>
     )
+  }
+
+  /* Past the last page — the reader settled the only row on it, or followed an
+     old link. The queue is not empty, so the page must not say it is: go to
+     the last page that still has rows, keeping the search. */
+  const lastPage = Math.max(1, Math.ceil(queue.total / queue.pageSize))
+  // `lastPage < query.page` also keeps an inconsistent answer from looping.
+  if (queue.items.length === 0 && queue.total > 0 && lastPage < query.page) {
+    const search = reviewQueueSearchParams({ ...query, page: lastPage }).toString()
+    redirect({
+      href: search ? `/backoffice/payments/review?${search}` : '/backoffice/payments/review',
+      locale,
+    })
   }
 
   // The deadline colour is decided against the moment the page was rendered,

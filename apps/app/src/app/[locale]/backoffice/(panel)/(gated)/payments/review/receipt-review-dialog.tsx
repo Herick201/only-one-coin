@@ -7,7 +7,7 @@ import type {
   RejectionReason,
   ReviewDecision,
 } from '@/lib/backoffice/types'
-import { fetchReceiptUrl, type PaymentErrorKey } from '@/lib/backoffice/payment-client'
+import { fetchReceiptUrl } from '@/lib/backoffice/payment-client'
 import { formatDateTime, formatMoney, type Locale } from '@/lib/format'
 import { formatPaymentMethod } from '@/lib/payment-method'
 import { SectionTitle, StatusBadge } from '@/components/backoffice/ui'
@@ -47,10 +47,20 @@ export function deadlineState(
 }
 
 /**
- * What the dialog hears back from a decision. `stay` keeps the case open with
- * an error under the buttons; `done` means the queue already closed it.
+ * Why a decision did not go through although nothing failed: the case changed
+ * under the reader. Said in the dialog, never as a success toast.
  */
-export type DecideOutcome = { kind: 'done' } | { kind: 'stay'; error: PaymentErrorKey }
+export type CaseNotice = 'already_settled' | 'not_found' | 'seat_released'
+
+/**
+ * What the dialog hears back from a decision. `done` means the queue already
+ * closed it; `notice` keeps it open with an amber note on what changed;
+ * `error` keeps it open with a retryable failure.
+ */
+export type DecideOutcome =
+  | { kind: 'done' }
+  | { kind: 'notice'; notice: CaseNotice }
+  | { kind: 'error' }
 
 /** Where the receipt image stands while the dialog is open. */
 type ImageState =
@@ -93,7 +103,8 @@ export function ReceiptReviewDialog({
   const [note, setNote] = useState('')
   /** Keyed by the payment it belongs to, so a new case never shows the last one's image. */
   const [loaded, setLoaded] = useState<{ id: string; state: ImageState } | null>(null)
-  const [error, setError] = useState<PaymentErrorKey | null>(null)
+  const [failed, setFailed] = useState(false)
+  const [notice, setNotice] = useState<CaseNotice | null>(null)
 
   /**
    * Double-click guard. The state drives the disabled buttons; the ref is what
@@ -113,7 +124,8 @@ export function ReceiptReviewDialog({
     setRejecting(false)
     setReason(payment?.fraudSignals.includes('identical_file') ? 'duplicate' : 'amount_mismatch')
     setNote('')
-    setError(null)
+    setFailed(false)
+    setNotice(null)
     // Only a new case resets the form; a re-render of the same one does not.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paymentId])
@@ -139,15 +151,24 @@ export function ReceiptReviewDialog({
     if (!payment || inFlight.current) return
     inFlight.current = true
     setSending(true)
-    setError(null)
+    setFailed(false)
     try {
       const outcome = await onDecide(payment.id, decision)
-      if (outcome.kind === 'stay') setError(outcome.error)
+      if (outcome.kind === 'notice') setNotice(outcome.notice)
+      if (outcome.kind === 'error') setFailed(true)
     } finally {
       inFlight.current = false
       setSending(false)
     }
   }
+
+  /**
+   * Decided elsewhere or gone: nothing left to decide here. A released seat
+   * only blocks approving — rejecting is still how the case gets closed.
+   */
+  const closed = notice === 'already_settled' || notice === 'not_found'
+  const approveBlocked = sending || notice !== null
+  const rejectBlocked = sending || closed
 
   const deadline = payment ? deadlineState(payment.reviewDeadline, renderedAt) : 'ok'
 
@@ -302,7 +323,7 @@ export function ReceiptReviewDialog({
                             value={value}
                             checked={reason === value}
                             onChange={() => setReason(value)}
-                            disabled={sending}
+                            disabled={rejectBlocked}
                             className="accent-brand-blue"
                           />
                           {t(`rejection_reason.${value}`)}
@@ -318,7 +339,7 @@ export function ReceiptReviewDialog({
                         onChange={(event) => setNote(event.target.value)}
                         rows={3}
                         maxLength={NOTE_MAX_LENGTH}
-                        disabled={sending}
+                        disabled={rejectBlocked}
                         placeholder={t('receipt_review.reject_note_placeholder')}
                         className="w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink outline-none transition placeholder:text-muted-foreground focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15"
                       />
@@ -326,7 +347,7 @@ export function ReceiptReviewDialog({
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        disabled={sending}
+                        disabled={rejectBlocked}
                         aria-busy={sending}
                         onClick={() => void send({ kind: 'reject', reason, note: note.trim() })}
                         className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
@@ -348,7 +369,7 @@ export function ReceiptReviewDialog({
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      disabled={sending}
+                      disabled={approveBlocked}
                       aria-busy={sending}
                       onClick={() => void send({ kind: 'approve' })}
                       className="inline-flex items-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-yellow hover:text-ink active:bg-brand-yellow-deep disabled:cursor-not-allowed disabled:opacity-60"
@@ -358,7 +379,7 @@ export function ReceiptReviewDialog({
                     </button>
                     <button
                       type="button"
-                      disabled={sending}
+                      disabled={rejectBlocked}
                       onClick={() => setRejecting(true)}
                       className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3.5 py-2 text-sm font-semibold text-muted-foreground transition hover:border-red-200 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
                     >
@@ -367,7 +388,16 @@ export function ReceiptReviewDialog({
                     </button>
                   </div>
                 )}
-                {error && (
+                {notice && (
+                  <p
+                    role="status"
+                    className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800"
+                  >
+                    <BoIcon name="alert" size={14} className="mt-0.5 shrink-0" />
+                    {t(`receipt_review.notice_${notice}`)}
+                  </p>
+                )}
+                {failed && (
                   <p role="alert" className="mt-3 text-xs font-semibold text-red-600">
                     {t('receipt_review.decide_error')}
                   </p>
