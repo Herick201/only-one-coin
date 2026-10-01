@@ -1,0 +1,225 @@
+import { v7 as uuid } from "uuid";
+import { z } from "zod";
+import { SoftDeletableModel, SoftDeletableModelPropsSchema } from "../shared/base/SoftDeletableModel.js";
+import {
+  ClassGroupCourseLockedError,
+  ClassGroupIncompleteError,
+  InvalidDateRangeError,
+  InvalidStatusTransitionError,
+} from "./errors.js";
+
+export const WeekdaySchema = z.enum(["mon", "tue", "wed", "thu", "fri", "sat", "sun"]);
+const HourMinute = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
+
+/** One weekly session, in America/Lima — the shape the checkout already reads. */
+export const WeeklySlotSchema = z
+  .object({ weekday: WeekdaySchema, startTime: HourMinute, endTime: HourMinute })
+  .refine((slot) => slot.startTime < slot.endTime);
+export type WeeklySlot = z.infer<typeof WeeklySlotSchema>;
+
+export const ClassGroupStatusSchema = z.enum(["draft", "enrolling", "in_progress", "finished", "closed"]);
+export type ClassGroupStatus = z.infer<typeof ClassGroupStatusSchema>;
+
+/**
+ * The only way forward, one step at a time, moved by a person (OOC-35). No
+ * step back: a class group opened by mistake is retired, not un-published.
+ */
+export const NEXT_CLASS_GROUP_STATUS: Record<ClassGroupStatus, ClassGroupStatus | null> = {
+  draft: "enrolling",
+  enrolling: "in_progress",
+  in_progress: "finished",
+  finished: "closed",
+  closed: null,
+};
+
+const optionalDate = z.coerce.date().nullable().optional();
+
+export const ClassGroupPropsSchema = SoftDeletableModelPropsSchema.extend({
+  courseId: z.string().uuid(),
+  academicPeriodId: z.string().uuid(),
+  code: z.string().trim(),
+  teacherName: z.string().trim(),
+  slots: z.array(WeeklySlotSchema),
+  startsOn: z.coerce.date().nullable(),
+  endsOn: z.coerce.date().nullable(),
+  enrollmentOpensAt: z.coerce.date().nullable(),
+  enrollmentClosesAt: z.coerce.date().nullable(),
+  capacity: z.number().int().positive(),
+  seatsTaken: z.number().int().nonnegative(),
+  status: ClassGroupStatusSchema,
+  sourceClassGroupId: z.string().uuid().nullable(),
+});
+export type ClassGroupProps = z.infer<typeof ClassGroupPropsSchema>;
+
+export const CreateClassGroupSchema = z.object({
+  courseId: z.string().uuid(),
+  academicPeriodId: z.string().uuid(),
+  code: z.string().trim().min(1),
+  teacherName: z.string().trim(),
+  slots: z.array(WeeklySlotSchema).min(1),
+  capacity: z.number().int().positive(),
+  startsOn: optionalDate,
+  endsOn: optionalDate,
+  enrollmentOpensAt: optionalDate,
+  enrollmentClosesAt: optionalDate,
+});
+export type CreateClassGroupDTO = z.infer<typeof CreateClassGroupSchema>;
+
+/** The period never changes — a class group in the wrong period is retired and reopened. */
+export const UpdateClassGroupSchema = CreateClassGroupSchema.omit({ academicPeriodId: true }).partial();
+export type UpdateClassGroupDTO = z.infer<typeof UpdateClassGroupSchema>;
+
+type Editable = keyof UpdateClassGroupDTO;
+
+export class ClassGroup extends SoftDeletableModel {
+  public courseId: string;
+  public readonly academicPeriodId: string;
+  public code: string;
+  public teacherName: string;
+  public slots: WeeklySlot[];
+  public startsOn: Date | null;
+  public endsOn: Date | null;
+  public enrollmentOpensAt: Date | null;
+  public enrollmentClosesAt: Date | null;
+  public capacity: number;
+  /** Read-only here: only the atomic seat UPDATE in apps/api ever moves it (apps/api CLAUDE.md, Vagas). */
+  public readonly seatsTaken: number;
+  public status: ClassGroupStatus;
+  public readonly sourceClassGroupId: string | null;
+
+  constructor(props: ClassGroupProps) {
+    super(props);
+    this.courseId = props.courseId;
+    this.academicPeriodId = props.academicPeriodId;
+    this.code = props.code;
+    this.teacherName = props.teacherName;
+    this.slots = props.slots;
+    this.startsOn = props.startsOn;
+    this.endsOn = props.endsOn;
+    this.enrollmentOpensAt = props.enrollmentOpensAt;
+    this.enrollmentClosesAt = props.enrollmentClosesAt;
+    this.capacity = props.capacity;
+    this.seatsTaken = props.seatsTaken;
+    this.status = props.status;
+    this.sourceClassGroupId = props.sourceClassGroupId;
+  }
+
+  /** Always born a draft; publishing is a separate, checked step. */
+  static create(dto: CreateClassGroupDTO): ClassGroup {
+    const valid = CreateClassGroupSchema.parse(dto);
+    const group = new ClassGroup(
+      ClassGroupPropsSchema.parse({
+        ...valid,
+        id: uuid(),
+        startsOn: valid.startsOn ?? null,
+        endsOn: valid.endsOn ?? null,
+        enrollmentOpensAt: valid.enrollmentOpensAt ?? null,
+        enrollmentClosesAt: valid.enrollmentClosesAt ?? null,
+        seatsTaken: 0,
+        status: "draft",
+        sourceClassGroupId: null,
+      }),
+    );
+    group.assertConsistent();
+    return group;
+  }
+
+  /**
+   * Period duplication (OOC-35): same course, schedule, code, teacher and
+   * capacity; no dates, no window, no seats, a draft — and a pointer back.
+   * Nothing that belongs to the old period's students comes along.
+   */
+  static copyInto(source: ClassGroup, academicPeriodId: string): ClassGroup {
+    return new ClassGroup(
+      ClassGroupPropsSchema.parse({
+        id: uuid(),
+        courseId: source.courseId,
+        academicPeriodId,
+        code: source.code,
+        teacherName: source.teacherName,
+        slots: source.slots,
+        startsOn: null,
+        endsOn: null,
+        enrollmentOpensAt: null,
+        enrollmentClosesAt: null,
+        capacity: source.capacity,
+        seatsTaken: 0,
+        status: "draft",
+        sourceClassGroupId: source.id,
+      }),
+    );
+  }
+
+  get isFull(): boolean {
+    return this.seatsTaken >= this.capacity;
+  }
+
+  update(patch: UpdateClassGroupDTO): Editable[] {
+    const valid = UpdateClassGroupSchema.parse(patch);
+    const changed: Editable[] = [];
+
+    if (valid.courseId !== undefined && valid.courseId !== this.courseId) {
+      if (this.status !== "draft" || this.seatsTaken > 0) throw new ClassGroupCourseLockedError();
+      this.courseId = valid.courseId;
+      changed.push("courseId");
+    }
+
+    for (const key of ["code", "teacherName", "capacity"] as const) {
+      const next = valid[key];
+      if (next !== undefined && next !== this[key]) {
+        (this as Record<string, unknown>)[key] = next;
+        changed.push(key);
+      }
+    }
+
+    if (valid.slots !== undefined && JSON.stringify(valid.slots) !== JSON.stringify(this.slots)) {
+      this.slots = valid.slots;
+      changed.push("slots");
+    }
+
+    for (const key of ["startsOn", "endsOn", "enrollmentOpensAt", "enrollmentClosesAt"] as const) {
+      const next = valid[key];
+      if (next === undefined) continue;
+      const current = this[key];
+      if ((next?.getTime() ?? null) === (current?.getTime() ?? null)) continue;
+      this[key] = next;
+      changed.push(key);
+    }
+
+    this.assertConsistent();
+    if (changed.length > 0) this.touch();
+    return changed;
+  }
+
+  /** Moves one step forward. Answers the status it left. */
+  advanceTo(next: ClassGroupStatus): ClassGroupStatus {
+    if (NEXT_CLASS_GROUP_STATUS[this.status] !== next) throw new InvalidStatusTransitionError();
+    const previous = this.status;
+    this.status = next;
+    this.assertConsistent();
+    this.touch();
+    return previous;
+  }
+
+  /**
+   * What the 0018 checks also say — repeated here so the reader gets a
+   * readable reason instead of a constraint name. Capacity vs seats taken is
+   * NOT here: the seats move under us, so only the conditional UPDATE in the
+   * repository can answer it truthfully.
+   */
+  private assertConsistent(): void {
+    if (this.status !== "draft" && (this.startsOn === null || this.endsOn === null)) {
+      throw new ClassGroupIncompleteError();
+    }
+    if (this.startsOn && this.endsOn && this.startsOn.getTime() >= this.endsOn.getTime()) {
+      throw new InvalidDateRangeError();
+    }
+    if (
+      this.enrollmentOpensAt &&
+      this.enrollmentClosesAt &&
+      this.enrollmentOpensAt.getTime() >= this.enrollmentClosesAt.getTime()
+    ) {
+      throw new InvalidDateRangeError();
+    }
+  }
+}

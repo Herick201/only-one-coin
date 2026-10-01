@@ -1,11 +1,17 @@
-import type {
-  AuditLogEntry,
-  Course,
-  IAuditLogRepository,
-  ICourseRepository,
-  IPlanRepository,
-  Plan,
-  PlanPrice,
+import {
+  CapacityBelowSeatsTakenError,
+  PeriodAlreadyDuplicatedError,
+  type AcademicPeriod,
+  type AuditLogEntry,
+  type ClassGroup,
+  type Course,
+  type IAcademicPeriodRepository,
+  type IAuditLogRepository,
+  type IClassGroupRepository,
+  type ICourseRepository,
+  type IPlanRepository,
+  type Plan,
+  type PlanPrice,
 } from "@ooc/domain";
 
 /**
@@ -57,5 +63,64 @@ export class FakePlanRepository implements IPlanRepository {
 
   async addPrice(price: PlanPrice): Promise<void> {
     this.prices.push(price);
+  }
+}
+
+export class FakeAcademicPeriodRepository implements IAcademicPeriodRepository {
+  public readonly rows = new Map<string, AcademicPeriod>();
+
+  async create(period: AcademicPeriod): Promise<AcademicPeriod> {
+    this.rows.set(period.id, period);
+    return period;
+  }
+
+  async findById(id: string): Promise<AcademicPeriod | null> {
+    return this.rows.get(id) ?? null;
+  }
+
+  async update(period: AcademicPeriod): Promise<AcademicPeriod> {
+    this.rows.set(period.id, period);
+    return period;
+  }
+}
+
+export class FakeClassGroupRepository implements IClassGroupRepository {
+  public readonly rows = new Map<string, ClassGroup>();
+  /** Lets a test simulate seats taken by the checkout between read and write. */
+  public seatsTakenOverride = new Map<string, number>();
+
+  async create(group: ClassGroup): Promise<ClassGroup> {
+    this.rows.set(group.id, group);
+    return group;
+  }
+
+  async findById(id: string): Promise<ClassGroup | null> {
+    return this.rows.get(id) ?? null;
+  }
+
+  async update(group: ClassGroup): Promise<ClassGroup> {
+    const taken = this.seatsTakenOverride.get(group.id) ?? group.seatsTaken;
+    if (group.capacity < taken) throw new CapacityBelowSeatsTakenError();
+    this.rows.set(group.id, group);
+    return group;
+  }
+
+  async listForCopy(periodId: string): Promise<{ copyable: ClassGroup[]; skippedRetired: number }> {
+    const inPeriod = [...this.rows.values()].filter((group) => group.academicPeriodId === periodId);
+    return {
+      copyable: inPeriod.filter((group) => !group.isDeleted),
+      skippedRetired: inPeriod.filter((group) => group.isDeleted).length,
+    };
+  }
+
+  async insertCopies(sourcePeriodId: string, targetPeriodId: string, copies: ClassGroup[]): Promise<void> {
+    const already = [...this.rows.values()].some(
+      (group) =>
+        group.academicPeriodId === targetPeriodId &&
+        group.sourceClassGroupId !== null &&
+        this.rows.get(group.sourceClassGroupId)?.academicPeriodId === sourcePeriodId,
+    );
+    if (already) throw new PeriodAlreadyDuplicatedError();
+    for (const copy of copies) this.rows.set(copy.id, copy);
   }
 }

@@ -262,7 +262,50 @@ export {
   CourseNotFoundError,
   PlanNotFoundError,
   PriceInPastError,
+  PeriodNotFoundError,
+  CatalogClassGroupNotFoundError,
+  InvalidDateRangeError,
+  InvalidStatusTransitionError,
+  ClassGroupIncompleteError,
+  CapacityBelowSeatsTakenError,
+  ClassGroupCourseLockedError,
+  PeriodAlreadyDuplicatedError,
+  DuplicateSamePeriodError,
 } from "./catalog/errors.js";
+export {
+  AcademicPeriod,
+  AcademicPeriodPropsSchema,
+  CreateAcademicPeriodSchema,
+  UpdateAcademicPeriodSchema,
+  type AcademicPeriodProps,
+  type CreateAcademicPeriodDTO,
+  type UpdateAcademicPeriodDTO,
+} from "./catalog/AcademicPeriod.js";
+export {
+  ClassGroup,
+  ClassGroupPropsSchema,
+  ClassGroupStatusSchema,
+  CreateClassGroupSchema,
+  UpdateClassGroupSchema,
+  NEXT_CLASS_GROUP_STATUS,
+  WeekdaySchema,
+  WeeklySlotSchema,
+  type ClassGroupProps,
+  type ClassGroupStatus,
+  type CreateClassGroupDTO,
+  type UpdateClassGroupDTO,
+  type WeeklySlot,
+} from "./catalog/ClassGroup.js";
+export type { IAcademicPeriodRepository } from "./catalog/ports/IAcademicPeriodRepository.js";
+export type { IClassGroupRepository } from "./catalog/ports/IClassGroupRepository.js";
+export { CreateAcademicPeriodUseCase, type CreateAcademicPeriodInput } from "./catalog/CreateAcademicPeriodUseCase.js";
+export { UpdateAcademicPeriodUseCase, type UpdateAcademicPeriodInput } from "./catalog/UpdateAcademicPeriodUseCase.js";
+export { CreateClassGroupUseCase, type CreateClassGroupInput } from "./catalog/CreateClassGroupUseCase.js";
+export { UpdateClassGroupUseCase, type UpdateClassGroupInput } from "./catalog/UpdateClassGroupUseCase.js";
+export {
+  AdvanceClassGroupStatusUseCase,
+  type AdvanceClassGroupStatusInput,
+} from "./catalog/AdvanceClassGroupStatusUseCase.js";
 export { Plan, PlanPrice, PRICE_PAST_TOLERANCE_MS, type PlanProps, type PlanPriceProps } from "./catalog/Plan.js";
 export type { IPlanRepository } from "./catalog/ports/IPlanRepository.js";
 export { CreatePlanUseCase, type CreatePlanInput } from "./catalog/CreatePlanUseCase.js";
