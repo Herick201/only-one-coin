@@ -315,6 +315,7 @@ o que é real:
 | Matrículas (`/backoffice/enrollments`) | **Real**: listagem, métricas do ciclo e abertura manual (`GET`/`POST /api/v1/enrollments`) |
 | Reservas de vaga (`/backoffice/enrollments/reservations`) | Mock |
 | Pagamentos e fila de revisão (`/backoffice/payments`, `/payments/review`) | Mock — não existe ainda ação em lote nem endpoint de pagamento avulso |
+| Cursos (`/backoffice/courses`) | **Real**: lista (aposentados inclusos, sinalizados), criar curso, opções (resumo, regra de certificado, congelamento, transferência), sair do catálogo/voltar com aviso de matrícula viva, e planos com preço agendado (`/api/v1/catalog`, com `audit_log`). A coluna `courses.local_only` deixou de existir |
 | Turmas (`/backoffice/class-groups`) | Mock — `apps/api` só expõe leitura (`GET /class-groups`); não há rota de criar/editar turma |
 | Docentes (`/backoffice/teachers`) | Mock — não existe tabela `teachers` ainda (decisão deliberada, `docs/ROADMAP.md` Sessão 36) |
 | Equipe (`/backoffice/team`) | **Real**: listagem, criação, convite, redefinição de senha e a bitácora de troca de cargo (lida do `audit_log`) |
@@ -333,7 +334,7 @@ o que é real:
   vocabulário de erro HTTP reutilizável (`shared/base/errors/`).
 - `packages/queue` — contrato de fila compartilhado (BullMQ/Redis).
 - `packages/db` — Postgres local via `compose.yml` (`postgres:18-alpine`) +
-  schema/migrations com Drizzle Kit (`docs/ARCHITECTURE.md` §5.8). Quinze
+  schema/migrations com Drizzle Kit (`docs/ARCHITECTURE.md` §5.8). Dezessete
   migrations além da baseline: schema do Better Auth
   (`0001_better_auth_core.sql`), o modelo acadêmico e de pessoas inteiro —
   `academic_periods`, `courses`, `plans`, `plan_prices`, `class_groups`,
@@ -349,13 +350,17 @@ o que é real:
   o dono das tabelas (`CLAUDE.md` §6/§8), cobertas por
   `packages/db/tests/privileges.test.ts`; e `deleted_at` no catálogo,
   na matrícula e no apoderado (`0012`), completando o par da trava —
-  `students` já tinha, e `plan_prices`/`consents`/`audit_log` ficam de fora
-  por serem append-only; a `outbox` de notificações (`0013`), uma linha
+  `students` já tinha, e `consents`/`audit_log` ficam de fora
+  por serem append-only (`plan_prices` também, mas ele entra na trava de
+  privilégio pela `0017`); a `outbox` de notificações (`0013`), uma linha
   por e-mail a enviar; `seat_holds` e `platform_settings` (`0014`), o hold
   curto do checkout e os parâmetros que o backoffice ajusta; e
   `receipt_uploads` (`0015`), a custódia do arquivo do comprovante entre o
   upload direto ao bucket e a matrícula que ainda não existe naquele momento
-  (OOC-19). Ainda
+  (OOC-19); `0016` (antifraude do comprovante); e `0017`, o catálogo de
+  cursos (`summary`, regra de certificado, congelamento e transferência em
+  `courses`) mais a trava de `plan_prices` — sem `UPDATE`/`DELETE`, com
+  trigger `plan_prices_append_only` (OOC-36). Ainda
   não existem: `teachers`, `campaigns`, `attendance`, `grades`,
   `materials`, `certificates` — essas entram nas próximas sessões do
   `ROADMAP.md`.

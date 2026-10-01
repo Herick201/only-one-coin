@@ -10,7 +10,7 @@ Carregado junto com o `CLAUDE.md` da raiz quando uma sessão trabalha aqui dentr
 - Dados de extração ficam em `payment_receipts`, não em `payments`.
 - **`amount_cents INTEGER`.** Nunca float, nunca `numeric` de ponto flutuante (ver também `packages/db/CLAUDE.md`).
 - **Idempotency key em todo pagamento.** Duplo POST de celular ruim é certeza.
-- Preço é **versionado, nunca editado**. A matrícula congela o `plan_price_id` vigente. Corrigir a tabela de preços não pode revalidar histórico.
+- Preço é **versionado, nunca editado**. A matrícula congela o `plan_price_id` vigente. Corrigir a tabela de preços não pode revalidar histórico. Desde a `0017` o banco recusa `UPDATE`/`DELETE` em `plan_prices` (`packages/db/CLAUDE.md`). Preço novo pode ser **agendado** — `valid_from` futuro, nunca passado (tolerância de 60 s, `PRICE_PAST_TOLERANCE_MS`). Só `master`/`admin` criam plano e lançam preço (`POST /catalog/courses/:id/plans`, `POST /catalog/plans/:id/prices`).
 - Tolerância de validação **configurável no backoffice**, não constante no código.
 
 ## OCR — nunca síncrono
