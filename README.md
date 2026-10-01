@@ -160,7 +160,8 @@ Sessão 7) já existem. Domínio e fila já existem, independentes dessa escolha
   string preservada) e o dev server no local (ver **Rodar local**).
   No backoffice já existem: alunos (`/backoffice/students`, com ficha, histórico e edição),
   turmas (`/backoffice/class-groups`, real desde o OOC-35: períodos, rascunho,
-  duplicação de período, ciclo de vida e lista de espera; lista paginada e ficha da turma.
+  duplicação de período, ciclo de vida, tirar do catálogo e voltar, e lista de espera;
+  lista paginada e ficha da turma.
   Emissão de certificados em lote e procedimentos por matrícula — mover,
   congelar, retirar — continuam mock e só aparecem na visão do docente, até as
   Sessões 37/38), cursos (`/backoffice/courses`, catálogo com opções por
