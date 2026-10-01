@@ -165,23 +165,25 @@ Sessão 7) já existem. Domínio e fila já existem, independentes dessa escolha
   Emissão de certificados em lote e procedimentos por matrícula — mover,
   congelar, retirar — continuam mock e só aparecem na visão do docente, até as
   Sessões 37/38), cursos (`/backoffice/courses`, catálogo com opções por
-  curso) e pagamentos (`/backoffice/payments`: livro de todos os pagamentos —
-  matrícula e trâmite — com métricas do ciclo, busca e filtros por estado, meio
-  e conceito, e cada linha abrindo o comprovante e os dados do pagamento num
-  modal; `/backoffice/payments/review`, a fila de revisão humana com a
-  ficha de decisão do comprovante — extração campo a campo com confiança,
-  segunda leitura quando os modelos divergem, aprovar/recusar com motivo —
-  ambos leem e gravam via `apps/api`, e a fila mostra a imagem real do
-  comprovante, os sinais de fraude e o prazo de revisão),
-  matrículas
-  (`/backoffice/enrollments`: livro de todas as matrículas — aluno, curso/turma,
-  estado da matrícula, da vaga e do pagamento — com métricas do ciclo, busca,
-  filtros por estado, vaga, idioma e ciclo, detalhe em modal e abertura manual de
-  matrícula sobre aluno já cadastrado (vaga reservada, preço vigente somente
-  leitura, pagamento nunca aprovado dali, meio de pagamento com opção "outro"
-  que pede o texto que o nomeia); e
-  só quem entrou — vaga confirmada; o que ainda espera dinheiro vive em
-  Pagos, e a aba Reservas deixou de existir) e docentes
+  curso) e pagamentos (`/backoffice/payments`: livro dos pagamentos reais das
+  matrículas, com métricas do ciclo, busca, filtros por estado e meio e
+  ordenação por data; cada linha abre os dados do pagamento num modal — meio,
+  número de operação, valor registrado contra o preço congelado do plano, quem
+  decidiu e quando — e, se ainda está em aberto, o atalho para o caso na fila;
+  `/backoffice/payments/review`, a fila de revisão humana: os pagamentos em
+  aberto, o mais antigo primeiro, com prazo de revisão, estado do comprovante e
+  sinais de fraude em texto; o caso abre num modal com a imagem real do
+  comprovante por URL assinada de 5 minutos (ou o aviso de que não há imagem
+  utilizável — sem comprovante, arquivo recusado ou ainda subindo; avisa, não
+  bloqueia), o meio e o número de operação declarados, o preço congelado do
+  plano e aprovar/recusar com motivo — ambos leem e gravam via `apps/api`),
+  matrículas (`/backoffice/enrollments`: só quem entrou — vaga confirmada; o
+  que ainda espera dinheiro vive em Pagos, e a aba Reservas deixou de existir —
+  com aluno, curso/turma, estado da matrícula, da vaga e do pagamento, métricas
+  do ciclo, busca, filtros por idioma e ciclo, detalhe em modal e abertura
+  manual de matrícula sobre aluno já cadastrado (vaga reservada, preço vigente
+  somente leitura, pagamento nunca aprovado dali — a matrícula vai para Pagos —,
+  meio de pagamento com opção "outro" que pede o texto que o nomeia)) e docentes
   (`/backoffice/teachers`: plantel em duas abas — **Geral** (ativos) e
   **Inativos** — com busca, filtro por idioma, "sem turma" e "contrato a
   vencer", coluna de contrato com o alerta de vencimento; cadastro de docente —
