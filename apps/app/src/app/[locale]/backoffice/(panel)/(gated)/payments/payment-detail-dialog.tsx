@@ -1,16 +1,18 @@
 'use client'
 
 import { useLocale, useTranslations } from 'next-intl'
+import { Link } from '@/i18n/navigation'
 import type { PaymentRow } from '@/lib/backoffice/types'
 import { formatDateTime, formatMoney, type Locale } from '@/lib/format'
 import { formatPaymentMethod } from '@/lib/payment-method'
 import { SectionTitle, StatusBadge } from '@/components/backoffice/ui'
-import { paymentTone, reviewFlagTone } from '@/components/backoffice/status-tone'
+import { paymentTone } from '@/components/backoffice/status-tone'
 import { BoIcon } from '@/components/backoffice/icons'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -21,15 +23,21 @@ import {
  * review queue, next to what the model read, because approving is a usecase
  * with its own audit entry and not a click on a list (CLAUDE.md §8).
  *
- * It exists so the row can stay a row. Flag, rail, operation number and who
- * settled it are all worth one look each and none of them worth a column: in
- * the table they turned every line into four stacked lines.
+ * It exists so the row can stay a row. Rail, operation number and who settled
+ * it are all worth one look each and none of them worth a column: in the table
+ * they turned every line into four stacked lines.
+ *
+ * An open payment carries the way to where it is decided, for whoever decides
+ * it (`canReview`). The link is a convenience; the role on the settle route in
+ * `apps/api` is what enforces it (CLAUDE.md §8).
  */
 export function PaymentDetailDialog({
   payment,
+  canReview,
   onClose,
 }: {
   payment: PaymentRow | null
+  canReview: boolean
   onClose: () => void
 }) {
   const t = useTranslations('bo')
@@ -37,6 +45,9 @@ export function PaymentDetailDialog({
 
   const mismatch =
     payment !== null && payment.amountCents !== payment.expectedAmountCents
+  const undecided =
+    payment !== null &&
+    (payment.status === 'pending' || payment.status === 'under_review')
 
   return (
     <Dialog
@@ -58,26 +69,14 @@ export function PaymentDetailDialog({
               <DialogDescription>
                 {t('receipt_review.subtitle', {
                   date: formatDateTime(payment.submittedAt, locale),
-                  course:
-                    payment.concept.kind === 'course'
-                      ? payment.concept.courseName
-                      : t(`document_type.${payment.concept.type}`),
+                  course: payment.courseName,
                 })}
               </DialogDescription>
-              {/* The state and, when it is open, why it is open. This is the
-                  pair the table used to stack on every row. */}
               <div className="mt-1 flex flex-wrap items-center gap-2">
                 <StatusBadge
                   tone={paymentTone[payment.status]}
                   label={t(`payment_status.${payment.status}`)}
                 />
-                {payment.flag && (
-                  <StatusBadge
-                    tone={reviewFlagTone[payment.flag]}
-                    dot={false}
-                    label={t(`review_flag.${payment.flag}`)}
-                  />
-                )}
               </div>
             </DialogHeader>
 
@@ -108,15 +107,11 @@ export function PaymentDetailDialog({
                 <dl className="mt-2">
                   <DataRow
                     label={t('payments.filter_method')}
-                    value={
-                      payment.method
-                        ? formatPaymentMethod(
-                            payment.method,
-                            null,
-                            t('payment_method.other'),
-                          )
-                        : t('payments.no_method')
-                    }
+                    value={formatPaymentMethod(
+                      payment.method,
+                      payment.methodDetail,
+                      t('payment_method.other'),
+                    )}
                   />
                   <DataRow
                     label={t('payments.col_operation')}
@@ -143,15 +138,15 @@ export function PaymentDetailDialog({
                     label={t('payments.col_submitted')}
                     value={formatDateTime(payment.submittedAt, locale)}
                   />
-                  {/* Who settled it, or that nobody has. An approved payment
-                      with no name behind it went through the ladder alone —
-                      that is an answer, not a blank. */}
+                  {/* Who settled it, or that nobody has. A decision whose
+                      audit entry names no account still happened — it reads
+                      as an unknown author, not as a blank. */}
                   <DataRow
                     label={t('payments.col_decided')}
                     value={
                       payment.decidedAt
                         ? `${formatDateTime(payment.decidedAt, locale)} · ${
-                            payment.decidedByName ?? t('payments.decided_auto')
+                            payment.decidedByName ?? t('payments.decided_by_unknown')
                           }`
                         : t('payments.decided_open')
                     }
@@ -175,6 +170,21 @@ export function PaymentDetailDialog({
                 )}
               </section>
             </div>
+
+            {/* Still owed a decision: the way to where it is taken, next to
+                the receipt and what the model read. Full width, so on a phone
+                it is the one action under the data. */}
+            {undecided && canReview && (
+              <DialogFooter className="border-t border-line p-5">
+                <Link
+                  href={`/backoffice/payments/review?receipt=${payment.id}`}
+                  className="inline-flex min-h-tap w-full items-center justify-center gap-1.5 rounded-lg bg-brand-blue px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-deep"
+                >
+                  {t('payments.open_review')}
+                  <BoIcon name="chevron-right" size={16} />
+                </Link>
+              </DialogFooter>
+            )}
           </>
         )}
       </DialogContent>

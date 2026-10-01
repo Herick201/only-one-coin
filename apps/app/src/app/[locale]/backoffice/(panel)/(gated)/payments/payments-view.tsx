@@ -1,14 +1,18 @@
 'use client'
 
-import { useMemo, useState, type MouseEvent, type ReactNode } from 'react'
+import { useEffect, useState, useTransition, type MouseEvent, type ReactNode } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
-import type {
-  PaymentMethod,
-  PaymentMetrics,
-  PaymentRow,
-  PaymentStatus,
-} from '@/lib/backoffice/types'
+import type { PaymentRow } from '@/lib/backoffice/types'
+import type { PaymentLedger } from '@/lib/backoffice/payments'
+import {
+  MIN_SEARCH_LENGTH,
+  PAYMENT_METHODS,
+  PAYMENT_STATUSES,
+  paymentLedgerSearchParams,
+  type PaymentLedgerQuery,
+} from '@/lib/backoffice/payment-ledger-query'
 import { formatDateTime, formatMoney, type Locale } from '@/lib/format'
 import { formatPaymentMethod } from '@/lib/payment-method'
 import {
@@ -29,102 +33,77 @@ import { FiltersDropdown } from '@/components/backoffice/filters-dropdown'
 import { PaymentDetailDialog } from './payment-detail-dialog'
 import { AutoGrid } from '@/components/layout/auto-grid'
 
-type StatusFilter = PaymentStatus | 'all'
-type MethodFilter = PaymentMethod | 'all'
-type ConceptFilter = 'all' | 'course' | 'document'
-
-/** The states as they are worked, not alphabetically: open ones first. */
-const STATUS_FILTERS: StatusFilter[] = [
-  'all',
-  'under_review',
-  'pending',
-  'approved',
-  'rejected',
-]
-
-const METHOD_FILTERS: MethodFilter[] = [
-  'all',
-  'yape',
-  'plin',
-  'bcp',
-  'interbank',
-  'other',
-]
-
-const CONCEPT_FILTERS: ConceptFilter[] = ['all', 'course', 'document']
-
-const PAGE_SIZE = 15
+/** Long enough to finish a word, short enough to feel like typing. */
+const SEARCH_DEBOUNCE_MS = 350
 
 /**
- * The ledger: every payment the institution received, whatever it was for.
- * Enrollments and paid procedures share the list because `payments` is
- * agnostic of origin (CLAUDE.md §5) — the treasury closes the period over both
- * and would otherwise have to add up two screens.
+ * The ledger: every payment the institution received. Newest first here, the
+ * opposite of the review queue: this screen answers "what came in", the queue
+ * answers "what is somebody still waiting on".
  *
- * Newest first here, the opposite of the review queue: this screen answers
- * "what came in", the queue answers "what is somebody still waiting on".
- *
- * Search, filters and paging run in the browser only because the dataset is
- * mocked; with the real API this becomes a server query (up to 20k receipts a
- * month in peak season, CLAUDE.md §1).
+ * Search, filters, sort and paging are the URL, and the URL is a query to
+ * Postgres (`GET /api/v1/payments`): this component never holds more than the
+ * page on screen — up to 20k receipts a month in peak season (CLAUDE.md §1).
  */
 export function PaymentsView({
-  rows,
-  metrics,
+  ledger,
+  query,
+  canReview,
 }: {
-  rows: PaymentRow[]
-  metrics: PaymentMetrics
+  ledger: PaymentLedger
+  query: PaymentLedgerQuery
+  /** Whether the viewer settles payments — draws the dialog's way to the queue. */
+  canReview: boolean
 }) {
   const t = useTranslations('bo')
   const locale = useLocale() as Locale
 
   const [detail, setDetail] = useState<PaymentRow | null>(null)
-  const [query, setQuery] = useState('')
-  const [status, setStatus] = useState<StatusFilter>('all')
-  const [method, setMethod] = useState<MethodFilter>('all')
-  const [concept, setConcept] = useState<ConceptFilter>('all')
-  const [sort, setSort] = useState<'newest' | 'oldest'>('newest')
-  const [page, setPage] = useState(0)
 
-  const activeFilters = [status, method, concept].filter(
-    (value) => value !== 'all',
-  ).length
+  const router = useRouter()
+  const pathname = usePathname()
+  /**
+   * True while the server renders the page the reader just asked for. The
+   * table stays on screen, dimmed, instead of blanking: the rows being
+   * replaced are still the best answer until the new ones arrive.
+   */
+  const [pending, startTransition] = useTransition()
 
-  const filtered = useMemo(() => {
-    const needle = query.trim().toLowerCase()
-    const list = rows.filter((row) => {
-      if (status !== 'all' && row.status !== status) return false
-      if (method !== 'all' && row.method !== method) return false
-      if (concept !== 'all' && row.concept.kind !== concept) return false
-      if (!needle) return true
-      const conceptText =
-        row.concept.kind === 'course'
-          ? row.concept.courseName
-          : t(`document_type.${row.concept.type}`)
-      return [row.studentName, conceptText, row.operationNumber ?? '']
-        .join(' ')
-        .toLowerCase()
-        .includes(needle)
+  /** Any change to the query goes back to page 1, unless it IS the page. */
+  function navigate(next: Partial<PaymentLedgerQuery>, mode: 'push' | 'replace' = 'push') {
+    const search = paymentLedgerSearchParams({ ...query, page: 1, ...next }).toString()
+    const href = search ? `${pathname}?${search}` : pathname
+    startTransition(() => {
+      router[mode](href, { scroll: false })
     })
-    // The source hands the list over newest first; oldest is a reversal, not a
-    // second sort key.
-    return sort === 'newest' ? list : [...list].reverse()
-  }, [rows, query, status, method, concept, sort, t])
-
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
-  const currentPage = Math.min(page, pageCount - 1)
-  const pageRows = filtered.slice(
-    currentPage * PAGE_SIZE,
-    currentPage * PAGE_SIZE + PAGE_SIZE,
-  )
-
-  /** Any filter change sends the reader back to the first page. */
-  function reset<T>(setter: (value: T) => void) {
-    return (value: T) => {
-      setter(value)
-      setPage(0)
-    }
   }
+
+  /**
+   * The search box is typed into locally and reaches the URL after a pause —
+   * a request per keystroke would be a full-ledger ILIKE per keystroke. Under
+   * the API's minimum length it is not a search yet, so nothing is sent.
+   */
+  const [searchText, setSearchText] = useState(query.q)
+  useEffect(() => {
+    const needle = searchText.trim()
+    if (needle === query.q) return
+    if (needle.length > 0 && needle.length < MIN_SEARCH_LENGTH) return
+
+    const timer = setTimeout(() => navigate({ q: needle }, 'replace'), SEARCH_DEBOUNCE_MS)
+    return () => clearTimeout(timer)
+    // `navigate` closes over `query`, which is already a dependency.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchText, query])
+
+  const { items: pageRows, total, pageSize, metrics } = ledger
+
+  const activeFilters = [query.status, query.method].filter(
+    (value) => value !== null,
+  ).length
+  const narrowed = activeFilters > 0 || query.q !== ''
+
+  const pageCount = Math.max(1, Math.ceil(total / pageSize))
+  const currentPage = Math.min(query.page, pageCount) - 1
 
   /**
    * The row opens the payment, not the student: this screen is the ledger, and
@@ -144,14 +123,19 @@ export function PaymentsView({
   return (
     <div className="flex flex-col gap-4">
       <AutoGrid as="section" min="15rem" gap="gap-3">
+        {/* The age of the oldest open payment is the hint only when something
+            is open — "oldest waiting 0 h" over an empty queue is a number
+            that means nothing. */}
         <StatCard
           icon="alert"
           tone="warning"
           label={t('payments.metric_in_review')}
           value={String(metrics.inReview)}
-          hint={t('payments.metric_in_review_hint', {
-            hours: metrics.oldestPendingHours,
-          })}
+          hint={
+            metrics.oldestOpenHours === null
+              ? undefined
+              : t('payments.metric_oldest_hint', { hours: metrics.oldestOpenHours })
+          }
         />
         <StatCard
           icon="check"
@@ -188,62 +172,50 @@ export function PaymentsView({
             />
             <input
               type="search"
-              value={query}
-              onChange={(event) => reset(setQuery)(event.target.value)}
+              value={searchText}
+              onChange={(event) => setSearchText(event.target.value)}
               placeholder={t('payments.search_placeholder')}
               className="w-full rounded-lg border border-line bg-white py-2 pl-9 pr-3 text-sm text-ink outline-none transition placeholder:text-muted-foreground focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15"
             />
           </label>
 
-          {/* Three axes of chips would be taller than the table itself, so
-              they live behind the button — same as the alumnos list. */}
+          {/* Two axes of chips would be taller than the table itself, so they
+              live behind the button — same as the enrollment ledger. */}
           <FiltersDropdown
             label={t('payments.filters')}
             count={activeFilters}
             panelClassName="flex-col gap-3"
           >
             <FilterRow label={t('payments.filter_status')}>
-              {STATUS_FILTERS.map((value) => (
+              <Chip
+                active={query.status === null}
+                onClick={() => navigate({ status: null })}
+                label={t('payments.filter_all')}
+              />
+              {PAYMENT_STATUSES.map((value) => (
                 <Chip
                   key={value}
-                  active={status === value}
-                  onClick={() => reset(setStatus)(value)}
-                  label={
-                    value === 'all'
-                      ? t('payments.filter_all')
-                      : t(`payment_status.${value}`)
-                  }
-                />
-              ))}
-            </FilterRow>
-            <FilterRow label={t('payments.filter_concept')}>
-              {CONCEPT_FILTERS.map((value) => (
-                <Chip
-                  key={value}
-                  active={concept === value}
-                  onClick={() => reset(setConcept)(value)}
-                  label={
-                    value === 'all'
-                      ? t('payments.filter_all')
-                      : t(`payments.concept_${value}`)
-                  }
+                  active={query.status === value}
+                  onClick={() => navigate({ status: value })}
+                  label={t(`payment_status.${value}`)}
                 />
               ))}
             </FilterRow>
             <FilterRow label={t('payments.filter_method')}>
-              {METHOD_FILTERS.map((value) => (
+              <Chip
+                active={query.method === null}
+                onClick={() => navigate({ method: null })}
+                label={t('payments.filter_all')}
+              />
+              {PAYMENT_METHODS.map((value) => (
                 <Chip
                   key={value}
-                  active={method === value}
-                  onClick={() => reset(setMethod)(value)}
+                  active={query.method === value}
+                  onClick={() => navigate({ method: value })}
                   /* Rail names are proper nouns — never translated
                      (CLAUDE.md §4 glossary). Everything that came in by some
                      other route is one chip, named in the reader's language. */
-                  label={
-                    value === 'all'
-                      ? t('payments.filter_all')
-                      : formatPaymentMethod(value, null, t('payment_method.other'))
-                  }
+                  label={formatPaymentMethod(value, null, t('payment_method.other'))}
                 />
               ))}
             </FilterRow>
@@ -251,33 +223,24 @@ export function PaymentsView({
 
           <button
             type="button"
-            onClick={() => setSort(sort === 'newest' ? 'oldest' : 'newest')}
+            onClick={() => navigate({ sort: query.sort === 'newest' ? 'oldest' : 'newest' })}
             className="inline-flex items-center gap-1.5 self-start rounded-lg border border-line bg-white px-3 py-2 text-sm font-semibold text-muted-foreground transition hover:text-ink"
           >
             <BoIcon name="sort" size={16} />
-            {t(sort === 'newest' ? 'payments.sort_newest' : 'payments.sort_oldest')}
+            {t(query.sort === 'newest' ? 'payments.sort_newest' : 'payments.sort_oldest')}
           </button>
         </Toolbar>
-
       </div>
 
       {/* min-w-0: the row is wide enough to push a flex child past the page,
           and the scroll belongs to the table, never to the page. */}
-      <Card className="min-w-0">
+      <Card className={`min-w-0 transition-opacity ${pending ? 'opacity-60' : ''}`} aria-busy={pending}>
         {pageRows.length === 0 ? (
           <div className="p-4">
             <EmptyState
-              icon={rows.length === 0 ? 'payments' : 'search'}
-              title={t(
-                rows.length === 0
-                  ? 'payments.empty_title'
-                  : 'payments.empty_search_title',
-              )}
-              body={t(
-                rows.length === 0
-                  ? 'payments.empty_body'
-                  : 'payments.empty_search_body',
-              )}
+              icon={!narrowed ? 'payments' : 'search'}
+              title={t(!narrowed ? 'payments.empty_title' : 'payments.empty_search_title')}
+              body={t(!narrowed ? 'payments.empty_body' : 'payments.empty_search_body')}
             />
           </div>
         ) : (
@@ -285,7 +248,7 @@ export function PaymentsView({
             <TableShell
               columns={[
                 t('payments.col_student'),
-                t('payments.col_concept'),
+                t('payments.col_course'),
                 t('payments.col_amount'),
                 t('payments.col_status'),
                 t('payments.col_operation'),
@@ -295,7 +258,7 @@ export function PaymentsView({
               <thead>
                 <tr>
                   <th className={thClass}>{t('payments.col_student')}</th>
-                  <th className={thClass}>{t('payments.col_concept')}</th>
+                  <th className={thClass}>{t('payments.col_course')}</th>
                   <th className={thClass}>{t('payments.col_amount')}</th>
                   <th className={thClass}>{t('payments.col_status')}</th>
                   <th className={thClass}>{t('payments.col_operation')}</th>
@@ -316,19 +279,11 @@ export function PaymentsView({
                         </Link>
                       </td>
 
-                      {/* What was paid for. The kind rides on top as a word,
-                          because "Inglés Básico A1" and "Constancia" only look
-                          alike until the treasury has to tell them apart. */}
+                      {/* What was paid for. Every payment today belongs to an
+                          enrollment, so it is the course. */}
                       <td className={tdClass}>
-                        <span className="block max-w-[15rem]">
-                          <span className="block text-xs uppercase tracking-wide text-muted-foreground">
-                            {t(`payments.concept_${row.concept.kind}`)}
-                          </span>
-                          <span className="block truncate text-sm text-ink">
-                            {row.concept.kind === 'course'
-                              ? row.concept.courseName
-                              : t(`document_type.${row.concept.type}`)}
-                          </span>
+                        <span className="block max-w-[15rem] truncate text-sm text-ink">
+                          {row.courseName}
                         </span>
                       </td>
 
@@ -355,10 +310,10 @@ export function PaymentsView({
                         )}
                       </td>
 
-                      {/* One badge, nothing under it. The flag, the rail, the
-                          operation number and who settled it all live one
-                          click away in the dialog: stacked on the row they
-                          turned a ledger into four lines per payment. */}
+                      {/* One badge, nothing under it. The rail, the operation
+                          number and who settled it all live one click away in
+                          the dialog: stacked on the row they turned a ledger
+                          into four lines per payment. */}
                       <td className={tdClass}>
                         <StatusBadge
                           tone={paymentTone[row.status]}
@@ -370,13 +325,11 @@ export function PaymentsView({
                         className={`${tdClass} whitespace-nowrap text-xs text-muted-foreground`}
                       >
                         <span className="block font-semibold text-ink">
-                          {row.method
-                            ? formatPaymentMethod(
-                                row.method,
-                                null,
-                                t('payment_method.other'),
-                              )
-                            : t('payments.no_method')}
+                          {formatPaymentMethod(
+                            row.method,
+                            row.methodDetail,
+                            t('payment_method.other'),
+                          )}
                         </span>
                       </td>
 
@@ -385,7 +338,6 @@ export function PaymentsView({
                       >
                         {formatDateTime(row.submittedAt, locale)}
                       </td>
-
                     </tr>
                   )
                 })}
@@ -402,14 +354,18 @@ export function PaymentsView({
                 })}
                 prevLabel={t('payments.page_prev')}
                 nextLabel={t('payments.page_next')}
-                onChange={setPage}
+                onChange={(page) => navigate({ page: page + 1 })}
               />
             )}
           </>
         )}
       </Card>
 
-      <PaymentDetailDialog payment={detail} onClose={() => setDetail(null)} />
+      <PaymentDetailDialog
+        payment={detail}
+        canReview={canReview}
+        onClose={() => setDetail(null)}
+      />
     </div>
   )
 }

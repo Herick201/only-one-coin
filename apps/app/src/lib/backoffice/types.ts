@@ -891,32 +891,40 @@ export type NewTeacher = Pick<
  * §5) travel the same states and the same OCR ladder. A discriminated union
  * instead of a loose string so the document type reaches the screen as a code
  * the locale resolves, never as text (CLAUDE.md §4).
+ *
+ * Only the review sheet's mock extraction still carries it: the real ledger
+ * (`PaymentRow`) reads payments of enrollments alone, the only origin
+ * `payments` has today.
  */
 export type PaymentConcept =
   | { kind: 'course'; courseName: string }
   | { kind: 'document'; type: DocumentType }
 
-/** One line of the payment ledger. */
+/**
+ * One line of the payment ledger, as `GET /api/v1/payments` serves it. Every
+ * payment today belongs to an enrollment, so the course is what it was for.
+ */
 export interface PaymentRow {
   id: string
+  enrollmentId: string
   studentId: string
   studentName: string
-  concept: PaymentConcept
+  courseName: string
   status: PaymentStatus
-  /** Null while the student has not uploaded a receipt yet. */
-  method: PaymentMethod | null
+  method: PaymentMethod
+  /** The free text that names an `other` method — that text is its label. */
+  methodDetail: string | null
+  operationNumber: string | null
   /** What the receipt says — equals the expected value once approved. */
   amountCents: number
-  /** The frozen plan price / procedure fee it is checked against. */
+  /** The frozen plan price it is checked against. */
   expectedAmountCents: number
   currency: 'PEN'
-  operationNumber: string | null
   submittedAt: string
-  /** When a human or the ladder settled it. Null while it is still open. */
+  /** When the latest approval or rejection was recorded. Null while open. */
   decidedAt: string | null
+  /** Who recorded that decision; null when the audit entry names no account. */
   decidedByName: string | null
-  /** Only while under review — why the ladder handed it to a human. */
-  flag: ReviewFlag | null
 }
 
 /**
@@ -925,12 +933,55 @@ export interface PaymentRow {
  * figure on a screen nobody opens on a Sunday reads as zero collection.
  */
 export interface PaymentMetrics {
+  /** Empty when no period has started yet — then every count is zero. */
+  periodName: string
   inReview: number
-  oldestPendingHours: number
+  /** Age of the oldest open payment; null when nothing is open. */
+  oldestOpenHours: number | null
   approved: number
   collectedCents: number
   rejected: number
-  periodName: string
+}
+
+/** Where a payment's latest receipt upload stands, as the review queue reads it. */
+export type ReviewReceiptState = 'missing' | 'uploading' | 'ready' | 'refused'
+
+/** What the antifraud screening found on a receipt — only the kind of it. */
+export type ReceiptFraudSignalKind =
+  | 'identical_file'
+  | 'similar_image'
+  | 'edited_with_software'
+  | 'modified_after_capture'
+  | 'payer_name_mismatch'
+
+/** One payment still owed a decision, as `GET /api/v1/payments/review` serves it. */
+export interface PaymentReviewItem {
+  id: string
+  enrollmentId: string
+  studentId: string
+  studentName: string
+  courseName: string
+  classGroupName: string
+  planName: string
+  status: 'pending' | 'under_review'
+  method: PaymentMethod
+  methodDetail: string | null
+  operationNumber: string | null
+  expectedAmountCents: number
+  currency: 'PEN'
+  receipt: ReviewReceiptState
+  fraudSignals: ReceiptFraudSignalKind[]
+  submittedAt: string
+  /** When the open payment overstays the review window. */
+  reviewDeadline: string
+}
+
+export interface PaymentReviewQueue {
+  items: PaymentReviewItem[]
+  /** Open payments matching the query, across every page. */
+  total: number
+  page: number
+  pageSize: number
 }
 
 /** A field the extraction reads off the receipt. */
