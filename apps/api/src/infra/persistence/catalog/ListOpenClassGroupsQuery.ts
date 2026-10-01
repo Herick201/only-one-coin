@@ -26,7 +26,7 @@ export interface OpenClassGroupResult {
  * outside packages/domain for the same reason as SearchStudentsQuery: no
  * invariant to protect, only a join to shape. Filters server-side to
  * on sale (`sellableClassGroup`: enrolling, not retired, inside its
- * enrollment window) AND `seats_taken < capacity` (defense in depth — the
+ * enrollment window, its period and course not retired) AND `seats_taken < capacity` (defense in depth — the
  * client filters too, but the server is the one that must not lie about
  * what has room).
  *
@@ -63,16 +63,9 @@ export class ListOpenClassGroupsQuery {
       .innerJoin(plans, eq(plans.courseId, courses.id))
       .innerJoin(planPrices, and(eq(planPrices.planId, plans.id), lte(planPrices.validFrom, sql`now()`)))
       // Every table joined here is part of the offer being listed, so a
-      // retired row on any of them takes the class group out (CLAUDE.md §6).
-      .where(
-        and(
-          sellableClassGroup(),
-          gt(classGroups.capacity, classGroups.seatsTaken),
-          isNull(courses.deletedAt),
-          isNull(academicPeriods.deletedAt),
-          isNull(plans.deletedAt),
-        ),
-      )
+      // retired row on any of them takes the class group out (CLAUDE.md §6):
+      // course and period through sellableClassGroup, the plan here.
+      .where(and(sellableClassGroup(), gt(classGroups.capacity, classGroups.seatsTaken), isNull(plans.deletedAt)))
       .orderBy(asc(courses.name), desc(plans.createdAt), desc(planPrices.validFrom));
 
     // The joins above can produce more than one row per class_group when a

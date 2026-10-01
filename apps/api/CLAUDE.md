@@ -101,7 +101,7 @@ Os dois prazos são **configuráveis no backoffice** (`/backoffice/settings`), n
 **Turma em rascunho e janela de inscrição (OOC-35, 01/10/2026):**
 
 - **Rascunho nunca toma vaga.** Os dois UPDATEs atômicos (claim do checkout e matrícula manual) levam `status <> 'draft'` no `WHERE`.
-- **`sellableClassGroup()` é a definição única de "à venda"** (`infra/persistence/catalog/sellableClassGroup.ts`): status `enrolling`, não aposentada, dentro da janela opcional. Usada pelo catálogo público (`GET /catalog`, que também esconde período aposentado), pelo seletor da matrícula manual (`GET /class-groups`) e pelo claim do checkout (`DrizzleSeatHoldRepository.claim`). Não reescrever o filtro em outro lugar.
+- **`sellableClassGroup()` é a definição única de "à venda"** (`infra/persistence/catalog/sellableClassGroup.ts`): status `enrolling`, não aposentada, dentro da janela opcional, e com **período e curso não aposentados** (`exists` correlacionado, então vale também dentro do `UPDATE` do claim). Usada pelo catálogo público (`GET /catalog`), pelo seletor da matrícula manual (`GET /class-groups`) e pelo claim do checkout (`DrizzleSeatHoldRepository.claim`). Não reescrever o filtro em outro lugar.
 - **A janela vale no claim, não no submit nem no caminho manual.** Hold preso dentro da janela sobrevive ao fechamento dela; a matrícula manual do staff (`createWithPayment`) ignora a janela de propósito.
 - **Redução de capacidade é UPDATE condicional**, `WHERE seats_taken <= capacidade nova` — nunca ler, comparar e gravar. Usecase de catálogo não escreve `seats_taken`.
 - **Lista de espera:** só entra turma cheia; saída grava `left_at` + motivo (`enrolled`, `withdrawn`, `removed_by_staff`). A matrícula manual fecha a entrada ativa com `enrolled` na mesma transação.

@@ -1,5 +1,5 @@
 import type { ClaimSeatHoldResult, EnrollmentOrigin, ISeatHoldRepository, SeatHold } from "@ooc/domain";
-import { classGroups, courses, seatHolds } from "@ooc/db";
+import { classGroups, seatHolds } from "@ooc/db";
 import { and, eq, lt, ne, sql } from "drizzle-orm";
 import type { Db } from "@/infra/db/client.js";
 import { sellableClassGroup } from "@/infra/persistence/catalog/sellableClassGroup.js";
@@ -24,16 +24,12 @@ export class DrizzleSeatHoldRepository implements ISeatHoldRepository {
   }): Promise<ClaimSeatHoldResult> {
     return this.db.transaction(async (tx) => {
       // What the public checkout may sell: on sale right now (enrolling, not
-      // retired, inside its enrollment window — sellableClassGroup, the same
-      // definition the catalog reads list through), and its course not
-      // retired either (CLAUDE.md §1, "Catálogo sai do ar, não some"). The id
-      // comes from the client, so the window is checked here, not trusted
-      // from the page that offered it (CLAUDE.md §8).
-      const onOffer = and(
-        eq(classGroups.id, params.classGroupId),
-        sellableClassGroup(),
-        sql`exists (select 1 from ${courses} where ${courses.id} = ${classGroups.courseId} and ${courses.deletedAt} is null)`,
-      );
+      // retired, inside its enrollment window, its period and course not
+      // retired — sellableClassGroup, the same definition the catalog reads
+      // list through; CLAUDE.md §1, "Catálogo sai do ar, não some"). The id
+      // comes from the client, so this is checked here, not trusted from the
+      // page that offered it (CLAUDE.md §8).
+      const onOffer = and(eq(classGroups.id, params.classGroupId), sellableClassGroup());
 
       const [seat] = await tx
         .update(classGroups)

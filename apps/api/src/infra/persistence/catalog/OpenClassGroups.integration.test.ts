@@ -160,6 +160,24 @@ describe("class groups on sale", () => {
     });
   });
 
+  it("a class group in a retired period never takes a seat at checkout", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      await seed(tx);
+      const result = await new DrizzleSeatHoldRepository(tx).claim({
+        classGroupId: RETIRED_PERIOD,
+        origin: "web",
+        holdMinutes: 15,
+      });
+      expect(result.kind).toBe("not_found");
+
+      const [row] = await tx
+        .select({ seatsTaken: classGroups.seatsTaken })
+        .from(classGroups)
+        .where(eq(classGroups.id, RETIRED_PERIOD));
+      expect(row?.seatsTaken).toBe(0);
+    });
+  });
+
   it("a manual enrollment on a draft is refused like a full class group", async () => {
     await inRolledBackTransaction(async (tx) => {
       await seed(tx);

@@ -1,4 +1,4 @@
-import { academicPeriods, classGroups, courses, planPrices, plans } from "@ooc/db";
+import { classGroups, courses, planPrices, plans } from "@ooc/db";
 import { and, desc, eq, isNull, lte, sql } from "drizzle-orm";
 import type { Db } from "@/infra/db/client.js";
 import { sellableClassGroup } from "./sellableClassGroup.js";
@@ -43,7 +43,7 @@ export interface PublicCatalog {
  * What `/enrollment` reads before anybody picks anything — no session, no
  * role (public route). Only class groups on sale are offered
  * (`sellableClassGroup`: enrolling, not retired, inside the enrollment
- * window; and the period not retired) — a draft or closed one is never
+ * window, its period and course not retired) — a draft or closed one is never
  * listed, matching the seat model (CLAUDE.md §5).
  *
  * `languages` (`CatalogLanguage[]` on the frontend) is not a query of its
@@ -115,10 +115,9 @@ export class GetPublicCatalogQuery {
         seatsTaken: classGroups.seatsTaken,
       })
       .from(classGroups)
-      // A class group in a retired period is not on offer either, same as
-      // the manual-enrollment picker (ListOpenClassGroupsQuery).
-      .innerJoin(academicPeriods, eq(classGroups.academicPeriodId, academicPeriods.id))
-      .where(and(sellableClassGroup(), isNull(academicPeriods.deletedAt)));
+      // A retired period or course takes the class group out too — part of
+      // sellableClassGroup, the same rule the picker and the claim read.
+      .where(sellableClassGroup());
 
     const classGroupRows: PublicCatalogClassGroup[] = classGroupResult.map((row) => ({
       ...row,
