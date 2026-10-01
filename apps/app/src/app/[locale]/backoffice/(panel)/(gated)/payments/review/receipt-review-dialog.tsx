@@ -213,10 +213,7 @@ export function ReceiptReviewDialog({
                 {payment.receipt === 'missing' ? (
                   // No image at all: the only proof left is the bank statement,
                   // and the reviewer is told so before the approve button.
-                  <p className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                    <BoIcon name="alert" size={14} className="mt-0.5 shrink-0" />
-                    {t('receipt_review.no_receipt_warning')}
-                  </p>
+                  <ReceiptWarning text={t('receipt_review.no_receipt_warning')} />
                 ) : payment.receipt === 'ready' && image.kind === 'shown' ? (
                   // A signed, five-minute URL straight from the bucket:
                   // `next/image` would proxy and cache a link that is meant to
@@ -240,6 +237,17 @@ export function ReceiptReviewDialog({
                         : t(`receipt_state.${payment.receipt}`)
                     }
                   />
+                )}
+                {/* No usable image either way, so the same kind of warning as
+                    a missing receipt — it warns, it never blocks approving
+                    (a deposit on the bank statement is proof enough). Still
+                    uploading also means the antifraud screening has not run:
+                    its signals may arrive after the decision. */}
+                {payment.receipt === 'refused' && (
+                  <ReceiptWarning text={t('receipt_review.refused_receipt_warning')} />
+                )}
+                {payment.receipt === 'uploading' && (
+                  <ReceiptWarning text={t('receipt_review.uploading_receipt_warning')} />
                 )}
                 <p className="mt-2 text-xs text-muted-foreground">
                   {t('receipt_review.image_note')}
@@ -411,6 +419,16 @@ export function ReceiptReviewDialog({
         )}
       </DialogContent>
     </Dialog>
+  )
+}
+
+/** An amber note on the receipt the reviewer is about to decide without. */
+function ReceiptWarning({ text }: { text: string }) {
+  return (
+    <p className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+      <BoIcon name="alert" size={14} className="mt-0.5 shrink-0" />
+      {text}
+    </p>
   )
 }
 

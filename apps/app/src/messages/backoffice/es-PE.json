@@ -399,6 +399,8 @@
       "image_alt": "Comprobante de pago enviado por el alumno",
       "image_unavailable": "No se pudo cargar la imagen del comprobante. Cierra y vuelve a abrir para intentarlo de nuevo.",
       "no_receipt_warning": "Aprobar sin comprobante: confirma el depósito en el estado de cuenta antes.",
+      "refused_receipt_warning": "El archivo de este comprobante fue rechazado: no hay imagen que revisar. Confirma el depósito en el estado de cuenta antes de aprobar.",
+      "uploading_receipt_warning": "El comprobante todavía se está procesando: la imagen y las señales antifraude pueden aparecer después. Si apruebas ahora, confirma el depósito en el estado de cuenta antes.",
       "declared_title": "Lo que declaró el alumno",
       "signals_title": "Señales de la revisión antifraude",
       "signals_none": "La revisión antifraude no encontró nada.",

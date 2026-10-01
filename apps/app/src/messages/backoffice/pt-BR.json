@@ -399,6 +399,8 @@
       "image_alt": "Comprovante de pagamento enviado pelo aluno",
       "image_unavailable": "Não foi possível carregar a imagem do comprovante. Feche e abra de novo para tentar outra vez.",
       "no_receipt_warning": "Aprovar sem comprovante: confirme o depósito no extrato antes.",
+      "refused_receipt_warning": "O arquivo deste comprovante foi recusado: não há imagem para revisar. Confirme o depósito no extrato antes de aprovar.",
+      "uploading_receipt_warning": "O comprovante ainda está sendo processado: a imagem e os sinais antifraude podem aparecer depois. Se aprovar agora, confirme o depósito no extrato antes.",
       "declared_title": "O que o aluno declarou",
       "signals_title": "Sinais da triagem antifraude",
       "signals_none": "A triagem antifraude não encontrou nada.",

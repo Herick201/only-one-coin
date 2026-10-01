@@ -399,6 +399,8 @@
       "image_alt": "Payment receipt sent by the student",
       "image_unavailable": "The receipt image could not be loaded. Close and reopen it to try again.",
       "no_receipt_warning": "Approving without a receipt: confirm the deposit on the bank statement first.",
+      "refused_receipt_warning": "This receipt's file was refused: there is no image to review. Confirm the deposit on the bank statement before approving.",
+      "uploading_receipt_warning": "The receipt is still being processed: the image and the antifraud signals may show up later. If you approve now, confirm the deposit on the bank statement first.",
       "declared_title": "What the student declared",
       "signals_title": "Antifraud screening signals",
       "signals_none": "The antifraud screening found nothing.",
