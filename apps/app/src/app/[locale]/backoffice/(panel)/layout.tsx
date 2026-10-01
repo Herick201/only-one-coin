@@ -5,6 +5,7 @@ import { cookies } from 'next/headers'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { logoutStaff } from '../actions'
 import {
+  canBrowseCatalog,
   canBrowseReports,
   canConfigureSettings,
   canManageEmail,
@@ -167,12 +168,13 @@ export default async function BackofficePanelLayout({
       key: 'academic',
       label: t('nav.group_academic'),
       items: [
-        ...(flags['backoffice.academic'] ? [{
+        ...(flags['backoffice.academic'] && canBrowseCatalog(staff.role) ? [{
           /* One entry for the two screens the section is made of. They are
              read together — a course is what a class group is an instance of —
              and two sibling items reading "Turmas" and "Cursos" looked like
              the same destination twice. The tab strip on the pages carries
-             the split. */
+             the split. Billing sees no academic data: the catalog answers it
+             404, so the link is not drawn either. */
           key: 'class_groups' as const,
           href: '/backoffice/class-groups',
           alsoMatches: ['/backoffice/courses'],
