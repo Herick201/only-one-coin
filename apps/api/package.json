@@ -16,6 +16,7 @@
     "import:legacy": "tsx --conditions=development --env-file=.env src/scripts/import-legacy-enrollments.ts",
     "storage:cors": "tsx --conditions=development --env-file=.env src/scripts/apply-bucket-cors.ts",
     "report:duplicate-students": "tsx --conditions=development --env-file=.env src/scripts/report-duplicate-students.ts",
+    "ocr:show": "tsx --conditions=development --env-file=.env src/scripts/show-receipt-ocr.ts",
     "ocr:eval": "tsx --conditions=development --env-file-if-exists=.env src/scripts/evaluate-receipt-ocr.ts",
     "build": "tsc && tsc-alias",
     "start": "node dist/index.js",
