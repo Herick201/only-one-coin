@@ -1,5 +1,12 @@
-import { classGroups, courses, enrollments, payments, planPrices, plans, receiptUploads, students } from "@ooc/db";
-import { isReceiptFraudSignalKind, type PaymentMethod, type ReceiptFraudSignalKind } from "@ooc/domain";
+import { classGroups, courses, enrollments, paymentReceipts, payments, planPrices, plans, receiptUploads, students } from "@ooc/db";
+import {
+  PaymentMethodSchema,
+  RECEIPT_EXTRACTION_TIER_PRIMARY,
+  isReceiptFraudSignalKind,
+  type PaymentMethod,
+  type ReceiptExtractionFailureReason,
+  type ReceiptFraudSignalKind,
+} from "@ooc/domain";
 import { and, asc, desc, eq, inArray, isNotNull, isNull, sql, type SQL } from "drizzle-orm";
 import type { Db } from "@/infra/db/client.js";
 import { OPEN_STATUSES, PAYMENTS_PAGE_SIZE, paymentSearchCondition } from "./ListPaymentsQuery.js";
@@ -23,6 +30,37 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 /** Where the payment's latest receipt upload stands, as the screen reads it. */
 export type ReviewReceiptState = "missing" | "uploading" | "ready" | "refused";
 
+/** One field the OCR read, with the model's own confidence (0–1). */
+export interface ReviewReadField<TValue> {
+  value: TValue | null;
+  confidence: number;
+}
+
+/**
+ * What OCR level 1 read off the latest receipt (OOC-20), shown to the
+ * reviewer next to what the student declared. Only shown, never judged
+ * here: comparing it with the price is the validation step (ROADMAP
+ * Sessão 27). `null` while there is no processed receipt to read.
+ */
+export type ReviewReceiptReading =
+  /** Processed, but no reading yet — the worker has not got to it, or no
+   * OCR key is configured. */
+  | { state: "not_read" }
+  | { state: "failed"; reason: ReceiptExtractionFailureReason; modelName: string | null; readAt: Date }
+  | {
+      state: "read";
+      modelName: string | null;
+      modelVersion: string | null;
+      readAt: Date;
+      amountCents: ReviewReadField<number>;
+      operationNumber: ReviewReadField<string>;
+      paymentMethod: ReviewReadField<PaymentMethod> & { detail: string | null };
+      payerName: ReviewReadField<string>;
+      /** ISO 8601: an instant in UTC, or a bare date when the receipt printed
+       * no time. */
+      paidAt: ReviewReadField<string>;
+    };
+
 export interface PaymentReviewItem {
   id: string;
   enrollmentId: string;
@@ -42,6 +80,7 @@ export interface PaymentReviewItem {
    * student's receipt and payment, which this screen has no business
    * showing. */
   fraudSignals: ReceiptFraudSignalKind[];
+  reading: ReviewReceiptReading | null;
   submittedAt: Date;
   reviewDeadline: Date;
 }
@@ -73,6 +112,71 @@ function signalKinds(raw: unknown): ReceiptFraudSignalKind[] {
   return [...new Set(kinds)];
 }
 
+const FAILURE_REASONS: readonly ReceiptExtractionFailureReason[] = [
+  "provider_unavailable",
+  "invalid_response",
+  "unexpected_error",
+];
+
+function confidenceOf(raw: unknown): number {
+  return typeof raw === "number" && raw >= 0 && raw <= 1 ? raw : 0;
+}
+
+/** One entry of `payment_receipts.extracted_fields`, by field name. A value
+ * of the wrong type reads as not read — same reasoning as `signalKinds`:
+ * one odd jsonb value must never take the whole queue down. */
+function readField<TValue>(
+  fields: Record<string, unknown>[],
+  name: string,
+  accept: (value: unknown) => value is TValue,
+): ReviewReadField<TValue> {
+  const entry = fields.find((field) => field.field === name);
+  if (!entry || !accept(entry.value)) return { value: null, confidence: 0 };
+  return { value: entry.value, confidence: confidenceOf(entry.confidence) };
+}
+
+const isString = (value: unknown): value is string => typeof value === "string" && value.length > 0;
+const isCents = (value: unknown): value is number => Number.isSafeInteger(value) && (value as number) > 0;
+const isMethod = (value: unknown): value is PaymentMethod => PaymentMethodSchema.safeParse(value).success;
+
+function receiptReading(
+  uploadStatus: string | null,
+  row: {
+    readAt: Date | null;
+    modelName: string | null;
+    modelVersion: string | null;
+    failureReason: string | null;
+    fields: unknown;
+  },
+): ReviewReceiptReading | null {
+  if (uploadStatus !== "processed") return null;
+  if (!row.readAt) return { state: "not_read" };
+  if (row.failureReason) {
+    const reason = FAILURE_REASONS.find((known) => known === row.failureReason) ?? "unexpected_error";
+    return { state: "failed", reason, modelName: row.modelName, readAt: row.readAt };
+  }
+
+  const fields = Array.isArray(row.fields)
+    ? row.fields.filter((field): field is Record<string, unknown> => typeof field === "object" && field !== null)
+    : [];
+  const method = readField(fields, "payment_method", isMethod);
+  const methodEntry = fields.find((field) => field.field === "payment_method");
+  return {
+    state: "read",
+    modelName: row.modelName,
+    modelVersion: row.modelVersion,
+    readAt: row.readAt,
+    amountCents: readField(fields, "amount_cents", isCents),
+    operationNumber: readField(fields, "operation_number", isString),
+    paymentMethod: {
+      ...method,
+      detail: method.value === "other" && isString(methodEntry?.detail) ? methodEntry.detail : null,
+    },
+    payerName: readField(fields, "payer_name", isString),
+    paidAt: readField(fields, "paid_at", isString),
+  };
+}
+
 export class ListPaymentReviewQueueQuery {
   constructor(private readonly db: Db) {}
 
@@ -83,6 +187,7 @@ export class ListPaymentReviewQueueQuery {
     // receipt gets replaced, and the reviewer cares about the replacement.
     const latestUpload = this.db
       .selectDistinctOn([receiptUploads.paymentId], {
+        id: receiptUploads.id,
         paymentId: receiptUploads.paymentId,
         status: receiptUploads.status,
         fraudSignals: receiptUploads.fraudSignals,
@@ -117,6 +222,11 @@ export class ListPaymentReviewQueueQuery {
         expectedAmountCents: planPrices.amountCents,
         uploadStatus: latestUpload.status,
         fraudSignals: latestUpload.fraudSignals,
+        readAt: paymentReceipts.createdAt,
+        readModelName: paymentReceipts.modelName,
+        readModelVersion: paymentReceipts.modelVersion,
+        readFailureReason: paymentReceipts.failureReason,
+        readFields: paymentReceipts.extractedFields,
       })
       .from(payments)
       .innerJoin(enrollments, eq(enrollments.id, payments.enrollmentId))
@@ -126,6 +236,15 @@ export class ListPaymentReviewQueueQuery {
       .innerJoin(planPrices, eq(planPrices.id, enrollments.planPriceId))
       .innerJoin(plans, eq(plans.id, planPrices.planId))
       .leftJoin(latestUpload, eq(latestUpload.paymentId, payments.id))
+      // The level-1 reading of that same upload — at most one row, by the
+      // (receipt_upload_id, tier) unique index.
+      .leftJoin(
+        paymentReceipts,
+        and(
+          eq(paymentReceipts.receiptUploadId, latestUpload.id),
+          eq(paymentReceipts.tier, RECEIPT_EXTRACTION_TIER_PRIMARY),
+        ),
+      )
       .where(where)
       // A queue: whoever has waited longest is first, always.
       .orderBy(asc(payments.createdAt), asc(payments.id))
@@ -165,6 +284,13 @@ export class ListPaymentReviewQueueQuery {
         currency: "PEN",
         receipt: receiptState(row.uploadStatus),
         fraudSignals: signalKinds(row.fraudSignals),
+        reading: receiptReading(row.uploadStatus, {
+          readAt: row.readAt,
+          modelName: row.readModelName,
+          modelVersion: row.readModelVersion,
+          failureReason: row.readFailureReason,
+          fields: row.readFields,
+        }),
         submittedAt: row.createdAt,
         reviewDeadline: new Date(row.createdAt.getTime() + REVIEW_WINDOW_DAYS * DAY_MS),
       }),

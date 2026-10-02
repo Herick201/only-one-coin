@@ -11,6 +11,34 @@ const QuerySchema = z.object({
   q: z.string().trim().min(2).max(100).optional(),
 });
 
+const PaymentMethodEnum = z.enum(["yape", "plin", "bcp", "interbank", "other"]);
+const confidence = z.number().min(0).max(1);
+const readField = <T extends z.ZodTypeAny>(value: T) => z.object({ value: value.nullable(), confidence });
+
+// What OCR level 1 read off the latest receipt (OOC-20) — shown to the
+// reviewer, never judged by this route. Null while there is no processed
+// receipt to read.
+const ReadingSchema = z.discriminatedUnion("state", [
+  z.object({ state: z.literal("not_read") }),
+  z.object({
+    state: z.literal("failed"),
+    reason: z.enum(["provider_unavailable", "invalid_response", "unexpected_error"]),
+    modelName: z.string().nullable(),
+    readAt: z.string(),
+  }),
+  z.object({
+    state: z.literal("read"),
+    modelName: z.string().nullable(),
+    modelVersion: z.string().nullable(),
+    readAt: z.string(),
+    amountCents: readField(z.number().int()),
+    operationNumber: readField(z.string()),
+    paymentMethod: readField(PaymentMethodEnum).extend({ detail: z.string().nullable() }),
+    payerName: readField(z.string()),
+    paidAt: readField(z.string()),
+  }),
+]);
+
 const ItemSchema = z.object({
   id: z.string().uuid(),
   enrollmentId: z.string().uuid(),
@@ -20,13 +48,14 @@ const ItemSchema = z.object({
   classGroupName: z.string(),
   planName: z.string(),
   status: z.enum(["pending", "under_review"]),
-  method: z.enum(["yape", "plin", "bcp", "interbank", "other"]),
+  method: PaymentMethodEnum,
   methodDetail: z.string().nullable(),
   operationNumber: z.string().nullable(),
   expectedAmountCents: z.number().int(),
   currency: z.literal("PEN"),
   receipt: z.enum(["missing", "uploading", "ready", "refused"]),
   fraudSignals: z.array(z.enum(RECEIPT_FRAUD_SIGNAL_KINDS)),
+  reading: ReadingSchema.nullable(),
   submittedAt: z.string(),
   reviewDeadline: z.string(),
 });
@@ -50,6 +79,10 @@ export const listPaymentReviewQueueRoute = RouteBuilder.get("/payments/review")
     reply.status(200).send({
       items: result.items.map((row) => ({
         ...row,
+        reading:
+          row.reading && row.reading.state !== "not_read"
+            ? { ...row.reading, readAt: row.reading.readAt.toISOString() }
+            : row.reading,
         submittedAt: row.submittedAt.toISOString(),
         reviewDeadline: row.reviewDeadline.toISOString(),
       })),

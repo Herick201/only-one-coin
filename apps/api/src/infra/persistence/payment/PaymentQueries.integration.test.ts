@@ -8,6 +8,7 @@ import {
   payments,
   planPrices,
   plans,
+  paymentReceipts,
   receiptUploads,
   seatHolds,
   students,
@@ -109,7 +110,10 @@ type SeedKey = keyof SeededPayments["operationOf"];
  * nobody has sent a receipt for, one whose receipt was screened and flagged,
  * one approved (with its audit entry) and one rejected.
  */
-async function seedPayments(tx: Tx): Promise<SeededPayments> {
+/** What OCR level 1 left on the under-review payment's receipt. */
+type SeedReading = "read" | "failed" | "none";
+
+async function seedPayments(tx: Tx, reading: SeedReading = "read"): Promise<SeededPayments> {
   const stamp = Date.now();
   const base = stamp - 10 * 60_000;
   const plan: { key: SeedKey; status: string; seatStatus: "reserved" | "confirmed" | "released" }[] = [
@@ -172,7 +176,7 @@ async function seedPayments(tx: Tx): Promise<SeededPayments> {
       expiresAt: new Date(),
     })
     .returning({ id: seatHolds.id });
-  await tx.insert(receiptUploads).values({
+  const [upload] = await tx.insert(receiptUploads).values({
     seatHoldId: hold!.id,
     paymentId: ids.underReview,
     objectKey: `receipts/payment-queries-integration/${stamp}/raw.jpg`,
@@ -185,7 +189,36 @@ async function seedPayments(tx: Tx): Promise<SeededPayments> {
       { kind: "kind_from_a_later_version" },
     ],
     screenedAt: new Date(),
-  });
+  }).returning({ id: receiptUploads.id });
+
+  if (reading === "read") {
+    await tx.insert(paymentReceipts).values({
+      paymentId: ids.underReview,
+      receiptUploadId: upload!.id,
+      tier: 1,
+      modelName: "google/gemini-3.1-flash-lite",
+      modelVersion: "google/gemini-3.1-flash-lite via Google",
+      amountCents: 14990,
+      operationNumber: "08312457",
+      extractedFields: [
+        { field: "amount_cents", value: 14990, confidence: 0.97 },
+        { field: "operation_number", value: "08312457", confidence: 0.92 },
+        { field: "payment_method", value: "other", detail: "BBVA", confidence: 0.8 },
+        // A malformed value (a hand edit, an older writer): read as not read,
+        // never passed to the route's schema.
+        { field: "payer_name", value: 42, confidence: 0.9 },
+        { field: "paid_at", value: "2026-10-02T14:30:00.000Z", confidence: 7 },
+      ],
+    });
+  } else if (reading === "failed") {
+    await tx.insert(paymentReceipts).values({
+      paymentId: ids.underReview,
+      receiptUploadId: upload!.id,
+      tier: 1,
+      modelName: "google/gemini-3.1-flash-lite",
+      failureReason: "provider_unavailable",
+    });
+  }
 
   await tx.insert(auditLog).values({
     actorId: "usr_payment_queries_integration",
@@ -213,6 +246,40 @@ describe("ListPaymentReviewQueueQuery", () => {
       expect(item.reviewDeadline.getTime() - item.submittedAt.getTime()).toBe(REVIEW_WINDOW_DAYS * 24 * 60 * 60 * 1000);
       expect(item.expectedAmountCents).toBe(15000);
       expect(item).toMatchObject({ classGroupName: "Lun/Mié 19:00", planName: "Paquete completo", status: "pending", currency: "PEN" });
+    });
+  });
+
+  it("carries the OCR reading of the latest receipt, field by field (OOC-20)", async () => {
+    await rolledBack(async (tx) => {
+      await seedPayments(tx, "read");
+      const queue = await new ListPaymentReviewQueueQuery(tx as unknown as Db).run({ academicPeriodId: PERIOD });
+
+      // No receipt, nothing to read.
+      expect(queue.items[0]!.reading).toBeNull();
+      expect(queue.items[1]!.reading).toMatchObject({
+        state: "read",
+        modelName: "google/gemini-3.1-flash-lite",
+        modelVersion: "google/gemini-3.1-flash-lite via Google",
+        amountCents: { value: 14990, confidence: 0.97 },
+        operationNumber: { value: "08312457", confidence: 0.92 },
+        paymentMethod: { value: "other", detail: "BBVA", confidence: 0.8 },
+        payerName: { value: null, confidence: 0 },
+        // A confidence outside 0–1 is not trusted either.
+        paidAt: { value: "2026-10-02T14:30:00.000Z", confidence: 0 },
+      });
+    });
+  });
+
+  it("says when the OCR failed, and when it has not read the receipt yet", async () => {
+    await rolledBack(async (tx) => {
+      await seedPayments(tx, "failed");
+      const queue = await new ListPaymentReviewQueueQuery(tx as unknown as Db).run({ academicPeriodId: PERIOD });
+      expect(queue.items[1]!.reading).toMatchObject({ state: "failed", reason: "provider_unavailable" });
+    });
+    await rolledBack(async (tx) => {
+      await seedPayments(tx, "none");
+      const queue = await new ListPaymentReviewQueueQuery(tx as unknown as Db).run({ academicPeriodId: PERIOD });
+      expect(queue.items[1]!.reading).toEqual({ state: "not_read" });
     });
   });
 
