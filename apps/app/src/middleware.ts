@@ -26,13 +26,20 @@ function withBackofficePrefix(pathname: string): string {
   return pathname === '/' ? '/backoffice' : `/backoffice${pathname}`
 }
 
-// The receipt image in the backoffice review queue is a short-lived signed URL
-// served straight from the bucket (Tigris in production, LocalStack locally),
-// not from this origin: without the bucket origin in `img-src` the browser
-// refuses the image. Optional — unset, receipts simply do not render. Only a
-// bare origin (scheme + host + port, nothing after it) is accepted; anything
-// else is ignored rather than spliced into the policy.
-function receiptImageOrigin(): string {
+// The receipts bucket (Tigris in production, LocalStack locally) is a second
+// origin the browser talks to directly, twice:
+// - `connect-src`: the checkout POSTs the receipt straight to the bucket
+//   with a presigned form (OOC-19) — the file never goes through apps/api.
+//   Without the bucket here the browser refuses the request before sending
+//   it: the API never sees it, the bucket never logs it, and the checkout
+//   only says "the upload failed".
+// - `img-src`: the backoffice review queue shows the receipt from a
+//   short-lived signed URL on the same host.
+// Read from RECEIPT_IMAGE_ORIGIN (the name predates the upload use). Unset,
+// both break: no receipt can be uploaded or shown. Only a bare origin
+// (scheme + host + port, nothing after it) is accepted; anything else is
+// ignored rather than spliced into the policy.
+function receiptBucketOrigin(): string {
   const value = process.env.RECEIPT_IMAGE_ORIGIN
   if (!value) return ''
   try {
@@ -63,9 +70,9 @@ function buildCsp(nonce: string): string {
     default-src 'self';
     script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ''};
     style-src 'self' 'unsafe-inline';
-    img-src 'self' data:${receiptImageOrigin()};
+    img-src 'self' data:${receiptBucketOrigin()};
     font-src 'self';
-    connect-src 'self';
+    connect-src 'self'${receiptBucketOrigin()};
     object-src 'none';
     base-uri 'self';
     form-action 'self';
