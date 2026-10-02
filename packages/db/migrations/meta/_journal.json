@@ -134,6 +134,13 @@
       "when": 1790878020332,
       "tag": "0018_catalog_class_groups",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1790962408402,
+      "tag": "0019_receipt_extraction",
+      "breakpoints": true
     }
   ]
 }

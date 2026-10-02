@@ -552,19 +552,28 @@ export const payments = pgTable(
 // uploaded receipt image — a payment can carry more than one over time (a
 // rejected receipt gets replaced), so this is 1:N off payments, not 1:1.
 //
-// operation_number gets a partial unique index (null allowed, but no two
-// non-null values may repeat). image_phash had one too until OOC-22
-// (30/09/2026): two different Yape receipts for the same price hash
-// identically — the only differences are text too small for a perceptual
-// hash — so a unique index there refuses the second honest student. It is a
-// plain index now; similarity is a screening signal for a human, never a
-// constraint (apps/api/CLAUDE.md, "Antifraude do comprovante"). tier /
-// model_name / model_version / extracted_fields mirror the columns CLAUDE.md
-// §5 requires ("gravar tier, model_name, model_version e confiança por campo
-// em toda extração") even though no worker fills them yet — packages/ocr and
-// the worker are Sessão 26+, out of scope here. extracted_fields is the
-// per-field {field, value, confidence} array as JSON rather than a side
-// table, since it is written once by the worker and never queried by field.
+// image_phash had a unique index until OOC-22 (30/09/2026): two different
+// Yape receipts for the same price hash identically — the only differences
+// are text too small for a perceptual hash — so a unique index there refuses
+// the second honest student. It is a plain index now; similarity is a
+// screening signal for a human, never a constraint (apps/api/CLAUDE.md,
+// "Antifraude do comprovante"). operation_number lost its unique index the
+// same way in OOC-20: the operation-number guard is per payment method and
+// lives on payments (OOC-22), and a global unique index on what the model
+// *read* would fail the worker forever on the second receipt that honestly
+// shows the same digits — a Plin and a BCP, or the replacement photo of the
+// same payment.
+//
+// tier / model_name / model_version / extracted_fields are what CLAUDE.md
+// requires on every extraction ("gravar tier, model_name, model_version e
+// confiança por campo"). extracted_fields is the per-field
+// {field, value, confidence} array as JSON rather than a side table, since
+// it is written once by the worker and never queried by field. Since OOC-20
+// the receipt-extract worker writes one row per (receipt upload, tier) — the
+// unique index makes a redelivered job a no-op. A row with failure_reason
+// set is an extraction that produced no fields (retries exhausted): written
+// anyway, so the relay stops offering the receipt and a reviewer sees why it
+// has no reading.
 export const paymentReceipts = pgTable(
   "payment_receipts",
   {
@@ -572,6 +581,9 @@ export const paymentReceipts = pgTable(
     paymentId: uuid("payment_id")
       .notNull()
       .references(() => payments.id, { onDelete: "restrict" }),
+    // Nullable only for rows that could predate OOC-20 — every extraction
+    // names the upload whose processed image it read.
+    receiptUploadId: uuid("receipt_upload_id").references(() => receiptUploads.id, { onDelete: "restrict" }),
     imagePhash: text("image_phash"),
     operationNumber: text("operation_number"),
     amountCents: integer("amount_cents"),
@@ -579,16 +591,20 @@ export const paymentReceipts = pgTable(
     modelName: text("model_name"),
     modelVersion: text("model_version"),
     extractedFields: jsonb("extracted_fields"),
+    failureReason: text("failure_reason"),
     createdAt: createdAt(),
   },
   (table) => [
     index("payment_receipts_image_phash_idx")
       .on(table.imagePhash)
       .where(sql`${table.imagePhash} is not null`),
-    uniqueIndex("payment_receipts_operation_number_uidx")
+    index("payment_receipts_operation_number_idx")
       .on(table.operationNumber)
       .where(sql`${table.operationNumber} is not null`),
     index("payment_receipts_payment_id_idx").on(table.paymentId),
+    uniqueIndex("payment_receipts_receipt_upload_tier_uidx")
+      .on(table.receiptUploadId, table.tier)
+      .where(sql`${table.receiptUploadId} is not null`),
   ],
 );
 
