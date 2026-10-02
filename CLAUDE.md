@@ -110,7 +110,7 @@ Se algo parecer exigir um desses, **pare e pergunte**.
 | Storage (comprovante + backup) | **Tigris** (nativo do Fly.io — `fly storage create`, S3-compatible, egress zero) — mesmo bucket-provider pros dois usos, sem conta separada |
 | Auth | **Better Auth** — biblioteca embutida no processo de `apps/api` (Fastify), nunca instanciada em `apps/app` |
 | Fila | **Redis (Upstash) + BullMQ** — workers em `apps/api` |
-| OCR / IA | **Gemini 3.1 Flash-Lite** (nível 1) — chamado direto (Google AI Studio) **ou via OpenRouter**, escolhido por env · modelo de outra família (nível 2) |
+| OCR / IA | **OpenRouter** pra todos os níveis — **Gemini 3.1 Flash-Lite** (nível 1) · modelo de outra família (nível 2, a escolher) |
 | E-mail (transacional/campanhas) | **Brevo**, atrás de adapter |
 | E-mail (caixa/mailbox de staff) | **Zoho Mail Lite** — Brevo não hospeda caixa (sem IMAP próprio); usar só se alguém precisar **receber e ler** e-mail em `contato@`/`matricula@` |
 | Rate limit + idempotência | **Upstash Redis** (borda) — mesma instância usada pela fila |
@@ -125,7 +125,7 @@ Não trocar nada disso sem me perguntar. Já foram avaliadas e descartadas: Cler
 
 **Decisão fechada — fila mesclada com a API (sessão 31/08/2026).** `apps/api` tinha dois entrypoints (`src/index.ts` HTTP e `src/worker.ts`) pensados pra escalar/reiniciar de forma independente — isso só se justificava se a hospedagem permitisse escalar cada um à parte. Como o Fly.io hospeda `apps/api` como uma VM always-on única, a separação parou de se justificar: um entrypoint só, HTTP + workers de fila no mesmo processo. Simplifica o deploy (uma imagem, uma máquina) sem abrir mão do requisito de always-on que os workers de BullMQ exigem.
 
-**Decisão fechada — OCR via OpenRouter (sessão 02/10/2026).** O modelo do nível 1 continua o mesmo (Gemini 3.1 Flash-Lite); o que mudou é o caminho até ele. Além da chamada direta ao Google, `packages/ocr` tem um adapter da **OpenRouter**, e `RECEIPT_OCR_PROVIDER` (`gemini` | `openrouter`) escolhe qual o worker usa. Motivo: uma chave só também atende o nível 2, que exige modelo de outra família. Custo da escolha: um intermediário a mais no caminho do comprovante, que é dado pessoal (Ley 29733) — por isso a chamada exige da OpenRouter endpoint com **retenção zero** (`zdr`), sem coleta de dados e que honre o JSON schema (`require_parameters`). Detalhe em `apps/api/CLAUDE.md`, OCR.
+**Decisão fechada — OCR via OpenRouter (sessão 02/10/2026).** O modelo do nível 1 continua o mesmo (Gemini 3.1 Flash-Lite); o que mudou é o caminho até ele: **todo nível da escada de OCR passa pela OpenRouter**, e a chamada direta ao Google saiu do código (sem `@google/genai`). Motivo: o nível 2 exige modelo de **outra família**, e com uma chave só o nível vira só um id de modelo — `RECEIPT_OCR_TIER1_MODEL` / `RECEIPT_OCR_TIER2_MODEL`, mesmo adapter, mesmo prompt, mesmo schema. O nível 2 está **ligado, não decidido**: sem modelo padrão, o boot recusa um da mesma família do nível 1, e nada escala pra ele até a Sessão 29. Custo da escolha: um intermediário a mais no caminho do comprovante, que é dado pessoal (Ley 29733) — por isso a chamada exige da OpenRouter endpoint com **retenção zero** (`zdr`), sem coleta de dados e que honre todo parâmetro (`require_parameters`). Detalhe em `apps/api/CLAUDE.md`, OCR.
 
 **Decisão fechada — auth.** O provedor removido cobria Postgres, auth e storage juntos; os três já foram resolvidos (Neon, Better Auth e Tigris, acima). Better Auth é uma **biblioteca embutida no processo do backend**, não um serviço hospedado externo — roda dentro do próprio `apps/api`, aceita conexão Postgres existente, e o campo `role` fica travado contra escrita client-side (`additionalFields.role`, `input:false`). Padrão de integração completo (porta em `packages/domain`, adapter em `apps/api/src/infra`, `apps/app` nunca instanciando o provedor) em `docs/ARCHITECTURE.md` §5.6.
 
@@ -143,7 +143,7 @@ packages/
   queue/             contrato de fila compartilhado (jobs, producers) — usado por quem publica e por quem consome
   db/                schema + migrations (Drizzle Kit) + seed — mesma DATABASE_URL local/Neon
   notifications/     NotificationProvider, templates de e-mail trilíngues, adapter Brevo e guarda de allowlist
-  ocr/               adapter do modelo de OCR (Gemini) atrás da porta IReceiptExtractor do domínio — só os workers de apps/api importam
+  ocr/               adapter OpenRouter do OCR (um por nível, só muda o modelo) atrás da porta IReceiptExtractor do domínio — só os workers de apps/api importam
 ```
 
 Hoje existem `domain/`, `queue/`, `notifications/`, `ocr/` e `db/`. `i18n` e `shared` não viraram pacote — cada app tem as próprias mensagens (`apps/*/src/i18n/`, `apps/*/src/messages/`) e não há tipo/utilitário cross-app que já justifique extrair um `packages/shared`.

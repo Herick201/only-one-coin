@@ -339,9 +339,8 @@ o que é real:
   identidade/auth (`identity/`, ver `packages/domain/README.md`) e um
   vocabulário de erro HTTP reutilizável (`shared/base/errors/`).
 - `packages/queue` — contrato de fila compartilhado (BullMQ/Redis).
-- `packages/ocr` — dois adapters do Gemini 3.1 Flash-Lite atrás da porta
-  `IReceiptExtractor` (`packages/domain`), chamada direta ou via OpenRouter
-  (`RECEIPT_OCR_PROVIDER`): prompt, JSON schema da resposta e a conversão pro
+- `packages/ocr` — o adapter OpenRouter atrás da porta `IReceiptExtractor`
+  (`packages/domain`), o mesmo pra todo nível da OCR (só muda o modelo): prompt, JSON schema da resposta e a conversão pro
   domínio (valor impresso → centavos sem float, data de Lima → UTC). Só
   `apps/api` importa, e só o `index.ts` dos workers — nunca o container que as
   rotas carregam.
@@ -410,16 +409,16 @@ o que é real:
   sinais aparecem como texto na fila de revisão do backoffice (Pagos).
   **OCR nível 1 (OOC-20):** o mesmo relay oferece o comprovante processado e
   ligado a pagamento ao worker `receipt-extract`, que manda a imagem
-  processada ao Gemini 3.1 Flash-Lite (`packages/ocr`) — direto ou via
-  OpenRouter, com retenção zero exigida — com saída presa a um
+  processada ao Gemini 3.1 Flash-Lite via OpenRouter (`packages/ocr`, retenção
+  zero exigida) com saída presa a um
   JSON schema e grava em `payment_receipts` os cinco campos (valor, nº de
   operação, meio, titular, data) com confiança por campo, nível, modelo e
   versão servida. Falha técnica é retentada 3x com backoff (nível 1r);
   esgotadas, a linha é gravada com `failure_reason`. **Só lê, não decide:**
   nenhum status muda pela leitura — a comparação com o preço é a Sessão 27, a
-  escalada pro nível 2 é a Sessão 29, e a tela de revisão ainda não mostra a
-  leitura. Sem a chave do provedor escolhido o worker não sobe e os
-  comprovantes ficam sem leitura. Taxa de acerto medida em [`docs/OCR-AVALIACAO.md`](docs/OCR-AVALIACAO.md).
+  escalada pro nível 2 é a Sessão 29 (o modelo dele já se configura e se mede,
+  mas nada escala), e a tela de revisão ainda não mostra a leitura. Sem
+  `OPENROUTER_API_KEY` o worker não sobe e os comprovantes ficam sem leitura. Taxa de acerto medida em [`docs/OCR-AVALIACAO.md`](docs/OCR-AVALIACAO.md).
 
 **Autorização e domínio de negócio já não dependem de Neon de staging/produção
 provisionado** — rodam sobre o Postgres local. **A reconstruir** quando
