@@ -17,7 +17,6 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@google/genai": "~2.24.0",
     "@ooc/domain": "workspace:*",
     "zod": "^3.24.1"
   },

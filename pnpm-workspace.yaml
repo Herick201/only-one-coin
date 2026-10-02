@@ -6,14 +6,10 @@ packages:
 # As demais trazem binário pré-built (bindings nativos via optionalDependencies);
 # não precisam rodar postinstall -> false (decisão explícita p/ o gate do pnpm 11).
 allowBuilds:
-  # @google/genai (packages/ocr): só preinstall no-op; protobufjs, dependência
-  # dele: postinstall é checagem de versão — nenhum dos dois compila nada
-  '@google/genai': false
   '@parcel/watcher': false
   '@swc/core': false
   esbuild: true
   # dependência opcional do ioredis (packages/queue) — tem fallback puro em JS
   msgpackr-extract: false
-  protobufjs: false
   sharp: true
   unrs-resolver: false

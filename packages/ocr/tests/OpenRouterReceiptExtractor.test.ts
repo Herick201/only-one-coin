@@ -2,6 +2,8 @@ import { ReceiptExtractionError } from "@ooc/domain";
 import { describe, expect, it } from "vitest";
 import { OpenRouterReceiptExtractor } from "../src/OpenRouterReceiptExtractor.js";
 
+const TIER1 = "google/gemini-3.1-flash-lite";
+
 const IMAGE = { bytes: new Uint8Array([0xff, 0xd8, 0xff]), contentType: "image/jpeg" };
 
 const READING = {
@@ -49,7 +51,7 @@ async function reasonOf(promise: Promise<unknown>): Promise<{ reason: string; pr
 describe("OpenRouterReceiptExtractor", () => {
   it("sends the image, the strict schema and the zero-retention routing", async () => {
     const { fetch, calls } = fakeFetch(() => completion(JSON.stringify(READING)));
-    await new OpenRouterReceiptExtractor({ apiKey: "sk-or-test", fetch }).extract(IMAGE);
+    await new OpenRouterReceiptExtractor({ apiKey: "sk-or-test", model: TIER1, fetch }).extract(IMAGE);
 
     expect(calls).toHaveLength(1);
     expect(calls[0]!.url).toBe("https://openrouter.ai/api/v1/chat/completions");
@@ -69,25 +71,30 @@ describe("OpenRouterReceiptExtractor", () => {
 
   it("returns the fields, the requested model and the version + upstream that served it", async () => {
     const { fetch } = fakeFetch(() => completion(JSON.stringify(READING)));
-    const extraction = await new OpenRouterReceiptExtractor({ apiKey: "k", fetch }).extract(IMAGE);
+    const extraction = await new OpenRouterReceiptExtractor({ apiKey: "k", model: TIER1, fetch }).extract(IMAGE);
 
     expect(extraction.modelName).toBe("google/gemini-3.1-flash-lite");
     expect(extraction.modelVersion).toBe("google/gemini-3.1-flash-lite-20260507 via Google");
     expect(extraction.fields[0]).toEqual({ field: "amount_cents", value: 12000, confidence: 0.98 });
   });
 
-  it("uses the configured model", async () => {
-    const { fetch, calls } = fakeFetch(() => completion(JSON.stringify(READING)));
-    const extractor = new OpenRouterReceiptExtractor({ apiKey: "k", model: "google/gemini-3.5-flash-lite", fetch });
+  it("a tier-2 model differs only in the model id — same prompt, schema and routing", async () => {
+    const tier1 = fakeFetch(() => completion(JSON.stringify(READING)));
+    const tier2 = fakeFetch(() => completion(JSON.stringify(READING)));
+    await new OpenRouterReceiptExtractor({ apiKey: "k", model: TIER1, fetch: tier1.fetch }).extract(IMAGE);
+    const extractor = new OpenRouterReceiptExtractor({ apiKey: "k", model: "anthropic/claude-haiku-4.5", fetch: tier2.fetch });
     await extractor.extract(IMAGE);
 
-    expect(extractor.modelName).toBe("google/gemini-3.5-flash-lite");
-    expect(JSON.parse(calls[0]!.init.body as string).model).toBe("google/gemini-3.5-flash-lite");
+    const { model: model1, ...rest1 } = JSON.parse(tier1.calls[0]!.init.body as string);
+    const { model: model2, ...rest2 } = JSON.parse(tier2.calls[0]!.init.body as string);
+    expect(extractor.modelName).toBe("anthropic/claude-haiku-4.5");
+    expect([model1, model2]).toEqual([TIER1, "anthropic/claude-haiku-4.5"]);
+    expect(rest2).toEqual(rest1);
   });
 
   it.each([429, 402, 401, 503])("an HTTP %d is provider_unavailable with the status", async (status) => {
     const { fetch } = fakeFetch(() => new Response("{}", { status }));
-    expect(await reasonOf(new OpenRouterReceiptExtractor({ apiKey: "k", fetch }).extract(IMAGE))).toEqual({
+    expect(await reasonOf(new OpenRouterReceiptExtractor({ apiKey: "k", model: TIER1, fetch }).extract(IMAGE))).toEqual({
       reason: "provider_unavailable",
       providerStatus: status,
     });
@@ -95,7 +102,7 @@ describe("OpenRouterReceiptExtractor", () => {
 
   it("an error body on a 200 is provider_unavailable", async () => {
     const { fetch } = fakeFetch(() => Response.json({ error: { code: 502, message: "upstream" } }));
-    expect(await reasonOf(new OpenRouterReceiptExtractor({ apiKey: "k", fetch }).extract(IMAGE))).toEqual({
+    expect(await reasonOf(new OpenRouterReceiptExtractor({ apiKey: "k", model: TIER1, fetch }).extract(IMAGE))).toEqual({
       reason: "provider_unavailable",
       providerStatus: 502,
     });
@@ -103,7 +110,7 @@ describe("OpenRouterReceiptExtractor", () => {
 
   it("a network failure is provider_unavailable", async () => {
     const fetch = (() => Promise.reject(new TypeError("fetch failed"))) as typeof globalThis.fetch;
-    expect((await reasonOf(new OpenRouterReceiptExtractor({ apiKey: "k", fetch }).extract(IMAGE))).reason).toBe(
+    expect((await reasonOf(new OpenRouterReceiptExtractor({ apiKey: "k", model: TIER1, fetch }).extract(IMAGE))).reason).toBe(
       "provider_unavailable",
     );
   });
@@ -115,7 +122,7 @@ describe("OpenRouterReceiptExtractor", () => {
     ["a body that is not JSON", () => new Response("<html>", { status: 200 })],
   ])("%s is invalid_response", async (_label, respond) => {
     const { fetch } = fakeFetch(respond);
-    expect((await reasonOf(new OpenRouterReceiptExtractor({ apiKey: "k", fetch }).extract(IMAGE))).reason).toBe(
+    expect((await reasonOf(new OpenRouterReceiptExtractor({ apiKey: "k", model: TIER1, fetch }).extract(IMAGE))).reason).toBe(
       "invalid_response",
     );
   });

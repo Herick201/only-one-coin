@@ -32,66 +32,41 @@ export type ModelReceiptReading = z.infer<typeof ModelReceiptReadingSchema>;
 const jsonText = { type: ["string", "null"] } as const;
 const jsonConfidence = { type: "number", minimum: 0, maximum: 1 } as const;
 
-/** The same shape as `ModelReceiptReadingSchema`, as the JSON Schema the
- * provider constrains its output to. Kept by hand next to the zod schema —
- * the zod parse is what actually guards the worker, this only steers the
- * model. */
-export const MODEL_RECEIPT_READING_JSON_SCHEMA = {
-  type: "object",
-  properties: {
-    amount: {
-      type: "object",
-      properties: { value: jsonText, confidence: jsonConfidence },
-      required: ["value", "confidence"],
-    },
-    operation_number: {
-      type: "object",
-      properties: { value: jsonText, confidence: jsonConfidence },
-      required: ["value", "confidence"],
-    },
-    payment_method: {
-      type: "object",
-      properties: {
-        value: { type: ["string", "null"], enum: [...PaymentRailSchema.options, "other", null] },
-        detail: jsonText,
-        confidence: jsonConfidence,
-      },
-      required: ["value", "detail", "confidence"],
-    },
-    payer_name: {
-      type: "object",
-      properties: { value: jsonText, confidence: jsonConfidence },
-      required: ["value", "confidence"],
-    },
-    paid_at: {
-      type: "object",
-      properties: { date: jsonText, time: jsonText, confidence: jsonConfidence },
-      required: ["date", "time", "confidence"],
-    },
-  },
-  required: ["amount", "operation_number", "payment_method", "payer_name", "paid_at"],
-} as const;
-
-/**
- * The same schema with `additionalProperties: false` on every object — what
- * OpenAI-style strict structured output (OpenRouter) requires. A copy, not
- * an edit of the shared constant, so the direct Gemini call keeps sending
- * exactly the schema it was measured with.
- */
-export function toStrictJsonSchema(schema: unknown): unknown {
-  if (Array.isArray(schema)) {
-    return schema.map(toStrictJsonSchema);
-  }
-  if (schema === null || typeof schema !== "object") {
-    return schema;
-  }
-  const copy = Object.fromEntries(Object.entries(schema).map(([key, value]) => [key, toStrictJsonSchema(value)]));
-  return copy.type === "object" ? { ...copy, additionalProperties: false } : copy;
+/** A closed object: strict structured output (OpenAI-style, what OpenRouter
+ * enforces) requires `additionalProperties: false` and every property listed
+ * as required. */
+function closedObject<const TProperties extends Record<string, unknown>>(properties: TProperties) {
+  return {
+    type: "object",
+    properties,
+    required: Object.keys(properties) as (keyof TProperties & string)[],
+    additionalProperties: false,
+  } as const;
 }
+
+/** The same shape as `ModelReceiptReadingSchema`, as the strict JSON Schema
+ * the model's output is constrained to. Kept by hand next to the zod schema —
+ * the zod parse is what actually guards the worker, this only steers the
+ * model. Sent as is to every tier's model, so a tier-2 reading answers the
+ * exact same question as tier 1. */
+export const MODEL_RECEIPT_READING_JSON_SCHEMA = closedObject({
+  amount: closedObject({ value: jsonText, confidence: jsonConfidence }),
+  operation_number: closedObject({ value: jsonText, confidence: jsonConfidence }),
+  payment_method: closedObject({
+    // anyOf, not `type: ["string", "null"]` + enum: Anthropic refuses an enum
+    // under a type array (measured 02/10/2026), Google accepts both — the
+    // schema has to hold for every family a tier may use.
+    value: { anyOf: [{ type: "string", enum: [...PaymentRailSchema.options, "other"] }, { type: "null" }] },
+    detail: jsonText,
+    confidence: jsonConfidence,
+  }),
+  payer_name: closedObject({ value: jsonText, confidence: jsonConfidence }),
+  paid_at: closedObject({ date: jsonText, time: jsonText, confidence: jsonConfidence }),
+});
 
 /** The model's JSON text as the domain's fields — `invalid_response` for
  * anything that is not the asked-for shape (including an empty answer from
- * a safety block). Shared by every provider adapter. */
+ * a safety block). Shared by every tier. */
 export function parseModelReading(text: string | null | undefined): ReceiptExtractedField[] {
   if (!text) {
     throw new ReceiptExtractionError("invalid_response");

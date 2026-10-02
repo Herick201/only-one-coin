@@ -7,21 +7,17 @@ import {
 import { z } from "zod";
 import { RECEIPT_REQUEST_TIMEOUT_MS, isTransportError } from "./providerCall.js";
 import { RECEIPT_EXTRACTION_PROMPT } from "./receiptPrompt.js";
-import { MODEL_RECEIPT_READING_JSON_SCHEMA, parseModelReading, toStrictJsonSchema } from "./receiptReading.js";
-
-/** The same model as the direct Gemini adapter, by OpenRouter's slug. */
-export const DEFAULT_OPENROUTER_RECEIPT_MODEL = "google/gemini-3.1-flash-lite";
+import { MODEL_RECEIPT_READING_JSON_SCHEMA, parseModelReading } from "./receiptReading.js";
 
 const OPENROUTER_CHAT_URL = "https://openrouter.ai/api/v1/chat/completions";
-
-const STRICT_RECEIPT_READING_JSON_SCHEMA = toStrictJsonSchema(MODEL_RECEIPT_READING_JSON_SCHEMA);
 
 /**
  * Who may see a receipt on the way through (decision of 02/10/2026). The
  * image is personal data (Ley 29733): OpenRouter only routes to endpoints
  * with zero data retention that do not collect prompts for training, and
  * only to ones that honour every parameter sent — a provider that silently
- * dropped the JSON schema would answer free text.
+ * dropped the JSON schema would answer free text. Applies to every tier: a
+ * tier-2 model with no zero-retention endpoint simply cannot be used.
  */
 const PROVIDER_ROUTING = {
   zdr: true,
@@ -42,21 +38,28 @@ const ChatCompletionSchema = z.object({
 
 export interface OpenRouterReceiptExtractorOptions {
   apiKey: string;
-  model?: string;
+  /** OpenRouter's `vendor/model` id — the only thing that differs between
+   * the tiers of the OCR ladder. */
+  model: string;
   /** Injected in tests; the global `fetch` otherwise. */
   fetch?: typeof fetch;
 }
 
 /**
- * `IReceiptExtractor` over OpenRouter's OpenAI-compatible chat API, with
- * strict JSON-schema output. Same prompt and same conversion as the direct
- * Gemini adapter (`parseModelReading`), so the two are measured on equal
- * terms (docs/OCR-AVALIACAO.md). Retrying belongs to the worker, as there.
+ * `IReceiptExtractor` over OpenRouter's OpenAI-compatible chat API — the one
+ * adapter every tier of the OCR ladder uses (decision of 02/10/2026): level 1
+ * and the level-2 model of another family differ only in `model`, so they
+ * get the same prompt, the same strict JSON schema and the same conversion
+ * (`parseModelReading`), and their readings compare field for field.
+ * Retrying belongs to the worker.
  *
  * `modelVersion` records the model id OpenRouter reports having served and
  * the upstream that ran it (`google/gemini-3.1-flash-lite via Google`, as of
  * 02/10/2026 — OpenRouter does not report a dated version) — with an
  * intermediary, "which model read this receipt" includes where it ran.
+ *
+ * Nothing read off the image is logged here or put in an error message:
+ * the reading is PII (CLAUDE.md §6) and only ever goes to the database.
  */
 export class OpenRouterReceiptExtractor implements IReceiptExtractor {
   readonly modelName: string;
@@ -64,7 +67,7 @@ export class OpenRouterReceiptExtractor implements IReceiptExtractor {
   private readonly fetch: typeof fetch;
 
   constructor(options: OpenRouterReceiptExtractorOptions) {
-    this.modelName = options.model ?? DEFAULT_OPENROUTER_RECEIPT_MODEL;
+    this.modelName = options.model;
     this.apiKey = options.apiKey;
     this.fetch = options.fetch ?? fetch;
   }
@@ -91,7 +94,7 @@ export class OpenRouterReceiptExtractor implements IReceiptExtractor {
           ],
           response_format: {
             type: "json_schema",
-            json_schema: { name: "receipt_reading", strict: true, schema: STRICT_RECEIPT_READING_JSON_SCHEMA },
+            json_schema: { name: "receipt_reading", strict: true, schema: MODEL_RECEIPT_READING_JSON_SCHEMA },
           },
           provider: PROVIDER_ROUTING,
         }),
@@ -101,9 +104,10 @@ export class OpenRouterReceiptExtractor implements IReceiptExtractor {
       throw new ReceiptExtractionError(isTransportError(error) ? "provider_unavailable" : "unexpected_error");
     }
 
-    // Any error status (429, 5xx — and also a bad key, no credit or no ZDR
-    // endpoint left) counts as the provider being unavailable, as in the
-    // Gemini adapter; the worker logs the status for whoever has to fix it.
+    // Any error status (429, 5xx — and also a bad key, no credit or no
+    // zero-retention endpoint left) counts as the provider being
+    // unavailable: from the payment's point of view that is what happened,
+    // and the worker logs the status for whoever has to fix it.
     if (!response.ok) {
       throw new ReceiptExtractionError("provider_unavailable", response.status);
     }
