@@ -141,10 +141,10 @@ packages/
   queue/             contrato de fila compartilhado (jobs, producers) — usado por quem publica e por quem consome
   db/                schema + migrations (Drizzle Kit) + seed — mesma DATABASE_URL local/Neon
   notifications/     NotificationProvider, templates de e-mail trilíngues, adapter Brevo e guarda de allowlist
-  ocr/               ainda não criado — pipeline de extração (entra com a Sessão 26 do ROADMAP)
+  ocr/               adapter do modelo de OCR (Gemini) atrás da porta IReceiptExtractor do domínio — só os workers de apps/api importam
 ```
 
-Hoje existem `domain/`, `queue/`, `notifications/` e `db/`. `i18n` e `shared` não viraram pacote — cada app tem as próprias mensagens (`apps/*/src/i18n/`, `apps/*/src/messages/`) e não há tipo/utilitário cross-app que já justifique extrair um `packages/shared`.
+Hoje existem `domain/`, `queue/`, `notifications/`, `ocr/` e `db/`. `i18n` e `shared` não viraram pacote — cada app tem as próprias mensagens (`apps/*/src/i18n/`, `apps/*/src/messages/`) e não há tipo/utilitário cross-app que já justifique extrair um `packages/shared`.
 
 ---
 
