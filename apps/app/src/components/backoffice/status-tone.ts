@@ -8,7 +8,9 @@ import type {
   GradeStatus,
   EnrollmentStatus,
   PaymentStatus,
+  ReceiptFraudSignalKind,
   ReviewFlag,
+  ReviewReceiptState,
   SeatStatus,
   StudentStatus,
   TeacherStatus,
@@ -62,6 +64,26 @@ export const reviewFlagTone: Record<ReviewFlag, Tone> = {
   illegible: 'warning',
   duplicate_phash: 'danger',
   model_divergence: 'warning',
+}
+
+/**
+ * Where an open payment's receipt stands. No receipt at all is the one that
+ * needs attention: approving it rests on the bank statement alone.
+ */
+export const receiptStateTone: Record<ReviewReceiptState, Tone> = {
+  missing: 'warning',
+  uploading: 'info',
+  ready: 'success',
+  refused: 'danger',
+}
+
+/** The same file already used is a hard stop; the rest are reasons to look twice. */
+export const fraudSignalTone: Record<ReceiptFraudSignalKind, Tone> = {
+  identical_file: 'danger',
+  similar_image: 'warning',
+  edited_with_software: 'warning',
+  modified_after_capture: 'warning',
+  payer_name_mismatch: 'warning',
 }
 
 export const auditTone: Record<AuditAction, Tone> = {

@@ -33,7 +33,7 @@ export interface EnrollmentRecipient {
  * Only for messages about the enrollment itself — portal credentials belong
  * to the student's own account and are never copied to anybody.
  */
-export function enrollmentRecipients(facts: EnrollmentEmailFacts): EnrollmentRecipient[] {
+export function enrollmentRecipients(facts: Pick<EnrollmentEmailFacts, "student" | "guardian">): EnrollmentRecipient[] {
   const recipients: EnrollmentRecipient[] = [
     { kind: "student", to: facts.student.email, name: facts.student.firstName },
   ];
@@ -63,5 +63,46 @@ export function enrollmentReceivedEmails(facts: EnrollmentEmailFacts, locale: Lo
       amountCents: facts.amountCents,
     },
     dedupeKey: `enrollment_received:${facts.enrollmentId}:${recipient.kind}`,
+  }));
+}
+
+/** What a payment decision e-mail needs — the enrollment's people and course,
+ * keyed by the payment so a second decision e-mail can never be emitted. */
+export interface PaymentEmailFacts {
+  paymentId: string;
+  student: EnrollmentEmailFacts["student"];
+  guardian: EnrollmentEmailFacts["guardian"];
+  courseName: string;
+  classGroupStartsOn: Date;
+}
+
+/** "Your payment was approved" — the enrollment is now real (OOC-55). */
+export function paymentApprovedEmails(facts: PaymentEmailFacts, locale: Locale): EmailNotification[] {
+  const studentName = `${facts.student.firstName} ${facts.student.lastName}`;
+
+  return enrollmentRecipients(facts).map((recipient) => ({
+    templateKey: "payment_approved",
+    to: recipient.to,
+    locale,
+    vars: {
+      recipientName: recipient.name,
+      studentName,
+      courseName: facts.courseName,
+      startsOn: facts.classGroupStartsOn.toISOString(),
+    },
+    dedupeKey: `payment_approved:${facts.paymentId}:${recipient.kind}`,
+  }));
+}
+
+/** "Your payment could not be confirmed" — the seat went back to the class group. */
+export function paymentRejectedEmails(facts: PaymentEmailFacts, locale: Locale): EmailNotification[] {
+  const studentName = `${facts.student.firstName} ${facts.student.lastName}`;
+
+  return enrollmentRecipients(facts).map((recipient) => ({
+    templateKey: "payment_rejected",
+    to: recipient.to,
+    locale,
+    vars: { recipientName: recipient.name, studentName, courseName: facts.courseName },
+    dedupeKey: `payment_rejected:${facts.paymentId}:${recipient.kind}`,
   }));
 }

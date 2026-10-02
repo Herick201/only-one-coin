@@ -1,4 +1,5 @@
 import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 /**
  * The raw bucket operations the normalize worker needs and nothing else
@@ -35,5 +36,11 @@ export class ReceiptObjectStore {
 
   async deleteObject(key: string): Promise<void> {
     await this.s3.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }));
+  }
+
+  /** A GET URL that dies in `expiresInSeconds` - the only way a person sees a
+   * receipt (CLAUDE.md §8: 5 minutes, scoped, access logged by the caller). */
+  async createReadUrl(key: string, expiresInSeconds: number): Promise<string> {
+    return getSignedUrl(this.s3, new GetObjectCommand({ Bucket: this.bucket, Key: key }), { expiresIn: expiresInSeconds });
   }
 }

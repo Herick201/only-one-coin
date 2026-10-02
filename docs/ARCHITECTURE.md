@@ -623,7 +623,7 @@ desligado não vai no bundle.
 | `portal.continue` | portal | Continuar estudando (próximo nível, re-matrícula) |
 | `backoffice` | backoffice | O painel inteiro |
 | `backoffice.students` | backoffice | Diretório de alunos e ficha |
-| `backoffice.enrollments` | backoffice | Matrículas + reservas |
+| `backoffice.enrollments` | backoffice | Matrículas (só vaga confirmada) |
 | `backoffice.payments` | backoffice | Pagamentos, fila de revisão, parâmetros |
 | `backoffice.academic` | backoffice | Turmas + cursos |
 | `backoffice.teachers` | backoffice | Docentes e fichas |
@@ -664,7 +664,7 @@ mudar num commit futuro.
 
 Links profundos **entre seções do backoffice** ainda não consultam a flag do
 destino: abrir a ficha de um aluno a partir de Pagamentos, de Matrículas, de
-Reservas, de Envios de e-mail ou da lista de certificados de uma turma; abrir
+Envios de e-mail ou da lista de certificados de uma turma; abrir
 uma turma a partir da ficha do docente ou do detalhe de matrícula; abrir a ficha
 do docente a partir de Equipe. Com a seção de destino desligada e a de origem
 ligada, esses links dão 404 para quem trabalha no painel. As portas das telas de

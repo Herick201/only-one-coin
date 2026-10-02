@@ -1,13 +1,15 @@
 'use client'
 
-import { useMemo, useState, type MouseEvent } from 'react'
+import { useCallback, useEffect, useState, useTransition, type MouseEvent } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
-import type {
-  ReceiptExtraction,
-  ReviewDecision,
-  ReviewFlag,
-  ReviewQueueItem,
-} from '@/lib/backoffice/types'
+import type { PaymentReviewItem, ReviewDecision } from '@/lib/backoffice/types'
+import {
+  MIN_SEARCH_LENGTH,
+  reviewQueueSearchParams,
+  type ReviewQueueQuery,
+} from '@/lib/backoffice/payment-ledger-query'
+import { approvePayment, rejectPayment } from '@/lib/backoffice/payment-client'
 import { formatDateTime, formatMoney, type Locale } from '@/lib/format'
 import {
   Card,
@@ -22,304 +24,286 @@ import {
   toolbarSearchClass,
 } from '@/components/backoffice/ui'
 import { Toast } from '@/components/backoffice/controls'
-import { reviewFlagTone } from '@/components/backoffice/status-tone'
+import { fraudSignalTone, receiptStateTone } from '@/components/backoffice/status-tone'
 import { BoIcon } from '@/components/backoffice/icons'
-import { FiltersDropdown } from '@/components/backoffice/filters-dropdown'
-import { ReceiptReviewDialog } from './receipt-review-dialog'
+import { ReceiptReviewDialog, deadlineState, type DecideOutcome } from './receipt-review-dialog'
 
-type FlagFilter = ReviewFlag | 'all'
-
-/** Same order as the tier ladder reads: hard blocks first, then the doubts. */
-const FLAG_FILTERS: FlagFilter[] = [
-  'all',
-  'amount_mismatch',
-  'duplicate_phash',
-  'model_divergence',
-  'low_confidence',
-  'illegible',
-]
-
-const PAGE_SIZE = 15
+/** Long enough to finish a word, short enough to feel like typing. */
+const SEARCH_DEBOUNCE_MS = 350
 
 /**
- * The queue as a work list. Default order is oldest first — a receipt waiting
- * is a student waiting, and the promise on the home card is that the queue is
- * worked from the oldest one.
+ * The queue as a work list, oldest first — a payment waiting is a student
+ * waiting, and the promise on the home card is that the queue is worked from
+ * the oldest one.
  *
- * The row triages; the decision happens in the dialog, next to the image and to
- * what the model read. Settling a receipt from a list, on a flag alone, is how
- * a mismatch gets approved because the row looked like the one above it.
+ * The row triages; the decision happens in the dialog, next to the receipt
+ * image and to what the student declared. Settling a payment from a list is
+ * how a mismatch gets approved because the row looked like the one above it.
  *
- * The row carries only what sorts one case from another — who is waiting, how
- * much, why it stopped, since when. The rail and the operation number are read
- * against the image or not at all, so they wait for the click instead of
- * printing a number nobody can check from the list.
- *
- * Filtering and paging run in the browser only because the dataset is mocked;
- * with the real API this becomes a server query (up to 20k receipts a month in
- * peak season, CLAUDE.md §1).
+ * Search and paging are the URL, and the URL is a query to Postgres
+ * (`GET /api/v1/payments/review`): this component never holds more than the
+ * page on screen. A decision goes to the API and the page is re-rendered from
+ * the server — the row leaves because the payment is settled, not because the
+ * browser dropped it.
  */
 export function ReviewQueueView({
-  rows,
-  extractions,
+  items,
+  total,
+  pageSize,
+  query,
   canReview,
   openReceiptId,
+  renderedAt,
 }: {
-  rows: ReviewQueueItem[]
-  /** The extraction behind each queued receipt, keyed by the queue row. */
-  extractions: Record<string, ReceiptExtraction>
+  items: PaymentReviewItem[]
+  /** Open payments matching the query, across every page. */
+  total: number
+  pageSize: number
+  query: ReviewQueueQuery
   canReview: boolean
   /**
-   * One receipt to open on arrival — another screen sent the reader straight
-   * to it. Honoured only if it is real and they may settle it: a link is a
-   * request, not a permission (CLAUDE.md §8).
+   * One payment to open on arrival — another screen sent the reader straight
+   * to it. Honoured only if it is on this page and they may settle it: a link
+   * is a request, not a permission (CLAUDE.md §8).
    */
   openReceiptId?: string | null
+  /** When the server rendered the page — what the deadline is measured from. */
+  renderedAt: number
 }) {
   const t = useTranslations('bo')
   const locale = useLocale() as Locale
+  const router = useRouter()
+  const pathname = usePathname()
 
-  /** A settled receipt leaves the queue — that is the whole point of settling
-   *  it. No server yet, so the removal lives here (see the mock notice). */
-  const [queue, setQueue] = useState<ReviewQueueItem[]>(rows)
-  const [reviewing, setReviewing] = useState<string | null>(() =>
-    canReview && openReceiptId && extractions[openReceiptId] ? openReceiptId : null,
+  const [reviewing, setReviewing] = useState<PaymentReviewItem | null>(() =>
+    canReview && openReceiptId
+      ? (items.find((item) => item.id === openReceiptId) ?? null)
+      : null,
   )
   const [toast, setToast] = useState<string | null>(null)
+  const dismissToast = useCallback(() => setToast(null), [])
 
-  const [query, setQuery] = useState('')
-  const [flag, setFlag] = useState<FlagFilter>('all')
-  const [sort, setSort] = useState<'oldest' | 'newest'>('oldest')
-  const [page, setPage] = useState(0)
+  /**
+   * True while the server renders the page the reader just asked for. The
+   * table stays on screen, dimmed, instead of blanking.
+   */
+  const [pending, startTransition] = useTransition()
 
-  const counts = useMemo(() => {
-    const seed = { all: queue.length } as Record<FlagFilter, number>
-    for (const value of FLAG_FILTERS) if (value !== 'all') seed[value] = 0
-    for (const row of queue) seed[row.flag] += 1
-    return seed
-  }, [queue])
-
-  const filtered = useMemo(() => {
-    const needle = query.trim().toLowerCase()
-    const list = queue.filter((row) => {
-      if (flag !== 'all' && row.flag !== flag) return false
-      if (!needle) return true
-      return [row.studentName, row.courseName, row.operationNumber ?? '']
-        .join(' ')
-        .toLowerCase()
-        .includes(needle)
+  /** Any change to the query goes back to page 1, unless it IS the page. */
+  function navigate(next: Partial<ReviewQueueQuery>, mode: 'push' | 'replace' = 'push') {
+    const search = reviewQueueSearchParams({ ...query, page: 1, ...next }).toString()
+    const href = search ? `${pathname}?${search}` : pathname
+    startTransition(() => {
+      router[mode](href, { scroll: false })
     })
-    // The server hands the list over oldest first; newest is a reversal, not a
-    // second sort key.
-    return sort === 'oldest' ? list : [...list].reverse()
-  }, [queue, query, flag, sort])
-
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
-  const currentPage = Math.min(page, pageCount - 1)
-  const pageRows = filtered.slice(
-    currentPage * PAGE_SIZE,
-    currentPage * PAGE_SIZE + PAGE_SIZE,
-  )
-
-  function search(value: string) {
-    setQuery(value)
-    setPage(0)
-  }
-
-  function filterByFlag(value: FlagFilter) {
-    setFlag(value)
-    setPage(0)
-  }
-
-  function decide(paymentId: string, decision: ReviewDecision) {
-    setQueue((current) => current.filter((row) => row.id !== paymentId))
-    setReviewing(null)
-    setToast(
-      t(
-        decision.kind === 'approve'
-          ? 'receipt_review.approved_toast'
-          : 'receipt_review.rejected_toast',
-      ),
-    )
   }
 
   /**
-   * The row opens the receipt, it does not leave the queue. Sending a reviewer
-   * to the student file mid-triage loses the page, the filter and the place in
-   * the list — and the dialog already carries everything the row was hiding.
+   * Typed into locally, sent after a pause — a request per keystroke would be
+   * a full-queue ILIKE per keystroke. Under the API's minimum length it is not
+   * a search yet, so nothing is sent.
+   */
+  const [searchText, setSearchText] = useState(query.q)
+  useEffect(() => {
+    const needle = searchText.trim()
+    if (needle === query.q) return
+    if (needle.length > 0 && needle.length < MIN_SEARCH_LENGTH) return
+
+    const timer = setTimeout(() => navigate({ q: needle }, 'replace'), SEARCH_DEBOUNCE_MS)
+    return () => clearTimeout(timer)
+    // `navigate` closes over `query`, which is already a dependency.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchText, query])
+
+  const pageCount = Math.max(1, Math.ceil(total / pageSize))
+  const currentPage = Math.min(query.page, pageCount) - 1
+
+  /** Re-reads the queue from the server, keeping the table on screen meanwhile. */
+  function refreshQueue() {
+    startTransition(() => {
+      router.refresh()
+    })
+  }
+
+  async function decide(paymentId: string, decision: ReviewDecision): Promise<DecideOutcome> {
+    const result =
+      decision.kind === 'approve'
+        ? await approvePayment(paymentId)
+        : await rejectPayment(paymentId, decision.reason, decision.note)
+
+    if (result.ok) {
+      setReviewing(null)
+      setToast(t(decision.kind === 'approve' ? 'review.approved_toast' : 'review.rejected_toast'))
+      refreshQueue()
+      return { kind: 'done' }
+    }
+    switch (result.error) {
+      // The case changed under the reader: somebody else decided it, it left
+      // the queue, or its seat went back to the class group. None of that is a
+      // success, so it is not a toast — the dialog stays open and says so,
+      // while the queue behind it is re-read.
+      case 'already_settled':
+      case 'not_found':
+      case 'seat_released':
+        refreshQueue()
+        return { kind: 'notice', notice: result.error }
+      default:
+        return { kind: 'error' }
+    }
+  }
+
+  /**
+   * The row opens the payment, it does not leave the queue. Sending a reviewer
+   * to the student file mid-triage loses the page and the place in the list.
    * The button in the last column is the keyboard path; this only covers the
    * mouse.
    */
-  function rowProps(id: string) {
-    const openable = canReview && Boolean(extractions[id])
-    if (!openable) return {}
+  function rowProps(item: PaymentReviewItem) {
+    if (!canReview) return {}
     return {
       className: 'cursor-pointer transition hover:bg-sky-soft',
       onClick: (event: MouseEvent<HTMLTableRowElement>) => {
         if ((event.target as HTMLElement).closest('a,button')) return
-        setReviewing(id)
+        setReviewing(item)
       },
     }
   }
 
+  const columns = [
+    t('review.col_student'),
+    t('review.col_course'),
+    t('receipt_review.check_expected'),
+    t('review.col_submitted'),
+    t('review.col_deadline'),
+    t('review.col_receipt'),
+    t('review.col_signals'),
+    '',
+  ]
+
   return (
     <div className="flex flex-col gap-4">
-      {/* Toolbar */}
-      <div className="flex flex-col gap-3">
-        <Toolbar>
-          <label className={toolbarSearchClass}>
-            <span className="sr-only">{t('review_queue.search_label')}</span>
-            <BoIcon
-              name="search"
-              size={16}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-            />
-            <input
-              type="search"
-              value={query}
-              onChange={(event) => search(event.target.value)}
-              placeholder={t('review_queue.search_placeholder')}
-              className="w-full rounded-lg border border-line bg-white py-2 pl-9 pr-3 text-sm text-ink outline-none transition placeholder:text-muted-foreground focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15"
-            />
-          </label>
-
-          {/* Six reasons is a row of chips wide enough to shove the table
-              down the page — they live behind the button, like the alumnos
-              list does. */}
-          <FiltersDropdown
-            label={t('review_queue.filters')}
-            count={flag !== 'all' ? 1 : 0}
-            panelClassName="flex-wrap items-center gap-1.5"
-          >
-            {FLAG_FILTERS.map((value) => {
-              const active = flag === value
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => filterByFlag(value)}
-                  aria-pressed={active}
-                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                    active
-                      ? 'bg-brand-blue text-white'
-                      : 'border border-line bg-white text-muted-foreground hover:bg-cream hover:text-ink'
-                  }`}
-                >
-                  {value === 'all'
-                    ? t('review_queue.filter_all')
-                    : t(`review_flag.${value}`)}
-                  <span className={active ? 'text-white/70' : 'text-slate-400'}>
-                    {counts[value]}
-                  </span>
-                </button>
-              )
-            })}
-          </FiltersDropdown>
-
-          <button
-            type="button"
-            onClick={() => setSort(sort === 'oldest' ? 'newest' : 'oldest')}
-            className="inline-flex items-center gap-1.5 self-start rounded-lg border border-line bg-white px-3 py-2 text-sm font-semibold text-muted-foreground transition hover:text-ink"
-          >
-            <BoIcon name="sort" size={16} />
-            {t(
-              sort === 'oldest' ? 'review_queue.sort_oldest' : 'review_queue.sort_newest',
-            )}
-          </button>
-        </Toolbar>
-
-        {/* One axis only: the flag is what tells one case from another here. */}
-      </div>
+      <Toolbar>
+        <label className={toolbarSearchClass}>
+          <span className="sr-only">{t('review_queue.search_label')}</span>
+          <BoIcon
+            name="search"
+            size={16}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+          />
+          <input
+            type="search"
+            value={searchText}
+            onChange={(event) => setSearchText(event.target.value)}
+            placeholder={t('review_queue.search_placeholder')}
+            className="w-full rounded-lg border border-line bg-white py-2 pl-9 pr-3 text-sm text-ink outline-none transition placeholder:text-muted-foreground focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15"
+          />
+        </label>
+      </Toolbar>
 
       {/* min-w-0: the row is wide enough to push a flex child past the page,
           and the scroll belongs to the table, never to the page. */}
-      <Card className="min-w-0">
-        {pageRows.length === 0 ? (
+      <Card
+        className={`min-w-0 transition-opacity ${pending ? 'opacity-60' : ''}`}
+        aria-busy={pending}
+      >
+        {items.length === 0 ? (
           <div className="p-4">
             <EmptyState
-              icon={queue.length === 0 ? 'check' : 'search'}
-              title={t(
-                queue.length === 0 ? 'review.empty_title' : 'review_queue.empty_search_title',
-              )}
-              body={t(
-                queue.length === 0 ? 'review.empty_body' : 'review_queue.empty_search_body',
-              )}
+              icon={query.q ? 'search' : 'check'}
+              title={t(query.q ? 'review_queue.empty_search_title' : 'review.empty_title')}
+              body={t(query.q ? 'review_queue.empty_search_body' : 'review.empty_body')}
             />
           </div>
         ) : (
           <>
-            <TableShell
-              columns={[
-                t('review.col_student'),
-                t('review.col_amount'),
-                t('review.col_flag'),
-                t('review.col_submitted'),
-                '',
-              ]}
-            >
+            <TableShell columns={columns}>
               <thead>
                 <tr>
-                  <th className={thClass}>{t('review.col_student')}</th>
-                  <th className={thClass}>{t('review.col_amount')}</th>
-                  <th className={thClass}>{t('review.col_flag')}</th>
-                  <th className={thClass}>{t('review.col_submitted')}</th>
+                  {columns.slice(0, -1).map((label) => (
+                    <th key={label} className={thClass}>
+                      {label}
+                    </th>
+                  ))}
                   <th className={thClass}>
                     <span className="sr-only">{t('common.actions')}</span>
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {pageRows.map((row) => {
-                  const mismatch = row.amountCents !== row.expectedAmountCents
+                {items.map((item) => {
+                  const deadline = deadlineState(item.reviewDeadline, renderedAt)
                   return (
-                    <tr key={row.id} {...rowProps(row.id)}>
-                      {/* Course rides under the name: it says which price the
-                          receipt is being checked against, and as its own
-                          column it pushed the table off the screen. */}
+                    <tr key={item.id} {...rowProps(item)}>
+                      <td className={tdClass}>
+                        <span className="block max-w-[14rem] truncate font-semibold text-ink">
+                          {item.studentName}
+                        </span>
+                      </td>
+
+                      {/* The class group rides under the course: it says which
+                          seat the payment is holding. */}
                       <td className={tdClass}>
                         <span className="block max-w-[15rem]">
-                          <span className="block truncate font-semibold text-ink">
-                            {row.studentName}
+                          <span className="block truncate text-sm text-ink">
+                            {item.courseName}
                           </span>
                           <span className="block truncate text-xs text-muted-foreground">
-                            {row.courseName}
+                            {item.classGroupName}
                           </span>
                         </span>
                       </td>
-                      <td className={`${tdClass} whitespace-nowrap`}>
-                        <span
-                          className={`font-semibold tabular-nums ${
-                            mismatch ? 'text-red-600' : 'text-ink'
-                          }`}
-                        >
-                          {formatMoney(row.amountCents, 'PEN', locale)}
-                        </span>
-                        {/* The expected value only earns a line when it differs
-                            — otherwise it is noise on every row. */}
-                        {mismatch && (
-                          <span className="block text-xs tabular-nums text-muted-foreground">
-                            {t('review.expected', {
-                              amount: formatMoney(row.expectedAmountCents, 'PEN', locale),
-                            })}
-                          </span>
-                        )}
+
+                      <td className={`${tdClass} whitespace-nowrap font-semibold tabular-nums`}>
+                        {formatMoney(item.expectedAmountCents, item.currency, locale)}
                       </td>
-                      <td className={tdClass}>
-                        <StatusBadge
-                          tone={reviewFlagTone[row.flag]}
-                          label={t(`review_flag.${row.flag}`)}
-                        />
-                      </td>
+
                       <td
                         className={`${tdClass} whitespace-nowrap text-sm tabular-nums text-muted-foreground`}
                       >
-                        {formatDateTime(row.submittedAt, locale)}
+                        {formatDateTime(item.submittedAt, locale)}
                       </td>
+
+                      {/* Red from a day out: the window closing is what the
+                          reviewer needs to see before it happens. */}
+                      <td
+                        className={`${tdClass} whitespace-nowrap text-sm tabular-nums ${
+                          deadline !== 'ok'
+                            ? 'font-semibold text-red-600'
+                            : 'text-muted-foreground'
+                        }`}
+                      >
+                        {formatDateTime(item.reviewDeadline, locale)}
+                        {deadline === 'overdue' && (
+                          <span className="block text-xs">{t('review.deadline_overdue')}</span>
+                        )}
+                      </td>
+
+                      <td className={tdClass}>
+                        <StatusBadge
+                          tone={receiptStateTone[item.receipt]}
+                          label={t(`receipt_state.${item.receipt}`)}
+                        />
+                      </td>
+
+                      <td className={tdClass}>
+                        {item.fraudSignals.length > 0 && (
+                          <span className="flex flex-wrap gap-1">
+                            {item.fraudSignals.map((signal) => (
+                              <StatusBadge
+                                key={signal}
+                                tone={fraudSignalTone[signal]}
+                                label={t(`fraud_signal.${signal}`)}
+                              />
+                            ))}
+                          </span>
+                        )}
+                      </td>
+
                       <td className={`${tdClass} whitespace-nowrap text-right`}>
-                        {canReview && extractions[row.id] && (
+                        {canReview && (
                           <button
                             type="button"
-                            onClick={() => setReviewing(row.id)}
+                            onClick={() => setReviewing(item)}
                             className={rowActionClass}
                           >
                             {t('receipt_review.open')}
@@ -343,7 +327,7 @@ export function ReviewQueueView({
                 })}
                 prevLabel={t('review_queue.page_prev')}
                 nextLabel={t('review_queue.page_next')}
-                onChange={setPage}
+                onChange={(page) => navigate({ page: page + 1 })}
               />
             )}
           </>
@@ -351,11 +335,12 @@ export function ReviewQueueView({
       </Card>
 
       <ReceiptReviewDialog
-        extraction={reviewing ? (extractions[reviewing] ?? null) : null}
+        payment={reviewing}
+        renderedAt={renderedAt}
         onClose={() => setReviewing(null)}
         onDecide={decide}
       />
-      <Toast message={toast} onDismiss={() => setToast(null)} />
+      <Toast message={toast} onDismiss={dismissToast} />
     </div>
   )
 }

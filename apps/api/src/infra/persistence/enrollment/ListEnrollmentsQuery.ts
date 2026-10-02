@@ -3,7 +3,7 @@ import { and, asc, desc, eq, ilike, isNull, or, sql, type SQL, type SQLWrapper }
 import type { Db } from "@/infra/db/client.js";
 
 /**
- * The enrollment ledger — every seat in the institution, read for the
+ * The enrollment ledger — every confirmed seat in the institution, read for the
  * backoffice (CLAUDE.md §1). Read-only, and outside `packages/domain` for the
  * same reason as its neighbours in this folder: it protects no invariant, it
  * only shapes a join.
@@ -48,9 +48,6 @@ export interface EnrollmentListMetrics {
   periodName: string;
   total: number;
   active: number;
-  reserved: number;
-  expiringSoon: number;
-  released: number;
 }
 
 export type EnrollmentListSeatStatus = "reserved" | "confirmed" | "released";
@@ -62,8 +59,6 @@ export type EnrollmentListSeatStatus = "reserved" | "confirmed" | "released";
  * filter that only sees the newest few hundred rows answers the wrong question.
  */
 export interface EnrollmentListFilters {
-  status?: EnrollmentListStatus;
-  seatStatus?: EnrollmentListSeatStatus;
   /** `courses.language` — the label itself, there is no languages table. */
   language?: string;
   academicPeriodId?: string;
@@ -94,18 +89,6 @@ export interface EnrollmentListResult {
    * the ledger holds. */
   filterOptions: EnrollmentListFilterOptions;
 }
-
-/**
- * How long a seat may sit `reserved` with an unsettled payment before the cron
- * hands it back (CLAUDE.md §5 — the five-day review window, the second of the
- * two clocks). Mirrored here only to count what is about to expire; the real
- * value belongs in `/backoffice/settings`, which has no table yet, and the
- * cron that acts on it does not exist either. Provisional on purpose: nothing
- * releases a seat on this number today, it only colours a figure in the header.
- */
-const RESERVATION_WINDOW_DAYS = 5;
-const RESERVATION_WARNING_HOURS = 24;
-const HOUR_MS = 60 * 60 * 1000;
 
 /**
  * One screen of rows (`enrollments-view.tsx` shows exactly this many). Paged
@@ -146,32 +129,10 @@ function deriveStatus(seatStatus: string, paymentStatus: string): EnrollmentList
   return "under_review";
 }
 
-/**
- * `deriveStatus` as a WHERE condition, so the status filter runs in Postgres.
- * A seat with no payment row reads `pending`, same as the mapping below.
- */
-function statusCondition(status: EnrollmentListStatus, latestPaymentStatus: SQLWrapper): SQL {
-  const payment = sql`coalesce(${latestPaymentStatus}, 'pending')`;
-  const rejected = sql`(${payment} = 'rejected' or ${enrollments.seatStatus} = 'released')`;
-  const active = sql`(${enrollments.seatStatus} = 'confirmed' and ${payment} = 'approved')`;
-
-  switch (status) {
-    case "rejected":
-      return rejected;
-    case "active":
-      return active;
-    case "under_review":
-      return sql`not ${rejected} and not ${active}`;
-    case "completed":
-      // Nothing in the schema can produce it yet (see above).
-      return sql`false`;
-  }
-}
-
 export class ListEnrollmentsQuery {
   constructor(private readonly db: Db) {}
 
-  async run(filters: EnrollmentListFilters = {}, now = new Date()): Promise<EnrollmentListResult> {
+  async run(filters: EnrollmentListFilters = {}): Promise<EnrollmentListResult> {
     const page = Math.max(1, Math.floor(filters.page ?? 1));
 
     // The payment that speaks for the enrollment: the most recent one. An
@@ -197,6 +158,11 @@ export class ListEnrollmentsQuery {
       // on it, or the ledger would lose rows every time the catalog is tidied
       // up.
       isNull(enrollments.deletedAt),
+      // OOC-55: the ledger is who got in. A seat still reserved (payment open)
+      // or already handed back (payment refused) is settled in Payments and
+      // never reaches this list. The seat decides, not the latest payment: a
+      // monthly student whose next module is still open is still a student.
+      eq(enrollments.seatStatus, "confirmed"),
       ...this.filterConditions(filters, latestPayment),
     );
 
@@ -256,7 +222,7 @@ export class ListEnrollmentsQuery {
     const [rows, counted, metrics, filterOptions] = await Promise.all([
       rowsPromise,
       totalPromise,
-      this.metrics(now),
+      this.metrics(),
       this.filterOptions(),
     ]);
 
@@ -324,8 +290,6 @@ export class ListEnrollmentsQuery {
   ): SQL[] {
     const conditions: SQL[] = [];
 
-    if (filters.status) conditions.push(statusCondition(filters.status, latestPayment.status));
-    if (filters.seatStatus) conditions.push(eq(enrollments.seatStatus, filters.seatStatus));
     if (filters.language) conditions.push(eq(courses.language, filters.language));
     if (filters.academicPeriodId) conditions.push(eq(classGroups.academicPeriodId, filters.academicPeriodId));
 
@@ -370,11 +334,7 @@ export class ListEnrollmentsQuery {
    * JS over `items` would make every number quietly mean "of this page",
    * which is the kind of figure somebody reports upward.
    */
-  private async metrics(now: Date): Promise<EnrollmentListMetrics> {
-    const expiryThreshold = new Date(
-      now.getTime() - (RESERVATION_WINDOW_DAYS * 24 - RESERVATION_WARNING_HOURS) * HOUR_MS,
-    );
-
+  private async metrics(): Promise<EnrollmentListMetrics> {
     const latestPaymentStatus = this.db
       .selectDistinctOn([payments.enrollmentId], {
         enrollmentId: payments.enrollmentId,
@@ -391,18 +351,10 @@ export class ListEnrollmentsQuery {
           sql<number>`count(*) filter (where ${enrollments.seatStatus} = 'confirmed' and ${latestPaymentStatus.status} = 'approved')`.mapWith(
             Number,
           ),
-        reserved: sql<number>`count(*) filter (where ${enrollments.seatStatus} = 'reserved')`.mapWith(Number),
-        // Reserved for longer than the window minus the warning margin: the
-        // seats the cron is about to hand back.
-        expiringSoon:
-          sql<number>`count(*) filter (where ${enrollments.seatStatus} = 'reserved' and ${enrollments.createdAt} <= ${expiryThreshold})`.mapWith(
-            Number,
-          ),
-        released: sql<number>`count(*) filter (where ${enrollments.seatStatus} = 'released')`.mapWith(Number),
       })
       .from(enrollments)
       .leftJoin(latestPaymentStatus, eq(latestPaymentStatus.enrollmentId, enrollments.id))
-      .where(isNull(enrollments.deletedAt));
+      .where(and(isNull(enrollments.deletedAt), eq(enrollments.seatStatus, "confirmed")));
 
     // The period the institution is in: the most recent one already started.
     const [period] = await this.db
@@ -416,11 +368,8 @@ export class ListEnrollmentsQuery {
       periodName: period?.name ?? "",
       total: totals?.total ?? 0,
       active: totals?.active ?? 0,
-      reserved: totals?.reserved ?? 0,
-      expiringSoon: totals?.expiringSoon ?? 0,
-      released: totals?.released ?? 0,
     };
   }
 }
 
-export { RESERVATION_WINDOW_DAYS, RESERVATION_WARNING_HOURS, PAGE_SIZE };
+export { PAGE_SIZE };

@@ -886,37 +886,30 @@ export type NewTeacher = Pick<
 /* -------------------------------------------------------------------------- */
 
 /**
- * What a payment is for. `payments` is agnostic of origin (CLAUDE.md §5): an
- * enrollment and a paid procedure (the constancia, `docs/REGRAS-NEGOCIO.md`
- * §5) travel the same states and the same OCR ladder. A discriminated union
- * instead of a loose string so the document type reaches the screen as a code
- * the locale resolves, never as text (CLAUDE.md §4).
+ * One line of the payment ledger, as `GET /api/v1/payments` serves it. Every
+ * payment today belongs to an enrollment, so the course is what it was for.
  */
-export type PaymentConcept =
-  | { kind: 'course'; courseName: string }
-  | { kind: 'document'; type: DocumentType }
-
-/** One line of the payment ledger. */
 export interface PaymentRow {
   id: string
+  enrollmentId: string
   studentId: string
   studentName: string
-  concept: PaymentConcept
+  courseName: string
   status: PaymentStatus
-  /** Null while the student has not uploaded a receipt yet. */
-  method: PaymentMethod | null
+  method: PaymentMethod
+  /** The free text that names an `other` method — that text is its label. */
+  methodDetail: string | null
+  operationNumber: string | null
   /** What the receipt says — equals the expected value once approved. */
   amountCents: number
-  /** The frozen plan price / procedure fee it is checked against. */
+  /** The frozen plan price it is checked against. */
   expectedAmountCents: number
   currency: 'PEN'
-  operationNumber: string | null
   submittedAt: string
-  /** When a human or the ladder settled it. Null while it is still open. */
+  /** When the latest approval or rejection was recorded. Null while open. */
   decidedAt: string | null
+  /** Who recorded that decision; null when the audit entry names no account. */
   decidedByName: string | null
-  /** Only while under review — why the ladder handed it to a human. */
-  flag: ReviewFlag | null
 }
 
 /**
@@ -925,89 +918,55 @@ export interface PaymentRow {
  * figure on a screen nobody opens on a Sunday reads as zero collection.
  */
 export interface PaymentMetrics {
+  /** Empty when no period has started yet — then every count is zero. */
+  periodName: string
   inReview: number
-  oldestPendingHours: number
+  /** Age of the oldest open payment; null when nothing is open. */
+  oldestOpenHours: number | null
   approved: number
   collectedCents: number
   rejected: number
-  periodName: string
 }
 
-/** A field the extraction reads off the receipt. */
-export type ExtractionField =
-  | 'operation_number'
-  | 'amount'
-  | 'paid_at'
-  | 'payer_name'
-  | 'method'
+/** Where a payment's latest receipt upload stands, as the review queue reads it. */
+export type ReviewReceiptState = 'missing' | 'uploading' | 'ready' | 'refused'
 
-/**
- * What the model read, kept as domain data rather than as a formatted string:
- * money is cents, an instant is ISO, the rail is a code. The sheet renders it
- * in the reader's locale (CLAUDE.md §4) — a mock that stores "S/ 69,90" would
- * print the same in the three languages.
- */
-export type ExtractedValue =
-  | { kind: 'text'; text: string }
-  | { kind: 'money'; amountCents: number; currency: 'PEN' }
-  | { kind: 'timestamp'; iso: string }
-  | { kind: 'method'; method: PaymentMethod }
-  /** The model could not read the field — that is a value, not a missing one. */
-  | { kind: 'unreadable' }
+/** What the antifraud screening found on a receipt — only the kind of it. */
+export type ReceiptFraudSignalKind =
+  | 'identical_file'
+  | 'similar_image'
+  | 'edited_with_software'
+  | 'modified_after_capture'
+  | 'payer_name_mismatch'
 
-export interface ExtractedField {
-  field: ExtractionField
-  value: ExtractedValue
-  /** Per-field confidence, 0–1 — recorded on every extraction (CLAUDE.md §5). */
-  confidence: number
-}
-
-/**
- * Everything a human needs to settle one receipt: the image, what the model
- * read off it, and what the system expected. Deciding is the one action that
- * cannot be taken from the student file — it is a usecase of its own with its
- * own audit entry (CLAUDE.md §8).
- */
-export interface ReceiptExtraction {
-  paymentId: string
+/** One payment still owed a decision, as `GET /api/v1/payments/review` serves it. */
+export interface PaymentReviewItem {
+  id: string
+  enrollmentId: string
   studentId: string
   studentName: string
-  concept: PaymentConcept
-  flag: ReviewFlag
-  /** OCR ladder tier that produced this extraction, 0–3. */
-  tier: number
-  /** Brand name of the model — a proper noun, like the payment rails. */
-  modelName: string
-  modelVersion: string
-  /**
-   * Processed image (downscaled, grayscale, EXIF stripped — CLAUDE.md §5) held
-   * for 5 years. In production a signed URL of 5 minutes, scoped to the
-   * student (CLAUDE.md §8); null here because no storage is wired yet.
-   */
-  imageUrl: string | null
-  fields: ExtractedField[]
-  amountCents: number
-  expectedAmountCents: number
-  /** Tolerance in force when the receipt was validated — a backoffice setting. */
-  toleranceCents: number
+  courseName: string
+  classGroupName: string
+  planName: string
+  status: 'pending' | 'under_review'
   method: PaymentMethod
+  methodDetail: string | null
+  operationNumber: string | null
+  expectedAmountCents: number
+  currency: 'PEN'
+  receipt: ReviewReceiptState
+  fraudSignals: ReceiptFraudSignalKind[]
   submittedAt: string
-  /** Tier 0: the pHash matched a receipt already approved. */
-  duplicateOf: {
-    studentName: string
-    operationNumber: string | null
-    approvedAt: string
-  } | null
-  /**
-   * Tier 2 reading from a model of another family. Agreement is the criterion,
-   * never the more expensive model (CLAUDE.md §5) — so both readings are shown
-   * side by side and the vendor is not what settles it.
-   */
-  secondOpinion: {
-    operationNumber: string | null
-    amountCents: number
-    confidence: number
-  } | null
+  /** When the open payment overstays the review window. */
+  reviewDeadline: string
+}
+
+export interface PaymentReviewQueue {
+  items: PaymentReviewItem[]
+  /** Open payments matching the query, across every page. */
+  total: number
+  page: number
+  pageSize: number
 }
 
 /** Why a human turned a receipt down — recorded with the rejection. */
@@ -1105,43 +1064,6 @@ export interface EnrollmentMetrics {
   periodName: string
   total: number
   active: number
-  /** Seats held by an enrollment whose payment is not settled yet. */
-  reserved: number
-  /** Of those, the ones the cron releases within a day. */
-  expiringSoon: number
-  /** Seats already handed back — a rejected payment or an expired reservation. */
-  released: number
-}
-
-/**
- * A seat held while the money is still open. The reservation expires after
- * `PaymentSettings.reservationDays` and a cron hands the seat back
- * (CLAUDE.md §5) — which is why this is a screen and not a filter: nobody
- * chases a deadline they have to remember to filter for.
- */
-export interface SeatReservation {
-  enrollmentId: string
-  studentId: string
-  studentName: string
-  courseName: string
-  classGroupName: string
-  classGroupId: string | null
-  paymentStatus: PaymentStatus
-  /** Why the receipt is sitting with a human, when it is. */
-  flag: ReviewFlag | null
-  /**
-   * The queued receipt holding this seat up, when there is one. It is what
-   * lets the row open that receipt instead of dropping the reader into the
-   * whole queue to find it again. Null while nobody has uploaded anything.
-   */
-  reviewId: string | null
-  amountCents: number
-  currency: 'PEN'
-  reservedAt: string
-  /** When the cron releases the seat if nothing settles the payment. */
-  expiresAt: string
-  /** Whole hours to `expiresAt`; negative once the deadline has passed. */
-  hoursLeft: number
 }
 
 /** A plan as the enrollment form reads it: the price in force, never editable. */

@@ -11,8 +11,6 @@ const SeatStatusSchema = z.enum(["reserved", "confirmed", "released"]);
 // query does not turn into a full-ledger ILIKE on every keystroke.
 const ListEnrollmentsQuerySchema = z.object({
   page: z.coerce.number().int().min(1).max(100_000).default(1),
-  status: EnrollmentStatusSchema.optional(),
-  seat: SeatStatusSchema.optional(),
   language: z.string().trim().min(1).max(100).optional(),
   period: z.string().uuid().optional(),
   q: z.string().trim().min(2).max(100).optional(),
@@ -56,9 +54,6 @@ const EnrollmentListResponseSchema = z.object({
     periodName: z.string(),
     total: z.number().int(),
     active: z.number().int(),
-    reserved: z.number().int(),
-    expiringSoon: z.number().int(),
-    released: z.number().int(),
   }),
   filterOptions: z.object({
     languages: z.array(z.string()),
@@ -85,11 +80,9 @@ export const listEnrollmentsRoute = RouteBuilder.get("/enrollments")
   .response(200, EnrollmentListResponseSchema)
   .response(400, ErrorResponseSchema)
   .handler(async (request, reply) => {
-    const { page, status, seat, language, period, q, sort } = request.query;
+    const { page, language, period, q, sort } = request.query;
     const result = await container.queries.listEnrollments.run({
       page,
-      status,
-      seatStatus: seat,
       language,
       academicPeriodId: period,
       q,

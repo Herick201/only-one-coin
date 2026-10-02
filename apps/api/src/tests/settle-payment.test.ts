@@ -1,0 +1,141 @@
+import {
+  PaymentAlreadySettledError,
+  PaymentNotFoundError,
+  PaymentSeatReleasedError,
+  SettlePaymentUseCase,
+  type EnrollmentEmailContext,
+  type IEnrollmentEmailContextLookup,
+  type IPaymentSettlementRepository,
+  type PaymentToSettle,
+} from "@ooc/domain";
+import { beforeEach, describe, expect, it } from "vitest";
+
+/**
+ * Payments is where an enrollment is finished (OOC-55): approving confirms
+ * the seat, rejecting hands it back. The usecase decides; the repository
+ * makes it atomic. Pure domain here — fakes, no database.
+ */
+
+const ACTOR = "usr_billing";
+const PAYMENT = "018f2b5c-0000-7000-8000-00000000p001";
+
+class FakeSettlementRepository implements IPaymentSettlementRepository {
+  public settled: Parameters<IPaymentSettlementRepository["settle"]>[0][] = [];
+  constructor(public target: PaymentToSettle | null) {}
+
+  async findForSettlement(): Promise<PaymentToSettle | null> {
+    return this.target;
+  }
+
+  async settle(params: Parameters<IPaymentSettlementRepository["settle"]>[0]) {
+    this.settled.push(params);
+    const seatStatus =
+      this.target!.seatStatus === "reserved" ? (params.to === "approved" ? "confirmed" : "released") : this.target!.seatStatus;
+    return { seatStatus };
+  }
+}
+
+class FakeEmailContextLookup implements IEnrollmentEmailContextLookup {
+  constructor(private readonly context: EnrollmentEmailContext | null) {}
+  async find() {
+    return this.context;
+  }
+}
+
+const MINOR_CONTEXT: EnrollmentEmailContext = {
+  student: { firstName: "Ana", lastName: "Quispe", email: "ana@gmail.com", birthDate: new Date("2014-05-01T00:00:00.000Z") },
+  guardian: { firstName: "Rosa", email: "rosa@example.com" },
+  courseName: "Inglés Básico",
+  classGroupStartsOn: new Date("2026-11-02T00:00:00.000Z"),
+};
+
+function target(overrides: Partial<PaymentToSettle> = {}): PaymentToSettle {
+  return {
+    paymentId: PAYMENT,
+    enrollmentId: "018f2b5c-0000-7000-8000-00000000e001",
+    studentId: "018f2b5c-0000-7000-8000-00000000s001",
+    classGroupId: "018f2b5c-0000-7000-8000-00000000g001",
+    status: "pending",
+    seatStatus: "reserved",
+    ...overrides,
+  };
+}
+
+let repository: FakeSettlementRepository;
+let useCase: SettlePaymentUseCase;
+
+beforeEach(() => {
+  repository = new FakeSettlementRepository(target());
+  useCase = new SettlePaymentUseCase(repository, new FakeEmailContextLookup(MINOR_CONTEXT));
+});
+
+describe("SettlePaymentUseCase", () => {
+  it("approves an open payment and confirms the seat", async () => {
+    const result = await useCase.run({ actorId: ACTOR, paymentId: PAYMENT, decision: { kind: "approve" } });
+
+    expect(result).toEqual({ paymentId: PAYMENT, status: "approved", seatStatus: "confirmed" });
+    expect(repository.settled[0]!.to).toBe("approved");
+    expect(repository.settled[0]!.audit).toMatchObject({ actorId: ACTOR, action: "payment.approved", targetId: PAYMENT });
+  });
+
+  it("tells the student and, for a minor, the guardian", async () => {
+    await useCase.run({ actorId: ACTOR, paymentId: PAYMENT, decision: { kind: "approve" } });
+
+    const emails = repository.settled[0]!.notifications;
+    expect(emails.map((email) => [email.templateKey, email.to])).toEqual([
+      ["payment_approved", "ana@gmail.com"],
+      ["payment_approved", "rosa@example.com"],
+    ]);
+    expect(emails.every((email) => email.locale === "es-PE")).toBe(true);
+  });
+
+  it("rejects with a reason and the note in the audit trail", async () => {
+    const result = await useCase.run({
+      actorId: ACTOR,
+      paymentId: PAYMENT,
+      decision: { kind: "reject", reason: "amount_mismatch", note: "Pagó S/ 50" },
+    });
+
+    expect(result.status).toBe("rejected");
+    expect(result.seatStatus).toBe("released");
+    expect(repository.settled[0]!.audit.metadata).toMatchObject({ reason: "amount_mismatch", note: "Pagó S/ 50" });
+    expect(repository.settled[0]!.notifications[0]!.templateKey).toBe("payment_rejected");
+  });
+
+  it("refuses a payment that does not exist", async () => {
+    repository.target = null;
+
+    await expect(useCase.run({ actorId: ACTOR, paymentId: PAYMENT, decision: { kind: "approve" } })).rejects.toBeInstanceOf(
+      PaymentNotFoundError,
+    );
+  });
+
+  it.each(["approved", "rejected"] as const)("refuses a payment already %s", async (status) => {
+    repository.target = target({ status });
+
+    await expect(useCase.run({ actorId: ACTOR, paymentId: PAYMENT, decision: { kind: "approve" } })).rejects.toBeInstanceOf(
+      PaymentAlreadySettledError,
+    );
+    expect(repository.settled).toHaveLength(0);
+  });
+
+  it("refuses to approve money for a seat already handed back", async () => {
+    repository.target = target({ seatStatus: "released" });
+
+    await expect(useCase.run({ actorId: ACTOR, paymentId: PAYMENT, decision: { kind: "approve" } })).rejects.toBeInstanceOf(
+      PaymentSeatReleasedError,
+    );
+  });
+
+  it("still rejects when the seat is already gone — the money question stays open otherwise", async () => {
+    repository.target = target({ seatStatus: "released" });
+
+    const result = await useCase.run({
+      actorId: ACTOR,
+      paymentId: PAYMENT,
+      decision: { kind: "reject", reason: "other", note: "" },
+    });
+
+    expect(result).toMatchObject({ status: "rejected", seatStatus: "released" });
+  });
+});

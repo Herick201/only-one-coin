@@ -1,27 +1,27 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import {
-  getPaymentMetrics,
-  listPayments,
-} from '@/lib/backoffice/mock-data'
+import { listPayments, parsePaymentLedgerQuery } from '@/lib/backoffice/payments'
 import { getStaffSession } from '@/lib/backoffice/session'
-import { canViewPayments } from '@/lib/backoffice/permissions'
+import { canReviewPayments, canViewPayments } from '@/lib/backoffice/permissions'
 import { EmptyState, PageHeader } from '@/components/backoffice/ui'
 import { SectionTabs } from '@/components/backoffice/section-tabs'
 import { PaymentsView } from './payments-view'
 
 /**
- * Payments, the whole ledger. One section, three screens: what came in, what
- * is still waiting on a human, and the parameters that decide which is which.
+ * Payments, the whole ledger. One section, two screens: what came in, and what
+ * is still waiting on a human.
  *
- * The list is a client component so search, filters and paging work with no
- * backend; the data and the role gates come from the server. Hiding a tab or a
- * button is a screen convenience — the enforcing check is the role declared on
- * the route in `apps/api` (CLAUDE.md §8).
+ * Search, filters and paging live in the URL and run in Postgres: this server
+ * component reads them from `searchParams` and fetches exactly the page asked
+ * for (`GET /api/v1/payments`). The client component only rewrites the URL.
+ * Hiding a tab or a button is a screen convenience — the enforcing check is
+ * the role declared on the route in `apps/api` (CLAUDE.md §8).
  */
 export default async function PaymentsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const { locale } = await params
   setRequestLocale(locale)
@@ -45,20 +45,48 @@ export default async function PaymentsPage({
     )
   }
 
+  const tabs = (
+    <SectionTabs
+      tabs={[
+        {
+          href: '/backoffice/payments',
+          label: t('payments.tab_ledger'),
+          exact: true,
+        },
+        { href: '/backoffice/payments/review', label: t('payments.tab_review') },
+      ]}
+    />
+  )
+
+  /* A failure is shown as a failure: an empty ledger would read as "nothing
+     was collected this period", which is the one thing this screen must never
+     say by accident. */
+  const query = parsePaymentLedgerQuery(await searchParams)
+  const ledger = await listPayments(query)
+
+  if (!ledger) {
+    return (
+      <div className="flex flex-col gap-5">
+        <PageHeader title={t('payments.title')} />
+        {tabs}
+        <EmptyState
+          icon="alert"
+          title={t('payments.load_error_title')}
+          body={t('payments.load_error_body')}
+        />
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col gap-5">
       <PageHeader title={t('payments.title')} />
-      <SectionTabs
-        tabs={[
-          {
-            href: '/backoffice/payments',
-            label: t('payments.tab_ledger'),
-            exact: true,
-          },
-          { href: '/backoffice/payments/review', label: t('payments.tab_review') },
-        ]}
+      {tabs}
+      <PaymentsView
+        ledger={ledger}
+        query={query}
+        canReview={canReviewPayments(staff.role)}
       />
-      <PaymentsView rows={listPayments()} metrics={getPaymentMetrics()} />
     </div>
   )
 }

@@ -3,7 +3,7 @@ import { academicPeriods, classGroups, courses, enrollments, payments, planPrice
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { ListEnrollmentsQuery, PAGE_SIZE, type EnrollmentListStatus } from "./ListEnrollmentsQuery.js";
+import { ListEnrollmentsQuery, PAGE_SIZE } from "./ListEnrollmentsQuery.js";
 import type { Db } from "@/infra/db/client.js";
 
 /**
@@ -40,19 +40,19 @@ const GROUP_B = "018f2b5c-2000-7000-8000-000000000007";
 const LANGUAGE_A = "Lengua de prueba A (integration)";
 const LANGUAGE_B = "Lengua de prueba B (integration)";
 
-/** Seat × latest payment, covering every branch of `deriveStatus`. */
+/** Seat × latest payment. Only the first two are enrollments; the rest are
+ * still being settled in Payments and must never reach the ledger. */
 const COMBOS: { seat: "reserved" | "confirmed" | "released"; payment: string | null }[] = [
-  { seat: "reserved", payment: null },
-  { seat: "reserved", payment: "pending" },
-  { seat: "reserved", payment: "under_review" },
-  { seat: "reserved", payment: "rejected" },
   { seat: "confirmed", payment: "approved" },
   { seat: "confirmed", payment: "under_review" },
-  { seat: "released", payment: "approved" },
-  { seat: "released", payment: null },
+  { seat: "reserved", payment: "pending" },
+  { seat: "released", payment: "rejected" },
 ];
 
-const ENROLLMENT_COUNT = 20;
+const ENROLLMENT_COUNT = 40;
+
+const isVisible = (i: number) => COMBOS[i % COMBOS.length]!.seat === "confirmed";
+const VISIBLE = Array.from({ length: ENROLLMENT_COUNT }, (_, i) => i).filter(isVisible);
 
 let pool: pg.Pool;
 let db: Db;
@@ -169,17 +169,32 @@ async function readAll(filters: Parameters<ListEnrollmentsQuery["run"]>[0] = {})
   }
 }
 
+describe("visibility", () => {
+  it("lists only enrollments whose seat is confirmed", async () => {
+    const all = await readAll();
+
+    expect(all.total).toBe(VISIBLE.length);
+    expect(all.rows.every((row) => row.seatStatus === "confirmed")).toBe(true);
+  });
+
+  it("does not find a reserved enrollment even by its operation number", async () => {
+    const found = await readAll({ q: "OPLEDGER0002" });
+
+    expect(found.total).toBe(0);
+  });
+});
+
 describe("paging", () => {
   it("splits the ledger into pages that cover every row once, newest first", async () => {
     const first = await query.run({ academicPeriodId: PERIOD, page: 1 });
     const second = await query.run({ academicPeriodId: PERIOD, page: 2 });
 
-    expect(first.total).toBe(ENROLLMENT_COUNT);
+    expect(first.total).toBe(VISIBLE.length);
     expect(first.items).toHaveLength(PAGE_SIZE);
-    expect(second.items).toHaveLength(ENROLLMENT_COUNT - PAGE_SIZE);
+    expect(second.items).toHaveLength(VISIBLE.length - PAGE_SIZE);
 
     const ids = [...first.items, ...second.items].map((row) => row.id);
-    expect(new Set(ids).size).toBe(ENROLLMENT_COUNT);
+    expect(new Set(ids).size).toBe(VISIBLE.length);
 
     const times = [...first.items, ...second.items].map((row) => row.createdAt.getTime());
     expect(times).toEqual([...times].sort((a, b) => b - a));
@@ -194,29 +209,10 @@ describe("paging", () => {
 });
 
 describe("filters", () => {
-  it.each(["under_review", "active", "rejected", "completed"] as EnrollmentListStatus[])(
-    "the %s filter returns exactly the rows deriveStatus labels that way",
-    async (status) => {
-      const all = await readAll();
-      const filtered = await readAll({ status });
-
-      const expected = all.rows.filter((row) => row.status === status).map((row) => row.id);
-      expect(filtered.rows.map((row) => row.id).sort()).toEqual(expected.sort());
-      expect(filtered.total).toBe(expected.length);
-    },
-  );
-
-  it("filters by seat status", async () => {
-    const filtered = await readAll({ seatStatus: "released" });
-
-    expect(filtered.total).toBeGreaterThan(0);
-    expect(filtered.rows.every((row) => row.seatStatus === "released")).toBe(true);
-  });
-
   it("filters by language", async () => {
     const filtered = await readAll({ language: LANGUAGE_B });
 
-    expect(filtered.total).toBe(ENROLLMENT_COUNT / 2);
+    expect(filtered.total).toBe(VISIBLE.filter((i) => i % 2 === 1).length);
     expect(filtered.rows.every((row) => row.language?.name === LANGUAGE_B)).toBe(true);
   });
 
@@ -238,7 +234,6 @@ describe("search", () => {
       const found = await query.run({ academicPeriodId: PERIOD, q: row.code });
       expect(found.items.map((item) => item.id)).toContain(row.id);
     }
-    // One query per row, on purpose — each code is checked on its own.
   }, 60_000);
 
   it("finds a row by the operation number on its latest payment", async () => {
@@ -251,7 +246,7 @@ describe("search", () => {
   it("finds rows by student name", async () => {
     const found = await readAll({ q: "Alumno1" });
 
-    // Alumno1 and Alumno10…19.
-    expect(found.total).toBe(11);
+    const expected = VISIBLE.filter((i) => `Alumno${i}`.includes("Alumno1")).length;
+    expect(found.total).toBe(expected);
   });
 });

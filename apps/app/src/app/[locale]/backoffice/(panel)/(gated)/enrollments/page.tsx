@@ -7,7 +7,6 @@ import {
   canBrowseEnrollments,
 } from '@/lib/backoffice/permissions'
 import { EmptyState, PageHeader } from '@/components/backoffice/ui'
-import { SectionTabs } from '@/components/backoffice/section-tabs'
 import { EnrollmentsView, type EnrollmentPreselect } from './enrollments-view'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -52,10 +51,8 @@ async function readPreselect(
  * answers "what did this person buy" and never "who is sitting in Inglés A1
  * this ciclo".
  *
- * Two screens: the ledger, and the seats still held by an unsettled payment.
- * The second is a screen and not a filter because it is a deadline — the cron
- * hands those seats back after the reservation window (CLAUDE.md §5), and
- * nobody chases a deadline they have to remember to filter for.
+ * Only confirmed seats are listed: a reservation is still a payment matter
+ * and lives in the payments section until the payment is settled.
  *
  * Search, filters and paging live in the URL and run in Postgres: this server
  * component reads them from `searchParams` and fetches exactly the page asked
@@ -124,19 +121,6 @@ export default async function EnrollmentsPage({
     <div className="flex flex-col gap-5">
       <PageHeader
         title={t('enrollments.title')}
-      />
-      <SectionTabs
-        tabs={[
-          {
-            href: '/backoffice/enrollments',
-            label: t('enrollments.tab_ledger'),
-            exact: true,
-          },
-          {
-            href: '/backoffice/enrollments/reservations',
-            label: t('enrollments.tab_reservations'),
-          },
-        ]}
       />
       <EnrollmentsView
         ledger={ledger}

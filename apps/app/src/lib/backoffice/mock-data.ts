@@ -5,22 +5,16 @@ import type {
   CourseLanguage,
   CourseRow,
   DashboardMetrics,
-  EnrollmentMetrics,
   EnrollmentRow,
   EmailDeliveryIssue,
   EmailFlow,
   EmailMetrics,
   EmailSegment,
-  ExtractionField,
   PaymentMethod,
-  PaymentMetrics,
-  PaymentRow,
   PaymentSettings,
   PlanPrice,
-  ReceiptExtraction,
   ReviewFlag,
   ReviewQueueItem,
-  SeatReservation,
   SeatWatchItem,
   StaffUser,
   StudentDetail,
@@ -50,8 +44,6 @@ import { daysUntil } from './contract'
  * different city: the screen only earns its place if there is something to
  * recognise — or not recognise — on it.
  */
-
-const PERIOD = ''
 
 /**
  * Fee for the constancia de matrícula (`docs/REGRAS-NEGOCIO.md` §5: S/25).
@@ -124,7 +116,7 @@ const flaggedReceipts: ReviewQueueItem[] = []
  * the screen promises. Never a model's decision: tier 3 and divergence end
  * here by rule (CLAUDE.md §5).
  */
-export function listReviewQueue(): ReviewQueueItem[] {
+function listReviewQueue(): ReviewQueueItem[] {
   return [
     ...flaggedReceipts,
     ...pendingReceipts.map(
@@ -438,254 +430,6 @@ export function getPaymentSettings(): PaymentSettings {
   }
 }
 
-/**
- * Who settled a payment and when, read off the student's own audit trail — the
- * append-only record is the source (CLAUDE.md §8), not a column somebody could
- * set to a different value. No entry means the ladder approved it with no human
- * in the loop.
- */
-function decisionOf(
-  student: StudentDetail,
-  operationNumber: string | null,
-): { at: string; by: string } | null {
-  const entry = student.activity.find(
-    (item) =>
-      (item.action === 'payment_approved' || item.action === 'payment_rejected') &&
-      item.reference?.kind === 'operation' &&
-      item.reference.number === operationNumber,
-  )
-  return entry ? { at: entry.at, by: entry.actorName } : null
-}
-
-/**
- * The whole ledger, newest first. Enrollments and paid procedures land in the
- * same list on purpose: `payments` is agnostic of origin (CLAUDE.md §5), the
- * constancia travels the same states and the same OCR ladder, and the treasury
- * closes the period over both.
- *
- * What the receipt *reads* comes from the review queue when the case is still
- * open; the enrollment only ever carries the frozen plan price, so the two
- * screens can never disagree about the same receipt.
- */
-export function listPayments(): PaymentRow[] {
-  const queue = listReviewQueue()
-  const flags = new Map(
-    queue.map((item) => [`${item.studentId}|${item.courseName}`, item]),
-  )
-  /** Queued receipts already accounted for by an enrollment of their own. */
-  const matched = new Set<string>()
-
-  const rows: PaymentRow[] = []
-
-  for (const student of students) {
-    const studentName = `${student.firstName} ${student.lastName}`
-
-    for (const item of student.enrollments) {
-      const key = `${student.id}|${item.courseName}`
-      const open = item.paymentStatus === 'under_review' ? flags.get(key) : undefined
-      if (open) matched.add(open.id)
-      const decision = decisionOf(student, item.operationNumber)
-      rows.push({
-        id: `pay_${item.id}`,
-        studentId: student.id,
-        studentName,
-        concept: { kind: 'course', courseName: item.courseName },
-        status: item.paymentStatus,
-        method: item.paymentMethod,
-        amountCents: open?.amountCents ?? item.amountCents,
-        expectedAmountCents: item.amountCents,
-        currency: item.currency,
-        operationNumber: item.operationNumber,
-        submittedAt: item.createdAt,
-        decidedAt: decision?.at ?? item.paidAt,
-        decidedByName: decision?.by ?? null,
-        flag: open?.flag ?? null,
-      })
-    }
-
-    for (const request of student.documentRequests) {
-      const decision = decisionOf(student, request.operationNumber)
-      rows.push({
-        id: `pay_${request.id}`,
-        studentId: student.id,
-        studentName,
-        concept: { kind: 'document', type: request.type },
-        status: request.paymentStatus,
-        method: request.paymentMethod,
-        // A procedure has a fixed fee: what is expected is what it costs, and
-        // the receipt is checked against it exactly like a plan price.
-        amountCents: request.feeCents,
-        expectedAmountCents: request.feeCents,
-        currency: request.currency,
-        operationNumber: request.operationNumber,
-        submittedAt: request.requestedAt,
-        decidedAt: decision?.at ?? null,
-        decidedByName: decision?.by ?? null,
-        flag: null,
-      })
-    }
-  }
-
-  /**
-   * A receipt that matches no enrollment of its own is still a payment: a
-   * second upload over an already approved enrollment is exactly what tier 0
-   * catches. It belongs in the ledger, or the queue would hold receipts nobody
-   * can find from the money side.
-   */
-  for (const item of queue) {
-    if (matched.has(item.id)) continue
-    rows.push({
-      id: `pay_${item.id}`,
-      studentId: item.studentId,
-      studentName: item.studentName,
-      concept: { kind: 'course', courseName: item.courseName },
-      status: 'under_review',
-      method: item.method,
-      amountCents: item.amountCents,
-      expectedAmountCents: item.expectedAmountCents,
-      currency: 'PEN',
-      operationNumber: item.operationNumber,
-      submittedAt: item.submittedAt,
-      decidedAt: null,
-      decidedByName: null,
-      flag: item.flag,
-    })
-  }
-
-  return rows.sort((a, b) => b.submittedAt.localeCompare(a.submittedAt))
-}
-
-/**
- * Period figures, not daily ones: the ciclo is what the treasury closes
- * against, and "collected today" reads as zero every Sunday.
- */
-export function getPaymentMetrics(): PaymentMetrics {
-  const rows = listPayments()
-  const approved = rows.filter((row) => row.status === 'approved')
-  return {
-    inReview: rows.filter((row) => row.status === 'under_review').length,
-    oldestPendingHours: getDashboardMetrics().oldestPendingHours,
-    approved: approved.length,
-    collectedCents: approved.reduce((total, row) => total + row.amountCents, 0),
-    rejected: rows.filter((row) => row.status === 'rejected').length,
-    periodName: PERIOD,
-  }
-}
-
-/** Thirty minutes before the upload — a receipt is photographed after paying. */
-function paidAtOf(submittedAt: string): string {
-  return new Date(new Date(submittedAt).getTime() - 30 * 60_000).toISOString()
-}
-
-/**
- * The extraction behind one queued receipt, built from the queue row itself so
- * the flag, the tier and the confidence on the list are the same ones the
- * reviewer sees when opening it.
- *
- * Every field carries its own confidence and every extraction carries its tier
- * and model (CLAUDE.md §5) — that is what tells a reviewer whether the doubt is
- * about the number or about the picture.
- */
-function extractionOf(item: ReviewQueueItem): ReceiptExtraction {
-  const { toleranceCents } = getPaymentSettings()
-  const unreadable = item.flag === 'illegible'
-  /**
-   * The queue row promises the lowest per-field confidence, so no field may
-   * read below it — a sheet full of higher numbers would make the list lie.
-   * The weak field is the one the flag is about: the amount when the value does
-   * not match, the operation number in every other case.
-   */
-  const atLeast = (value: number) => Math.max(value, item.confidence)
-  const weakField: ExtractionField =
-    item.flag === 'amount_mismatch' ? 'amount' : 'operation_number'
-
-  return {
-    paymentId: item.id,
-    studentId: item.studentId,
-    studentName: item.studentName,
-    concept: { kind: 'course', courseName: item.courseName },
-    flag: item.flag,
-    tier: item.tier,
-    modelName: 'Gemini 3.1 Flash-Lite',
-    modelVersion: '2026-05',
-    imageUrl: null,
-    amountCents: item.amountCents,
-    expectedAmountCents: item.expectedAmountCents,
-    toleranceCents,
-    method: item.method,
-    submittedAt: item.submittedAt,
-    fields: [
-      {
-        field: 'operation_number',
-        value: item.operationNumber
-          ? { kind: 'text', text: item.operationNumber }
-          : { kind: 'unreadable' },
-        confidence:
-          weakField === 'operation_number' ? item.confidence : atLeast(0.96),
-      },
-      {
-        field: 'amount',
-        value: { kind: 'money', amountCents: item.amountCents, currency: 'PEN' },
-        confidence: weakField === 'amount' ? item.confidence : atLeast(0.97),
-      },
-      {
-        field: 'paid_at',
-        value: unreadable
-          ? { kind: 'unreadable' }
-          : { kind: 'timestamp', iso: paidAtOf(item.submittedAt) },
-        confidence: unreadable ? item.confidence : atLeast(0.9),
-      },
-      {
-        field: 'payer_name',
-        value: unreadable
-          ? { kind: 'unreadable' }
-          : { kind: 'text', text: item.studentName },
-        confidence: unreadable ? item.confidence : atLeast(0.86),
-      },
-      {
-        field: 'method',
-        value: { kind: 'method', method: item.method },
-        confidence: atLeast(0.99),
-      },
-    ],
-    // Tier 0: the same picture was already approved for somebody else. It is a
-    // block, not a doubt — the reviewer is confirming a match, not reading a
-    // number.
-    duplicateOf:
-      item.flag === 'duplicate_phash'
-        ? {
-            studentName: 'Diego Huamán Ccopa',
-            operationNumber: item.operationNumber,
-            approvedAt: '2026-07-11T12:34:00Z',
-          }
-        : null,
-    // Tier 2: a model of another family read the same picture. Agreement is
-    // the criterion, never the more expensive model (CLAUDE.md §5) — so both
-    // readings are shown and neither vendor settles it.
-    secondOpinion:
-      item.flag === 'model_divergence'
-        ? {
-            // The whole case is the two readings differing: the digit has to
-            // change, whatever the original one was.
-            operationNumber: item.operationNumber
-              ? `${item.operationNumber.slice(0, -1)}${
-                  (Number(item.operationNumber.slice(-1)) + 1) % 10
-                }`
-              : null,
-            amountCents: item.amountCents,
-            confidence: 0.61,
-          }
-        : null,
-  }
-}
-
-/** Every queued receipt's extraction, keyed by the queue row it belongs to. */
-export function listReceiptExtractions(): Record<string, ReceiptExtraction> {
-  return Object.fromEntries(
-    listReviewQueue().map((item) => [item.id, extractionOf(item)]),
-  )
-}
-
 /* -------------------------------------------------------------------------- */
 /* Enrollments — the ledger of seats, and the reservations still open          */
 /* -------------------------------------------------------------------------- */
@@ -800,72 +544,6 @@ export function listEnrollments(): EnrollmentRow[] {
   }
 
   return rows.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-}
-
-/** An hour, in milliseconds — the unit the reservation countdown is read in. */
-const HOUR_MS = 3_600_000
-
-/** Inside this many hours of expiry, a reservation is worth chasing today. */
-export const RESERVATION_WARNING_HOURS = 24
-
-/**
- * The seats currently held by an unsettled payment, soonest to expire first.
- * The deadline is the reservation window from the payment settings
- * (CLAUDE.md §5) counted from when the seat was taken — the same number the
- * cron releases against, read from one place so the screen cannot promise a
- * day the job does not honour.
- *
- * `now` is a parameter so the page passes the request's clock: computing it
- * inside a component would hydrate a different countdown than it rendered.
- */
-export function listSeatReservations(now: Date = new Date()): SeatReservation[] {
-  const windowMs = getPaymentSettings().reservationDays * 24 * HOUR_MS
-  const queue = listReviewQueue()
-
-  return listEnrollments()
-    .filter((row) => row.seatStatus === 'reserved')
-    .map((row) => {
-      const expiresAt = new Date(new Date(row.createdAt).getTime() + windowMs)
-      const open = queue.find(
-        (item) =>
-          item.studentId === row.studentId && item.courseName === row.courseName,
-      )
-      return {
-        enrollmentId: row.id,
-        studentId: row.studentId,
-        studentName: row.studentName,
-        courseName: row.courseName,
-        classGroupName: row.classGroupName,
-        classGroupId: row.classGroupId,
-        paymentStatus: row.paymentStatus,
-        flag: open?.flag ?? null,
-        // The queued receipt itself, so the row can open that one instead of
-        // handing the reader the whole queue back.
-        reviewId: open?.id ?? null,
-        amountCents: row.amountCents,
-        currency: row.currency,
-        reservedAt: row.createdAt,
-        expiresAt: expiresAt.toISOString(),
-        hoursLeft: Math.floor((expiresAt.getTime() - now.getTime()) / HOUR_MS),
-      }
-    })
-    .sort((a, b) => a.expiresAt.localeCompare(b.expiresAt))
-}
-
-/** Period figures for the section header. */
-export function getEnrollmentMetrics(now: Date = new Date()): EnrollmentMetrics {
-  const rows = listEnrollments()
-  const reservations = listSeatReservations(now)
-  return {
-    periodName: PERIOD,
-    total: rows.length,
-    active: rows.filter((row) => row.status === 'active').length,
-    reserved: reservations.length,
-    expiringSoon: reservations.filter(
-      (item) => item.hoursLeft <= RESERVATION_WARNING_HOURS,
-    ).length,
-    released: rows.filter((row) => row.seatStatus === 'released').length,
-  }
 }
 
 /* -------------------------------------------------------------------------- */
