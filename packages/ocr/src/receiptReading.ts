@@ -1,4 +1,4 @@
-import { PaymentMethodSchema, PaymentRailSchema, type ReceiptExtractedField } from "@ooc/domain";
+import { PaymentMethodSchema, PaymentRailSchema, ReceiptExtractionError, type ReceiptExtractedField } from "@ooc/domain";
 import { z } from "zod";
 
 /**
@@ -71,6 +71,45 @@ export const MODEL_RECEIPT_READING_JSON_SCHEMA = {
   },
   required: ["amount", "operation_number", "payment_method", "payer_name", "paid_at"],
 } as const;
+
+/**
+ * The same schema with `additionalProperties: false` on every object — what
+ * OpenAI-style strict structured output (OpenRouter) requires. A copy, not
+ * an edit of the shared constant, so the direct Gemini call keeps sending
+ * exactly the schema it was measured with.
+ */
+export function toStrictJsonSchema(schema: unknown): unknown {
+  if (Array.isArray(schema)) {
+    return schema.map(toStrictJsonSchema);
+  }
+  if (schema === null || typeof schema !== "object") {
+    return schema;
+  }
+  const copy = Object.fromEntries(Object.entries(schema).map(([key, value]) => [key, toStrictJsonSchema(value)]));
+  return copy.type === "object" ? { ...copy, additionalProperties: false } : copy;
+}
+
+/** The model's JSON text as the domain's fields — `invalid_response` for
+ * anything that is not the asked-for shape (including an empty answer from
+ * a safety block). Shared by every provider adapter. */
+export function parseModelReading(text: string | null | undefined): ReceiptExtractedField[] {
+  if (!text) {
+    throw new ReceiptExtractionError("invalid_response");
+  }
+
+  let json: unknown;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    throw new ReceiptExtractionError("invalid_response");
+  }
+
+  const parsed = ModelReceiptReadingSchema.safeParse(json);
+  if (!parsed.success) {
+    throw new ReceiptExtractionError("invalid_response");
+  }
+  return toExtractedFields(parsed.data);
+}
 
 /**
  * The printed amount as cents, or `null` when it is not an amount. Peruvian

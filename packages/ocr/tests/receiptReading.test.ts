@@ -1,7 +1,6 @@
 import { ReceiptExtractionError } from "@ooc/domain";
 import { describe, expect, it } from "vitest";
-import { parseModelReading } from "../src/GeminiReceiptExtractor.js";
-import { parseAmountToCents, toExtractedFields, toPaidAt, type ModelReceiptReading } from "../src/receiptReading.js";
+import { parseAmountToCents, parseModelReading, toExtractedFields, toPaidAt, type ModelReceiptReading } from "../src/receiptReading.js";
 
 describe("parseAmountToCents", () => {
   it.each([
