@@ -21,8 +21,11 @@
 // read off any receipt — the part that goes into docs/OCR-AVALIACAO.md) and
 // `ocr-eval-details.csv` (expected vs read, for the hand check; stays local).
 //
-// Needs only GEMINI_API_KEY (and optionally GEMINI_RECEIPT_MODEL) — no
-// database, no bucket. Each image is one model call.
+// Needs only the OCR variables, the same ones the worker reads:
+// RECEIPT_OCR_PROVIDER (gemini | openrouter) and that provider's key, plus
+// its optional model id — no database, no bucket. Each image is one model
+// call. Comparing providers is running it twice with a different
+// RECEIPT_OCR_PROVIDER.
 import { readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -33,21 +36,14 @@ import {
   type ReceiptExtractedFieldName,
   type ReceiptExtraction,
 } from "@ooc/domain";
-import { GeminiReceiptExtractor, parseAmountToCents, toPaidAt } from "@ooc/ocr";
-import { z } from "zod";
+import { parseAmountToCents, toPaidAt } from "@ooc/ocr";
+import { createReceiptExtractor, missingReceiptOcrKey } from "@/infra/ocr/createReceiptExtractor.js";
+import { ReceiptOcrEnvSchema } from "@/infra/ocr/receiptOcrEnv.js";
 import { normalizeReceiptImage } from "@/infra/storage/normalizeReceiptImage.js";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
 
 const FIELDS: ReceiptExtractedFieldName[] = ["amount_cents", "operation_number", "payment_method", "payer_name", "paid_at"];
-
-const EnvSchema = z.object({
-  GEMINI_API_KEY: z.string().min(1),
-  GEMINI_RECEIPT_MODEL: z
-    .string()
-    .optional()
-    .transform((val) => val || undefined),
-});
 
 interface Label {
   file: string;
@@ -236,7 +232,7 @@ function csvCell(value: string): string {
   return /[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
 }
 
-function buildReport(results: SampleResult[], modelName: string): string {
+function buildReport(results: SampleResult[], provider: string, modelName: string): string {
   const read = results.filter((result) => !result.failure);
   const versions = [...new Set(read.map((result) => result.modelVersion ?? "?"))].join(", ");
   const allFieldsRight = read.filter((result) => result.fields.every((field) => field.correct)).length;
@@ -245,7 +241,7 @@ function buildReport(results: SampleResult[], modelName: string): string {
     `# Avaliação OCR nível 1`,
     ``,
     `- Data: ${new Date().toISOString().slice(0, 10)}`,
-    `- Modelo pedido: \`${modelName}\` · versão servida: \`${versions || "—"}\``,
+    `- Provedor: \`${provider}\` · modelo pedido: \`${modelName}\` · versão servida: \`${versions || "—"}\``,
     `- Comprovantes: ${results.length} · lidos: ${read.length} · falha na chamada: ${results.length - read.length}`,
     `- Comprovantes com os cinco campos certos: ${allFieldsRight}/${read.length} (${percent(allFieldsRight, read.length)})`,
     ``,
@@ -308,8 +304,11 @@ async function main(): Promise<void> {
     throw new Error("the sample directory is inside the repository — real receipts must never be in it (CLAUDE.md §6)");
   }
 
-  const env = EnvSchema.parse(process.env);
-  const extractor = new GeminiReceiptExtractor({ apiKey: env.GEMINI_API_KEY, model: env.GEMINI_RECEIPT_MODEL });
+  const env = ReceiptOcrEnvSchema.parse(process.env);
+  const extractor = createReceiptExtractor(env);
+  if (!extractor) {
+    throw new Error(`${missingReceiptOcrKey(env)} is not set (RECEIPT_OCR_PROVIDER=${env.RECEIPT_OCR_PROVIDER})`);
+  }
 
   const labels = parseLabels(await readFile(path.join(sampleDir, "labels.csv"), "utf8"));
   const present = new Set(await readdir(sampleDir));
@@ -342,7 +341,7 @@ async function main(): Promise<void> {
 
   const reportPath = path.join(sampleDir, "ocr-eval-report.md");
   const detailsPath = path.join(sampleDir, "ocr-eval-details.csv");
-  await writeFile(reportPath, buildReport(results, extractor.modelName));
+  await writeFile(reportPath, buildReport(results, env.RECEIPT_OCR_PROVIDER, extractor.modelName));
   await writeFile(detailsPath, buildDetails(results));
   process.stdout.write(`\nReport:  ${reportPath}\nDetails: ${detailsPath} (personal data — keep it out of the repository)\n`);
 }

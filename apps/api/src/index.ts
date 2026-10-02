@@ -12,9 +12,9 @@ import {
   scheduleSeatHoldSweep,
 } from "@ooc/queue";
 import { ExtractReceiptUseCase } from "@ooc/domain";
-import { GeminiReceiptExtractor } from "@ooc/ocr";
 import { buildApp } from "./app.js";
 import { container } from "./container.js";
+import { createReceiptExtractor, missingReceiptOcrKey } from "./infra/ocr/createReceiptExtractor.js";
 import { startOutboxRelayWorker } from "./workers/outbox-relay.worker.js";
 import { startReceiptExtractWorker } from "./workers/receipt-extract.worker.js";
 import { startReceiptNormalizeWorker } from "./workers/receipt-normalize.worker.js";
@@ -24,7 +24,8 @@ import { startSeatHoldSweepWorker } from "./workers/seat-hold-sweep.worker.js";
 import { startSendEmailWorker } from "./workers/send-email.worker.js";
 
 const {
-  config: { PORT, HOST, REDIS_URL, NODE_ENV, BREVO_API_KEY, GEMINI_API_KEY, GEMINI_RECEIPT_MODEL },
+  config,
+  config: { PORT, HOST, REDIS_URL, NODE_ENV, BREVO_API_KEY },
   logger,
   notifications,
   storage,
@@ -69,11 +70,13 @@ const seatHoldSweepWorker = startSeatHoldSweepWorker(connection, logger, {
 // attached to a payment it is offered to the extract queue too. The model
 // client is built here, never in the container — routes load the container,
 // and the submit route must not import the AI module (apps/api/CLAUDE.md).
-// Without a key the queue is not created, nothing is offered, and receipts
+// RECEIPT_OCR_PROVIDER picks Gemini direct or OpenRouter; without that
+// provider's key the queue is not created, nothing is offered, and receipts
 // wait unread.
+const receiptExtractor = createReceiptExtractor(config);
 const receiptNormalizeQueue = createReceiptNormalizeQueue(connection);
 const receiptScreenQueue = createReceiptScreenQueue(connection);
-const receiptExtractQueue = GEMINI_API_KEY ? createReceiptExtractQueue(connection) : null;
+const receiptExtractQueue = receiptExtractor ? createReceiptExtractQueue(connection) : null;
 const receiptUploadRelayQueue = createReceiptUploadRelayQueue(connection);
 await scheduleReceiptUploadRelay(receiptUploadRelayQueue);
 const receiptNormalizeWorker = startReceiptNormalizeWorker(connection, logger, {
@@ -89,12 +92,12 @@ const receiptUploadRelayWorker = startReceiptUploadRelayWorker(connection, logge
 const receiptScreenWorker = startReceiptScreenWorker(connection, logger, {
   screenReceiptUpload: useCases.enrollment.screenReceiptUpload,
 });
-const receiptExtractWorker = GEMINI_API_KEY
+const receiptExtractWorker = receiptExtractor
   ? startReceiptExtractWorker(connection, logger, {
       extractReceipt: new ExtractReceiptUseCase(
         repositories.receiptExtraction,
         { read: (objectKey) => storage.objectStore.getObject(objectKey) },
-        new GeminiReceiptExtractor({ apiKey: GEMINI_API_KEY, model: GEMINI_RECEIPT_MODEL }),
+        receiptExtractor,
       ),
     })
   : null;
@@ -103,15 +106,19 @@ logger.info(
   {
     emailProvider: BREVO_API_KEY ? "brevo" : "log",
     allowlistEnforced: NODE_ENV !== "production",
-    receiptExtraction: receiptExtractWorker ? "gemini" : "off",
+    receiptExtraction: receiptExtractor
+      ? { provider: config.RECEIPT_OCR_PROVIDER, model: receiptExtractor.modelName }
+      : "off",
   },
   "Workers started: outbox-relay, send-email, seat-hold-sweep, receipt-upload-relay, receipt-normalize, receipt-screen, receipt-extract",
 );
 if (NODE_ENV === "production" && !BREVO_API_KEY) {
   logger.warn("BREVO_API_KEY is not set: transactional e-mails are logged, not sent");
 }
-if (NODE_ENV === "production" && !GEMINI_API_KEY) {
-  logger.warn("GEMINI_API_KEY is not set: receipts are screened but never read by OCR");
+if (NODE_ENV === "production" && !receiptExtractor) {
+  logger.warn(
+    `${missingReceiptOcrKey(config)} is not set (RECEIPT_OCR_PROVIDER=${config.RECEIPT_OCR_PROVIDER}): receipts are screened but never read by OCR`,
+  );
 }
 
 app.listen({ port: PORT, host: HOST }, (err, address) => {
