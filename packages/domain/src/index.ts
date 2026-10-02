@@ -133,6 +133,7 @@ export {
 } from "./enrollment/ScreenReceiptUploadUseCase.js";
 export {
   RECEIPT_EXTRACTION_TIER_PRIMARY,
+  RECEIPT_EXTRACTION_TIER_SECONDARY,
   ReceiptExtractionError,
   findExtractedField,
   type IReceiptExtractor,
@@ -140,6 +141,7 @@ export {
   type ReceiptExtractedFieldName,
   type ReceiptExtraction,
   type ReceiptExtractionFailureReason,
+  type ReceiptExtractionTier,
   type ReceiptImage,
 } from "./enrollment/ReceiptExtraction.js";
 export type {

@@ -7,6 +7,13 @@ import type { PaymentMethod } from "./Payment.js";
  */
 export const RECEIPT_EXTRACTION_TIER_PRIMARY = 1;
 
+/** Level 2: a model of another family, for when level 1 is not confident
+ * on a critical field. Only wired so far — its extractor can be built and
+ * measured, but nothing escalates to it until ROADMAP Sessão 29. */
+export const RECEIPT_EXTRACTION_TIER_SECONDARY = 2;
+
+export type ReceiptExtractionTier = typeof RECEIPT_EXTRACTION_TIER_PRIMARY | typeof RECEIPT_EXTRACTION_TIER_SECONDARY;
+
 /**
  * One field the model read off the receipt, with its own confidence (0–1).
  * `value` is `null` when the field is not on the image or not legible —
