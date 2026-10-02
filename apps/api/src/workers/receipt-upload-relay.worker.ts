@@ -1,11 +1,14 @@
 import { Worker, type ConnectionOptions, type Queue } from "bullmq";
 import {
   RECEIPT_UPLOAD_RELAY_QUEUE,
+  enqueueReceiptExtract,
   enqueueReceiptNormalize,
   enqueueReceiptScreen,
+  type ReceiptExtractPayload,
   type ReceiptNormalizePayload,
   type ReceiptScreenPayload,
 } from "@ooc/queue";
+import { RECEIPT_EXTRACTION_TIER_PRIMARY } from "@ooc/domain";
 import type { FastifyBaseLogger } from "fastify";
 import type { IReceiptNormalizationStore } from "@/infra/persistence/enrollment/DrizzleReceiptUploadRepository.js";
 
@@ -25,6 +28,11 @@ const RELAY_BATCH = 200;
  * it is both `processed` and attached to a payment, and those two happen in
  * either order — the submit may land before or after the normalize job —
  * so the condition is polled here rather than fired from either side.
+ *
+ * The OCR extraction (OOC-20) is offered on the same condition, side by
+ * side with the screening — neither waits on the other. `extractQueue` is
+ * absent when no model key is configured; receipts then simply wait,
+ * unread, until one is.
  */
 export function startReceiptUploadRelayWorker(
   connection: ConnectionOptions,
@@ -33,6 +41,7 @@ export function startReceiptUploadRelayWorker(
     store: IReceiptNormalizationStore;
     normalizeQueue: Queue<ReceiptNormalizePayload>;
     screenQueue: Queue<ReceiptScreenPayload>;
+    extractQueue: Queue<ReceiptExtractPayload> | null;
   },
 ): Worker {
   return new Worker(
@@ -52,6 +61,16 @@ export function startReceiptUploadRelayWorker(
       }
       if (screenable.length > 0) {
         logger.debug({ offered: screenable.length }, "receipt upload relay offered rows to screen");
+      }
+
+      if (deps.extractQueue) {
+        const extractable = await deps.store.listExtractableIds(RELAY_BATCH, RECEIPT_EXTRACTION_TIER_PRIMARY);
+        for (const receiptUploadId of extractable) {
+          await enqueueReceiptExtract(deps.extractQueue, { receiptUploadId });
+        }
+        if (extractable.length > 0) {
+          logger.debug({ offered: extractable.length }, "receipt upload relay offered rows to extract");
+        }
       }
     },
     { connection, concurrency: 1 },

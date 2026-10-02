@@ -52,6 +52,21 @@ const ConfigSchema = z
       .default("15000000")
       .transform((val) => parseInt(val, 10)),
 
+    // OCR level 1 (Gemini, packages/ocr — OOC-20). Same stance as the Brevo
+    // key below: without it receipts are normalized and screened but never
+    // read, and index.ts warns at boot — a missing model key never takes the
+    // API down. The model id is env so a provider rename is a secret change,
+    // not a deploy; every reading records the id it actually used. An empty
+    // value (`GEMINI_API_KEY=` straight from .env.example) counts as unset.
+    GEMINI_API_KEY: z
+      .string()
+      .optional()
+      .transform((val) => val || undefined),
+    GEMINI_RECEIPT_MODEL: z
+      .string()
+      .optional()
+      .transform((val) => val || undefined),
+
     // e-mail (Brevo, behind NotificationProvider — CLAUDE.md §3). Without a
     // key, e-mails are rendered and logged, never sent — optional even in
     // production, so a deploy never goes down over a missing e-mail secret
