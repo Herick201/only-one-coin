@@ -3,7 +3,7 @@
 // and compared with what a person read off each image by hand.
 //
 // Usage:
-//   pnpm --filter @ooc/api ocr:eval -- <sample-dir>
+//   pnpm --filter @ooc/api ocr:eval -- <sample-dir> [--tier 2]
 //
 // <sample-dir> holds the receipt images and a `labels.csv` filled in by hand:
 //
@@ -17,27 +17,31 @@
 //
 // Real receipts are personal data (CLAUDE.md §6): <sample-dir> must live
 // outside the repository — the script refuses otherwise. It writes two
-// files there: `ocr-eval-report.md` (accuracy and confidence only, no value
-// read off any receipt — the part that goes into docs/OCR-AVALIACAO.md) and
-// `ocr-eval-details.csv` (expected vs read, for the hand check; stays local).
+// files there: `ocr-eval-report-tier<N>.md` (accuracy and confidence only, no
+// value read off any receipt — the part that goes into
+// docs/OCR-AVALIACAO.md) and `ocr-eval-details-tier<N>.csv` (expected vs
+// read, for the hand check; stays local).
 //
-// Needs only the OCR variables, the same ones the worker reads:
-// RECEIPT_OCR_PROVIDER (gemini | openrouter) and that provider's key, plus
-// its optional model id — no database, no bucket. Each image is one model
-// call. Comparing providers is running it twice with a different
-// RECEIPT_OCR_PROVIDER.
+// `--tier 2` reads the same sample with RECEIPT_OCR_TIER2_MODEL instead of
+// tier 1's — how the level-2 model gets chosen (ROADMAP Sessão 29) before
+// anything escalates to it. Needs only the OCR variables, the same ones the
+// worker reads (OPENROUTER_API_KEY and the tier's model) — no database, no
+// bucket. Each image is one model call.
 import { readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  RECEIPT_EXTRACTION_TIER_PRIMARY,
+  RECEIPT_EXTRACTION_TIER_SECONDARY,
   ReceiptExtractionError,
   normalizeOperationNumber,
+  type ReceiptExtractionTier,
   type ReceiptExtractedField,
   type ReceiptExtractedFieldName,
   type ReceiptExtraction,
 } from "@ooc/domain";
 import { parseAmountToCents, toPaidAt } from "@ooc/ocr";
-import { createReceiptExtractor, missingReceiptOcrKey } from "@/infra/ocr/createReceiptExtractor.js";
+import { createReceiptExtractor } from "@/infra/ocr/createReceiptExtractor.js";
 import { ReceiptOcrEnvSchema } from "@/infra/ocr/receiptOcrEnv.js";
 import { normalizeReceiptImage } from "@/infra/storage/normalizeReceiptImage.js";
 
@@ -232,16 +236,16 @@ function csvCell(value: string): string {
   return /[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
 }
 
-function buildReport(results: SampleResult[], provider: string, modelName: string): string {
+function buildReport(results: SampleResult[], tier: ReceiptExtractionTier, modelName: string): string {
   const read = results.filter((result) => !result.failure);
   const versions = [...new Set(read.map((result) => result.modelVersion ?? "?"))].join(", ");
   const allFieldsRight = read.filter((result) => result.fields.every((field) => field.correct)).length;
 
   const lines = [
-    `# Avaliação OCR nível 1`,
+    `# Avaliação OCR nível ${tier}`,
     ``,
     `- Data: ${new Date().toISOString().slice(0, 10)}`,
-    `- Provedor: \`${provider}\` · modelo pedido: \`${modelName}\` · versão servida: \`${versions || "—"}\``,
+    `- Provedor: \`openrouter\` · modelo pedido: \`${modelName}\` · versão servida: \`${versions || "—"}\``,
     `- Comprovantes: ${results.length} · lidos: ${read.length} · falha na chamada: ${results.length - read.length}`,
     `- Comprovantes com os cinco campos certos: ${allFieldsRight}/${read.length} (${percent(allFieldsRight, read.length)})`,
     ``,
@@ -293,11 +297,36 @@ function buildDetails(results: SampleResult[]): string {
   return `${lines.join("\n")}\n`;
 }
 
-async function main(): Promise<void> {
-  const target = process.argv.slice(2).find((arg) => arg !== "--");
-  if (!target) {
-    throw new Error("usage: pnpm --filter @ooc/api ocr:eval -- <sample-dir>");
+const USAGE = "usage: pnpm --filter @ooc/api ocr:eval -- <sample-dir> [--tier 2]";
+
+function parseArgs(args: string[]): { target: string; tier: ReceiptExtractionTier } {
+  let target: string | null = null;
+  let tier: ReceiptExtractionTier = RECEIPT_EXTRACTION_TIER_PRIMARY;
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]!;
+    if (arg === "--") {
+      continue;
+    }
+    if (arg === "--tier") {
+      const value = Number(args[++i]);
+      if (value !== RECEIPT_EXTRACTION_TIER_PRIMARY && value !== RECEIPT_EXTRACTION_TIER_SECONDARY) {
+        throw new Error(`--tier must be 1 or 2 — ${USAGE}`);
+      }
+      tier = value;
+    } else if (!target) {
+      target = arg;
+    } else {
+      throw new Error(USAGE);
+    }
   }
+  if (!target) {
+    throw new Error(USAGE);
+  }
+  return { target, tier };
+}
+
+async function main(): Promise<void> {
+  const { target, tier } = parseArgs(process.argv.slice(2));
   const sampleDir = path.resolve(process.cwd(), target);
   const relative = path.relative(REPO_ROOT, sampleDir);
   if (!relative.startsWith("..") && !path.isAbsolute(relative)) {
@@ -305,9 +334,13 @@ async function main(): Promise<void> {
   }
 
   const env = ReceiptOcrEnvSchema.parse(process.env);
-  const extractor = createReceiptExtractor(env);
+  const extractor = createReceiptExtractor(env, tier);
   if (!extractor) {
-    throw new Error(`${missingReceiptOcrKey(env)} is not set (RECEIPT_OCR_PROVIDER=${env.RECEIPT_OCR_PROVIDER})`);
+    throw new Error(
+      tier === RECEIPT_EXTRACTION_TIER_SECONDARY && env.OPENROUTER_API_KEY
+        ? "RECEIPT_OCR_TIER2_MODEL is not set"
+        : "OPENROUTER_API_KEY is not set",
+    );
   }
 
   const labels = parseLabels(await readFile(path.join(sampleDir, "labels.csv"), "utf8"));
@@ -339,9 +372,9 @@ async function main(): Promise<void> {
     }
   }
 
-  const reportPath = path.join(sampleDir, "ocr-eval-report.md");
-  const detailsPath = path.join(sampleDir, "ocr-eval-details.csv");
-  await writeFile(reportPath, buildReport(results, env.RECEIPT_OCR_PROVIDER, extractor.modelName));
+  const reportPath = path.join(sampleDir, `ocr-eval-report-tier${tier}.md`);
+  const detailsPath = path.join(sampleDir, `ocr-eval-details-tier${tier}.csv`);
+  await writeFile(reportPath, buildReport(results, tier, extractor.modelName));
   await writeFile(detailsPath, buildDetails(results));
   process.stdout.write(`\nReport:  ${reportPath}\nDetails: ${detailsPath} (personal data — keep it out of the repository)\n`);
 }

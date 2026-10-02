@@ -11,10 +11,10 @@ import {
   scheduleReceiptUploadRelay,
   scheduleSeatHoldSweep,
 } from "@ooc/queue";
-import { ExtractReceiptUseCase } from "@ooc/domain";
+import { ExtractReceiptUseCase, RECEIPT_EXTRACTION_TIER_PRIMARY, RECEIPT_EXTRACTION_TIER_SECONDARY } from "@ooc/domain";
 import { buildApp } from "./app.js";
 import { container } from "./container.js";
-import { createReceiptExtractor, missingReceiptOcrKey } from "./infra/ocr/createReceiptExtractor.js";
+import { createReceiptExtractor, receiptOcrModelFor } from "./infra/ocr/createReceiptExtractor.js";
 import { startOutboxRelayWorker } from "./workers/outbox-relay.worker.js";
 import { startReceiptExtractWorker } from "./workers/receipt-extract.worker.js";
 import { startReceiptNormalizeWorker } from "./workers/receipt-normalize.worker.js";
@@ -70,10 +70,11 @@ const seatHoldSweepWorker = startSeatHoldSweepWorker(connection, logger, {
 // attached to a payment it is offered to the extract queue too. The model
 // client is built here, never in the container — routes load the container,
 // and the submit route must not import the AI module (apps/api/CLAUDE.md).
-// RECEIPT_OCR_PROVIDER picks Gemini direct or OpenRouter; without that
-// provider's key the queue is not created, nothing is offered, and receipts
-// wait unread.
-const receiptExtractor = createReceiptExtractor(config);
+// Every tier goes through OpenRouter; without OPENROUTER_API_KEY the queue
+// is not created, nothing is offered, and receipts wait unread. Only tier 1
+// runs — tier 2 is wired (its model is validated here at boot, so a
+// same-family choice fails now and not in Sessão 29) but nothing escalates.
+const receiptExtractor = createReceiptExtractor(config, RECEIPT_EXTRACTION_TIER_PRIMARY);
 const receiptNormalizeQueue = createReceiptNormalizeQueue(connection);
 const receiptScreenQueue = createReceiptScreenQueue(connection);
 const receiptExtractQueue = receiptExtractor ? createReceiptExtractQueue(connection) : null;
@@ -107,7 +108,11 @@ logger.info(
     emailProvider: BREVO_API_KEY ? "brevo" : "log",
     allowlistEnforced: NODE_ENV !== "production",
     receiptExtraction: receiptExtractor
-      ? { provider: config.RECEIPT_OCR_PROVIDER, model: receiptExtractor.modelName }
+      ? {
+          provider: "openrouter",
+          tier1: receiptExtractor.modelName,
+          tier2: receiptOcrModelFor(config, RECEIPT_EXTRACTION_TIER_SECONDARY) ?? "unset",
+        }
       : "off",
   },
   "Workers started: outbox-relay, send-email, seat-hold-sweep, receipt-upload-relay, receipt-normalize, receipt-screen, receipt-extract",
@@ -116,9 +121,7 @@ if (NODE_ENV === "production" && !BREVO_API_KEY) {
   logger.warn("BREVO_API_KEY is not set: transactional e-mails are logged, not sent");
 }
 if (NODE_ENV === "production" && !receiptExtractor) {
-  logger.warn(
-    `${missingReceiptOcrKey(config)} is not set (RECEIPT_OCR_PROVIDER=${config.RECEIPT_OCR_PROVIDER}): receipts are screened but never read by OCR`,
-  );
+  logger.warn("OPENROUTER_API_KEY is not set: receipts are screened but never read by OCR");
 }
 
 app.listen({ port: PORT, host: HOST }, (err, address) => {
