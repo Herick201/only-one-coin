@@ -26,8 +26,9 @@ prompt (`packages/ocr/src/receiptPrompt.ts`) ou de modelo
    nada. `payment_method` é `yape`/`plin`/`bcp`/`interbank` ou
    `other:<nome impresso>`. `paid_at` é horário de Lima, hora opcional.
    `payer_name` é quem **enviou** o dinheiro, não o destinatário.
-3. **Rodar** com a chave do Gemini no `apps/api/.env` (só ela é necessária —
-   sem banco, sem bucket):
+3. **Rodar** com as variáveis de OCR no `apps/api/.env` — `RECEIPT_OCR_PROVIDER`
+   (`gemini` ou `openrouter`) e a chave desse provedor; sem banco, sem bucket.
+   Pra comparar os dois caminhos, roda duas vezes trocando o provedor:
 
    ```bash
    pnpm --filter @ooc/api ocr:eval -- /caminho/da/amostra
@@ -66,11 +67,19 @@ Em todos: rótulo vazio só é acerto se o modelo também devolveu vazio.
 
 ## Histórico de medições
 
-| Data | Modelo (pedido · servido) | Amostra | Valor | Nº operação | Meio | Titular | Data | 5/5 campos | Quem conferiu |
+| Data | Provedor · modelo (pedido · servido) | Amostra | Valor | Nº operação | Meio | Titular | Data | 5/5 campos | Quem conferiu |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | — | — | — | — | — | — | — | — | — | — |
 
-**Pendente:** nenhuma medição feita ainda. O pipeline está pronto e testado
-(unitário e integração), mas a amostra de comprovantes reais e a chave do
-Gemini não estavam disponíveis na sessão que construiu o nível 1
-(02/10/2026). A Sessão 26 só fecha com a primeira linha desta tabela.
+**Pendente:** nenhuma medição em comprovante real ainda. O pipeline está
+pronto e testado (unitário e integração), mas a amostra real não estava
+disponível na sessão que construiu o nível 1 (02/10/2026). A Sessão 26 só
+fecha com a primeira linha desta tabela.
+
+O que já foi verificado, e **não conta como medição**: uma chamada real pela
+OpenRouter (`google/gemini-3.1-flash-lite via Google`, roteamento ZDR) sobre
+um comprovante de Yape **sintético** — gerado na hora, dados inventados —
+leu os cinco campos certos, inclusive "09:05 p. m." → 21:05 de Lima, sem
+confundir código de segurança nem celular com o nº de operação. Prova que o
+pedido é aceito e a conversão funciona ponta a ponta; não diz nada sobre
+foto torta, comprovante de banco ou print cortado.

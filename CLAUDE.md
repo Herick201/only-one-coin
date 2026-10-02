@@ -110,7 +110,7 @@ Se algo parecer exigir um desses, **pare e pergunte**.
 | Storage (comprovante + backup) | **Tigris** (nativo do Fly.io — `fly storage create`, S3-compatible, egress zero) — mesmo bucket-provider pros dois usos, sem conta separada |
 | Auth | **Better Auth** — biblioteca embutida no processo de `apps/api` (Fastify), nunca instanciada em `apps/app` |
 | Fila | **Redis (Upstash) + BullMQ** — workers em `apps/api` |
-| OCR / IA | **Gemini 3.1 Flash-Lite** (nível 1) · modelo de outra família (nível 2) |
+| OCR / IA | **Gemini 3.1 Flash-Lite** (nível 1) — chamado direto (Google AI Studio) **ou via OpenRouter**, escolhido por env · modelo de outra família (nível 2) |
 | E-mail (transacional/campanhas) | **Brevo**, atrás de adapter |
 | E-mail (caixa/mailbox de staff) | **Zoho Mail Lite** — Brevo não hospeda caixa (sem IMAP próprio); usar só se alguém precisar **receber e ler** e-mail em `contato@`/`matricula@` |
 | Rate limit + idempotência | **Upstash Redis** (borda) — mesma instância usada pela fila |
@@ -124,6 +124,8 @@ Não trocar nada disso sem me perguntar. Já foram avaliadas e descartadas: Cler
 **Decisão revertida — hospedagem de frontend (Netlify → Vercel, sessão 31/08/2026).** Vercel havia sido avaliado e descartado antes; reaberto e refechado nesta sessão a pedido meu, pensando num terceiro frontend futuro (portal do aluno) sobre a mesma conta/organização. Hoje `apps/app` continua **um único Next.js** (portal + backoffice juntos, `CLAUDE.md` §8) — nenhum desmembramento decidido ainda; o terceiro frontend é escopo em aberto, não confundir com decisão fechada.
 
 **Decisão fechada — fila mesclada com a API (sessão 31/08/2026).** `apps/api` tinha dois entrypoints (`src/index.ts` HTTP e `src/worker.ts`) pensados pra escalar/reiniciar de forma independente — isso só se justificava se a hospedagem permitisse escalar cada um à parte. Como o Fly.io hospeda `apps/api` como uma VM always-on única, a separação parou de se justificar: um entrypoint só, HTTP + workers de fila no mesmo processo. Simplifica o deploy (uma imagem, uma máquina) sem abrir mão do requisito de always-on que os workers de BullMQ exigem.
+
+**Decisão fechada — OCR via OpenRouter (sessão 02/10/2026).** O modelo do nível 1 continua o mesmo (Gemini 3.1 Flash-Lite); o que mudou é o caminho até ele. Além da chamada direta ao Google, `packages/ocr` tem um adapter da **OpenRouter**, e `RECEIPT_OCR_PROVIDER` (`gemini` | `openrouter`) escolhe qual o worker usa. Motivo: uma chave só também atende o nível 2, que exige modelo de outra família. Custo da escolha: um intermediário a mais no caminho do comprovante, que é dado pessoal (Ley 29733) — por isso a chamada exige da OpenRouter endpoint com **retenção zero** (`zdr`), sem coleta de dados e que honre o JSON schema (`require_parameters`). Detalhe em `apps/api/CLAUDE.md`, OCR.
 
 **Decisão fechada — auth.** O provedor removido cobria Postgres, auth e storage juntos; os três já foram resolvidos (Neon, Better Auth e Tigris, acima). Better Auth é uma **biblioteca embutida no processo do backend**, não um serviço hospedado externo — roda dentro do próprio `apps/api`, aceita conexão Postgres existente, e o campo `role` fica travado contra escrita client-side (`additionalFields.role`, `input:false`). Padrão de integração completo (porta em `packages/domain`, adapter em `apps/api/src/infra`, `apps/app` nunca instanciando o provedor) em `docs/ARCHITECTURE.md` §5.6.
 

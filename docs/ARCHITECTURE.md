@@ -18,7 +18,7 @@ pnpm workspaces com dois grupos, no mesmo padrão do diagrama do `CLAUDE.md` §3
 | `packages/domain` (`@ooc/domain`) | DDD puro — entidades, usecases, portas de repositório | Nenhum (núcleo — não depende de nada do monorepo) | Scaffold com contexto de exemplo + porta de identidade (auth) + vocabulário de erro HTTP |
 | `packages/queue` (`@ooc/queue`) | Contrato de fila compartilhado (schemas zod, producers) | Nenhum pacote interno (só `bullmq`/`ioredis`/`zod`) | Scaffold com job de exemplo |
 | `packages/db` (`@ooc/db`) | Schema + migrations (Drizzle Kit) — mesma `DATABASE_URL` local/Neon | Nenhum pacote interno (só `drizzle-orm`/`pg`) | Postgres local (Docker) + migration baseline vazia aplicando |
-| `packages/ocr` (`@ooc/ocr`) | Adapter do modelo de OCR (Gemini) atrás da porta `IReceiptExtractor` | `@ooc/domain` | Nível 1 implementado (OOC-20); só os workers de `apps/api` importam |
+| `packages/ocr` (`@ooc/ocr`) | Adapters do modelo de OCR (Gemini direto ou via OpenRouter) atrás da porta `IReceiptExtractor` | `@ooc/domain` | Nível 1 implementado (OOC-20); só os workers de `apps/api` importam |
 | `i18n`, `shared` | Reservados no diagrama do `CLAUDE.md` §3 | — | Ainda não criados (`notifications` já existe — a tabela acima não o lista em detalhe) |
 
 **Regra de dependência:** `apps/*` depende de `packages/*`, nunca o contrário. Dentro de `packages/*`, `@ooc/domain` é o núcleo — todo o resto pode depender dele, ele não depende de nenhum outro pacote do monorepo (nem de `@ooc/queue`, nem de infra). Hoje só `apps/api` importa `@ooc/domain` e `@ooc/queue`; `apps/app` é candidato futuro a importar `@ooc/queue` como produtor de job (ver `CLAUDE.md` §5), mas ainda não faz isso.
