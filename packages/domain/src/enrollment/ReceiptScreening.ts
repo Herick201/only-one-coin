@@ -33,9 +33,9 @@ export type ReceiptFraudSignal =
   | { kind: "modified_after_capture"; capturedAt: string; modifiedAt: string }
   /** The payer named on the receipt is neither the student nor the guardian.
    * A relative paying is ordinary, so this only informs the reviewer. Not
-   * produced yet: the payer's name only exists once the OCR extraction reads
-   * it (CLAUDE.md §5, not built) — `payerNameMatches` is the rule it will
-   * use. */
+   * produced yet: the OCR reads the payer's name since OOC-20
+   * (`payment_receipts.extracted_fields`), but wiring it to
+   * `payerNameMatches` belongs to the validation step (ROADMAP Sessão 27). */
   | { kind: "payer_name_mismatch"; payerName: string };
 
 export type ReceiptFraudSignalKind = ReceiptFraudSignal["kind"];
