@@ -37,28 +37,28 @@ const {
 
 const app = await buildApp();
 
-const connection = createRedisConnection(REDIS_URL);
+const redis = createRedisConnection(REDIS_URL);
 
 // Outbox → queue → provider (apps/api/CLAUDE.md, "Notificações"). The relay
 // sweeps pending outbox rows onto the send-email queue; the send-email worker
 // delivers them through the guarded provider.
-const sendEmailQueue = createSendEmailQueue(connection);
-const outboxRelayQueue = createOutboxRelayQueue(connection);
+const sendEmailQueue = createSendEmailQueue(redis);
+const outboxRelayQueue = createOutboxRelayQueue(redis);
 await scheduleOutboxRelay(outboxRelayQueue);
 
-const sendEmailWorker = startSendEmailWorker(connection, logger, {
+const sendEmailWorker = startSendEmailWorker(redis, logger, {
   store: notifications.outbox,
   provider: notifications.provider,
 });
-const outboxRelayWorker = startOutboxRelayWorker(connection, logger, {
+const outboxRelayWorker = startOutboxRelayWorker(redis, logger, {
   store: notifications.outbox,
   sendEmailQueue,
 });
 // Checkout holds (apps/api/CLAUDE.md, "Dois relógios"): expired holds give
 // their seat back to the class group, on the database clock.
-const seatHoldSweepQueue = createSeatHoldSweepQueue(connection);
+const seatHoldSweepQueue = createSeatHoldSweepQueue(redis);
 await scheduleSeatHoldSweep(seatHoldSweepQueue);
-const seatHoldSweepWorker = startSeatHoldSweepWorker(connection, logger, {
+const seatHoldSweepWorker = startSeatHoldSweepWorker(redis, logger, {
   expireSeatHolds: useCases.enrollment.expireSeatHolds,
 });
 
@@ -79,31 +79,31 @@ const seatHoldSweepWorker = startSeatHoldSweepWorker(connection, logger, {
 // The traffic light (OOC-21) rides the same relay once a receipt is both
 // screened and read.
 const receiptExtractor = createReceiptExtractor(config, RECEIPT_EXTRACTION_TIER_PRIMARY);
-const receiptNormalizeQueue = createReceiptNormalizeQueue(connection);
-const receiptScreenQueue = createReceiptScreenQueue(connection);
-const receiptValidateQueue = createReceiptValidateQueue(connection);
-const receiptExtractQueue = receiptExtractor ? createReceiptExtractQueue(connection) : null;
-const receiptUploadRelayQueue = createReceiptUploadRelayQueue(connection);
+const receiptNormalizeQueue = createReceiptNormalizeQueue(redis);
+const receiptScreenQueue = createReceiptScreenQueue(redis);
+const receiptValidateQueue = createReceiptValidateQueue(redis);
+const receiptExtractQueue = receiptExtractor ? createReceiptExtractQueue(redis) : null;
+const receiptUploadRelayQueue = createReceiptUploadRelayQueue(redis);
 await scheduleReceiptUploadRelay(receiptUploadRelayQueue);
-const receiptNormalizeWorker = startReceiptNormalizeWorker(connection, logger, {
+const receiptNormalizeWorker = startReceiptNormalizeWorker(redis, logger, {
   store: repositories.receiptUpload,
   objects: storage.objectStore,
 });
-const receiptUploadRelayWorker = startReceiptUploadRelayWorker(connection, logger, {
+const receiptUploadRelayWorker = startReceiptUploadRelayWorker(redis, logger, {
   store: repositories.receiptUpload,
   normalizeQueue: receiptNormalizeQueue,
   screenQueue: receiptScreenQueue,
   extractQueue: receiptExtractQueue,
   validateQueue: receiptValidateQueue,
 });
-const receiptScreenWorker = startReceiptScreenWorker(connection, logger, {
+const receiptScreenWorker = startReceiptScreenWorker(redis, logger, {
   screenReceiptUpload: useCases.enrollment.screenReceiptUpload,
 });
-const receiptValidateWorker = startReceiptValidateWorker(connection, logger, {
+const receiptValidateWorker = startReceiptValidateWorker(redis, logger, {
   validateReceipt: useCases.enrollment.validateReceipt,
 });
 const receiptExtractWorker = receiptExtractor
-  ? startReceiptExtractWorker(connection, logger, {
+  ? startReceiptExtractWorker(redis, logger, {
       extractReceipt: new ExtractReceiptUseCase(
         repositories.receiptExtraction,
         { read: (objectKey) => storage.objectStore.getObject(objectKey) },
@@ -159,7 +159,7 @@ async function shutdown() {
   await receiptScreenQueue.close();
   await receiptValidateQueue.close();
   await receiptExtractQueue?.close();
-  await connection.quit();
+  await redis.connection.quit();
   process.exit(0);
 }
 

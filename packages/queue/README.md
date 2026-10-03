@@ -12,7 +12,7 @@ Roda sobre a instância **Upstash Redis** já usada para rate limit/idempotênci
 
 ```
 src/
-  connection.ts     # factory da conexão Redis a partir de uma REDIS_URL (recebida por parâmetro — quem valida env é o app que consome)
+  connection.ts     # factory da conexão Redis + prefixo de chave a partir de uma REDIS_URL (recebida por parâmetro — quem valida env é o app que consome). O prefixo é o username da URL: o Redis compartilhado (repo `services`) dá a cada projeto um user de ACL restrito a `<user>:*`, então `ooc` grava em `ooc:*`; sem username, fica o `bull` padrão
   jobs/               # um arquivo por tipo de job: nome da fila + zod schema do payload (ex.: send-email.job.ts)
   producers/            # helpers tipados que fazem `queue.add(...)` — quem publica importa daqui, nunca monta o payload à mão
   index.ts

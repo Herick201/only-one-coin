@@ -1,5 +1,5 @@
-import { Worker, type ConnectionOptions } from "bullmq";
-import { RECEIPT_EXTRACT_QUEUE, ReceiptExtractPayloadSchema, type ReceiptExtractPayload } from "@ooc/queue";
+import { Worker } from "bullmq";
+import { RECEIPT_EXTRACT_QUEUE, ReceiptExtractPayloadSchema, type ReceiptExtractPayload, type QueueRedis } from "@ooc/queue";
 import { ReceiptExtractionError, findExtractedField, type ExtractReceiptUseCase } from "@ooc/domain";
 import type { FastifyBaseLogger } from "fastify";
 
@@ -14,7 +14,7 @@ import type { FastifyBaseLogger } from "fastify";
  * off the receipt (CLAUDE.md §6, PII in logs).
  */
 export function startReceiptExtractWorker(
-  connection: ConnectionOptions,
+  redis: QueueRedis,
   logger: FastifyBaseLogger,
   deps: { extractReceipt: ExtractReceiptUseCase },
 ): Worker<ReceiptExtractPayload> {
@@ -54,6 +54,6 @@ export function startReceiptExtractWorker(
       }
     },
     // Each job is one network call that mostly waits on the provider.
-    { connection, concurrency: 5 },
+    { ...redis, concurrency: 5 },
   );
 }

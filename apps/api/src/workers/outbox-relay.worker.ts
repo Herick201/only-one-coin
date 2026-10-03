@@ -1,5 +1,5 @@
-import { Worker, type ConnectionOptions, type Queue } from "bullmq";
-import { OUTBOX_RELAY_QUEUE, enqueueSendEmail, type SendEmailPayload } from "@ooc/queue";
+import { Worker, type Queue } from "bullmq";
+import { OUTBOX_RELAY_QUEUE, enqueueSendEmail, type SendEmailPayload, type QueueRedis } from "@ooc/queue";
 import type { FastifyBaseLogger } from "fastify";
 import type { IOutboxStore } from "@/infra/persistence/notification/DrizzleOutboxRepository.js";
 
@@ -17,7 +17,7 @@ const RELAY_BATCH = 200;
  * flush) is simply offered again on the next tick.
  */
 export function startOutboxRelayWorker(
-  connection: ConnectionOptions,
+  redis: QueueRedis,
   logger: FastifyBaseLogger,
   deps: { store: IOutboxStore; sendEmailQueue: Queue<SendEmailPayload> },
 ): Worker {
@@ -32,6 +32,6 @@ export function startOutboxRelayWorker(
         logger.debug({ offered: ids.length }, "outbox relay offered pending rows");
       }
     },
-    { connection, concurrency: 1 },
+    { ...redis, concurrency: 1 },
   );
 }

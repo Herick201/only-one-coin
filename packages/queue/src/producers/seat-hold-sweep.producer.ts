@@ -1,8 +1,9 @@
-import { Queue, type ConnectionOptions } from "bullmq";
+import { Queue } from "bullmq";
+import type { QueueRedis } from "../connection.js";
 import { SEAT_HOLD_SWEEP_EVERY_MS, SEAT_HOLD_SWEEP_QUEUE } from "../jobs/seat-hold-sweep.job.js";
 
-export function createSeatHoldSweepQueue(connection: ConnectionOptions): Queue {
-  return new Queue(SEAT_HOLD_SWEEP_QUEUE, { connection });
+export function createSeatHoldSweepQueue(redis: QueueRedis): Queue {
+  return new Queue(SEAT_HOLD_SWEEP_QUEUE, { ...redis });
 }
 
 /** Idempotent: upserting the scheduler on every boot leaves exactly one. */

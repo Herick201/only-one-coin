@@ -1,4 +1,4 @@
-import { Worker, type ConnectionOptions, type Queue } from "bullmq";
+import { Worker, type Queue } from "bullmq";
 import {
   RECEIPT_UPLOAD_RELAY_QUEUE,
   enqueueReceiptExtract,
@@ -9,6 +9,7 @@ import {
   type ReceiptNormalizePayload,
   type ReceiptScreenPayload,
   type ReceiptValidatePayload,
+  type QueueRedis,
 } from "@ooc/queue";
 import { RECEIPT_EXTRACTION_TIER_PRIMARY } from "@ooc/domain";
 import type { FastifyBaseLogger } from "fastify";
@@ -42,7 +43,7 @@ const RELAY_BATCH = 200;
  * so nothing is ever offered — the pipeline stays as it was before OCR.
  */
 export function startReceiptUploadRelayWorker(
-  connection: ConnectionOptions,
+  redis: QueueRedis,
   logger: FastifyBaseLogger,
   deps: {
     store: IReceiptNormalizationStore;
@@ -89,6 +90,6 @@ export function startReceiptUploadRelayWorker(
         logger.debug({ offered: validatable.length }, "receipt upload relay offered rows to validate");
       }
     },
-    { connection, concurrency: 1 },
+    { ...redis, concurrency: 1 },
   );
 }

@@ -1,13 +1,14 @@
-import { Queue, type ConnectionOptions } from "bullmq";
+import { Queue } from "bullmq";
+import type { QueueRedis } from "../connection.js";
 import { RECEIPT_SCREEN_QUEUE, ReceiptScreenPayloadSchema, type ReceiptScreenPayload } from "../jobs/receipt-screen.job.js";
 
 /** A screening attempt only fails on something transient (database
  * timeout) — same short ladder as the normalize step. */
 export const RECEIPT_SCREEN_ATTEMPTS = 3;
 
-export function createReceiptScreenQueue(connection: ConnectionOptions): Queue<ReceiptScreenPayload> {
+export function createReceiptScreenQueue(redis: QueueRedis): Queue<ReceiptScreenPayload> {
   return new Queue<ReceiptScreenPayload>(RECEIPT_SCREEN_QUEUE, {
-    connection,
+    ...redis,
     defaultJobOptions: {
       attempts: RECEIPT_SCREEN_ATTEMPTS,
       backoff: { type: "exponential", delay: 10_000 },

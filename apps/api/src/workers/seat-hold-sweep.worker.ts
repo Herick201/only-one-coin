@@ -1,5 +1,5 @@
-import { Worker, type ConnectionOptions } from "bullmq";
-import { SEAT_HOLD_SWEEP_QUEUE } from "@ooc/queue";
+import { Worker } from "bullmq";
+import { SEAT_HOLD_SWEEP_QUEUE, type QueueRedis } from "@ooc/queue";
 import type { ExpireSeatHoldsUseCase } from "@ooc/domain";
 import type { FastifyBaseLogger } from "fastify";
 
@@ -11,7 +11,7 @@ import type { FastifyBaseLogger } from "fastify";
  * rows (SKIP LOCKED) instead of handing a seat back twice.
  */
 export function startSeatHoldSweepWorker(
-  connection: ConnectionOptions,
+  redis: QueueRedis,
   logger: FastifyBaseLogger,
   deps: { expireSeatHolds: ExpireSeatHoldsUseCase },
 ): Worker {
@@ -23,6 +23,6 @@ export function startSeatHoldSweepWorker(
         logger.info({ expired }, "seat hold sweep returned expired holds to their class groups");
       }
     },
-    { connection, concurrency: 1 },
+    { ...redis, concurrency: 1 },
   );
 }

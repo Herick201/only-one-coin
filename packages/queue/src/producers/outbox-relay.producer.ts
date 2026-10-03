@@ -1,8 +1,9 @@
-import { Queue, type ConnectionOptions } from "bullmq";
+import { Queue } from "bullmq";
+import type { QueueRedis } from "../connection.js";
 import { OUTBOX_RELAY_EVERY_MS, OUTBOX_RELAY_QUEUE } from "../jobs/outbox-relay.job.js";
 
-export function createOutboxRelayQueue(connection: ConnectionOptions): Queue {
-  return new Queue(OUTBOX_RELAY_QUEUE, { connection });
+export function createOutboxRelayQueue(redis: QueueRedis): Queue {
+  return new Queue(OUTBOX_RELAY_QUEUE, { ...redis });
 }
 
 /** Idempotent: upserting the scheduler on every boot leaves exactly one. */

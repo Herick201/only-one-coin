@@ -1,5 +1,5 @@
-import { Worker, type ConnectionOptions } from "bullmq";
-import { RECEIPT_VALIDATE_QUEUE, ReceiptValidatePayloadSchema, type ReceiptValidatePayload } from "@ooc/queue";
+import { Worker } from "bullmq";
+import { RECEIPT_VALIDATE_QUEUE, ReceiptValidatePayloadSchema, type ReceiptValidatePayload, type QueueRedis } from "@ooc/queue";
 import type { ValidateReceiptUseCase } from "@ooc/domain";
 import type { FastifyBaseLogger } from "fastify";
 
@@ -10,7 +10,7 @@ import type { FastifyBaseLogger } from "fastify";
  * amount read nor the amount expected (CLAUDE.md §6, PII in logs).
  */
 export function startReceiptValidateWorker(
-  connection: ConnectionOptions,
+  redis: QueueRedis,
   logger: FastifyBaseLogger,
   deps: { validateReceipt: ValidateReceiptUseCase },
 ): Worker<ReceiptValidatePayload> {
@@ -30,6 +30,6 @@ export function startReceiptValidateWorker(
         throw error;
       }
     },
-    { connection, concurrency: 3 },
+    { ...redis, concurrency: 3 },
   );
 }

@@ -1,13 +1,14 @@
-import { Queue, type ConnectionOptions } from "bullmq";
+import { Queue } from "bullmq";
+import type { QueueRedis } from "../connection.js";
 import { SEND_EMAIL_QUEUE, SendEmailPayloadSchema, type SendEmailPayload } from "../jobs/send-email.job.js";
 
 /** Retry policy for a delivery the provider refused for a transient reason
  * (5xx, 429, network): 5 tries over roughly half an hour. */
 export const SEND_EMAIL_ATTEMPTS = 5;
 
-export function createSendEmailQueue(connection: ConnectionOptions): Queue<SendEmailPayload> {
+export function createSendEmailQueue(redis: QueueRedis): Queue<SendEmailPayload> {
   return new Queue<SendEmailPayload>(SEND_EMAIL_QUEUE, {
-    connection,
+    ...redis,
     defaultJobOptions: {
       attempts: SEND_EMAIL_ATTEMPTS,
       backoff: { type: "exponential", delay: 60_000 },

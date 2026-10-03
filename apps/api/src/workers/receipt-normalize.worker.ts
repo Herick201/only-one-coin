@@ -1,5 +1,5 @@
-import { Worker, type ConnectionOptions } from "bullmq";
-import { RECEIPT_NORMALIZE_QUEUE, ReceiptNormalizePayloadSchema, type ReceiptNormalizePayload } from "@ooc/queue";
+import { Worker } from "bullmq";
+import { RECEIPT_NORMALIZE_QUEUE, ReceiptNormalizePayloadSchema, type ReceiptNormalizePayload, type QueueRedis } from "@ooc/queue";
 import type { IReceiptUploadRepository } from "@ooc/domain";
 import type { FastifyBaseLogger } from "fastify";
 import type { IReceiptNormalizationStore } from "@/infra/persistence/enrollment/DrizzleReceiptUploadRepository.js";
@@ -25,7 +25,7 @@ import { normalizeReceiptImage } from "@/infra/storage/normalizeReceiptImage.js"
  * processed image, so every receipt is hashed from the same kind of input.
  */
 export function startReceiptNormalizeWorker(
-  connection: ConnectionOptions,
+  redis: QueueRedis,
   logger: FastifyBaseLogger,
   deps: { store: IReceiptUploadRepository & IReceiptNormalizationStore; objects: ReceiptObjectStore },
 ): Worker<ReceiptNormalizePayload> {
@@ -66,6 +66,6 @@ export function startReceiptNormalizeWorker(
         throw error;
       }
     },
-    { connection, concurrency: 3 },
+    { ...redis, concurrency: 3 },
   );
 }

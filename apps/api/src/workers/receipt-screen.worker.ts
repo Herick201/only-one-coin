@@ -1,5 +1,5 @@
-import { Worker, type ConnectionOptions } from "bullmq";
-import { RECEIPT_SCREEN_QUEUE, ReceiptScreenPayloadSchema, type ReceiptScreenPayload } from "@ooc/queue";
+import { Worker } from "bullmq";
+import { RECEIPT_SCREEN_QUEUE, ReceiptScreenPayloadSchema, type ReceiptScreenPayload, type QueueRedis } from "@ooc/queue";
 import type { ScreenReceiptUploadUseCase } from "@ooc/domain";
 import type { FastifyBaseLogger } from "fastify";
 
@@ -10,7 +10,7 @@ import type { FastifyBaseLogger } from "fastify";
  * the EXIF software string or anything else read off the file.
  */
 export function startReceiptScreenWorker(
-  connection: ConnectionOptions,
+  redis: QueueRedis,
   logger: FastifyBaseLogger,
   deps: { screenReceiptUpload: ScreenReceiptUploadUseCase },
 ): Worker<ReceiptScreenPayload> {
@@ -33,6 +33,6 @@ export function startReceiptScreenWorker(
         throw error;
       }
     },
-    { connection, concurrency: 3 },
+    { ...redis, concurrency: 3 },
   );
 }

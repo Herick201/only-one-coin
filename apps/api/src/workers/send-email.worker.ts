@@ -1,6 +1,6 @@
-import { Worker, type ConnectionOptions } from "bullmq";
+import { Worker } from "bullmq";
 import type { NotificationProvider } from "@ooc/notifications";
-import { SEND_EMAIL_ATTEMPTS, SEND_EMAIL_QUEUE, SendEmailPayloadSchema, type SendEmailPayload } from "@ooc/queue";
+import { SEND_EMAIL_ATTEMPTS, SEND_EMAIL_QUEUE, SendEmailPayloadSchema, type SendEmailPayload, type QueueRedis } from "@ooc/queue";
 import type { FastifyBaseLogger } from "fastify";
 import type { IOutboxStore } from "@/infra/persistence/notification/DrizzleOutboxRepository.js";
 import { deliverOutboxEmail } from "./deliverOutboxEmail.js";
@@ -10,7 +10,7 @@ import { deliverOutboxEmail } from "./deliverOutboxEmail.js";
  * outbox id and the outcome, never the recipient or the vars (CLAUDE.md §6).
  */
 export function startSendEmailWorker(
-  connection: ConnectionOptions,
+  redis: QueueRedis,
   logger: FastifyBaseLogger,
   deps: { store: IOutboxStore; provider: NotificationProvider },
 ): Worker<SendEmailPayload> {
@@ -34,6 +34,6 @@ export function startSendEmailWorker(
         throw error;
       }
     },
-    { connection, concurrency: 5 },
+    { ...redis, concurrency: 5 },
   );
 }

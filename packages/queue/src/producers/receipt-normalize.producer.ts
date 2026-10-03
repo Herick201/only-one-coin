@@ -1,4 +1,5 @@
-import { Queue, type ConnectionOptions } from "bullmq";
+import { Queue } from "bullmq";
+import type { QueueRedis } from "../connection.js";
 import { RECEIPT_NORMALIZE_QUEUE, ReceiptNormalizePayloadSchema, type ReceiptNormalizePayload } from "../jobs/receipt-normalize.job.js";
 
 /** Retry policy for a normalize attempt lost to something transient (bucket
@@ -7,9 +8,9 @@ import { RECEIPT_NORMALIZE_QUEUE, ReceiptNormalizePayloadSchema, type ReceiptNor
  * always ask the student to resend. */
 export const RECEIPT_NORMALIZE_ATTEMPTS = 3;
 
-export function createReceiptNormalizeQueue(connection: ConnectionOptions): Queue<ReceiptNormalizePayload> {
+export function createReceiptNormalizeQueue(redis: QueueRedis): Queue<ReceiptNormalizePayload> {
   return new Queue<ReceiptNormalizePayload>(RECEIPT_NORMALIZE_QUEUE, {
-    connection,
+    ...redis,
     defaultJobOptions: {
       attempts: RECEIPT_NORMALIZE_ATTEMPTS,
       backoff: { type: "exponential", delay: 10_000 },
