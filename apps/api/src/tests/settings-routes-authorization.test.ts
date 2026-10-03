@@ -7,7 +7,7 @@ import { SESSION_COOKIE_NAME } from "@/infra/auth/betterAuth.js";
 
 /**
  * CI gate §6.5 for the settings screen: management only. Billing settles
- * money but does not decide which money enters unseen. No database — the
+ * money but does not decide what the traffic light calls green. No database — the
  * authorization hook answers before the handler runs.
  */
 

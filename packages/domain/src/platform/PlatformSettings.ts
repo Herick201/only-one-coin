@@ -16,7 +16,8 @@ export const CheckoutHoldMinutesSchema = z
   .max(CHECKOUT_HOLD_MINUTES_MAX);
 
 /**
- * How far ABOVE the expected amount a receipt still approves on its own
+ * How far ABOVE the expected amount a receipt is still green — it only
+ * validates, a person approves
  * (OOC-21). Never below: "Sem descontos. Nunca." (CLAUDE.md §1). Mirrored by
  * the CHECK on `platform_settings.receipt_amount_tolerance_cents`; S/50 is
  * the ceiling the backoffice input already had.

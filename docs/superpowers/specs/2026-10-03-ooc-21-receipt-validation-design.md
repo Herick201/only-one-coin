@@ -13,8 +13,11 @@ backoffice (`settings/receipts`), mas é mock — o servidor só conhece
 
 ## Decisões (do dono, 03/10/2026)
 
-1. **Verde liquida, vermelho sugere.** Verde aprova o pagamento sozinho
-   (vaga `confirmed`, e-mail `payment_approved`). Vermelho **não rejeita**:
+1. **Só valida — aprovação nunca é automática** (revisado pelo dono em
+   03/10/2026, depois do merge do PR #120; o desenho original era "verde
+   liquida", e chegou a ir pra `main`). Verde grava o veredito e deixa o
+   pagamento `pending`, esperando uma pessoa em Pagos; amarelo e vermelho
+   levam `pending → under_review`. Vermelho **não rejeita**:
    vai pra fila de Pagos marcado como *rejeição sugerida*, e uma pessoa
    rejeita. Motivo: a OCR lendo 15 onde está impresso 150 devolveria a vaga de
    quem pagou certo — o erro de rejeitar sozinho custa mais que o de esperar
@@ -32,12 +35,12 @@ backoffice (`settings/receipts`), mas é mock — o servidor só conhece
 5. **Trava do nº de operação no verde.** O nº de operação lido tem que bater
    com o digitado (normalizado com `normalizeOperationNumber`). Não lido ou
    divergente → revisão. Sem isso, um print de outro pagamento do mesmo preço
-   seria aprovado sozinho.
+   apareceria verde pro revisor.
 6. **Trava do meio de pagamento no verde** (regra do controlador na revisão
    final, 03/10/2026, a confirmar com o dono): o meio que a IA leu tem que ser
    o `payments.method` declarado. A trava do nº de operação é única **por
    meio**, então um print de Yape (S/150, nº N) reenviado como `bcp` + N
-   passaria no submit, seria lido como 150 e N e aprovado sozinho. Vem depois
+   passaria no submit, seria lido como 150 e N e apareceria verde. Vem depois
    do nº de operação (valor → nº → meio). Meio não lido → `payment_method_unread`;
    lido diferente do declarado → `payment_method_mismatch`; ambos revisão.
    `other` compara só o enum, nunca o texto livre.
@@ -122,11 +125,11 @@ normalize → (screen ‖ extract) → validate
 - **Oferecido pelo `receipt-upload-relay`** quando o comprovante tem
   `screened_at is not null` **e** uma linha nível 1 em `payment_receipts`
   (lida ou falha) **e** `validated_at is null`. Esperar a triagem é o ponto:
-  ela roda em paralelo com a leitura, e sem isso o verde aprovaria um arquivo
+  ela roda em paralelo com a leitura, e sem isso o verde marcaria um arquivo
   que a triagem mandaria pra fila.
-- **Só o upload mais recente do pagamento** é validado (o mesmo que a fila
-  de revisão mostra). Upload mais antigo recebe o veredito gravado mas nunca
-  liquida.
+- **Só o upload mais recente do pagamento** move o status (o mesmo que a fila
+  de revisão mostra). Upload mais antigo recebe o veredito gravado e para por
+  aí.
 - `ValidateReceiptUseCase` (domínio): lê o sujeito (pagamento, status, valor
   esperado, nº digitado, leitura nível 1, configuração), decide, e chama o
   repositório que **numa transação só**:
@@ -134,19 +137,15 @@ normalize → (screen ‖ extract) → validate
      `expectedCents`, `readCents`, `toleranceCents`, `rejectBelowPercent` —
      os valores daquele momento) e `validated_at`, condicional em
      `validated_at is null` (reentrega é no-op);
-  2. **verde e pagamento `pending`** → `UPDATE payments SET status='approved'
-     WHERE id=… AND status='pending'`, vaga `reserved → confirmed`
-     (`confirmed` intocada), outbox `payment_approved` (mesma montagem do
-     `SettlePaymentUseCase`) e `audit_log` `payment.auto_approved` com ator
-     `system:receipt-validation` e o veredito no `metadata`. Vaga `released`
-     → não aprova, cai no passo 3;
-  3. **amarelo, vermelho (ou verde que não pôde aprovar) e pagamento
-     `pending`** → `pending → under_review`;
+  2. **verde** → só o passo 1: o pagamento fica `pending` com o veredito;
+  3. **amarelo ou vermelho, upload mais recente e pagamento `pending`** →
+     `pending → under_review` (condicional em `pending`);
   4. pagamento já `under_review` (a triagem roteou) ou já liquidado → só o
-     passo 1. **Verde nunca aprova `under_review`.**
-- A liquidação manual (`DrizzlePaymentSettlementRepository`) continua igual;
-  a automática reaproveita os mesmos pedaços SQL (vaga, outbox, audit), sem
-  passar pelo usecase manual — que exige ator humano e aceita `under_review`.
+     passo 1.
+- O semáforo **nunca** aprova, rejeita, mexe na vaga, escreve no outbox ou
+  no `audit_log`. Aprovar e rejeitar continuam só na liquidação manual
+  (`SettlePaymentUseCase` + `DrizzlePaymentSettlementRepository`), com uma
+  pessoa.
 - Log do worker: ids, veredito, motivo — **nunca valor lido nem esperado**
   (PII, `CLAUDE.md` §6).
 - Sem `OPENROUTER_API_KEY` não há leitura, então nada é oferecido — o
@@ -177,9 +176,9 @@ normalize → (screen ‖ extract) → validate
 - **`ValidateReceiptUseCase`** com fakes: monta o veredito certo e passa ao
   repositório; sujeito ausente → no-op.
 - **Integração** (`*.integration.test.ts`, `pnpm test:api:db`): verde em
-  `pending` aprova + confirma vaga + outbox + audit; verde em `under_review`
-  só grava; amarelo/vermelho em `pending` → `under_review`; reentrega no-op;
-  vaga `released` não aprova; upload antigo não liquida; relay só oferece
+  `pending` só grava (pagamento continua `pending`, sem outbox nem audit);
+  amarelo/vermelho em `pending` → `under_review`; pagamento já fora de `pending` só grava; reentrega no-op;
+  upload antigo não move o pagamento; relay só oferece
   depois de triagem + leitura.
 - **Rotas:** papel errado → 403 (portão 5 do CI).
 

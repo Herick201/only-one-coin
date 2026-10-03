@@ -1045,7 +1045,7 @@ export type ReviewDecision =
  * that escalates) and still to be confirmed as editable.
  */
 export interface PaymentSettings {
-  /** How far ABOVE the frozen price a receipt may land and still pass on its own — never below (CLAUDE.md §1, "Sem descontos"). */
+  /** How far ABOVE the frozen price a receipt may land and still be green — never below (CLAUDE.md §1, "Sem descontos"). */
   toleranceCents: number
   /** Below this percentage of the frozen price, rejection is suggested to the reviewer (1–99). */
   rejectBelowPercent: number

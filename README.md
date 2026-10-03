@@ -421,13 +421,14 @@ o que é real:
   `OPENROUTER_API_KEY` o worker não sobe e os comprovantes ficam sem leitura. Taxa de acerto medida em [`docs/OCR-AVALIACAO.md`](docs/OCR-AVALIACAO.md).
   **Semáforo do comprovante (OOC-21):** compara o valor lido com o preço
   congelado sob tolerância (só pra cima) e limite de rejeição configuráveis no
-  backoffice; verde aprova sozinho pagamento pendente, amarelo e vermelho vão
-  pra revisão — vermelho como rejeição sugerida.
+  backoffice. **Só valida, nunca aprova:** verde deixa o pagamento pendente
+  com a marca de que tudo bate, amarelo e vermelho vão pra revisão — vermelho
+  como rejeição sugerida. Quem aprova é sempre uma pessoa em Pagos.
 
 **Autorização e domínio de negócio já não dependem de Neon de staging/produção
 provisionado** — rodam sobre o Postgres local. **A reconstruir** quando
 staging/produção tiverem seus próprios dados de verdade: OCR e notificações
 reais (o comprovante do checkout público já sobe via signed URL, é
-normalizado e lido pelo nível 1 da OCR — acima —, mas só o semáforo decide, e só o verde; não há envio de e-mail real —
+normalizado e lido pelo nível 1 da OCR e validado pelo semáforo — acima —, mas a aprovação é sempre de uma pessoa; não há envio de e-mail real —
 `send-email.worker.ts` só loga o payload). Autorização é feita na camada de
 aplicação (`apps/api`), não em RLS — ver `CLAUDE.md` §8.

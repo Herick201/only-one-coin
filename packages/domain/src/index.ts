@@ -158,13 +158,11 @@ export {
 } from "./enrollment/ReceiptValidation.js";
 export type {
   IReceiptValidationRepository,
-  ReceiptAutoApproval,
   ReceiptValidationDetail,
   ReceiptValidationEffect,
   ReceiptValidationSubject,
 } from "./enrollment/ReceiptValidationRepository.js";
 export {
-  RECEIPT_VALIDATION_ACTOR,
   ValidateReceiptUseCase,
   type ValidateReceiptInput,
   type ValidateReceiptOutput,

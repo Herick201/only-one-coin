@@ -6,12 +6,16 @@ import { normalizeOperationNumber } from "./ReceiptScreening.js";
  * reading means for the payment. Pure and integer-only — cents and a whole
  * percentage, never a float near money.
  *
- * - `approve`: the pipeline settles the payment on its own (only out of
- *   `pending` — see `ValidateReceiptUseCase`).
- * - `review`: a person decides, as before the traffic light existed.
+ * It only validates: approvals are never automatic (owner, 03/10/2026).
+ * Every verdict is guidance for the person who settles the payment.
+ *
+ * - `approve`: the reading supports approving — amount, operation number
+ *   and payment method all match. The payment stays `pending` until a
+ *   person approves it.
+ * - `review`: something does not match; the payment goes to review.
  * - `reject_suggested`: far below the price. Still a person who rejects —
  *   an OCR reading 15 where 150 is printed must not hand back the seat of
- *   someone who paid in full (owner's decision, 03/10/2026).
+ *   someone who paid in full.
  */
 export const RECEIPT_VERDICTS = ["approve", "review", "reject_suggested"] as const;
 export type ReceiptVerdict = (typeof RECEIPT_VERDICTS)[number];
@@ -35,7 +39,7 @@ export const RECEIPT_VERDICT_REASONS = [
   "operation_number_unread",
   /** review — amount green, but the operation number read is not the one
    * the person typed. Without this, a screenshot of another payment for the
-   * same price would be approved unseen. */
+   * same price would show up green. */
   "operation_number_mismatch",
   /** review — amount and number green, but no usable payment method was
    * read. */
@@ -63,7 +67,7 @@ export interface ReceiptVerdictOutcome {
 /** Read from `platform_settings` at validation time — changing them never
  * revisits a verdict already recorded. */
 export interface ReceiptValidationSettings {
-  /** How far ABOVE the expected amount still approves, in cents. */
+  /** How far ABOVE the expected amount is still green, in cents. */
   toleranceCents: number;
   /** Below this percentage of the expected amount, rejection is suggested. */
   rejectBelowPercent: number;

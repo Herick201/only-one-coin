@@ -393,7 +393,6 @@ function buildContainer(): AppContainer {
   const validateReceipt = new ValidateReceiptUseCase(
     receiptValidationRepository,
     platformSettingsRepository,
-    enrollmentEmailContextLookup,
   );
 
   // Queries (read-only, no domain invariant to protect — see class docs)
