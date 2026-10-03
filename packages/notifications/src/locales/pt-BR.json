@@ -46,6 +46,16 @@
         "Entre com o seu e-mail {loginEmail} pelo botão abaixo."
       ],
       "action": "Entrar no portal"
+    },
+    "staff_password_reset": {
+      "subject": "Redefina sua senha do painel da Only One Coin",
+      "preheader": "O link vale por uma hora.",
+      "paragraphs": [
+        "Recebemos um pedido para redefinir a senha da sua conta no painel da Only One Coin.",
+        "Use o botão abaixo para criar uma senha nova. O link vale por uma hora e só pode ser usado uma vez.",
+        "Se não foi você, ignore este e-mail: sua senha continua a mesma."
+      ],
+      "action": "Criar senha nova"
     }
   }
 }

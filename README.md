@@ -104,7 +104,7 @@ auth já está implementado (`docs/ARCHITECTURE.md` §5.6): sign-up/sign-in/sess
 testados ponta a ponta, `role` protegido, erros do provedor traduzidos pro
 envelope do projeto (§5.7), docs interativas mescladas no Swagger. **A
 autenticação real do backoffice já está de pé** — login, logout, convite de
-staff e recuperação de senha do painel falam com o Better Auth de verdade
+staff e recuperação de senha do painel (link por e-mail desde OOC-30) falam com o Better Auth de verdade
 (`/api/auth/sign-in/email` etc.); só falta o MFA (nenhum plugin `twoFactor`
 configurado ainda, então `admin`/`billing` entram sem o segundo fator por
 enquanto). **O login do aluno (`/login`) continua mockado**: qualquer
@@ -330,7 +330,7 @@ o que é real:
 | Relatórios (`/backoffice/reports`) | Mock — a agregação roda no navegador porque o dataset é mockado; contra a API real vira query no servidor |
 | Configuração (`/backoffice/settings`) | Parcial: **Real** só a reserva durante o pagamento (`GET /settings`, `PUT /settings/checkout-hold`, com `audit_log`) — o resto são constantes fixas, alteradas só na tela |
 | Conta (`/backoffice/account`) | **Real**: troca da própria senha (`POST /api/v1/me/password`, OOC-31) — pede a senha atual, aplica as mesmas exigências da tela, encerra as demais sessões abertas e grava no `audit_log`; a data da última troca vem de `GET /api/v1/me/password`. O idioma do painel fica no navegador |
-| Login do backoffice, convite e redefinição de senha | **Real** — fala direto com o Better Auth (`/api/auth/sign-in/email`). MFA ainda não (nenhum plugin `twoFactor` configurado) |
+| Login do backoffice, convite e redefinição de senha | **Real** — fala direto com o Better Auth (`/api/auth/sign-in/email`). "Esqueci minha senha" manda o link por e-mail (`POST /staff/password-resets/request`, OOC-30); o link gerado pelo admin na tela de Equipe continua existindo. MFA ainda não (nenhum plugin `twoFactor` configurado) |
 | Login do aluno (`/login`) | Mock — qualquer submissão válida redireciona pro portal, sem checar credencial |
 | Portal do aluno (`/portal/*`, todas as telas) | Mock — nenhuma chamada à API ainda |
 

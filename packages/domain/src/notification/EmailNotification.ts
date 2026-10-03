@@ -48,6 +48,11 @@ export interface EmailTemplateVars {
     loginEmail: string;
     accessUrl: string;
   };
+  /** A staff member asked for a new password from the panel's login (OOC-30). */
+  staff_password_reset: {
+    recipientName: string;
+    resetUrl: string;
+  };
 }
 
 export type EmailTemplateKey = keyof EmailTemplateVars;
@@ -58,6 +63,7 @@ export const EMAIL_TEMPLATE_KEYS = [
   "payment_approved",
   "payment_rejected",
   "portal_credentials",
+  "staff_password_reset",
 ] as const satisfies readonly EmailTemplateKey[];
 
 /** One message to one recipient — the shape of one `outbox` row. A union over

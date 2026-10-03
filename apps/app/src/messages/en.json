@@ -57,6 +57,7 @@
     "recover_subtitle": "Enter your email and we will send a link to set a new password.",
     "recover_submit": "Send link",
     "recover_sending": "Sending…",
+    "recover_error": "We couldn't send the request. Check the address and your connection, then try again.",
     "recover_sent_title": "Check your email",
     "recover_sent_body": "If that address belongs to a panel account, the link to set a new password is on its way.",
     "back_to_login": "Back to sign in",

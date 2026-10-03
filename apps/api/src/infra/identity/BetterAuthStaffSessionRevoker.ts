@@ -34,4 +34,9 @@ export class BetterAuthStaffSessionRevoker implements IStaffSessionRevoker {
     );
     return result.rowCount ?? 0;
   }
+
+  async revokeAll(userId: string): Promise<number> {
+    const result = await this.db.execute(sql`delete from "session" where "userId" = ${userId}`);
+    return result.rowCount ?? 0;
+  }
 }

@@ -46,6 +46,16 @@
         "Ingresa con tu correo {loginEmail} usando el botón de abajo."
       ],
       "action": "Ingresar al portal"
+    },
+    "staff_password_reset": {
+      "subject": "Restablece tu contraseña del panel de Only One Coin",
+      "preheader": "El enlace vale por una hora.",
+      "paragraphs": [
+        "Recibimos un pedido para restablecer la contraseña de tu cuenta del panel de Only One Coin.",
+        "Usa el botón de abajo para crear una contraseña nueva. El enlace vale por una hora y solo se puede usar una vez.",
+        "Si no lo pediste, ignora este correo: tu contraseña sigue siendo la misma."
+      ],
+      "action": "Crear contraseña nueva"
     }
   }
 }

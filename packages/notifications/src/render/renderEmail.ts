@@ -32,6 +32,7 @@ export const LOCALE_CATALOGS: Record<Locale, LocaleCatalog> = {
 /** Which var holds the URL behind a template's button. */
 const ACTION_URL_VAR: Partial<Record<EmailTemplateKey, string>> = {
   portal_credentials: "accessUrl",
+  staff_password_reset: "resetUrl",
 };
 
 /** Intl wants a region to pick date/number conventions; `en` alone is fine. */

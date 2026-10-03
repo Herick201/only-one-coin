@@ -227,12 +227,14 @@ export type {
   ProvisionStaffAccountOutput,
 } from "./identity/ports/IStaffAccountProvisioner.js";
 export type { IStaffAccessRepository } from "./identity/ports/IStaffAccessRepository.js";
-export type { IStaffUserLookup, StaffUserDisplay } from "./identity/ports/IStaffUserLookup.js";
+export type { IStaffUserLookup, StaffUserDisplay, ResettableStaffUser } from "./identity/ports/IStaffUserLookup.js";
 export type {
   IStaffPasswordResetRepository,
   StaffPasswordReset,
   CreateStaffPasswordResetRecord,
+  IssueSelfServiceResetRecord,
 } from "./identity/ports/IStaffPasswordResetRepository.js";
+export type { IStaffPasswordResetLinkBuilder } from "./identity/ports/IStaffPasswordResetLinkBuilder.js";
 export type { IStaffPasswordSetter } from "./identity/ports/IStaffPasswordSetter.js";
 export type { IStaffSessionRevoker } from "./identity/ports/IStaffSessionRevoker.js";
 export {
@@ -286,6 +288,12 @@ export {
   type CompleteStaffPasswordResetInput,
   type CompleteStaffPasswordResetOutput,
 } from "./identity/CompleteStaffPasswordResetUseCase.js";
+export {
+  RequestStaffPasswordResetUseCase,
+  SELF_SERVICE_RESET_TTL_MINUTES,
+  SELF_SERVICE_RESET_COOLDOWN_SECONDS,
+  type RequestStaffPasswordResetInput,
+} from "./identity/RequestStaffPasswordResetUseCase.js";
 export {
   ChangeOwnPasswordUseCase,
   type ChangeOwnPasswordInput,

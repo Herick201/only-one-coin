@@ -46,6 +46,16 @@
         "Sign in with your e-mail {loginEmail} using the button below."
       ],
       "action": "Go to the portal"
+    },
+    "staff_password_reset": {
+      "subject": "Reset your Only One Coin panel password",
+      "preheader": "The link is valid for one hour.",
+      "paragraphs": [
+        "We received a request to reset the password of your Only One Coin panel account.",
+        "Use the button below to set a new password. The link is valid for one hour and can only be used once.",
+        "If you did not ask for this, ignore this e-mail: your password stays the same."
+      ],
+      "action": "Set a new password"
     }
   }
 }

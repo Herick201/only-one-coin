@@ -27,6 +27,7 @@ export default defineConfig({
       BETTER_AUTH_URL: "http://localhost:3333/api/auth",
       BETTER_AUTH_SECRET: "test-secret-at-least-32-characters-long",
       APP_PUBLIC_URLS: "http://localhost:3000",
+      BACKOFFICE_PUBLIC_URL: "http://localhost:3000",
       AWS_ENDPOINT_URL_S3: "http://localhost:9000",
       BUCKET_NAME: "test-bucket",
       AWS_ACCESS_KEY_ID: "test-access-key",
