@@ -115,8 +115,12 @@ substituída pelos bounded contexts reais acima.
   (OOC-19), mais o antifraude nível 0 (OOC-22: nº de operação único por meio
   no submit, triagem por sha256/pHash/EXIF no `receipt-screen` —
   `CLAUDE.md` deste app, "Antifraude do comprovante"). Ainda não enfileira
-  extração por IA, não escreve `payment_receipts` e não tem
-  Turnstile/rate limit (`docs/ROADMAP.md`, Sessões 25/26).
+  extração por IA, não escreve `payment_receipts`.
+- **Proteção da rota pública** (OOC-24): real. Toda rota `.public()` declara
+  rate limit (o boot cai sem ele), contado no Redis da fila por IP do leitor
+  e, no checkout, por hold; o submit passa por cache de idempotência no Redis
+  e por Cloudflare Turnstile antes do usecase. Detalhe: `CLAUDE.md` deste
+  app, "Proteção da rota pública".
 - **Hold de checkout (relógio curto)**: real. `POST /seat-holds` prende a vaga
   com o `UPDATE … WHERE seats_taken < capacity` atômico e grava a linha em
   `seat_holds` com `expires_at` pelo relógio do Postgres (minutos lidos de
@@ -125,9 +129,9 @@ substituída pelos bounded contexts reais acima.
   a vaga de novo); hold vencido ou desconhecido → 422
   `enrollment.seat_hold_expired`. `POST /seat-holds/:id/release` devolve a
   vaga quando o checkout troca de turma; o `seat-hold-sweep.worker.ts` (a cada
-  30 s) expira os vencidos e devolve as vagas numa instrução só. Sem Turnstile
-  nem rate limit, um script consegue prender vagas pelo tempo de um hold — o
-  mesmo buraco que o submit já tinha, fechado na Sessão 25.
+  30 s) expira os vencidos e devolve as vagas numa instrução só. O claim tem
+  rate limit por IP, não captcha: um script com muitos IPs ainda consegue
+  prender vagas pelo tempo de um hold.
 - **Relógio longo (janela de revisão de 5 dias)**: não existe. Nenhum cron
   devolve a vaga de uma matrícula `reserved` cujo pagamento ficou parado.
 - **Origem da matrícula**: real. O checkout manda a `source` resolvida na
