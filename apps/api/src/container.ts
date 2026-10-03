@@ -32,6 +32,7 @@ import {
   RemoveStaffAccessUseCase,
   RenewStaffInviteUseCase,
   RenewStaffPasswordResetUseCase,
+  RequestStaffPasswordResetUseCase,
   RestoreCatalogEntryUseCase,
   RestoreStaffAccessUseCase,
   SchedulePlanPriceUseCase,
@@ -74,6 +75,7 @@ import { createLogger } from "./infra/logger.js";
 import { createAuth, type Auth } from "./infra/auth/betterAuth.js";
 import { BetterAuthCurrentSessionPort } from "./infra/identity/BetterAuthCurrentSessionPort.js";
 import { BetterAuthFreshAuthVerifier } from "./infra/identity/BetterAuthFreshAuthVerifier.js";
+import { BackofficePasswordResetLinkBuilder } from "./infra/identity/BackofficePasswordResetLinkBuilder.js";
 import { BetterAuthStaffAccountProvisioner } from "./infra/identity/BetterAuthStaffAccountProvisioner.js";
 import { BetterAuthStaffPasswordSetter } from "./infra/identity/BetterAuthStaffPasswordSetter.js";
 import { BetterAuthStaffSessionRevoker } from "./infra/identity/BetterAuthStaffSessionRevoker.js";
@@ -192,6 +194,7 @@ export interface AppUseCases {
     renewPasswordReset: RenewStaffPasswordResetUseCase;
     cancelPasswordReset: CancelStaffPasswordResetUseCase;
     completePasswordReset: CompleteStaffPasswordResetUseCase;
+    requestPasswordReset: RequestStaffPasswordResetUseCase;
     changeOwnPassword: ChangeOwnPasswordUseCase;
   };
   platform: {
@@ -364,6 +367,13 @@ function buildContainer(): AppContainer {
   const completePasswordReset = new CompleteStaffPasswordResetUseCase(
     staffPasswordResetRepository,
     staffPasswordSetter,
+    staffSessionRevoker,
+    auditLogRepository,
+  );
+  const requestPasswordReset = new RequestStaffPasswordResetUseCase(
+    staffUserLookup,
+    staffPasswordResetRepository,
+    new BackofficePasswordResetLinkBuilder(config.BACKOFFICE_PUBLIC_URL),
     auditLogRepository,
   );
   const changeOwnPassword = new ChangeOwnPasswordUseCase(
@@ -498,6 +508,7 @@ function buildContainer(): AppContainer {
         renewPasswordReset,
         cancelPasswordReset,
         completePasswordReset,
+        requestPasswordReset,
         changeOwnPassword,
       },
       platform: {

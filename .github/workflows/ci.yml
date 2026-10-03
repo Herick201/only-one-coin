@@ -22,6 +22,7 @@ env:
   BETTER_AUTH_URL: http://localhost:3333/api/auth
   BETTER_AUTH_SECRET: ci-placeholder-secret-at-least-32-chars
   APP_PUBLIC_URLS: http://localhost:3000
+  BACKOFFICE_PUBLIC_URL: http://localhost:3000
   AWS_ENDPOINT_URL_S3: http://localhost:9000
   BUCKET_NAME: ci-placeholder-bucket
   AWS_ACCESS_KEY_ID: ci-placeholder-access-key

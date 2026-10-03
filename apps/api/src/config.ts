@@ -24,6 +24,15 @@ const ConfigSchema = z
       .string()
       .min(1)
       .transform((val) => val.split(",").map((url) => url.trim()).filter(Boolean)),
+    // The origin the panel is served from, for links that leave by e-mail —
+    // today the staff password reset (OOC-30). One origin, not the list
+    // above: an e-mail has to point at exactly one host. Production:
+    // https://backoffice.onlyonecoin.edu.pe; locally the apps/app origin.
+    // Only the origin is kept (no path, no trailing slash).
+    BACKOFFICE_PUBLIC_URL: z
+      .string()
+      .url()
+      .transform((val) => new URL(val).origin),
 
     // storage (Tigris in production, any S3-compatible endpoint locally —
     // OOC-19). The comprovante image never reaches this process's own HTTP

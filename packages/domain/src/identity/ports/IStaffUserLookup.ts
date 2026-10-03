@@ -9,8 +9,22 @@ export interface StaffUserDisplay {
   email: string;
 }
 
+/** Who a self-service password reset is addressed to. */
+export interface ResettableStaffUser {
+  id: string;
+  name: string;
+  email: string;
+}
+
 export interface IStaffUserLookup {
   existsByEmail(email: string): Promise<boolean>;
   /** Name/e-mail for a password-reset link's completion screen. */
   findDisplayByUserId(userId: string): Promise<StaffUserDisplay | null>;
+  /**
+   * The panel account behind this e-mail, if one may recover its password:
+   * a staff cargo (never `student`/`guardian`) whose access was not removed
+   * (`banned`). Anything else answers null — the caller cannot tell "no such
+   * account" from "account not allowed", and that is the point (OOC-30).
+   */
+  findResettableStaffByEmail(email: string): Promise<ResettableStaffUser | null>;
 }

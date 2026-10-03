@@ -6,4 +6,6 @@
 export interface IStaffSessionRevoker {
   /** Revokes every session of `userId` except the one `keepSessionToken` belongs to; returns how many went. */
   revokeOthers(userId: string, keepSessionToken: string): Promise<number>;
+  /** Revokes every session of `userId`; returns how many went. */
+  revokeAll(userId: string): Promise<number>;
 }

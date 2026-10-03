@@ -40,6 +40,9 @@ class FakeRevoker implements IStaffSessionRevoker {
     this.calls.push([userId, keepSessionToken]);
     return 2;
   }
+  async revokeAll(): Promise<number> {
+    throw new Error("changing one's own password keeps the current session");
+  }
 }
 
 class FakeAuditLog implements IAuditLogRepository {
