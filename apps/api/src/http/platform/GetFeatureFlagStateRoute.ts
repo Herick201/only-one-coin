@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { RouteBuilder } from "@/shared/http/RouteBuilder.js";
+import { RATE_LIMITS } from "@/shared/http/rateLimit.js";
 import { ErrorResponseSchema } from "@/shared/http/ErrorResponseSchema.js";
 import { container } from "@/container.js";
 
@@ -25,6 +26,7 @@ export const getFeatureFlagStateRoute = RouteBuilder.get("/feature-flags/state")
     description: "Public read for apps/app's flag resolver.",
   })
   .public()
+  .rateLimit(RATE_LIMITS.publicRead)
   .response(200, FeatureFlagStateResponseSchema)
   .response(401, ErrorResponseSchema)
   .handler(async (_request, reply) => {

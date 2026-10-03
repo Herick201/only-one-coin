@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { NotFoundError } from "@ooc/domain";
 import { RouteBuilder } from "@/shared/http/RouteBuilder.js";
+import { RATE_LIMITS } from "@/shared/http/rateLimit.js";
 import { ErrorResponseSchema } from "@/shared/http/ErrorResponseSchema.js";
 import { container } from "@/container.js";
 
@@ -24,6 +25,7 @@ export const getStaffPasswordResetRoute = RouteBuilder.get("/staff/password-rese
     description: "Backs /backoffice/reset-password/[token] before it renders the form.",
   })
   .public()
+  .rateLimit(RATE_LIMITS.staffLink)
   .params(GetStaffPasswordResetParamsSchema)
   .response(200, GetStaffPasswordResetResponseSchema)
   .response(404, ErrorResponseSchema)

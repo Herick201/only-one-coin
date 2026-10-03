@@ -32,6 +32,8 @@ export default defineConfig({
       BUCKET_NAME: "test-bucket",
       AWS_ACCESS_KEY_ID: "test-access-key",
       AWS_SECRET_ACCESS_KEY: "test-secret-key",
+      // Cloudflare's always-passes test secret; no test calls siteverify.
+      TURNSTILE_SECRET_KEY: "1x0000000000000000000000000000000AA",
     },
   },
 });

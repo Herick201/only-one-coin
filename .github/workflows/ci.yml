@@ -27,6 +27,9 @@ env:
   BUCKET_NAME: ci-placeholder-bucket
   AWS_ACCESS_KEY_ID: ci-placeholder-access-key
   AWS_SECRET_ACCESS_KEY: ci-placeholder-secret-key
+  # Cloudflare's public TEST keys (always pass) — not a secret.
+  TURNSTILE_SECRET_KEY: 1x0000000000000000000000000000000AA
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
 
 jobs:
   # Portão de CI item 1 (CLAUDE.md §6) — segredo commitado.

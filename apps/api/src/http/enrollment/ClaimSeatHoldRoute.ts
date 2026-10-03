@@ -1,6 +1,7 @@
 import { EnrollmentOriginInputSchema } from "@ooc/domain";
 import { z } from "zod";
 import { RouteBuilder } from "@/shared/http/RouteBuilder.js";
+import { RATE_LIMITS } from "@/shared/http/rateLimit.js";
 import { ErrorResponseSchema } from "@/shared/http/ErrorResponseSchema.js";
 import { container } from "@/container.js";
 
@@ -36,6 +37,7 @@ export const claimSeatHoldRoute = RouteBuilder.post("/seat-holds")
       "Takes one seat from the class group and records the checkout's channel. The seat goes back automatically when the hold expires without a submit.",
   })
   .public()
+  .rateLimit(RATE_LIMITS.seatHold)
   .body(ClaimSeatHoldBodySchema)
   .response(201, ClaimSeatHoldResponseSchema)
   .response(400, ErrorResponseSchema)

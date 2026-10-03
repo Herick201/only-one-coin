@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { RouteBuilder } from "@/shared/http/RouteBuilder.js";
+import { RATE_LIMITS } from "@/shared/http/rateLimit.js";
 import { container } from "@/container.js";
 
 const ReleaseSeatHoldParamsSchema = z.object({
@@ -16,6 +17,7 @@ export const releaseSeatHoldRoute = RouteBuilder.post("/seat-holds/:holdId/relea
     description: "Called when the checkout moves to another class group. No-op for a hold that is no longer active.",
   })
   .public()
+  .rateLimit(RATE_LIMITS.seatHold)
   .params(ReleaseSeatHoldParamsSchema)
   .response(204, z.void())
   .handler(async (request, reply) => {

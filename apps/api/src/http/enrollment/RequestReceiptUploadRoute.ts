@@ -1,6 +1,7 @@
 import { RECEIPT_CONTENT_TYPES } from "@ooc/domain";
 import { z } from "zod";
 import { RouteBuilder } from "@/shared/http/RouteBuilder.js";
+import { RATE_LIMITS, perSeatHold } from "@/shared/http/rateLimit.js";
 import { ErrorResponseSchema } from "@/shared/http/ErrorResponseSchema.js";
 import { container } from "@/container.js";
 
@@ -31,6 +32,7 @@ export const requestReceiptUploadRoute = RouteBuilder.post("/receipt-uploads")
       "The checkout POSTs the file straight to the bucket with the returned url/fields — the file never reaches this function (CLAUDE.md §6). Server-side validation and normalization happen afterwards, in the worker.",
   })
   .public()
+  .rateLimit(RATE_LIMITS.receiptUpload, perSeatHold("receipt-upload", 20, "seatHoldId"))
   .body(RequestReceiptUploadBodySchema)
   .response(201, RequestReceiptUploadResponseSchema)
   .response(404, ErrorResponseSchema)

@@ -1,5 +1,8 @@
+import { createHash } from "node:crypto";
 import {
+  ConflictError,
   CreateStudentSchema,
+  HttpError,
   DEFAULT_LOCALE,
   GuardianFieldsSchema,
   LocaleSchema,
@@ -8,9 +11,11 @@ import {
   PaymentMethodSchema,
   refineGmail,
   refineNationalId,
+  UnableToProcessEntryError,
 } from "@ooc/domain";
 import { z } from "zod";
 import { RouteBuilder } from "@/shared/http/RouteBuilder.js";
+import { RATE_LIMITS, perSeatHold } from "@/shared/http/rateLimit.js";
 import { ErrorResponseSchema } from "@/shared/http/ErrorResponseSchema.js";
 import { container } from "@/container.js";
 
@@ -21,6 +26,9 @@ const CONSENT_VERSION = "v1";
 
 const SubmitPublicEnrollmentBodySchema = z
   .object({
+    // The Cloudflare Turnstile token from the review step (OOC-24).
+    // Single-use: the checkout resets the widget after every attempt.
+    captchaToken: z.string().min(1).max(2048),
     // The hold claimed when the checkout settled on the class group
     // (ClaimSeatHoldRoute). Its seat and its channel become this
     // enrollment's; an expired or unknown hold is a 422, and the checkout
@@ -70,10 +78,22 @@ const SubmitPublicEnrollmentResponseSchema = z.object({
   paymentId: z.string().uuid(),
 });
 
-// Public — this IS the front door of the funnel (CLAUDE.md §1). No
-// Turnstile, no rate limit yet (docs/ROADMAP.md Sessão 25) — a deliberately
-// reduced slice, not safe to point real traffic at until that lands.
-// Signed-URL upload landed in OOC-19: no OCR yet past the normalize step.
+type SubmitPublicEnrollmentResponse = z.infer<typeof SubmitPublicEnrollmentResponseSchema>;
+
+/** The idempotency cache compares requests by this — a hash, so no PII
+ * reaches Redis. The captcha token is left out: it changes on every attempt
+ * while the request it guards does not. */
+function fingerprintOf(body: Record<string, unknown>): string {
+  const { captchaToken: _token, ...request } = body;
+  return createHash("sha256").update(JSON.stringify(request)).digest("hex");
+}
+
+// Public — this IS the front door of the funnel (CLAUDE.md §1). Guarded in
+// this order (OOC-24, apps/api/CLAUDE.md "Proteção da rota pública"): the
+// per-IP and per-hold rate limits (before and after validation, in the
+// plugin), the idempotency cache — a retry of a submit that already went
+// through is answered from Redis, with no captcha and no database — then the
+// captcha, and only then the usecase.
 export const submitPublicEnrollmentRoute = RouteBuilder.post("/enrollments/public")
   .docs({
     tags: ["Enrollments"],
@@ -82,35 +102,88 @@ export const submitPublicEnrollmentRoute = RouteBuilder.post("/enrollments/publi
       "Creates the student (and guardian, if a minor), turns the checkout seat hold into the enrollment, opens its payment pending and links the confirmed receipt upload to it. Reduced slice: no OCR yet.",
   })
   .public()
+  .rateLimit(RATE_LIMITS.enrollmentSubmit, perSeatHold("enrollment-submit", 15, "holdId"))
   .body(SubmitPublicEnrollmentBodySchema)
   .response(201, SubmitPublicEnrollmentResponseSchema)
   .response(400, ErrorResponseSchema)
   .response(404, ErrorResponseSchema)
+  .response(409, ErrorResponseSchema)
   .response(422, ErrorResponseSchema)
+  .response(429, ErrorResponseSchema)
+  .response(503, ErrorResponseSchema)
   .handler(async (request, reply) => {
-    const { holdId, receiptUploadId, classGroupId, planId, student, guardian, payment, locale } = request.body;
+    const { captchaToken, holdId, receiptUploadId, classGroupId, planId, student, guardian, payment, locale } =
+      request.body;
 
-    const result = await container.useCases.enrollment.submitPublic.run({
-      seatHoldId: holdId,
-      receiptUploadId,
-      classGroupId,
-      planId,
-      student,
-      guardian: guardian
-        ? {
-            firstName: guardian.firstName,
-            lastName: guardian.lastName,
-            relationship: guardian.relationship,
-            nationalIdType: guardian.nationalIdType,
-            nationalId: guardian.nationalId,
-            email: guardian.email,
-            phone: guardian.phone,
-          }
-        : null,
-      consent: guardian ? { version: CONSENT_VERSION, ip: request.ip } : null,
-      locale,
-      payment,
-    });
+    const attempt = await container.edge.idempotency.begin(
+      "enrollment-submit",
+      payment.idempotencyKey,
+      fingerprintOf(request.body),
+    );
+    if (attempt.kind === "replay") {
+      return reply.status(201).send(attempt.response as SubmitPublicEnrollmentResponse);
+    }
+    if (attempt.kind === "in_progress") {
+      // The first attempt is still running; the checkout waits and resends.
+      throw new ConflictError({
+        reason: "idempotency.in_progress",
+        message: "A request with this idempotency key is still being processed.",
+      });
+    }
+    if (attempt.kind === "mismatch") {
+      throw new UnableToProcessEntryError({
+        reason: "idempotency.key_reused",
+        message: "This idempotency key was already used for a different request.",
+      });
+    }
 
-    reply.status(201).send({ enrollmentId: result.enrollment.id, paymentId: result.payment.id });
+    let response: SubmitPublicEnrollmentResponse;
+    try {
+      const captcha = await container.edge.captcha.verify(captchaToken, request.clientIp);
+      if (captcha === "failed") {
+        throw new UnableToProcessEntryError({
+          reason: "captcha.failed",
+          message: "The captcha token was refused.",
+        });
+      }
+      if (captcha === "unavailable") {
+        // Closed, not open: no captcha means no submit, not an unguarded one.
+        throw new HttpError({
+          status: 503,
+          reason: "captcha.unavailable",
+          message: "The captcha could not be verified.",
+        });
+      }
+
+      const result = await container.useCases.enrollment.submitPublic.run({
+        seatHoldId: holdId,
+        receiptUploadId,
+        classGroupId,
+        planId,
+        student,
+        guardian: guardian
+          ? {
+              firstName: guardian.firstName,
+              lastName: guardian.lastName,
+              relationship: guardian.relationship,
+              nationalIdType: guardian.nationalIdType,
+              nationalId: guardian.nationalId,
+              email: guardian.email,
+              phone: guardian.phone,
+            }
+          : null,
+        // The guardian's IP, not the proxy's (infra/edge/clientIp.ts).
+        consent: guardian ? { version: CONSENT_VERSION, ip: request.clientIp } : null,
+        locale,
+        payment,
+      });
+      response = { enrollmentId: result.enrollment.id, paymentId: result.payment.id };
+    } catch (err) {
+      // Nothing settled: the key is free for the corrected resend.
+      await attempt.abandon();
+      throw err;
+    }
+
+    await attempt.complete(response);
+    reply.status(201).send(response);
   });

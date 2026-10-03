@@ -2,6 +2,7 @@ import type { Role } from "@ooc/domain";
 import type { FastifyReply, FastifyRequest, RouteOptions } from "fastify";
 import type { z, ZodType } from "zod";
 import type { RouteAuth } from "@/infra/plugins/authorization.js";
+import { RATE_LIMITS, type RateLimitRule } from "@/shared/http/rateLimit.js";
 
 interface RouteSchema {
   tags?: string[];
@@ -26,6 +27,9 @@ export class RouteBuilder<
   // route built without one fails at registration time (authorization
   // plugin's onRoute hook), not silently open.
   private auth?: RouteAuth;
+  // Same deal for the rate limit (CLAUDE.md §6): a public route has to name
+  // its own; a session-gated one falls back to the per-user staff budget.
+  private rateLimitRules?: RateLimitRule[];
 
   private constructor(method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH", url: string) {
     this.method = method;
@@ -102,6 +106,16 @@ export class RouteBuilder<
     return this;
   }
 
+  /**
+   * The counters this route spends from (shared/http/rateLimit.ts). Required
+   * on a `.public()` route — the boot fails without it. Optional on a
+   * session-gated one, which otherwise spends the staff per-user budget.
+   */
+  rateLimit(...rules: [RateLimitRule, ...RateLimitRule[]]) {
+    this.rateLimitRules = rules;
+    return this;
+  }
+
   handler(
     fn: (
       request: FastifyRequest<{
@@ -116,7 +130,10 @@ export class RouteBuilder<
       method: this.method,
       url: this.url,
       schema: this.schema,
-      config: { auth: this.auth },
+      config: {
+        auth: this.auth,
+        rateLimit: this.rateLimitRules ?? (this.auth && !this.auth.public ? [RATE_LIMITS.staff] : undefined),
+      },
       handler: fn as RouteOptions["handler"],
     };
   }

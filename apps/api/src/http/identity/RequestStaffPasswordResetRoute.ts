@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { DEFAULT_LOCALE, LocaleSchema } from "@ooc/domain";
 import { RouteBuilder } from "@/shared/http/RouteBuilder.js";
+import { RATE_LIMITS } from "@/shared/http/rateLimit.js";
 import { ErrorResponseSchema } from "@/shared/http/ErrorResponseSchema.js";
 import { container } from "@/container.js";
 
@@ -26,6 +27,7 @@ export const requestStaffPasswordResetRoute = RouteBuilder.post("/staff/password
       "Backs \"Forgot my password\" on the panel's login. Same 202 whether or not the address has a panel account.",
   })
   .public()
+  .rateLimit(RATE_LIMITS.staffResetRequest)
   .body(RequestStaffPasswordResetBodySchema)
   .response(202, RequestStaffPasswordResetResponseSchema)
   .response(400, ErrorResponseSchema)

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { RouteBuilder } from "@/shared/http/RouteBuilder.js";
+import { RATE_LIMITS, perSeatHold } from "@/shared/http/rateLimit.js";
 import { ErrorResponseSchema } from "@/shared/http/ErrorResponseSchema.js";
 import { container } from "@/container.js";
 
@@ -24,6 +25,7 @@ export const confirmReceiptUploadRoute = RouteBuilder.post("/receipt-uploads/:re
       "A metadata-only HEAD against the bucket — never the file's bytes. Retryable: called again before the object exists, it fails with a 422 the checkout can retry once its own PUT finishes.",
   })
   .public()
+  .rateLimit(RATE_LIMITS.receiptUpload, perSeatHold("receipt-upload", 20, "seatHoldId"))
   .params(ConfirmReceiptUploadParamsSchema)
   .body(ConfirmReceiptUploadBodySchema)
   .response(200, ConfirmReceiptUploadResponseSchema)
