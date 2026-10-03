@@ -3,6 +3,7 @@ import {
   CancelStaffInviteUseCase,
   ClaimSeatHoldUseCase,
   CancelStaffPasswordResetUseCase,
+  ChangeOwnPasswordUseCase,
   CompleteStaffInviteUseCase,
   CompleteStaffPasswordResetUseCase,
   ConfirmReceiptUploadUseCase,
@@ -75,6 +76,7 @@ import { BetterAuthCurrentSessionPort } from "./infra/identity/BetterAuthCurrent
 import { BetterAuthFreshAuthVerifier } from "./infra/identity/BetterAuthFreshAuthVerifier.js";
 import { BetterAuthStaffAccountProvisioner } from "./infra/identity/BetterAuthStaffAccountProvisioner.js";
 import { BetterAuthStaffPasswordSetter } from "./infra/identity/BetterAuthStaffPasswordSetter.js";
+import { BetterAuthStaffSessionRevoker } from "./infra/identity/BetterAuthStaffSessionRevoker.js";
 import { DrizzleAuditLogRepository } from "./infra/identity/DrizzleAuditLogRepository.js";
 import { DrizzleStaffAccessRepository } from "./infra/identity/DrizzleStaffAccessRepository.js";
 import { DrizzleStaffInviteRepository } from "./infra/identity/DrizzleStaffInviteRepository.js";
@@ -120,6 +122,7 @@ import { ListClassGroupsQuery } from "./infra/persistence/catalog/ListClassGroup
 import { ListWaitlistQuery } from "./infra/persistence/catalog/ListWaitlistQuery.js";
 import { ListStaffQuery } from "./infra/persistence/identity/ListStaffQuery.js";
 import { ListStaffRoleChangesQuery } from "./infra/persistence/identity/ListStaffRoleChangesQuery.js";
+import { GetPasswordChangedAtQuery } from "./infra/persistence/identity/GetPasswordChangedAtQuery.js";
 import { DrizzleFeatureFlagOverrideRepository } from "./infra/persistence/platform/DrizzleFeatureFlagOverrideRepository.js";
 import { DrizzlePlatformSettingsRepository } from "./infra/persistence/platform/DrizzlePlatformSettingsRepository.js";
 import { DrizzleEnrollmentEmailContextLookup } from "./infra/persistence/enrollment/DrizzleEnrollmentEmailContextLookup.js";
@@ -189,6 +192,7 @@ export interface AppUseCases {
     renewPasswordReset: RenewStaffPasswordResetUseCase;
     cancelPasswordReset: CancelStaffPasswordResetUseCase;
     completePasswordReset: CompleteStaffPasswordResetUseCase;
+    changeOwnPassword: ChangeOwnPasswordUseCase;
   };
   platform: {
     setFeatureFlag: SetFeatureFlagOverrideUseCase;
@@ -231,6 +235,7 @@ export interface AppQueries {
   listWaitlist: ListWaitlistQuery;
   listStaff: ListStaffQuery;
   listStaffRoleChanges: ListStaffRoleChangesQuery;
+  getPasswordChangedAt: GetPasswordChangedAtQuery;
 }
 
 export interface AppIdentity {
@@ -303,6 +308,7 @@ function buildContainer(): AppContainer {
   const staffUserLookup = new DrizzleStaffUserLookup(db);
   const staffPasswordResetRepository = new DrizzleStaffPasswordResetRepository(db);
   const staffPasswordSetter = new BetterAuthStaffPasswordSetter(db);
+  const staffSessionRevoker = new BetterAuthStaffSessionRevoker(auth, db);
   const featureFlagOverrideRepository = new DrizzleFeatureFlagOverrideRepository(db);
   const catalogEntryRepository = new DrizzleCatalogEntryRepository(db);
   const courseRepository = new DrizzleCourseRepository(db);
@@ -360,6 +366,12 @@ function buildContainer(): AppContainer {
     staffPasswordSetter,
     auditLogRepository,
   );
+  const changeOwnPassword = new ChangeOwnPasswordUseCase(
+    freshAuthVerifier,
+    staffPasswordSetter,
+    staffSessionRevoker,
+    auditLogRepository,
+  );
 
   const setFeatureFlag = new SetFeatureFlagOverrideUseCase(featureFlagOverrideRepository, auditLogRepository);
   const updateCheckoutHoldMinutes = new UpdateCheckoutHoldMinutesUseCase(platformSettingsRepository, auditLogRepository);
@@ -411,6 +423,7 @@ function buildContainer(): AppContainer {
   const listWaitlist = new ListWaitlistQuery(db);
   const listStaff = new ListStaffQuery(db);
   const listStaffRoleChanges = new ListStaffRoleChangesQuery(db);
+  const getPasswordChangedAt = new GetPasswordChangedAtQuery(db);
 
   return {
     production: config.NODE_ENV === "production",
@@ -485,6 +498,7 @@ function buildContainer(): AppContainer {
         renewPasswordReset,
         cancelPasswordReset,
         completePasswordReset,
+        changeOwnPassword,
       },
       platform: {
         setFeatureFlag,
@@ -526,6 +540,7 @@ function buildContainer(): AppContainer {
       listWaitlist,
       listStaff,
       listStaffRoleChanges,
+      getPasswordChangedAt,
     },
   };
 }

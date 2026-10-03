@@ -47,6 +47,8 @@ import { listWaitlistRoute } from "@/http/catalog/ListWaitlistRoute.js";
 import { joinWaitlistRoute } from "@/http/catalog/JoinWaitlistRoute.js";
 import { leaveWaitlistRoute } from "@/http/catalog/LeaveWaitlistRoute.js";
 import { getCurrentStaffRoute } from "@/http/identity/GetCurrentStaffRoute.js";
+import { getOwnPasswordRoute } from "@/http/identity/GetOwnPasswordRoute.js";
+import { changeOwnPasswordRoute } from "@/http/identity/ChangeOwnPasswordRoute.js";
 import { listStaffRoute } from "@/http/identity/ListStaffRoute.js";
 import { listStaffRoleChangesRoute } from "@/http/identity/ListStaffRoleChangesRoute.js";
 import { createStaffInviteRoute } from "@/http/identity/CreateStaffInviteRoute.js";
@@ -144,6 +146,8 @@ export async function buildApp(): Promise<FastifyInstance> {
         instance.withTypeProvider<ZodTypeProvider>().route(joinWaitlistRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(leaveWaitlistRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(getCurrentStaffRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(getOwnPasswordRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(changeOwnPasswordRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(listStaffRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(listStaffRoleChangesRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(createStaffInviteRoute);
