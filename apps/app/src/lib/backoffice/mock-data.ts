@@ -423,7 +423,8 @@ export function listClassGroupRostersFor(staff: StaffUser): ClassGroupDetail[] {
  *  in the code (CLAUDE.md §5). Editable from the backoffice. */
 export function getPaymentSettings(): PaymentSettings {
   return {
-    toleranceCents: 50,
+    toleranceCents: 0,
+    rejectBelowPercent: 50,
     escalationConfidence: 0.75,
     reservationDays: 5,
     checkoutHoldMinutes: 15,

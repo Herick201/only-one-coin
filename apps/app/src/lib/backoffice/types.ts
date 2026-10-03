@@ -949,9 +949,8 @@ export interface ReadField<T> {
 export type ReadingFailureReason = 'provider_unavailable' | 'invalid_response' | 'unexpected_error'
 
 /**
- * What OCR level 1 read off the receipt (OOC-20). Shown to the reviewer as
- * guidance, never judged on screen: comparing it with the price is the
- * validation step (ROADMAP Sessão 27).
+ * What OCR level 1 read off the receipt (OOC-20). Shown to the reviewer next to
+ * the receipt; the judgement on it is `ReviewVerdict` (OOC-21).
  */
 export type ReceiptReading =
   | { state: 'not_read' }
@@ -969,6 +968,24 @@ export type ReceiptReading =
       /** An instant in UTC, or a bare `YYYY-MM-DD` when the receipt printed no time. */
       paidAt: ReadField<string>
     }
+
+/** The receipt traffic light's verdict (OOC-21). */
+export type ReceiptVerdict = 'approve' | 'review' | 'reject_suggested'
+
+export type ReceiptVerdictReason =
+  | 'exact'
+  | 'within_tolerance'
+  | 'overpaid'
+  | 'underpaid'
+  | 'far_below'
+  | 'amount_unread'
+  | 'operation_number_unread'
+  | 'operation_number_mismatch'
+
+export interface ReviewVerdict {
+  verdict: ReceiptVerdict
+  reason: ReceiptVerdictReason
+}
 
 /** One payment still owed a decision, as `GET /api/v1/payments/review` serves it. */
 export interface PaymentReviewItem {
@@ -990,6 +1007,8 @@ export interface PaymentReviewItem {
   /** What the OCR read off the latest receipt; `null` while there is no
    * processed receipt to read. */
   reading: ReceiptReading | null
+  /** The traffic light's verdict on the latest receipt; `null` while it has not run. */
+  verdict: ReviewVerdict | null
   submittedAt: string
   /** When the open payment overstays the review window. */
   reviewDeadline: string
@@ -1024,8 +1043,10 @@ export type ReviewDecision =
  * that escalates) and still to be confirmed as editable.
  */
 export interface PaymentSettings {
-  /** How far a receipt may fall from the frozen price and still pass. */
+  /** How far ABOVE the frozen price a receipt may land and still pass on its own — never below (CLAUDE.md §1, "Sem descontos"). */
   toleranceCents: number
+  /** Below this percentage of the frozen price, rejection is suggested to the reviewer (1–99). */
+  rejectBelowPercent: number
   /** Below this per-field confidence the ladder escalates, 0–1. */
   escalationConfidence: number
   /** Days a reserved seat survives without an approved payment. */

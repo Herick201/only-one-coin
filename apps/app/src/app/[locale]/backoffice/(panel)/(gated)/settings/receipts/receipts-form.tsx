@@ -14,9 +14,10 @@ import { Notice, Row, SettingsActions, numberClass } from '../settings-ui'
  * clocks. Settings rather than constants for the reason CLAUDE.md §5 gives
  * about the tolerance: changing what a rule means must not require a deploy.
  *
- * Only the checkout hold reaches the server so far (`PUT /settings/checkout-
- * hold`, which appends to `audit_log`); the other three still change on screen
- * only, and the toast after saving says so.
+ * The checkout hold, the tolerance and the red line reach the server (`PUT
+ * /settings/…`, each appending to `audit_log`); the confidence floor and the
+ * reservation days still change on screen only, and the toast after saving
+ * says so.
  */
 export function ReceiptSettingsForm({ settings }: { settings: PaymentSettings }) {
   const t = useTranslations('bo')
@@ -28,12 +29,31 @@ export function ReceiptSettingsForm({ settings }: { settings: PaymentSettings })
 
   const dirty = JSON.stringify(draft) !== JSON.stringify(saved)
 
+  /** One PUT per server-side number that changed; the first failure stops. */
   async function save() {
-    if (draft.checkoutHoldMinutes !== saved.checkoutHoldMinutes) {
-      const response = await fetch('/api/v1/settings/checkout-hold', {
+    const writes: { changed: boolean; path: string; body: Record<string, number> }[] = [
+      {
+        changed: draft.checkoutHoldMinutes !== saved.checkoutHoldMinutes,
+        path: '/api/v1/settings/checkout-hold',
+        body: { minutes: draft.checkoutHoldMinutes },
+      },
+      {
+        changed: draft.toleranceCents !== saved.toleranceCents,
+        path: '/api/v1/settings/receipt-amount-tolerance',
+        body: { cents: draft.toleranceCents },
+      },
+      {
+        changed: draft.rejectBelowPercent !== saved.rejectBelowPercent,
+        path: '/api/v1/settings/receipt-reject-below',
+        body: { percent: draft.rejectBelowPercent },
+      },
+    ]
+
+    for (const write of writes.filter((entry) => entry.changed)) {
+      const response = await fetch(write.path, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ minutes: draft.checkoutHoldMinutes }),
+        body: JSON.stringify(write.body),
       }).catch(() => null)
 
       if (!response?.ok) {
@@ -63,12 +83,29 @@ export function ReceiptSettingsForm({ settings }: { settings: PaymentSettings })
               type="number"
               min={0}
               max={50}
-              step={0.5}
+              step={0.1}
               aria-label={t('settings.tolerance_label')}
               value={draft.toleranceCents / 100}
               onChange={(event) =>
                 set('toleranceCents', Math.round(Number(event.target.value) * 100))
               }
+              className={numberClass}
+            />
+          </Row>
+
+          <Row
+            helpLabel={t('common.help')}
+            label={t('settings.reject_below_label')}
+            hint={t('settings.reject_below_hint')}
+            value={t('settings.reject_below_value', { percent: draft.rejectBelowPercent })}
+          >
+            <input
+              type="number"
+              min={1}
+              max={99}
+              aria-label={t('settings.reject_below_label')}
+              value={draft.rejectBelowPercent}
+              onChange={(event) => set('rejectBelowPercent', Number(event.target.value))}
               className={numberClass}
             />
           </Row>
