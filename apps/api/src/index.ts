@@ -4,6 +4,7 @@ import {
   createReceiptNormalizeQueue,
   createReceiptScreenQueue,
   createReceiptUploadRelayQueue,
+  createReceiptValidateQueue,
   createRedisConnection,
   createSeatHoldSweepQueue,
   createSendEmailQueue,
@@ -20,6 +21,7 @@ import { startReceiptExtractWorker } from "./workers/receipt-extract.worker.js";
 import { startReceiptNormalizeWorker } from "./workers/receipt-normalize.worker.js";
 import { startReceiptScreenWorker } from "./workers/receipt-screen.worker.js";
 import { startReceiptUploadRelayWorker } from "./workers/receipt-upload-relay.worker.js";
+import { startReceiptValidateWorker } from "./workers/receipt-validate.worker.js";
 import { startSeatHoldSweepWorker } from "./workers/seat-hold-sweep.worker.js";
 import { startSendEmailWorker } from "./workers/send-email.worker.js";
 
@@ -74,9 +76,12 @@ const seatHoldSweepWorker = startSeatHoldSweepWorker(connection, logger, {
 // is not created, nothing is offered, and receipts wait unread. Only tier 1
 // runs — tier 2 is wired (its model is validated here at boot, so a
 // same-family choice fails now and not in Sessão 29) but nothing escalates.
+// The traffic light (OOC-21) rides the same relay once a receipt is both
+// screened and read.
 const receiptExtractor = createReceiptExtractor(config, RECEIPT_EXTRACTION_TIER_PRIMARY);
 const receiptNormalizeQueue = createReceiptNormalizeQueue(connection);
 const receiptScreenQueue = createReceiptScreenQueue(connection);
+const receiptValidateQueue = createReceiptValidateQueue(connection);
 const receiptExtractQueue = receiptExtractor ? createReceiptExtractQueue(connection) : null;
 const receiptUploadRelayQueue = createReceiptUploadRelayQueue(connection);
 await scheduleReceiptUploadRelay(receiptUploadRelayQueue);
@@ -89,9 +94,13 @@ const receiptUploadRelayWorker = startReceiptUploadRelayWorker(connection, logge
   normalizeQueue: receiptNormalizeQueue,
   screenQueue: receiptScreenQueue,
   extractQueue: receiptExtractQueue,
+  validateQueue: receiptValidateQueue,
 });
 const receiptScreenWorker = startReceiptScreenWorker(connection, logger, {
   screenReceiptUpload: useCases.enrollment.screenReceiptUpload,
+});
+const receiptValidateWorker = startReceiptValidateWorker(connection, logger, {
+  validateReceipt: useCases.enrollment.validateReceipt,
 });
 const receiptExtractWorker = receiptExtractor
   ? startReceiptExtractWorker(connection, logger, {
@@ -115,7 +124,7 @@ logger.info(
         }
       : "off",
   },
-  "Workers started: outbox-relay, send-email, seat-hold-sweep, receipt-upload-relay, receipt-normalize, receipt-screen, receipt-extract",
+  "Workers started: outbox-relay, send-email, seat-hold-sweep, receipt-upload-relay, receipt-normalize, receipt-screen, receipt-validate, receipt-extract",
 );
 if (NODE_ENV === "production" && !BREVO_API_KEY) {
   logger.warn("BREVO_API_KEY is not set: transactional e-mails are logged, not sent");
@@ -140,6 +149,7 @@ async function shutdown() {
   await receiptUploadRelayWorker.close();
   await receiptNormalizeWorker.close();
   await receiptScreenWorker.close();
+  await receiptValidateWorker.close();
   await receiptExtractWorker?.close();
   await outboxRelayQueue.close();
   await sendEmailQueue.close();
@@ -147,6 +157,7 @@ async function shutdown() {
   await receiptUploadRelayQueue.close();
   await receiptNormalizeQueue.close();
   await receiptScreenQueue.close();
+  await receiptValidateQueue.close();
   await receiptExtractQueue?.close();
   await connection.quit();
   process.exit(0);

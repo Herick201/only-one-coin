@@ -19,6 +19,10 @@ export interface IReceiptNormalizationStore {
    * at `tier` yet — what the relay offers to the `receipt-extract` queue
    * (OOC-20). */
   listExtractableIds(limit: number, tier: number): Promise<string[]>;
+  /** Screened, attached to a payment, with a level-1 row (a reading or a
+   * recorded failure) and no verdict yet — what the relay offers to the
+   * `receipt-validate` queue (OOC-21). */
+  listValidatableIds(limit: number, tier: number): Promise<string[]>;
   /** The processed key and the fingerprint land in the same statement: a
    * `processed` row always has what the screening compares. */
   markProcessed(
@@ -108,6 +112,28 @@ export class DrizzleReceiptUploadRepository implements IReceiptUploadRepository,
           eq(receiptUploads.status, "processed"),
           isNotNull(receiptUploads.paymentId),
           sql`not exists (
+            select 1 from ${paymentReceipts}
+             where ${paymentReceipts.receiptUploadId} = ${receiptUploads.id}
+               and ${paymentReceipts.tier} = ${tier}
+          )`,
+        ),
+      )
+      .orderBy(asc(receiptUploads.createdAt))
+      .limit(limit);
+
+    return rows.map((row) => row.id);
+  }
+
+  async listValidatableIds(limit: number, tier: number): Promise<string[]> {
+    const rows = await this.db
+      .select({ id: receiptUploads.id })
+      .from(receiptUploads)
+      .where(
+        and(
+          isNotNull(receiptUploads.paymentId),
+          isNotNull(receiptUploads.screenedAt),
+          isNull(receiptUploads.validatedAt),
+          sql`exists (
             select 1 from ${paymentReceipts}
              where ${paymentReceipts.receiptUploadId} = ${receiptUploads.id}
                and ${paymentReceipts.tier} = ${tier}

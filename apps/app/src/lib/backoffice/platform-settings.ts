@@ -3,6 +3,8 @@ import { apiFetch } from './api-client'
 /** What `GET /settings` returns — the settings something server-side reads. */
 export interface PlatformSettingsRow {
   checkoutHoldMinutes: number
+  receiptAmountToleranceCents: number
+  receiptRejectBelowPercent: number
 }
 
 /**

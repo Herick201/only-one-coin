@@ -44,12 +44,18 @@ export default async function ReceiptSettingsPage({
     )
   }
 
-  // The checkout hold is the one number here `apps/api` already enforces, so it
-  // is read from there; the rest is still the screen-only defaults.
+  // What `apps/api` already enforces is read from there; the rest is still the
+  // screen-only defaults.
   const platform = await getPlatformSettings()
   const receipts = {
     ...getGeneralSettings().receipts,
-    ...(platform ? { checkoutHoldMinutes: platform.checkoutHoldMinutes } : {}),
+    ...(platform
+      ? {
+          checkoutHoldMinutes: platform.checkoutHoldMinutes,
+          toleranceCents: platform.receiptAmountToleranceCents,
+          rejectBelowPercent: platform.receiptRejectBelowPercent,
+        }
+      : {}),
   }
 
   return (

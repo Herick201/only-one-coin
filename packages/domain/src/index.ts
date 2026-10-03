@@ -144,6 +144,31 @@ export {
   type ReceiptExtractionTier,
   type ReceiptImage,
 } from "./enrollment/ReceiptExtraction.js";
+export {
+  RECEIPT_VERDICTS,
+  RECEIPT_VERDICT_REASONS,
+  classifyReceiptAmount,
+  decideReceiptVerdict,
+  isReceiptVerdict,
+  isReceiptVerdictReason,
+  type ReceiptValidationSettings,
+  type ReceiptVerdict,
+  type ReceiptVerdictOutcome,
+  type ReceiptVerdictReason,
+} from "./enrollment/ReceiptValidation.js";
+export type {
+  IReceiptValidationRepository,
+  ReceiptAutoApproval,
+  ReceiptValidationDetail,
+  ReceiptValidationEffect,
+  ReceiptValidationSubject,
+} from "./enrollment/ReceiptValidationRepository.js";
+export {
+  RECEIPT_VALIDATION_ACTOR,
+  ValidateReceiptUseCase,
+  type ValidateReceiptInput,
+  type ValidateReceiptOutput,
+} from "./enrollment/ValidateReceiptUseCase.js";
 export type {
   IReceiptExtractionRepository,
   IReceiptImageReader,
@@ -270,6 +295,12 @@ export {
   CHECKOUT_HOLD_MINUTES_MIN,
   CHECKOUT_HOLD_MINUTES_MAX,
   CheckoutHoldMinutesSchema,
+  RECEIPT_AMOUNT_TOLERANCE_CENTS_MIN,
+  RECEIPT_AMOUNT_TOLERANCE_CENTS_MAX,
+  RECEIPT_REJECT_BELOW_PERCENT_MIN,
+  RECEIPT_REJECT_BELOW_PERCENT_MAX,
+  ReceiptAmountToleranceCentsSchema,
+  ReceiptRejectBelowPercentSchema,
   type PlatformSettings,
 } from "./platform/PlatformSettings.js";
 export type { IPlatformSettingsRepository } from "./platform/ports/IPlatformSettingsRepository.js";
@@ -277,6 +308,14 @@ export {
   UpdateCheckoutHoldMinutesUseCase,
   type UpdateCheckoutHoldMinutesInput,
 } from "./platform/UpdateCheckoutHoldMinutesUseCase.js";
+export {
+  UpdateReceiptAmountToleranceUseCase,
+  type UpdateReceiptAmountToleranceInput,
+} from "./platform/UpdateReceiptAmountToleranceUseCase.js";
+export {
+  UpdateReceiptRejectBelowPercentUseCase,
+  type UpdateReceiptRejectBelowPercentInput,
+} from "./platform/UpdateReceiptRejectBelowPercentUseCase.js";
 export {
   SetFeatureFlagOverrideUseCase,
   type SetFeatureFlagOverrideInput,

@@ -8,6 +8,7 @@ import type {
   ReceiptReading,
   RejectionReason,
   ReviewDecision,
+  ReviewVerdict,
 } from '@/lib/backoffice/types'
 import { fetchReceiptUrl } from '@/lib/backoffice/payment-client'
 import { formatDate, formatDateTime, formatMoney, type Locale } from '@/lib/format'
@@ -291,6 +292,7 @@ export function ReceiptReviewDialog({
                 </dl>
               </section>
 
+              {payment.verdict && <VerdictNotice verdict={payment.verdict} />}
               {payment.reading && <ReadingSection reading={payment.reading} />}
 
               <section>
@@ -427,12 +429,40 @@ export function ReceiptReviewDialog({
 }
 
 /**
+ * The receipt traffic light's verdict (OOC-21), in words. A suggested
+ * rejection is only that — the reviewer still rejects, with a reason. A green
+ * verdict only shows up here when the payment could not be settled on its own —
+ * the screening had already sent it to a person, or its seat had been released.
+ */
+function VerdictNotice({ verdict }: { verdict: ReviewVerdict }) {
+  const t = useTranslations('bo')
+  const tone =
+    verdict.verdict === 'reject_suggested'
+      ? 'border-red-200 bg-red-50 text-red-800'
+      : verdict.verdict === 'review'
+        ? 'border-amber-200 bg-amber-50 text-amber-800'
+        : 'border-emerald-200 bg-emerald-50 text-emerald-800'
+
+  return (
+    <section>
+      <SectionTitle icon="shield">{t('receipt_review.verdict_title')}</SectionTitle>
+      <p className={`mt-2 flex items-start gap-2 rounded-lg border px-3 py-2 text-xs ${tone}`}>
+        <BoIcon name="alert" size={14} className="mt-0.5 shrink-0" />
+        <span>
+          <strong className="font-semibold">{t(`receipt_review.verdict_${verdict.verdict}`)}</strong>
+          {' · '}
+          {t(`receipt_review.verdict_reason_${verdict.reason}`)}
+        </span>
+      </p>
+    </section>
+  )
+}
+
+/**
  * What OCR level 1 read off the receipt (OOC-20), field by field, with the
- * model's own confidence. Guidance next to the image, never a verdict: no
- * colour says right or wrong, because comparing the reading with the price
- * and choosing a confidence threshold are the validation step's (ROADMAP
- * Sessão 27), measured on real receipts first (docs/OCR-AVALIACAO.md). The
- * model id stays off screen — it is a technical id (CLAUDE.md §4) and lives
+ * model's own confidence. The judgement on it is `VerdictNotice`, above; the
+ * confidence threshold is still level 2's (Sessão 29), measured on real
+ * receipts first (docs/OCR-AVALIACAO.md). The model id stays off screen — it is a technical id (CLAUDE.md §4) and lives
  * in the database for audit.
  */
 function ReadingSection({ reading }: { reading: ReceiptReading }) {

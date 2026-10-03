@@ -34,8 +34,9 @@ export type ReceiptFraudSignal =
   /** The payer named on the receipt is neither the student nor the guardian.
    * A relative paying is ordinary, so this only informs the reviewer. Not
    * produced yet: the OCR reads the payer's name since OOC-20
-   * (`payment_receipts.extracted_fields`), but wiring it to
-   * `payerNameMatches` belongs to the validation step (ROADMAP Sessão 27). */
+   * (`payment_receipts.extracted_fields`), but it is not wired to
+   * `payerNameMatches` yet: OOC-21's validation left the
+   * payer out (a parent paying is normal; a mismatch only informs). */
   | { kind: "payer_name_mismatch"; payerName: string };
 
 export type ReceiptFraudSignalKind = ReceiptFraudSignal["kind"];

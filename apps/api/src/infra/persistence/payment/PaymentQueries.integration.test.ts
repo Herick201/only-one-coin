@@ -283,6 +283,39 @@ describe("ListPaymentReviewQueueQuery", () => {
     });
   });
 
+  it("carries the traffic light's verdict of the latest receipt (OOC-21)", async () => {
+    await rolledBack(async (tx) => {
+      const seeded = await seedPayments(tx, "read");
+      await tx
+        .update(receiptUploads)
+        .set({
+          validationVerdict: "reject_suggested",
+          validationDetail: { reason: "far_below", expectedCents: 15000, readCents: 4000, toleranceCents: 0, rejectBelowPercent: 50 },
+          validatedAt: new Date(),
+        })
+        .where(eq(receiptUploads.paymentId, seeded.underReview));
+
+      const queue = await new ListPaymentReviewQueueQuery(tx as unknown as Db).run({ academicPeriodId: PERIOD });
+
+      expect(queue.items[0]!.verdict).toBeNull();
+      expect(queue.items[1]!.verdict).toEqual({ verdict: "reject_suggested", reason: "far_below" });
+    });
+  });
+
+  it("reads an odd stored verdict as no verdict, never a 500", async () => {
+    await rolledBack(async (tx) => {
+      const seeded = await seedPayments(tx, "read");
+      await tx
+        .update(receiptUploads)
+        .set({ validationVerdict: "review", validationDetail: { reason: "reason_from_a_later_version" }, validatedAt: new Date() })
+        .where(eq(receiptUploads.paymentId, seeded.underReview));
+
+      const queue = await new ListPaymentReviewQueueQuery(tx as unknown as Db).run({ academicPeriodId: PERIOD });
+
+      expect(queue.items[1]!.verdict).toBeNull();
+    });
+  });
+
   it("finds an open payment by its operation number", async () => {
     await rolledBack(async (tx) => {
       const seeded = await seedPayments(tx);

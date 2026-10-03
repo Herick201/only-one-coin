@@ -5,6 +5,8 @@ import { container } from "@/container.js";
 
 const GetPlatformSettingsResponseSchema = z.object({
   checkoutHoldMinutes: z.number().int(),
+  receiptAmountToleranceCents: z.number().int(),
+  receiptRejectBelowPercent: z.number().int(),
 });
 
 // Same roles that open the settings screen (canConfigureSettings in apps/app).

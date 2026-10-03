@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { RECEIPT_FRAUD_SIGNAL_KINDS } from "@ooc/domain";
+import { RECEIPT_FRAUD_SIGNAL_KINDS, RECEIPT_VERDICTS, RECEIPT_VERDICT_REASONS } from "@ooc/domain";
 import { RouteBuilder } from "@/shared/http/RouteBuilder.js";
 import { ErrorResponseSchema } from "@/shared/http/ErrorResponseSchema.js";
 import { container } from "@/container.js";
@@ -15,9 +15,8 @@ const PaymentMethodEnum = z.enum(["yape", "plin", "bcp", "interbank", "other"]);
 const confidence = z.number().min(0).max(1);
 const readField = <T extends z.ZodTypeAny>(value: T) => z.object({ value: value.nullable(), confidence });
 
-// What OCR level 1 read off the latest receipt (OOC-20) — shown to the
-// reviewer, never judged by this route. Null while there is no processed
-// receipt to read.
+// What OCR level 1 read off the latest receipt (OOC-20). Null while there is
+// no processed receipt to read.
 const ReadingSchema = z.discriminatedUnion("state", [
   z.object({ state: z.literal("not_read") }),
   z.object({
@@ -56,6 +55,7 @@ const ItemSchema = z.object({
   receipt: z.enum(["missing", "uploading", "ready", "refused"]),
   fraudSignals: z.array(z.enum(RECEIPT_FRAUD_SIGNAL_KINDS)),
   reading: ReadingSchema.nullable(),
+  verdict: z.object({ verdict: z.enum(RECEIPT_VERDICTS), reason: z.enum(RECEIPT_VERDICT_REASONS) }).nullable(),
   submittedAt: z.string(),
   reviewDeadline: z.string(),
 });

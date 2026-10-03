@@ -1,0 +1,4 @@
+ALTER TABLE "platform_settings" ADD COLUMN "receipt_amount_tolerance_cents" integer DEFAULT 0 NOT NULL;--> statement-breakpoint
+ALTER TABLE "platform_settings" ADD COLUMN "receipt_reject_below_percent" integer DEFAULT 50 NOT NULL;--> statement-breakpoint
+ALTER TABLE "platform_settings" ADD CONSTRAINT "platform_settings_receipt_amount_tolerance_cents_check" CHECK ("platform_settings"."receipt_amount_tolerance_cents" between 0 and 5000);--> statement-breakpoint
+ALTER TABLE "platform_settings" ADD CONSTRAINT "platform_settings_receipt_reject_below_percent_check" CHECK ("platform_settings"."receipt_reject_below_percent" between 1 and 99);

@@ -141,6 +141,20 @@
       "when": 1790962408402,
       "tag": "0019_receipt_extraction",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1791041256153,
+      "tag": "0020_receipt_validation_settings",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1791041898997,
+      "tag": "0021_receipt_validation_verdict",
+      "breakpoints": true
     }
   ]
 }
