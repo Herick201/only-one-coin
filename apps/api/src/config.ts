@@ -34,6 +34,21 @@ const ConfigSchema = z
       .url()
       .transform((val) => new URL(val).origin),
 
+    // Public-route protection (OOC-24). The Turnstile secret pairs with
+    // apps/app's NEXT_PUBLIC_TURNSTILE_SITE_KEY — one widget per environment.
+    // Required: a captcha that silently switches itself off when a secret is
+    // missing is a front door left open without anybody noticing.
+    TURNSTILE_SECRET_KEY: z.string().min(1),
+    // Shared with apps/app's proxy. Every call from apps/app arrives here from
+    // a Vercel IP, so the student's IP travels in a header of its own — and is
+    // believed only when this secret comes with it (infra/edge/clientIp.ts).
+    // Optional so a deploy never goes down over it (the INTERNAL_API_TOKEN
+    // lesson, apps/app/CLAUDE.md): unset, the API falls back to the first
+    // X-Forwarded-For hop, which a caller hitting fly.dev directly can forge,
+    // and index.ts warns at boot in production.
+    // An empty value (the .env.example line copied as is) counts as unset.
+    API_PROXY_SECRET: z.preprocess((val) => (val === "" ? undefined : val), z.string().min(32).optional()),
+
     // storage (Tigris in production, any S3-compatible endpoint locally —
     // OOC-19). The comprovante image never reaches this process's own HTTP
     // function (CLAUDE.md §6); this is only the credential apps/api uses to

@@ -49,6 +49,13 @@ function receiptBucketOrigin(): string {
   }
 }
 
+// Cloudflare Turnstile (OOC-24, the checkout's review step). Its script is
+// inserted by our nonced bundle, which `strict-dynamic` already trusts — the
+// host in script-src is only the fallback for browsers without it. The widget
+// itself is an iframe from the same host: without `frame-src` the default-src
+// 'self' blocks it and nobody can submit an enrollment.
+const TURNSTILE_ORIGIN = 'https://challenges.cloudflare.com'
+
 // CSP com nonce por request (CLAUDE.md §8). Exige rendering dinâmico em toda
 // rota — natural aqui, porque apps/app inteiro fica atrás de login (portal +
 // backoffice, sem página pública indexada). O nonce só nonça os scripts que o
@@ -68,11 +75,12 @@ function buildCsp(nonce: string): string {
   const isDev = process.env.NODE_ENV === 'development'
   return `
     default-src 'self';
-    script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ''};
+    script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${TURNSTILE_ORIGIN}${isDev ? " 'unsafe-eval'" : ''};
     style-src 'self' 'unsafe-inline';
     img-src 'self' data:${receiptBucketOrigin()};
     font-src 'self';
     connect-src 'self'${receiptBucketOrigin()};
+    frame-src ${TURNSTILE_ORIGIN};
     object-src 'none';
     base-uri 'self';
     form-action 'self';

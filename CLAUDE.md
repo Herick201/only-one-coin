@@ -114,7 +114,7 @@ Se algo parecer exigir um desses, **pare e pergunte**.
 | OCR / IA | **OpenRouter** pra todos os níveis — **Gemini 3.1 Flash-Lite** (nível 1) · modelo de outra família (nível 2, a escolher) |
 | E-mail (transacional/campanhas) | **Brevo**, atrás de adapter |
 | E-mail (caixa/mailbox de staff) | **Zoho Mail Lite** — Brevo não hospeda caixa (sem IMAP próprio); usar só se alguém precisar **receber e ler** e-mail em `contato@`/`matricula@` |
-| Rate limit + idempotência | **Mesmo Redis da fila** (`redis-nrlabs`), aplicado **dentro de `apps/api`** — não na borda da Vercel, que não alcança a rede privada do Fly. Ainda não construído (Sessão 25) |
+| Rate limit + idempotência | **Mesmo Redis da fila** (`redis-nrlabs`), aplicado **dentro de `apps/api`** — não na borda da Vercel, que não alcança a rede privada do Fly. Construído no OOC-24 (`apps/api/CLAUDE.md`, Proteção da rota pública) |
 | Captcha | **Cloudflare Turnstile** |
 | Backup | `pg_dump` → **Tigris** via Scheduled Function (mesmo storage do comprovante) |
 | Observabilidade | **Sentry** + **PostHog** (EU Cloud) |
@@ -234,7 +234,7 @@ Cada um tem um mecanismo. O mecanismo é obrigatório, não a boa intenção.
 | **E-mail real disparado de staging** | `AllowlistGuard` embrulha o provider e recusa destinatário fora de `EMAIL_ALLOWLIST` quando `NODE_ENV !== production`. **Atenção:** o `Dockerfile` da API fixa `NODE_ENV=production` — um staging com a mesma imagem precisa sobrescrever `NODE_ENV`, senão a guarda fica aberta (`apps/api/CLAUDE.md`, Notificações) |
 | Rota sem checagem de papel | middleware deny-by-default em `apps/api`; rota sem papel declarado falha no CI |
 | SQL rodado à mão no painel de produção | só migration versionada |
-| Sem rate limiting | middleware deny-by-default; rota sem política declarada falha no CI |
+| Sem rate limiting | plugin deny-by-default em `apps/api` (OOC-24): rota `.public()` sem `.rateLimit(...)` derruba o **boot** (como a falta de papel); rota com sessão herda o orçamento por usuário do staff |
 | Commit direto na `main` | branch protection: PR + CI verde |
 | Stack trace ao usuário | error boundary → mensagem genérica + `error_id`. Detalhe só no Sentry |
 | `localhost` fixo no código | tudo via env validada com zod no boot + regra de lint |

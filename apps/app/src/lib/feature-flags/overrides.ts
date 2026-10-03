@@ -1,5 +1,6 @@
 import { cache } from 'react'
 import { serverEnv } from '@/server-env'
+import { requestIdentityHeaders } from '@/lib/api-identity'
 import { FEATURE_FLAGS, type FeatureFlagKey } from './registry'
 
 /**
@@ -29,7 +30,9 @@ export const getFlagOverrides = cache(async (): Promise<FlagOverrides> => {
   try {
     const response = await fetch(
       new URL('/api/v1/feature-flags/state', serverEnv.API_INTERNAL_URL),
-      { cache: 'no-store' },
+      // Rate-limited per reader's IP (OOC-24): every page reads this, and
+      // counted against Vercel's IP the whole site would share one budget.
+      { headers: await requestIdentityHeaders(), cache: 'no-store' },
     )
 
     if (!response.ok) {

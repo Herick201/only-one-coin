@@ -3,6 +3,8 @@ import fastify, { type FastifyInstance } from "fastify";
 import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from "fastify-type-provider-zod";
 import errorHandlerPlugin from "@/infra/plugins/errorHandler.js";
 import authorizationPlugin from "@/infra/plugins/authorization.js";
+import clientIpPlugin from "@/infra/plugins/clientIp.js";
+import rateLimitPlugin from "@/infra/plugins/rateLimit.js";
 import swaggerPlugin from "@/infra/plugins/swagger.js";
 import { mergeAuthIntoSwagger } from "@/infra/plugins/authSwagger.js";
 import { rootRoute } from "@/http/RootRoute.js";
@@ -92,6 +94,11 @@ export async function buildApp(): Promise<FastifyInstance> {
   // deny-by-default onRoute check below (CLAUDE.md §6 targets application
   // routes; the swagger UI's internal routes aren't built via RouteBuilder
   // and are dev-only in the first place, container.production gated above).
+  // Same reasoning for the rate limit's onRoute check. Order matters below:
+  // the client IP is resolved first, per-IP limits run before the session
+  // lookup in authorization (a burst never reaches the database).
+  await app.register(clientIpPlugin, { proxySecret: container.config.API_PROXY_SECRET });
+  await app.register(rateLimitPlugin, { limiter: container.edge.rateLimiter });
   await app.register(authorizationPlugin);
 
   app.after(() => {

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { RouteBuilder } from "@/shared/http/RouteBuilder.js";
+import { RATE_LIMITS } from "@/shared/http/rateLimit.js";
 import { ErrorResponseSchema } from "@/shared/http/ErrorResponseSchema.js";
 import { container } from "@/container.js";
 
@@ -23,6 +24,7 @@ export const completeStaffPasswordResetRoute = RouteBuilder.post("/staff/passwor
     description: "Sets the new password on the existing account and closes the link out.",
   })
   .public()
+  .rateLimit(RATE_LIMITS.staffLink)
   .body(CompleteStaffPasswordResetBodySchema)
   .response(200, CompleteStaffPasswordResetResponseSchema)
   .response(404, ErrorResponseSchema)

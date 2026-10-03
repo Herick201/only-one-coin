@@ -72,6 +72,11 @@ import {
 } from "@ooc/domain";
 import { loadConfig, type Config } from "./config.js";
 import { createLogger } from "./infra/logger.js";
+import type { Redis } from "ioredis";
+import { createEdgeRedis } from "./infra/edge/createEdgeRedis.js";
+import { RedisRateLimiter, type RateLimiter } from "./infra/edge/RedisRateLimiter.js";
+import { RedisIdempotencyCache, type IdempotencyCache } from "./infra/edge/RedisIdempotencyCache.js";
+import { TurnstileCaptchaVerifier, type CaptchaVerifier } from "./infra/edge/TurnstileCaptchaVerifier.js";
 import { createAuth, type Auth } from "./infra/auth/betterAuth.js";
 import { BetterAuthCurrentSessionPort } from "./infra/identity/BetterAuthCurrentSessionPort.js";
 import { BetterAuthFreshAuthVerifier } from "./infra/identity/BetterAuthFreshAuthVerifier.js";
@@ -266,6 +271,15 @@ export interface AppStorage {
   objectStore: ReceiptObjectStore;
 }
 
+/** The public-route protection (OOC-24): what stands between a burst of
+ * requests and Postgres. On its own Redis connection — see createEdgeRedis. */
+export interface AppEdge {
+  redis: Redis;
+  rateLimiter: RateLimiter;
+  idempotency: IdempotencyCache;
+  captcha: CaptchaVerifier;
+}
+
 export interface AppContainer {
   production: boolean;
   config: Config;
@@ -275,6 +289,7 @@ export interface AppContainer {
   identity: AppIdentity;
   notifications: AppNotifications;
   storage: AppStorage;
+  edge: AppEdge;
   repositories: AppRepositories;
   useCases: AppUseCases;
   queries: AppQueries;
@@ -287,6 +302,15 @@ function buildContainer(): AppContainer {
   // Auth
   const auth = createAuth(config);
   const currentSession = new BetterAuthCurrentSessionPort(auth);
+
+  // Public-route protection
+  const edgeRedis = createEdgeRedis(config.REDIS_URL, logger);
+  const edge: AppEdge = {
+    redis: edgeRedis,
+    rateLimiter: new RedisRateLimiter(edgeRedis, logger),
+    idempotency: new RedisIdempotencyCache(edgeRedis, logger),
+    captcha: new TurnstileCaptchaVerifier(config.TURNSTILE_SECRET_KEY, logger),
+  };
 
   // Persistence
   const db = createDb(config);
@@ -441,6 +465,7 @@ function buildContainer(): AppContainer {
     logger,
     auth,
     db,
+    edge,
     identity: {
       currentSession,
       freshAuthVerifier,

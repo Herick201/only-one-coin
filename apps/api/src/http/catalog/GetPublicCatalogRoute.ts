@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { RouteBuilder } from "@/shared/http/RouteBuilder.js";
+import { RATE_LIMITS } from "@/shared/http/rateLimit.js";
 import { container } from "@/container.js";
 
 const GetPublicCatalogResponseSchema = z.object({
@@ -89,6 +90,7 @@ export const getPublicCatalogRoute = RouteBuilder.get("/catalog")
     description: "Languages, courses, plans, open class groups and payment accounts — no session required.",
   })
   .public()
+  .rateLimit(RATE_LIMITS.publicRead)
   .response(200, GetPublicCatalogResponseSchema)
   .handler(async (_request, reply) => {
     const [catalog, platformSettings] = await Promise.all([

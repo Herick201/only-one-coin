@@ -1,6 +1,7 @@
 import { fromNodeHeaders } from "better-auth/node";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import type { Auth } from "@/infra/auth/betterAuth.js";
+import { RATE_LIMITS } from "@/shared/http/rateLimit.js";
 
 export function registerAuthRoutes(app: FastifyInstance, auth: Auth) {
   app.route({
@@ -10,7 +11,9 @@ export function registerAuthRoutes(app: FastifyInstance, auth: Auth) {
     // signup, session refresh...) — necessarily reachable without a session
     // already established. Still subject to the deny-by-default onRoute
     // check (CLAUDE.md §6), so it must declare itself explicitly public.
-    config: { auth: { public: true } },
+    // Same for the rate limit (CLAUDE.md §6): per IP, since there is no
+    // account to count against before sign-in.
+    config: { auth: { public: true }, rateLimit: [RATE_LIMITS.auth] },
     handler: async (request, reply) => {
       const url = new URL(request.url, `http://${request.headers.host}`);
       const headers = fromNodeHeaders(request.headers);

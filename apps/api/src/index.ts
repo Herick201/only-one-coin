@@ -29,6 +29,7 @@ const {
   config,
   config: { PORT, HOST, REDIS_URL, NODE_ENV, BREVO_API_KEY },
   logger,
+  edge,
   notifications,
   storage,
   repositories,
@@ -129,6 +130,11 @@ logger.info(
 if (NODE_ENV === "production" && !BREVO_API_KEY) {
   logger.warn("BREVO_API_KEY is not set: transactional e-mails are logged, not sent");
 }
+if (NODE_ENV === "production" && !config.API_PROXY_SECRET) {
+  logger.warn(
+    "API_PROXY_SECRET is not set: the client IP is read from X-Forwarded-For, which a caller bypassing apps/app can forge",
+  );
+}
 if (NODE_ENV === "production" && !receiptExtractor) {
   logger.warn("OPENROUTER_API_KEY is not set: receipts are screened but never read by OCR");
 }
@@ -160,6 +166,7 @@ async function shutdown() {
   await receiptValidateQueue.close();
   await receiptExtractQueue?.close();
   await connection.quit();
+  await edge.redis.quit();
   process.exit(0);
 }
 

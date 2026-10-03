@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { RouteBuilder } from "@/shared/http/RouteBuilder.js";
+import { RATE_LIMITS } from "@/shared/http/rateLimit.js";
 import { ErrorResponseSchema } from "@/shared/http/ErrorResponseSchema.js";
 import { container } from "@/container.js";
 
@@ -24,6 +25,7 @@ export const completeStaffInviteRoute = RouteBuilder.post("/staff/invites/comple
     description: "The invitee's own password, chosen here — nobody else ever holds it (CLAUDE.md §8).",
   })
   .public()
+  .rateLimit(RATE_LIMITS.staffLink)
   .body(CompleteStaffInviteBodySchema)
   .response(201, CompleteStaffInviteResponseSchema)
   .response(404, ErrorResponseSchema)

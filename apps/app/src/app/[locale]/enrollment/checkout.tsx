@@ -20,6 +20,13 @@ import { StepReview, type SubmitOutcome } from './step-review'
 import { Submitted } from './submitted'
 import { Expired } from './expired'
 
+// A resend that finds the first attempt still running (409
+// `idempotency.in_progress`, OOC-24) waits this long and tries again — the
+// first one either lands, and the resend gets its answer, or fails and frees
+// the key.
+const IN_PROGRESS_RETRY_MS = 1500
+const IN_PROGRESS_MAX_RETRIES = 5
+
 // Short route code -> the full locale name the API (and the e-mails it
 // sends) speaks — the same mapping as `src/i18n/request.ts`.
 const apiLocale: Record<Locale, 'es-PE' | 'en' | 'pt-BR'> = {
@@ -91,64 +98,78 @@ export function Checkout({
     if (outcome === 'held') goTo('student')
   }
 
-  async function submit(): Promise<SubmitOutcome> {
+  async function submit(captchaToken: string): Promise<SubmitOutcome> {
     const plan = planOfCourse(catalog, draft.course.courseId)
     const receiptUploadId = draft.payment.receipt?.receiptUploadId ?? null
     if (!draft.course.classGroupId || !plan || !draft.payment.method || !holdId || !receiptUploadId) {
       throw new Error('Checkout draft is missing a required field at submit')
     }
 
-    const response = await fetch('/api/v1/enrollments/public', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        // The seat and the channel travel as this one id: the server reads
-        // both off the hold, never off this body.
-        holdId,
-        // Minted and confirmed in step 3 (RequestReceiptUploadRoute,
-        // ConfirmReceiptUploadRoute) — the server checks it belongs to this
-        // same hold and actually landed in the bucket.
-        receiptUploadId,
-        classGroupId: draft.course.classGroupId,
-        planId: plan.id,
-        student: {
-          firstName: draft.student.firstName,
-          lastName: draft.student.lastName,
-          nationalIdType: draft.student.nationalIdType,
-          nationalId: draft.student.nationalId,
-          email: draft.student.email,
-          phone: phoneNumberOf(draft.student.phone),
-          birthDate: draft.student.birthDate,
-          // Peru only — the public form has no country selector
-          // (StudentDraft doc comment, lib/enrollment/types.ts).
-          country: 'PE',
-          region: draft.student.region,
-          city: draft.student.city,
-        },
-        guardian: draft.guardian.consentAccepted
-          ? {
-              firstName: draft.guardian.firstName,
-              lastName: draft.guardian.lastName,
-              relationship: draft.guardian.relationship,
-              nationalIdType: draft.guardian.nationalIdType,
-              nationalId: draft.guardian.nationalId,
-              email: draft.guardian.email,
-              phone: phoneNumberOf(draft.guardian.phone),
-              consentAccepted: true as const,
-            }
-          : null,
-        // The e-mails about this enrollment are written in this language.
-        locale: apiLocale[locale],
-        payment: {
-          method: draft.payment.method,
-          methodDetail: null,
-          operationNumber: draft.payment.operationNumber,
-          idempotencyKey: idempotencyKey.current,
-        },
-      }),
+    const payload = JSON.stringify({
+      // Turnstile (OOC-24): checked by the API before anything is written.
+      captchaToken,
+      // The seat and the channel travel as this one id: the server reads
+      // both off the hold, never off this body.
+      holdId,
+      // Minted and confirmed in step 3 (RequestReceiptUploadRoute,
+      // ConfirmReceiptUploadRoute) — the server checks it belongs to this
+      // same hold and actually landed in the bucket.
+      receiptUploadId,
+      classGroupId: draft.course.classGroupId,
+      planId: plan.id,
+      student: {
+        firstName: draft.student.firstName,
+        lastName: draft.student.lastName,
+        nationalIdType: draft.student.nationalIdType,
+        nationalId: draft.student.nationalId,
+        email: draft.student.email,
+        phone: phoneNumberOf(draft.student.phone),
+        birthDate: draft.student.birthDate,
+        // Peru only — the public form has no country selector
+        // (StudentDraft doc comment, lib/enrollment/types.ts).
+        country: 'PE',
+        region: draft.student.region,
+        city: draft.student.city,
+      },
+      guardian: draft.guardian.consentAccepted
+        ? {
+            firstName: draft.guardian.firstName,
+            lastName: draft.guardian.lastName,
+            relationship: draft.guardian.relationship,
+            nationalIdType: draft.guardian.nationalIdType,
+            nationalId: draft.guardian.nationalId,
+            email: draft.guardian.email,
+            phone: phoneNumberOf(draft.guardian.phone),
+            consentAccepted: true as const,
+          }
+        : null,
+      // The e-mails about this enrollment are written in this language.
+      locale: apiLocale[locale],
+      payment: {
+        method: draft.payment.method,
+        methodDetail: null,
+        operationNumber: draft.payment.operationNumber,
+        idempotencyKey: idempotencyKey.current,
+      },
     })
 
+    const post = () =>
+      fetch('/api/v1/enrollments/public', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload,
+      })
+
+    let response = await post()
+    for (let retry = 0; response.status === 409 && retry < IN_PROGRESS_MAX_RETRIES; retry++) {
+      await new Promise((resolve) => setTimeout(resolve, IN_PROGRESS_RETRY_MS))
+      response = await post()
+    }
+
     if (!response.ok) {
+      // Too many attempts from here (OOC-24). Nothing was written; the hold
+      // keeps running, so waiting a few minutes and sending again works.
+      if (response.status === 429) return 'rate_limited'
       // A field the API refused (OOC-64). Same rules as this page, so this is
       // a stale bundle or a server-only check; nothing was written and the
       // hold is intact.
@@ -170,6 +191,11 @@ export function Checkout({
         // or it was not their receipt to send.
         if (body?.reason === 'enrollment.operation_number_already_used') {
           return 'operation_number_used'
+        }
+        // The captcha token was refused (expired, already used). Nothing was
+        // written; the widget hands out a new one.
+        if (body?.reason === 'captcha.failed') {
+          return 'captcha_failed'
         }
       }
       throw new Error(`Submit failed: ${response.status}`)

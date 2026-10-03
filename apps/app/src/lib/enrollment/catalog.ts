@@ -1,4 +1,5 @@
 import { serverEnv } from '@/server-env'
+import { requestIdentityHeaders } from '@/lib/api-identity'
 import type { PublicCatalog } from './types'
 
 /**
@@ -10,6 +11,8 @@ import type { PublicCatalog } from './types'
  */
 export async function getPublicCatalog(): Promise<PublicCatalog> {
   const response = await fetch(new URL('/api/v1/catalog', serverEnv.API_INTERNAL_URL), {
+    // Rate-limited per reader's IP (OOC-24), not per Vercel's.
+    headers: await requestIdentityHeaders(),
     cache: 'no-store',
   })
 

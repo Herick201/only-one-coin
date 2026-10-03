@@ -1,4 +1,5 @@
 import { serverEnv } from '@/server-env'
+import { apiIdentityHeaders, stripIdentityHeaders } from '@/lib/api-identity'
 
 /**
  * Same-origin proxy to apps/api, shared by `src/app/api/v1/[...all]` and
@@ -13,6 +14,11 @@ export async function proxyToApi(request: Request): Promise<Response> {
 
   const headers = new Headers(request.headers)
   headers.delete('host')
+  // The reader's IP, vouched for (OOC-24) — whatever the browser claimed goes.
+  stripIdentityHeaders(headers)
+  for (const [name, value] of Object.entries(apiIdentityHeaders(request.headers))) {
+    headers.set(name, value)
+  }
 
   const hasBody = request.method !== 'GET' && request.method !== 'HEAD'
 

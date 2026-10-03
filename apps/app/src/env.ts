@@ -12,8 +12,12 @@ import { z } from 'zod'
 const schema = z.object({
   // Landing pública (Astro). Opcional; fallback para a raiz do próprio app.
   NEXT_PUBLIC_LANDING_URL: z.string().url().optional(),
+  // Cloudflare Turnstile site key (public) — the checkout's review step
+  // (OOC-24). Required: without it nobody can submit an enrollment.
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().min(1),
 })
 
 export const env = schema.parse({
   NEXT_PUBLIC_LANDING_URL: process.env.NEXT_PUBLIC_LANDING_URL,
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
 })

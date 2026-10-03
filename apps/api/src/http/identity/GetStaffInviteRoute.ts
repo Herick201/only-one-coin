@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { NotFoundError } from "@ooc/domain";
 import { RouteBuilder } from "@/shared/http/RouteBuilder.js";
+import { RATE_LIMITS } from "@/shared/http/rateLimit.js";
 import { ErrorResponseSchema } from "@/shared/http/ErrorResponseSchema.js";
 import { container } from "@/container.js";
 
@@ -37,6 +38,7 @@ export const getStaffInviteRoute = RouteBuilder.get("/staff/invites/:token")
     description: "Backs /backoffice/invite/[token] before it renders the completion form.",
   })
   .public()
+  .rateLimit(RATE_LIMITS.staffLink)
   .params(GetStaffInviteParamsSchema)
   .response(200, GetStaffInviteResponseSchema)
   .response(404, ErrorResponseSchema)
