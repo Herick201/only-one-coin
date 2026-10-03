@@ -4,9 +4,11 @@ import {
   enqueueReceiptExtract,
   enqueueReceiptNormalize,
   enqueueReceiptScreen,
+  enqueueReceiptValidate,
   type ReceiptExtractPayload,
   type ReceiptNormalizePayload,
   type ReceiptScreenPayload,
+  type ReceiptValidatePayload,
 } from "@ooc/queue";
 import { RECEIPT_EXTRACTION_TIER_PRIMARY } from "@ooc/domain";
 import type { FastifyBaseLogger } from "fastify";
@@ -33,6 +35,11 @@ const RELAY_BATCH = 200;
  * side with the screening — neither waits on the other. `extractQueue` is
  * absent when no model key is configured; receipts then simply wait,
  * unread, until one is.
+ *
+ * The traffic light (OOC-21) waits for both: a receipt is offered to the
+ * validate queue only once it is screened AND has its level-1 row (a
+ * reading or a recorded failure). Without a model key nothing is ever read,
+ * so nothing is ever offered — the pipeline stays as it was before OCR.
  */
 export function startReceiptUploadRelayWorker(
   connection: ConnectionOptions,
@@ -42,6 +49,7 @@ export function startReceiptUploadRelayWorker(
     normalizeQueue: Queue<ReceiptNormalizePayload>;
     screenQueue: Queue<ReceiptScreenPayload>;
     extractQueue: Queue<ReceiptExtractPayload> | null;
+    validateQueue: Queue<ReceiptValidatePayload>;
   },
 ): Worker {
   return new Worker(
@@ -71,6 +79,14 @@ export function startReceiptUploadRelayWorker(
         if (extractable.length > 0) {
           logger.debug({ offered: extractable.length }, "receipt upload relay offered rows to extract");
         }
+      }
+
+      const validatable = await deps.store.listValidatableIds(RELAY_BATCH, RECEIPT_EXTRACTION_TIER_PRIMARY);
+      for (const receiptUploadId of validatable) {
+        await enqueueReceiptValidate(deps.validateQueue, { receiptUploadId });
+      }
+      if (validatable.length > 0) {
+        logger.debug({ offered: validatable.length }, "receipt upload relay offered rows to validate");
       }
     },
     { connection, concurrency: 1 },

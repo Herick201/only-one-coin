@@ -28,3 +28,10 @@ export {
   createReceiptExtractQueue,
   enqueueReceiptExtract,
 } from "./producers/receipt-extract.producer.js";
+export { RECEIPT_VALIDATE_QUEUE, ReceiptValidatePayloadSchema } from "./jobs/receipt-validate.job.js";
+export type { ReceiptValidatePayload } from "./jobs/receipt-validate.job.js";
+export {
+  RECEIPT_VALIDATE_ATTEMPTS,
+  createReceiptValidateQueue,
+  enqueueReceiptValidate,
+} from "./producers/receipt-validate.producer.js";

@@ -38,6 +38,7 @@ import {
   SubmitPublicEnrollmentUseCase,
   UpdateCheckoutHoldMinutesUseCase,
   UpdateReceiptAmountToleranceUseCase,
+  ValidateReceiptUseCase,
   UpdateReceiptRejectBelowPercentUseCase,
   UpdateCourseUseCase,
   type IAuditLogRepository,
@@ -91,6 +92,7 @@ import {
   DrizzleReceiptUploadRepository,
   type IReceiptNormalizationStore,
 } from "./infra/persistence/enrollment/DrizzleReceiptUploadRepository.js";
+import { DrizzleReceiptValidationRepository } from "./infra/persistence/enrollment/DrizzleReceiptValidationRepository.js";
 import { DrizzleReceiptScreeningRepository } from "./infra/persistence/enrollment/DrizzleReceiptScreeningRepository.js";
 import { DrizzleReceiptExtractionRepository } from "./infra/persistence/enrollment/DrizzleReceiptExtractionRepository.js";
 import { createS3Client } from "./infra/storage/s3Client.js";
@@ -168,6 +170,9 @@ export interface AppUseCases {
     confirmReceiptUpload: ConfirmReceiptUploadUseCase;
     /** Run by the `receipt-screen` worker, never a route (OOC-22). */
     screenReceiptUpload: ScreenReceiptUploadUseCase;
+    /** Run by the `receipt-validate` worker, never a route (OOC-21). Pure
+     * comparison — no AI module, so it may live in the container. */
+    validateReceipt: ValidateReceiptUseCase;
   };
   payment: {
     settlePayment: SettlePaymentUseCase;
@@ -384,6 +389,13 @@ function buildContainer(): AppContainer {
 
   const settlePayment = new SettlePaymentUseCase(paymentSettlementRepository, enrollmentEmailContextLookup);
 
+  const receiptValidationRepository = new DrizzleReceiptValidationRepository(db);
+  const validateReceipt = new ValidateReceiptUseCase(
+    receiptValidationRepository,
+    platformSettingsRepository,
+    enrollmentEmailContextLookup,
+  );
+
   // Queries (read-only, no domain invariant to protect — see class docs)
   const listStudents = new ListStudentsQuery(db);
   const getStudent = new GetStudentQuery(db);
@@ -457,6 +469,7 @@ function buildContainer(): AppContainer {
         requestReceiptUpload,
         confirmReceiptUpload,
         screenReceiptUpload,
+        validateReceipt,
       },
       payment: {
         settlePayment,
