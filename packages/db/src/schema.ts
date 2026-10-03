@@ -653,6 +653,13 @@ export const receiptUploads = pgTable(
     // found, stamped once. Null screened_at = not screened yet.
     fraudSignals: jsonb("fraud_signals"),
     screenedAt: timestamp("screened_at", { withTimezone: true }),
+    // The receipt traffic light (OOC-21), stamped once after the screening
+    // and the level-1 reading: 'approve' | 'review' | 'reject_suggested',
+    // and `validation_detail` holds the reason and the numbers it was decided
+    // with (ReceiptValidationDetail). Null validated_at = not validated yet.
+    validationVerdict: text("validation_verdict"),
+    validationDetail: jsonb("validation_detail"),
+    validatedAt: timestamp("validated_at", { withTimezone: true }),
     ...timestamps(),
   },
   (table) => [
@@ -673,6 +680,19 @@ export const receiptUploads = pgTable(
       .on(table.createdAt)
       .where(sql`${table.status} = 'processed' and ${table.paymentId} is not null and ${table.screenedAt} is null`),
     index("receipt_uploads_image_sha256_idx").on(table.imageSha256).where(sql`${table.imageSha256} is not null`),
+    check(
+      "receipt_uploads_validation_verdict_check",
+      sql`${table.validationVerdict} is null or ${table.validationVerdict} in ('approve', 'review', 'reject_suggested')`,
+    ),
+    check(
+      "receipt_uploads_validation_stamp_check",
+      sql`(${table.validationVerdict} is null) = (${table.validatedAt} is null)`,
+    ),
+    // The validation relay's query: screened, attached, not validated. The
+    // level-1 reading is an anti-join on payment_receipts' unique index.
+    index("receipt_uploads_validate_pending_idx")
+      .on(table.createdAt)
+      .where(sql`${table.paymentId} is not null and ${table.screenedAt} is not null and ${table.validatedAt} is null`),
   ],
 );
 
