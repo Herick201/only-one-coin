@@ -3,9 +3,12 @@ import {
   PaymentMethodSchema,
   RECEIPT_EXTRACTION_TIER_PRIMARY,
   isReceiptFraudSignalKind,
+  isReceiptVerdict,
+  isReceiptVerdictReason,
   type PaymentMethod,
   type ReceiptExtractionFailureReason,
   type ReceiptFraudSignalKind,
+  type ReceiptVerdictOutcome,
 } from "@ooc/domain";
 import { and, asc, desc, eq, inArray, isNotNull, isNull, sql, type SQL } from "drizzle-orm";
 import type { Db } from "@/infra/db/client.js";
@@ -38,9 +41,8 @@ export interface ReviewReadField<TValue> {
 
 /**
  * What OCR level 1 read off the latest receipt (OOC-20), shown to the
- * reviewer next to what the student declared. Only shown, never judged
- * here: comparing it with the price is the validation step (ROADMAP
- * Sessão 27). `null` while there is no processed receipt to read.
+ * reviewer next to what the student declared. The judgement is `verdict`,
+ * next to it (OOC-21). `null` while there is no processed receipt to read.
  */
 export type ReviewReceiptReading =
   /** Processed, but no reading yet — the worker has not got to it, or no
@@ -81,6 +83,10 @@ export interface PaymentReviewItem {
    * showing. */
   fraudSignals: ReceiptFraudSignalKind[];
   reading: ReviewReceiptReading | null;
+  /** The traffic light's verdict on the latest receipt (OOC-21) — `null`
+   * while it has not run (no receipt, not screened or read yet, or no OCR
+   * key configured). */
+  verdict: ReceiptVerdictOutcome | null;
   submittedAt: Date;
   reviewDeadline: Date;
 }
@@ -110,6 +116,14 @@ function signalKinds(raw: unknown): ReceiptFraudSignalKind[] {
   if (!Array.isArray(raw)) return [];
   const kinds = raw.map((signal) => (signal as { kind?: unknown } | null)?.kind).filter(isReceiptFraudSignalKind);
   return [...new Set(kinds)];
+}
+
+/** The verdict stamped on `receipt_uploads`. Same defence as `signalKinds`:
+ * a value this version does not know reads as no verdict, never a 500. */
+function receiptVerdict(verdict: string | null, detail: unknown): ReceiptVerdictOutcome | null {
+  const reason = (detail as { reason?: unknown } | null)?.reason;
+  if (!isReceiptVerdict(verdict) || !isReceiptVerdictReason(reason)) return null;
+  return { verdict, reason };
 }
 
 const FAILURE_REASONS: readonly ReceiptExtractionFailureReason[] = [
@@ -191,6 +205,8 @@ export class ListPaymentReviewQueueQuery {
         paymentId: receiptUploads.paymentId,
         status: receiptUploads.status,
         fraudSignals: receiptUploads.fraudSignals,
+        validationVerdict: receiptUploads.validationVerdict,
+        validationDetail: receiptUploads.validationDetail,
       })
       .from(receiptUploads)
       .where(isNotNull(receiptUploads.paymentId))
@@ -222,6 +238,8 @@ export class ListPaymentReviewQueueQuery {
         expectedAmountCents: planPrices.amountCents,
         uploadStatus: latestUpload.status,
         fraudSignals: latestUpload.fraudSignals,
+        validationVerdict: latestUpload.validationVerdict,
+        validationDetail: latestUpload.validationDetail,
         readAt: paymentReceipts.createdAt,
         readModelName: paymentReceipts.modelName,
         readModelVersion: paymentReceipts.modelVersion,
@@ -291,6 +309,7 @@ export class ListPaymentReviewQueueQuery {
           failureReason: row.readFailureReason,
           fields: row.readFields,
         }),
+        verdict: receiptVerdict(row.validationVerdict, row.validationDetail),
         submittedAt: row.createdAt,
         reviewDeadline: new Date(row.createdAt.getTime() + REVIEW_WINDOW_DAYS * DAY_MS),
       }),
