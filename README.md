@@ -9,6 +9,7 @@ backoffice administrativo e módulo de e-mail.
 - [`CLAUDE.md`](CLAUDE.md) — contexto permanente: stack fechada, convenções, regras proibidas. Em camada: o que é específico de cada app/pacote vive em `apps/*/CLAUDE.md` e `packages/*/CLAUDE.md` (mapa completo no topo do arquivo da raiz).
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — estrutura do monorepo, modelo de autorização (Caminho A vs. B), RBAC, custo mensal estimado, o shell/layout responsivo de `apps/app` e as **feature flags** das três superfícies (§8).
 - [`docs/MATRICULA-CHECKOUT.md`](docs/MATRICULA-CHECKOUT.md) — o funil público de matrícula: wizard de 4 passos com dois modos de entrada (landing e link do vendedor), os dois relógios da vaga e a atribuição de canal.
+- [`docs/OCR-AVALIACAO.md`](docs/OCR-AVALIACAO.md) — como medir a taxa de acerto da OCR em comprovantes reais (`ocr:eval`) e o resultado de cada medição.
 - [`docs/DOCUMENTOS-E-CERTIFICADOS.md`](docs/DOCUMENTOS-E-CERTIFICADOS.md) — emissão de constancia e certificado, lote por turma, e-mail pela outbox.
 - [`docs/INFRAESTRUTURA.md`](docs/INFRAESTRUTURA.md) — base de conhecimento: levantamento de mercado (preços, specs, latência) que baseou as escolhas de hospedagem.
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — plano de desenvolvimento em sessões pequenas (1 sessão = 1 PR).
@@ -319,7 +320,7 @@ o que é real:
 | --- | --- |
 | Alunos (`/backoffice/students`) | **Real**: listagem (sem quem só tem matrícula reservada), ficha e criação chamam a API. Edição é stub de frontend (fica em estado local; a escrita real ainda não existe) |
 | Matrículas (`/backoffice/enrollments`) | **Real**: só vagas confirmadas (quem pagou e foi aprovado), busca/filtros e abertura manual, que avisa que a matrícula foi enviada a Pagos (`GET`/`POST /api/v1/enrollments`). A aba Reservas foi removida |
-| Pagamentos e fila de revisão (`/backoffice/payments`, `/payments/review`) | **Real** (OOC-55): livro e fila leem `GET /api/v1/payments` e `/payments/review`; o comprovante abre por URL assinada (`audit_log`); aprovar (vaga `reserved → confirmed`) e rejeitar com motivo (vaga devolvida à turma) gravam e disparam o e-mail. Fora: credenciais do portal na aprovação, cron da janela de 5 dias, OCR, trâmites (constancia), ação em lote, ordenação por confiança e atalhos de teclado. O painel inicial (Home) continua mock |
+| Pagamentos e fila de revisão (`/backoffice/payments`, `/payments/review`) | **Real** (OOC-55): livro e fila leem `GET /api/v1/payments` e `/payments/review`; o comprovante abre por URL assinada (`audit_log`); aprovar (vaga `reserved → confirmed`) e rejeitar com motivo (vaga devolvida à turma) gravam e disparam o e-mail. O diálogo de revisão mostra a **leitura da IA** do comprovante (OOC-20): os cinco campos com a confiança de cada um, ou que a leitura falhou ou ainda não aconteceu — só exibição, sem semáforo. Fora: credenciais do portal na aprovação, cron da janela de 5 dias, comparação automática da leitura com o preço (Sessão 27), trâmites (constancia), ação em lote, ordenação por confiança e atalhos de teclado. O painel inicial (Home) continua mock |
 | Cursos (`/backoffice/courses`) | **Real**: lista (aposentados inclusos, sinalizados), criar curso, opções (resumo, regra de certificado, congelamento, transferência), sair do catálogo/voltar com aviso de matrícula viva, e planos com preço agendado (`/api/v1/catalog`, com `audit_log`). A coluna `courses.local_only` deixou de existir |
 | Turmas (`/backoffice/class-groups`) | **Real**: lista por período, períodos (criar, duplicar), criar/editar turma, rascunho e ciclo de vida (`draft → enrolling → in_progress → finished → closed`), ficha da turma e lista de espera manual (`/api/v1/catalog`, com `audit_log`). Continua mock: visão do docente (precisa de `teachers`, Sessão 36), roster, notas e certificados |
 | Docentes (`/backoffice/teachers`) | Mock — não existe tabela `teachers` ainda (decisão deliberada, `docs/ROADMAP.md` Sessão 36) |
@@ -338,6 +339,11 @@ o que é real:
   identidade/auth (`identity/`, ver `packages/domain/README.md`) e um
   vocabulário de erro HTTP reutilizável (`shared/base/errors/`).
 - `packages/queue` — contrato de fila compartilhado (BullMQ/Redis).
+- `packages/ocr` — o adapter OpenRouter atrás da porta `IReceiptExtractor`
+  (`packages/domain`), o mesmo pra todo nível da OCR (só muda o modelo): prompt, JSON schema da resposta e a conversão pro
+  domínio (valor impresso → centavos sem float, data de Lima → UTC). Só
+  `apps/api` importa, e só o `index.ts` dos workers — nunca o container que as
+  rotas carregam.
 - `packages/db` — Postgres local via `compose.yml` (`postgres:18-alpine`) +
   schema/migrations com Drizzle Kit (`docs/ARCHITECTURE.md` §5.8). Dezessete
   migrations além da baseline: schema do Better Auth
@@ -365,7 +371,10 @@ o que é real:
   (OOC-19); `0016` (antifraude do comprovante); e `0017`, o catálogo de
   cursos (`summary`, regra de certificado, congelamento e transferência em
   `courses`) mais a trava de `plan_prices` — sem `UPDATE`/`DELETE`, com
-  trigger `plan_prices_append_only` (OOC-36). Ainda
+  trigger `plan_prices_append_only` (OOC-36); `0019` liga cada leitura de
+  OCR em `payment_receipts` ao upload que ela leu (uma linha por upload e
+  nível) e troca o índice único global de `operation_number` por um comum
+  (OOC-20). Ainda
   não existem: `teachers`, `campaigns`, `attendance`, `grades`,
   `materials`, `certificates` — essas entram nas próximas sessões do
   `ROADMAP.md`.
@@ -398,12 +407,25 @@ o que é real:
   editor mandam o pagamento pra `under_review`; pHash parecido só registra
   (regra e medição em `apps/api/CLAUDE.md`, "Antifraude do comprovante"). Os
   sinais aparecem como texto na fila de revisão do backoffice (Pagos).
+  **OCR nível 1 (OOC-20):** o mesmo relay oferece o comprovante processado e
+  ligado a pagamento ao worker `receipt-extract`, que manda a imagem
+  processada ao Gemini 3.1 Flash-Lite via OpenRouter (`packages/ocr`, retenção
+  zero exigida) com saída presa a um
+  JSON schema e grava em `payment_receipts` os cinco campos (valor, nº de
+  operação, meio, titular, data) com confiança por campo, nível, modelo e
+  versão servida. Falha técnica é retentada 3x com backoff (nível 1r);
+  esgotadas, a linha é gravada com `failure_reason`. **Só lê, não decide:**
+  nenhum status muda pela leitura — a comparação com o preço é a Sessão 27, a
+  escalada pro nível 2 é a Sessão 29 (o modelo dele já se configura e se mede,
+  mas nada escala). A leitura aparece no diálogo de revisão de Pagos e no
+  terminal com `pnpm --filter @ooc/api ocr:show`. Sem
+  `OPENROUTER_API_KEY` o worker não sobe e os comprovantes ficam sem leitura. Taxa de acerto medida em [`docs/OCR-AVALIACAO.md`](docs/OCR-AVALIACAO.md).
 
 **Autorização e domínio de negócio já não dependem de Neon de staging/produção
 provisionado** — rodam sobre o Postgres local. **A reconstruir** quando
 staging/produção tiverem seus próprios dados de verdade: OCR e notificações
-reais (o comprovante do checkout público já sobe via signed URL e é
-normalizado de verdade — acima —, mas a extração por IA em si,
-`packages/ocr`, ainda não existe; não há envio de e-mail real —
+reais (o comprovante do checkout público já sobe via signed URL, é
+normalizado e lido pelo nível 1 da OCR — acima —, mas a leitura ainda não
+decide nada; não há envio de e-mail real —
 `send-email.worker.ts` só loga o payload). Autorização é feita na camada de
 aplicação (`apps/api`), não em RLS — ver `CLAUDE.md` §8.

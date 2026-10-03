@@ -1,5 +1,6 @@
 import {
   createOutboxRelayQueue,
+  createReceiptExtractQueue,
   createReceiptNormalizeQueue,
   createReceiptScreenQueue,
   createReceiptUploadRelayQueue,
@@ -10,9 +11,12 @@ import {
   scheduleReceiptUploadRelay,
   scheduleSeatHoldSweep,
 } from "@ooc/queue";
+import { ExtractReceiptUseCase, RECEIPT_EXTRACTION_TIER_PRIMARY, RECEIPT_EXTRACTION_TIER_SECONDARY } from "@ooc/domain";
 import { buildApp } from "./app.js";
 import { container } from "./container.js";
+import { createReceiptExtractor, receiptOcrModelFor } from "./infra/ocr/createReceiptExtractor.js";
 import { startOutboxRelayWorker } from "./workers/outbox-relay.worker.js";
+import { startReceiptExtractWorker } from "./workers/receipt-extract.worker.js";
 import { startReceiptNormalizeWorker } from "./workers/receipt-normalize.worker.js";
 import { startReceiptScreenWorker } from "./workers/receipt-screen.worker.js";
 import { startReceiptUploadRelayWorker } from "./workers/receipt-upload-relay.worker.js";
@@ -20,6 +24,7 @@ import { startSeatHoldSweepWorker } from "./workers/seat-hold-sweep.worker.js";
 import { startSendEmailWorker } from "./workers/send-email.worker.js";
 
 const {
+  config,
   config: { PORT, HOST, REDIS_URL, NODE_ENV, BREVO_API_KEY },
   logger,
   notifications,
@@ -60,8 +65,19 @@ const seatHoldSweepWorker = startSeatHoldSweepWorker(connection, logger, {
 // EXIF/converts HEIC and writes back `processed` or `rejected`. Once a
 // processed receipt is attached to a payment, the same relay offers it to the
 // screen queue (OOC-22, antifraud level 0).
+//
+// OCR level 1 (OOC-20) rides the same relay: once a receipt is processed and
+// attached to a payment it is offered to the extract queue too. The model
+// client is built here, never in the container — routes load the container,
+// and the submit route must not import the AI module (apps/api/CLAUDE.md).
+// Every tier goes through OpenRouter; without OPENROUTER_API_KEY the queue
+// is not created, nothing is offered, and receipts wait unread. Only tier 1
+// runs — tier 2 is wired (its model is validated here at boot, so a
+// same-family choice fails now and not in Sessão 29) but nothing escalates.
+const receiptExtractor = createReceiptExtractor(config, RECEIPT_EXTRACTION_TIER_PRIMARY);
 const receiptNormalizeQueue = createReceiptNormalizeQueue(connection);
 const receiptScreenQueue = createReceiptScreenQueue(connection);
+const receiptExtractQueue = receiptExtractor ? createReceiptExtractQueue(connection) : null;
 const receiptUploadRelayQueue = createReceiptUploadRelayQueue(connection);
 await scheduleReceiptUploadRelay(receiptUploadRelayQueue);
 const receiptNormalizeWorker = startReceiptNormalizeWorker(connection, logger, {
@@ -72,17 +88,40 @@ const receiptUploadRelayWorker = startReceiptUploadRelayWorker(connection, logge
   store: repositories.receiptUpload,
   normalizeQueue: receiptNormalizeQueue,
   screenQueue: receiptScreenQueue,
+  extractQueue: receiptExtractQueue,
 });
 const receiptScreenWorker = startReceiptScreenWorker(connection, logger, {
   screenReceiptUpload: useCases.enrollment.screenReceiptUpload,
 });
+const receiptExtractWorker = receiptExtractor
+  ? startReceiptExtractWorker(connection, logger, {
+      extractReceipt: new ExtractReceiptUseCase(
+        repositories.receiptExtraction,
+        { read: (objectKey) => storage.objectStore.getObject(objectKey) },
+        receiptExtractor,
+      ),
+    })
+  : null;
 
 logger.info(
-  { emailProvider: BREVO_API_KEY ? "brevo" : "log", allowlistEnforced: NODE_ENV !== "production" },
-  "Workers started: outbox-relay, send-email, seat-hold-sweep, receipt-upload-relay, receipt-normalize, receipt-screen",
+  {
+    emailProvider: BREVO_API_KEY ? "brevo" : "log",
+    allowlistEnforced: NODE_ENV !== "production",
+    receiptExtraction: receiptExtractor
+      ? {
+          provider: "openrouter",
+          tier1: receiptExtractor.modelName,
+          tier2: receiptOcrModelFor(config, RECEIPT_EXTRACTION_TIER_SECONDARY) ?? "unset",
+        }
+      : "off",
+  },
+  "Workers started: outbox-relay, send-email, seat-hold-sweep, receipt-upload-relay, receipt-normalize, receipt-screen, receipt-extract",
 );
 if (NODE_ENV === "production" && !BREVO_API_KEY) {
   logger.warn("BREVO_API_KEY is not set: transactional e-mails are logged, not sent");
+}
+if (NODE_ENV === "production" && !receiptExtractor) {
+  logger.warn("OPENROUTER_API_KEY is not set: receipts are screened but never read by OCR");
 }
 
 app.listen({ port: PORT, host: HOST }, (err, address) => {
@@ -101,12 +140,14 @@ async function shutdown() {
   await receiptUploadRelayWorker.close();
   await receiptNormalizeWorker.close();
   await receiptScreenWorker.close();
+  await receiptExtractWorker?.close();
   await outboxRelayQueue.close();
   await sendEmailQueue.close();
   await seatHoldSweepQueue.close();
   await receiptUploadRelayQueue.close();
   await receiptNormalizeQueue.close();
   await receiptScreenQueue.close();
+  await receiptExtractQueue?.close();
   await connection.quit();
   process.exit(0);
 }

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { receiptOcrEnvShape } from "./infra/ocr/receiptOcrEnv.js";
 
 const ConfigSchema = z
   .object({
@@ -51,6 +52,15 @@ const ConfigSchema = z
       .string()
       .default("15000000")
       .transform((val) => parseInt(val, 10)),
+
+    // OCR level 1 (packages/ocr — OOC-20): provider, keys and model ids, in
+    // their own module so the ocr:eval script validates them the same way.
+    // Same stance as the Brevo key below: without the chosen provider's key
+    // receipts are normalized and screened but never read, and index.ts
+    // warns at boot — a missing model key never takes the API down. The
+    // model id is env so a provider rename is a secret change, not a
+    // deploy; every reading records the id it actually used.
+    ...receiptOcrEnvShape,
 
     // e-mail (Brevo, behind NotificationProvider — CLAUDE.md §3). Without a
     // key, e-mails are rendered and logged, never sent — optional even in

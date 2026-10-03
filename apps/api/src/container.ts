@@ -53,6 +53,7 @@ import {
   type IPlanRepository,
   type IPlatformSettingsRepository,
   type IPublicEnrollmentRepository,
+  type IReceiptExtractionRepository,
   type IReceiptUploadRepository,
   type ISeatHoldRepository,
   type IStaffAccessRepository,
@@ -89,6 +90,7 @@ import {
   type IReceiptNormalizationStore,
 } from "./infra/persistence/enrollment/DrizzleReceiptUploadRepository.js";
 import { DrizzleReceiptScreeningRepository } from "./infra/persistence/enrollment/DrizzleReceiptScreeningRepository.js";
+import { DrizzleReceiptExtractionRepository } from "./infra/persistence/enrollment/DrizzleReceiptExtractionRepository.js";
 import { createS3Client } from "./infra/storage/s3Client.js";
 import { TigrisReceiptStorage } from "./infra/storage/TigrisReceiptStorage.js";
 import { ReceiptObjectStore } from "./infra/storage/ReceiptObjectStore.js";
@@ -138,6 +140,11 @@ export interface AppRepositories {
    * `AppNotifications.outbox` is `IOutboxStore` rather than a domain port —
    * this is infra a worker consumes directly, not a usecase's dependency. */
   receiptUpload: IReceiptUploadRepository & IReceiptNormalizationStore;
+  /** Only the `receipt-extract` worker uses it (OOC-20). The extractor itself
+   * is not in this container on purpose: routes load the container, and the
+   * submit route must never import the AI module (apps/api/CLAUDE.md) —
+   * index.ts builds it next to the workers. */
+  receiptExtraction: IReceiptExtractionRepository;
   planPriceLookup: IPlanPriceLookup;
   staffInvite: IStaffInviteRepository;
   staffPasswordReset: IStaffPasswordResetRepository;
@@ -277,6 +284,7 @@ function buildContainer(): AppContainer {
   const seatHoldRepository = new DrizzleSeatHoldRepository(db);
   const receiptUploadRepository = new DrizzleReceiptUploadRepository(db);
   const receiptScreeningRepository = new DrizzleReceiptScreeningRepository(db);
+  const receiptExtractionRepository = new DrizzleReceiptExtractionRepository(db);
   const platformSettingsRepository = new DrizzlePlatformSettingsRepository(db);
   const userRoleRepository = new DrizzleUserRoleRepository(db);
   const auditLogRepository = new DrizzleAuditLogRepository(db);
@@ -423,6 +431,7 @@ function buildContainer(): AppContainer {
       publicEnrollment: publicEnrollmentRepository,
       seatHold: seatHoldRepository,
       receiptUpload: receiptUploadRepository,
+      receiptExtraction: receiptExtractionRepository,
       planPriceLookup,
       staffInvite: staffInviteRepository,
       staffPasswordReset: staffPasswordResetRepository,

@@ -939,6 +939,37 @@ export type ReceiptFraudSignalKind =
   | 'modified_after_capture'
   | 'payer_name_mismatch'
 
+/** One field the OCR read, with the model's own confidence (0–1). */
+export interface ReadField<T> {
+  value: T | null
+  confidence: number
+}
+
+/** Why the OCR produced no reading — after its retries ran out. */
+export type ReadingFailureReason = 'provider_unavailable' | 'invalid_response' | 'unexpected_error'
+
+/**
+ * What OCR level 1 read off the receipt (OOC-20). Shown to the reviewer as
+ * guidance, never judged on screen: comparing it with the price is the
+ * validation step (ROADMAP Sessão 27).
+ */
+export type ReceiptReading =
+  | { state: 'not_read' }
+  | { state: 'failed'; reason: ReadingFailureReason; modelName: string | null; readAt: string }
+  | {
+      state: 'read'
+      /** Technical model id — for audit, never rendered (CLAUDE.md §4). */
+      modelName: string | null
+      modelVersion: string | null
+      readAt: string
+      amountCents: ReadField<number>
+      operationNumber: ReadField<string>
+      paymentMethod: ReadField<PaymentMethod> & { detail: string | null }
+      payerName: ReadField<string>
+      /** An instant in UTC, or a bare `YYYY-MM-DD` when the receipt printed no time. */
+      paidAt: ReadField<string>
+    }
+
 /** One payment still owed a decision, as `GET /api/v1/payments/review` serves it. */
 export interface PaymentReviewItem {
   id: string
@@ -956,6 +987,9 @@ export interface PaymentReviewItem {
   currency: 'PEN'
   receipt: ReviewReceiptState
   fraudSignals: ReceiptFraudSignalKind[]
+  /** What the OCR read off the latest receipt; `null` while there is no
+   * processed receipt to read. */
+  reading: ReceiptReading | null
   submittedAt: string
   /** When the open payment overstays the review window. */
   reviewDeadline: string

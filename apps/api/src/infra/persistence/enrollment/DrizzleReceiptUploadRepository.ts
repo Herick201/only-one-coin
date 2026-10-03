@@ -1,6 +1,6 @@
 import type { IReceiptUploadRepository, ReceiptExifFacts, ReceiptUpload, ReceiptUploadStatus } from "@ooc/domain";
-import { receiptUploads } from "@ooc/db";
-import { and, asc, eq, isNotNull, isNull } from "drizzle-orm";
+import { paymentReceipts, receiptUploads } from "@ooc/db";
+import { and, asc, eq, isNotNull, isNull, sql } from "drizzle-orm";
 import type { Db } from "@/infra/db/client.js";
 import type { ReceiptFingerprint } from "@/infra/storage/fingerprintReceiptImage.js";
 
@@ -15,6 +15,10 @@ export interface IReceiptNormalizationStore {
   /** Normalized, attached to a payment, not screened yet — what the relay
    * offers to the `receipt-screen` queue (OOC-22). */
   listScreenableIds(limit: number): Promise<string[]>;
+  /** Normalized, attached to a payment, and with no `payment_receipts` row
+   * at `tier` yet — what the relay offers to the `receipt-extract` queue
+   * (OOC-20). */
+  listExtractableIds(limit: number, tier: number): Promise<string[]>;
   /** The processed key and the fingerprint land in the same statement: a
    * `processed` row always has what the screening compares. */
   markProcessed(
@@ -80,6 +84,34 @@ export class DrizzleReceiptUploadRepository implements IReceiptUploadRepository,
           eq(receiptUploads.status, "processed"),
           isNotNull(receiptUploads.paymentId),
           isNull(receiptUploads.screenedAt),
+        ),
+      )
+      .orderBy(asc(receiptUploads.createdAt))
+      .limit(limit);
+
+    return rows.map((row) => row.id);
+  }
+
+  /**
+   * An anti-join against `payment_receipts`, which its unique
+   * (receipt_upload_id, tier) index serves. Unlike the screening there is no
+   * stamp column on `receipt_uploads` to put a partial index on — the
+   * reading's own row is the stamp, so the two can never disagree. Every
+   * failed extraction writes its row too, so nothing is offered forever.
+   */
+  async listExtractableIds(limit: number, tier: number): Promise<string[]> {
+    const rows = await this.db
+      .select({ id: receiptUploads.id })
+      .from(receiptUploads)
+      .where(
+        and(
+          eq(receiptUploads.status, "processed"),
+          isNotNull(receiptUploads.paymentId),
+          sql`not exists (
+            select 1 from ${paymentReceipts}
+             where ${paymentReceipts.receiptUploadId} = ${receiptUploads.id}
+               and ${paymentReceipts.tier} = ${tier}
+          )`,
         ),
       )
       .orderBy(asc(receiptUploads.createdAt))

@@ -4,11 +4,13 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import type {
   PaymentReviewItem,
+  ReadField,
+  ReceiptReading,
   RejectionReason,
   ReviewDecision,
 } from '@/lib/backoffice/types'
 import { fetchReceiptUrl } from '@/lib/backoffice/payment-client'
-import { formatDateTime, formatMoney, type Locale } from '@/lib/format'
+import { formatDate, formatDateTime, formatMoney, type Locale } from '@/lib/format'
 import { formatPaymentMethod } from '@/lib/payment-method'
 import { SectionTitle, StatusBadge } from '@/components/backoffice/ui'
 import { paymentTone, receiptStateTone } from '@/components/backoffice/status-tone'
@@ -289,6 +291,8 @@ export function ReceiptReviewDialog({
                 </dl>
               </section>
 
+              {payment.reading && <ReadingSection reading={payment.reading} />}
+
               <section>
                 <SectionTitle icon="shield">{t('receipt_review.signals_title')}</SectionTitle>
                 {payment.fraudSignals.length === 0 ? (
@@ -419,6 +423,118 @@ export function ReceiptReviewDialog({
         )}
       </DialogContent>
     </Dialog>
+  )
+}
+
+/**
+ * What OCR level 1 read off the receipt (OOC-20), field by field, with the
+ * model's own confidence. Guidance next to the image, never a verdict: no
+ * colour says right or wrong, because comparing the reading with the price
+ * and choosing a confidence threshold are the validation step's (ROADMAP
+ * Sessão 27), measured on real receipts first (docs/OCR-AVALIACAO.md). The
+ * model id stays off screen — it is a technical id (CLAUDE.md §4) and lives
+ * in the database for audit.
+ */
+function ReadingSection({ reading }: { reading: ReceiptReading }) {
+  const t = useTranslations('bo')
+  const locale = useLocale() as Locale
+
+  if (reading.state === 'not_read') {
+    return (
+      <section>
+        <SectionTitle icon="doc">{t('receipt_review.reading_title')}</SectionTitle>
+        <p className="mt-2 text-sm text-muted-foreground">{t('receipt_review.reading_not_read')}</p>
+      </section>
+    )
+  }
+
+  if (reading.state === 'failed') {
+    return (
+      <section>
+        <SectionTitle icon="doc">{t('receipt_review.reading_title')}</SectionTitle>
+        <ReceiptWarning
+          text={t('receipt_review.reading_failed', {
+            reason: t(`receipt_review.reading_failure_${reading.reason}`),
+          })}
+        />
+      </section>
+    )
+  }
+
+  const notFound = t('receipt_review.reading_not_found')
+  const rows: { key: string; label: string; field: ReadField<unknown>; text: string }[] = [
+    {
+      key: 'amount',
+      label: t('receipt_review.reading_field_amount'),
+      field: reading.amountCents,
+      text: reading.amountCents.value === null ? notFound : formatMoney(reading.amountCents.value, 'PEN', locale),
+    },
+    {
+      key: 'operation',
+      label: t('receipt_review.reading_field_operation'),
+      field: reading.operationNumber,
+      text: reading.operationNumber.value ?? notFound,
+    },
+    {
+      key: 'method',
+      label: t('receipt_review.reading_field_method'),
+      field: reading.paymentMethod,
+      text:
+        reading.paymentMethod.value === null
+          ? notFound
+          : formatPaymentMethod(reading.paymentMethod.value, reading.paymentMethod.detail, t('payment_method.other')),
+    },
+    {
+      key: 'payer',
+      label: t('receipt_review.reading_field_payer'),
+      field: reading.payerName,
+      text: reading.payerName.value ?? notFound,
+    },
+    {
+      key: 'paid_at',
+      label: t('receipt_review.reading_field_paid_at'),
+      field: reading.paidAt,
+      text:
+        reading.paidAt.value === null
+          ? notFound
+          : reading.paidAt.value.length === 10
+            ? formatDate(reading.paidAt.value, locale)
+            : formatDateTime(reading.paidAt.value, locale),
+    },
+  ]
+
+  return (
+    <section>
+      <SectionTitle icon="doc">{t('receipt_review.reading_title')}</SectionTitle>
+      <p className="mt-2 text-xs text-muted-foreground">{t('receipt_review.reading_intro')}</p>
+      <dl className="mt-2">
+        {rows.map((row) => (
+          <div
+            key={row.key}
+            className="flex items-start justify-between gap-4 border-b border-line/70 py-2.5 last:border-b-0"
+          >
+            <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{row.label}</dt>
+            <dd className="text-right">
+              <span
+                className={`block text-sm tabular-nums ${
+                  row.field.value === null ? 'text-muted-foreground' : 'font-medium text-ink'
+                }`}
+              >
+                {row.text}
+              </span>
+              {row.field.value !== null && (
+                <span className="block text-xs tabular-nums text-muted-foreground">
+                  {t('receipt_review.reading_confidence', { value: Math.round(row.field.confidence * 100) })}
+                </span>
+              )}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <p className="mt-2 text-xs text-muted-foreground">
+        {t('receipt_review.reading_read_at', { date: formatDateTime(reading.readAt, locale) })}
+      </p>
+    </section>
   )
 }
 

@@ -132,6 +132,30 @@ export {
   type ScreenReceiptUploadOutput,
 } from "./enrollment/ScreenReceiptUploadUseCase.js";
 export {
+  RECEIPT_EXTRACTION_TIER_PRIMARY,
+  RECEIPT_EXTRACTION_TIER_SECONDARY,
+  ReceiptExtractionError,
+  findExtractedField,
+  type IReceiptExtractor,
+  type ReceiptExtractedField,
+  type ReceiptExtractedFieldName,
+  type ReceiptExtraction,
+  type ReceiptExtractionFailureReason,
+  type ReceiptExtractionTier,
+  type ReceiptImage,
+} from "./enrollment/ReceiptExtraction.js";
+export type {
+  IReceiptExtractionRepository,
+  IReceiptImageReader,
+  ReceiptExtractionSubject,
+} from "./enrollment/ReceiptExtractionRepository.js";
+export {
+  ExtractReceiptUseCase,
+  type ExtractReceiptInput,
+  type ExtractReceiptOutput,
+  type RecordReceiptExtractionFailureInput,
+} from "./enrollment/ExtractReceiptUseCase.js";
+export {
   RequestReceiptUploadUseCase,
   RECEIPT_CONTENT_TYPES,
   type ReceiptContentType,
