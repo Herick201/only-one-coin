@@ -1,15 +1,30 @@
 // TODO: switch to native crypto.randomUUIDv7() once engines.node requires >=26 (LTS ~out/2026)
 import { v7 as uuid } from "uuid";
 import { z } from "zod";
+import { InvalidFieldsError } from "../shared/base/errors/InvalidFieldsError.js";
+import { SoftDeletableModel, SoftDeletableModelPropsSchema } from "../shared/base/SoftDeletableModel.js";
 import {
-  BASE_PROPS_KEYS,
-  SoftDeletableModel,
-  SoftDeletableModelPropsSchema,
-} from "../shared/base/SoftDeletableModel.js";
+  ageOn,
+  BirthDateField,
+  CityField,
+  EmailField,
+  NationalIdField,
+  NationalIdTypeSchema,
+  type NationalIdType,
+  PersonNameField,
+  PhoneField,
+  refineNationalId,
+  RegionField,
+  toFieldErrors,
+} from "./fields.js";
 
-export const NationalIdTypeSchema = z.enum(["DNI", "CE", "passport"]);
-export type NationalIdType = z.infer<typeof NationalIdTypeSchema>;
+export { NationalIdTypeSchema, type NationalIdType };
 
+/**
+ * What a stored record looks like. Loose on purpose: rows written before the
+ * field rules existed (and the legacy import) still have to load. What a
+ * *new* record must satisfy is `CreateStudentSchema`, below.
+ */
 export const StudentPropsSchema = SoftDeletableModelPropsSchema.extend({
   firstName: z.string().min(1),
   lastName: z.string().min(1),
@@ -25,7 +40,38 @@ export const StudentPropsSchema = SoftDeletableModelPropsSchema.extend({
   city: z.string().min(1),
 });
 
-export const CreateStudentSchema = StudentPropsSchema.omit(BASE_PROPS_KEYS);
+/**
+ * What a new or rewritten record must satisfy — normalized first, then checked
+ * (`fields.ts`). The object without the cross-field rules is exported for
+ * routes that need to extend it; anything parsing a whole student uses
+ * `CreateStudentSchema`.
+ */
+export const StudentFieldsSchema = z.object({
+  firstName: PersonNameField,
+  lastName: PersonNameField,
+  nationalIdType: NationalIdTypeSchema,
+  nationalId: NationalIdField,
+  email: EmailField,
+  phone: PhoneField,
+  birthDate: BirthDateField,
+  // ISO 3166-1 alpha-2.
+  country: z
+    .string()
+    .transform((value) => value.trim().toUpperCase())
+    .pipe(z.string().length(2, "invalid")),
+  // First-level division ("departamento" in Peru). Null outside it.
+  region: RegionField.nullable(),
+  city: CityField,
+});
+
+/** Inside Peru the address names its departamento — both forms ask for it. */
+function refineRegion(value: { country: string; region: string | null }, ctx: z.RefinementCtx): void {
+  if (value.country === "PE" && value.region === null) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["region"], message: "required" });
+  }
+}
+
+export const CreateStudentSchema = StudentFieldsSchema.superRefine(refineNationalId).superRefine(refineRegion);
 
 export type StudentProps = z.infer<typeof StudentPropsSchema>;
 export type CreateStudentDTO = z.infer<typeof CreateStudentSchema>;
@@ -77,18 +123,7 @@ export class Student extends SoftDeletableModel {
   /** `ageInYears` for a birth date read off a record that was never
    * rehydrated into a Student (a narrow lookup that only needs the age). */
   static ageOf(birthDate: Date): number {
-    const today = new Date();
-    let age = today.getUTCFullYear() - birthDate.getUTCFullYear();
-
-    const hasHadBirthdayThisYear =
-      today.getUTCMonth() > birthDate.getUTCMonth() ||
-      (today.getUTCMonth() === birthDate.getUTCMonth() && today.getUTCDate() >= birthDate.getUTCDate());
-
-    if (!hasHadBirthdayThisYear) {
-      age -= 1;
-    }
-
-    return age;
+    return ageOn(birthDate);
   }
 
   static isMinorBornOn(birthDate: Date): boolean {
@@ -99,7 +134,7 @@ export class Student extends SoftDeletableModel {
     const result = CreateStudentSchema.safeParse(dto);
 
     if (!result.success) {
-      throw new Error("Invalid data");
+      throw new InvalidFieldsError(toFieldErrors(result.error.issues, "student"));
     }
 
     return new Student({

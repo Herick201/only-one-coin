@@ -19,18 +19,16 @@ export { ForbiddenError } from "./shared/base/errors/ForbiddenError.js";
 export { NotFoundError } from "./shared/base/errors/NotFoundError.js";
 export { ConflictError } from "./shared/base/errors/ConflictError.js";
 export { UnableToProcessEntryError } from "./shared/base/errors/UnableToProcessEntryError.js";
+export { InvalidFieldsError } from "./shared/base/errors/InvalidFieldsError.js";
 
-export {
-  Student,
-  StudentPropsSchema,
-  CreateStudentSchema,
-  NationalIdTypeSchema,
-} from "./student/Student.js";
-export type { StudentProps, CreateStudentDTO, NationalIdType } from "./student/Student.js";
+export * from "./student/fields.js";
+export { Student, StudentPropsSchema, StudentFieldsSchema, CreateStudentSchema } from "./student/Student.js";
+export type { StudentProps, CreateStudentDTO } from "./student/Student.js";
 export type { IStudentRepository } from "./student/StudentRepository.js";
 export {
   Guardian,
   GuardianPropsSchema,
+  GuardianFieldsSchema,
   CreateGuardianSchema,
   GuardianRelationshipSchema,
 } from "./student/Guardian.js";

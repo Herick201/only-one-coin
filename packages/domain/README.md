@@ -2,8 +2,10 @@
 
 Domínio DDD puro: entidades, regras de negócio e casos de uso. **Sem
 Fastify, sem provedor de banco, sem Redis** — não importa nada de `apps/api`
-nem de `packages/queue`. Quem depende deste pacote é `apps/api` (e, no
-futuro, possivelmente `apps/app`).
+nem de `packages/queue`. Quem depende deste pacote é `apps/api` — e
+`apps/app`, só pelo subpath `@ooc/domain/fields` (regras de campo da ficha,
+`src/student/fields.ts`, exportado como `.ts` cru; ver `docs/ARCHITECTURE.md`
+§1).
 
 Esboço baseado no template `Psykka/template-ddd`, adaptado para viver num
 pacote separado (o template original é um único app Fastify). Vai mudar

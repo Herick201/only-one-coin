@@ -1,7 +1,9 @@
 import type { Locale } from "../notification/EmailNotification.js";
 import { enrollmentReceivedEmails } from "../notification/enrollmentEmails.js";
 import { BaseUseCase } from "../shared/base/BaseUseCase.js";
+import { InvalidFieldsError } from "../shared/base/errors/InvalidFieldsError.js";
 import { GuardianRequiredForMinorError } from "../student/errors.js";
+import { isGmail } from "../student/fields.js";
 import { Guardian, type CreateGuardianDTO } from "../student/Guardian.js";
 import { Student, type CreateStudentDTO } from "../student/Student.js";
 import { Enrollment } from "./Enrollment.js";
@@ -71,6 +73,12 @@ export class SubmitPublicEnrollmentUseCase extends BaseUseCase<
 
   async run(input: SubmitPublicEnrollmentInput): Promise<SubmitPublicEnrollmentOutput> {
     const student = Student.create(input.student);
+
+    // The checkout's own gate, not the entity's: the backoffice registration
+    // is not held to it until OOC-65 decides (fields.ts, isGmail).
+    if (!isGmail(student.email)) {
+      throw new InvalidFieldsError([{ path: "student.email", code: "email_must_be_gmail" }]);
+    }
 
     if (student.isMinor && !input.guardian) {
       throw new GuardianRequiredForMinorError();
