@@ -92,7 +92,10 @@
         "consent_given": "Aceito (versão {version})",
         "what_happens": "Ao enviar, sua vaga fica reservada e o comprovante entra em revisão. Você tem até {days} dias para o pagamento ser aprovado; avisamos por e-mail assim que estiver pronto.",
         "submit_failed": "Não conseguimos enviar sua matrícula. Você pode tentar de novo — não vai criar uma vaga duplicada.",
-        "operation_number_used": "Esse número de operação já foi usado em outra matrícula. Confira no passo de pagamento; se estiver certo, fale com a gente pelo WhatsApp."
+        "operation_number_used": "Esse número de operação já foi usado em outra matrícula. Confira no passo de pagamento; se estiver certo, fale com a gente pelo WhatsApp.",
+        "invalid_fields": "Não conseguimos registrar sua matrícula: revise estes dados e envie de novo.",
+        "other_field": "Outro dado",
+        "guardian_field": "Responsável — {field}"
       }
     },
     "time_range": "{start} às {end}",
@@ -176,7 +179,7 @@
     },
     "error": {
       "required": "Preencha este campo.",
-      "national_id_format": "Confira o número: o DNI tem 8 dígitos.",
+      "national_id_format": "Confira o número: o DNI tem 8 dígitos; o carnê de estrangeiro, de 9 a 12 letras ou números; o passaporte, de 6 a 12.",
       "phone_format": "Escreva um número de celular válido.",
       "email_format": "Escreva um e-mail válido.",
       "email_must_be_gmail": "Precisa ser uma conta do Gmail. Não aceitamos e-mails institucionais nem corporativos.",
@@ -188,7 +191,9 @@
       "receipt_type": "Envie uma imagem (JPG, PNG ou HEIC).",
       "receipt_size": "O arquivo está pesado demais. Tente um print mais leve.",
       "receipt_upload_failed": "O envio falhou. Verifique sua conexão e tente de novo.",
-      "fix_fields": "Confira os campos marcados antes de continuar."
+      "fix_fields": "Confira os campos marcados antes de continuar.",
+      "too_long": "Está longo demais. Encurte um pouco.",
+      "invalid": "Revise este dado."
     },
     "submitted": {
       "title": "Recebemos sua matrícula",

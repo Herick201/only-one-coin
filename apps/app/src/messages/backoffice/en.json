@@ -195,7 +195,19 @@
       "created": "Student registered.",
       "submit_error": "Could not register the student. Try again.",
       "duplicate_error": "A student is already registered under this document. Find them in the directory: their file exists, and the enrollment is opened over it.",
-      "missing_fields": "Fill in the required fields to register the student."
+      "missing_fields": "Fill in the required fields to register the student.",
+      "invalid_error": "The system refused some details. Fix the marked fields and try again.",
+      "error": {
+        "required": "Fill in this field.",
+        "too_long": "This is too long.",
+        "national_id_format": "Invalid number: DNI has 8 digits; foreigner's card 9 to 12 letters or digits; passport 6 to 12.",
+        "phone_format": "Invalid mobile: too few digits.",
+        "email_format": "Invalid e-mail.",
+        "email_must_be_gmail": "Must be a Gmail account.",
+        "birth_date_range": "Check the birth date.",
+        "operation_format": "Invalid operation number.",
+        "invalid": "Check this."
+      }
     },
     "national_id_type": {
       "DNI": "DNI",

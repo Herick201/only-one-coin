@@ -1,4 +1,18 @@
-import { z } from 'zod'
+import {
+  CityField,
+  EmailField,
+  type FieldErrorCode,
+  isGmail,
+  isPlausibleAge,
+  issueOf,
+  NationalIdField,
+  nationalIdIssue,
+  type NationalIdType,
+  normalizeNationalId,
+  OperationNumberField,
+  PersonNameField,
+  PhoneField,
+} from '@ooc/domain/fields'
 import { ageFrom } from '@/lib/format'
 import { splitPhone } from '@/lib/geo'
 import type {
@@ -204,41 +218,32 @@ export type StudentField = keyof StudentDraft | 'minAge'
 export type GuardianField = keyof GuardianDraft
 export type PaymentField = keyof PaymentDraft
 
-/** DNI is 8 digits; CE and passport are alphanumeric and vary by country. */
-const NATIONAL_ID_RULES = {
-  DNI: /^\d{8}$/,
-  CE: /^[A-Za-z0-9]{9,12}$/,
-  passport: /^[A-Za-z0-9]{6,12}$/,
-} as const
-
-const emailSchema = z.string().trim().email()
-
 /**
- * The student's address has to be a personal Gmail account, and that is a
- * gate rather than advice: class access arrives through Google Classroom, and
- * the enrollment form says it in capitals — institutional and corporate
- * addresses are refused. A colegio address that stops working in December is
- * a student who loses the course they paid for.
- *
- * The guardian's address is not held to this: Classroom belongs to the student.
+ * The field rules themselves live in `@ooc/domain/fields` — the same copy
+ * `apps/api` refuses with (OOC-64). What stays here is only what is the
+ * browser's: the draft's shape, the phone split, the per-course minimum age.
+ * Normalization (trim, folded spaces, lowercase e-mail, document without
+ * separators) runs inside each field schema, so `12.345.678` passes here
+ * exactly when it passes there.
  */
-export function isGmail(email: string): boolean {
-  return /@gmail\.com$/.test(email.trim().toLowerCase())
-}
 
 /**
  * Mobile number — the sheet's CELULAR column, stored as one string with the
  * dial code (`joinPhone`), the same as the backoffice.
  *
  * Emptiness is `splitPhone`, never `phone === ''`: the field starts life
- * holding `"+51"`, which is a dial code and not a phone. The digit floor is
- * deliberately low — the Asociación does enroll students abroad, and a rule
- * that only knows Lima turns a paying student away at the last step.
+ * holding `"+51"`, which is a dial code and not a phone.
  */
-const MIN_DIGITS = 6
-
 export function phoneNumberOf(phone: string): string {
   return splitPhone(phone).number.trim()
+}
+
+function nationalIdError(type: NationalIdType, raw: string): FieldErrorCode | null {
+  return issueOf(NationalIdField, raw) ?? nationalIdIssue(type, normalizeNationalId(raw))
+}
+
+function setIf<T extends string>(errors: FieldErrors<T>, key: T, code: FieldErrorCode | null) {
+  if (code) errors[key] = code
 }
 
 export function validateStudent(
@@ -248,27 +253,21 @@ export function validateStudent(
 ): FieldErrors<StudentField> {
   const errors: FieldErrors<StudentField> = {}
 
-  if (draft.firstName.trim() === '') errors.firstName = 'required'
-  if (draft.lastName.trim() === '') errors.lastName = 'required'
+  setIf(errors, 'firstName', issueOf(PersonNameField, draft.firstName))
+  setIf(errors, 'lastName', issueOf(PersonNameField, draft.lastName))
+  setIf(errors, 'nationalId', nationalIdError(draft.nationalIdType, draft.nationalId))
+  setIf(errors, 'phone', issueOf(PhoneField, phoneNumberOf(draft.phone)))
 
-  const id = draft.nationalId.trim()
-  if (id === '') errors.nationalId = 'required'
-  else if (!NATIONAL_ID_RULES[draft.nationalIdType].test(id))
-    errors.nationalId = 'national_id_format'
-
-  const phone = phoneNumberOf(draft.phone)
-  if (phone === '') errors.phone = 'required'
-  else if (phone.replace(/\D/g, '').length < MIN_DIGITS) errors.phone = 'phone_format'
-
-  if (draft.email.trim() === '') errors.email = 'required'
-  else if (!emailSchema.safeParse(draft.email).success) errors.email = 'email_format'
+  const emailError = issueOf(EmailField, draft.email)
+  if (emailError) errors.email = emailError
+  // The address has to be a personal Gmail (`isGmail`) — Classroom.
   else if (!isGmail(draft.email)) errors.email = 'email_must_be_gmail'
 
   if (draft.birthDate === '') {
     errors.birthDate = 'required'
   } else {
     const age = ageFrom(draft.birthDate, now)
-    if (age < 0 || age > 120) errors.birthDate = 'birth_date_range'
+    if (!isPlausibleAge(age)) errors.birthDate = 'birth_date_range'
     // Minimum age is a gate, not a warning: a course with a floor of 13 does
     // not enroll a 10-year-old and sort it out later
     // (`docs/REGRAS-NEGOCIO.md` §2).
@@ -276,7 +275,7 @@ export function validateStudent(
   }
 
   if (!draft.region) errors.region = 'required'
-  if (draft.city.trim() === '') errors.city = 'required'
+  setIf(errors, 'city', issueOf(CityField, draft.city))
 
   return errors
 }
@@ -296,37 +295,24 @@ export function isMinor(birthDate: string, now = new Date()): boolean {
 export function validateGuardian(draft: GuardianDraft): FieldErrors<GuardianField> {
   const errors: FieldErrors<GuardianField> = {}
 
-  if (draft.firstName.trim() === '') errors.firstName = 'required'
-  if (draft.lastName.trim() === '') errors.lastName = 'required'
-
-  const id = draft.nationalId.trim()
-  if (id === '') errors.nationalId = 'required'
-  else if (!NATIONAL_ID_RULES[draft.nationalIdType].test(id))
-    errors.nationalId = 'national_id_format'
-
-  const phone = phoneNumberOf(draft.phone)
-  if (phone === '') errors.phone = 'required'
-  else if (phone.replace(/\D/g, '').length < MIN_DIGITS) errors.phone = 'phone_format'
-
-  if (draft.email.trim() === '') errors.email = 'required'
-  else if (!emailSchema.safeParse(draft.email).success) errors.email = 'email_format'
+  setIf(errors, 'firstName', issueOf(PersonNameField, draft.firstName))
+  setIf(errors, 'lastName', issueOf(PersonNameField, draft.lastName))
+  setIf(errors, 'nationalId', nationalIdError(draft.nationalIdType, draft.nationalId))
+  setIf(errors, 'phone', issueOf(PhoneField, phoneNumberOf(draft.phone)))
+  // Any provider: Classroom belongs to the student.
+  setIf(errors, 'email', issueOf(EmailField, draft.email))
 
   if (!draft.consentAccepted) errors.consentAccepted = 'consent_required'
 
   return errors
 }
 
-/** Operation numbers run 6–20 characters across Yape and the banks. */
-const OPERATION_NUMBER = /^[A-Za-z0-9-]{6,20}$/
-
 export function validatePayment(draft: PaymentDraft): FieldErrors<PaymentField> {
   const errors: FieldErrors<PaymentField> = {}
 
   if (draft.method === null) errors.method = 'required'
 
-  const operation = draft.operationNumber.trim()
-  if (operation === '') errors.operationNumber = 'required'
-  else if (!OPERATION_NUMBER.test(operation)) errors.operationNumber = 'operation_format'
+  setIf(errors, 'operationNumber', issueOf(OperationNumberField, draft.operationNumber))
 
   // The hard one. Without the image there is nothing for the OCR ladder to
   // read (`CLAUDE.md` §5) and the enrollment is a line nobody can ever settle,

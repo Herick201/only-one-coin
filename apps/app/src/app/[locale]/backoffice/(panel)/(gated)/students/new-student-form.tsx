@@ -2,6 +2,19 @@
 
 import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
+import {
+  CityField,
+  EmailField,
+  type FieldErrorCode,
+  isPlausibleAge,
+  issueOf,
+  NationalIdField,
+  nationalIdIssue,
+  normalizeNationalId,
+  PersonNameField,
+  PhoneField as PhoneRule,
+} from '@ooc/domain/fields'
+import { parseFieldErrors } from '@/lib/field-errors'
 import type { GuardianRelationship, NationalIdType, StudentRow } from '@/lib/backoffice/types'
 import { ageFrom } from '@/lib/format'
 import {
@@ -11,6 +24,7 @@ import {
   citiesOf,
   countryName,
   flagEmoji,
+  splitPhone,
 } from '@/lib/geo'
 import { Card, OptionalMark, RequiredMark } from '@/components/backoffice/ui'
 import { hasPhoneNumber, PhoneField } from '@/components/backoffice/phone-field'
@@ -60,6 +74,44 @@ function filled(value: string): boolean {
   return value.trim() !== ''
 }
 
+/** Problems keyed by the path the API answers with (`student.email`). */
+type FormErrors = Partial<Record<string, FieldErrorCode>>
+
+/**
+ * The same field rules `POST /students` applies (`@ooc/domain/fields`,
+ * OOC-64), so the panel refuses what the API would before a round trip. No
+ * Gmail rule here: whether the backoffice is held to it is OOC-65's call.
+ */
+function personErrors(
+  scope: 'student' | 'guardian',
+  person: Pick<EditableStudent, 'firstName' | 'lastName' | 'nationalIdType' | 'nationalId' | 'email' | 'phone'>,
+): FormErrors {
+  const nationalId =
+    issueOf(NationalIdField, person.nationalId) ??
+    nationalIdIssue(person.nationalIdType, normalizeNationalId(person.nationalId))
+  const entries: [string, FieldErrorCode | null][] = [
+    ['firstName', issueOf(PersonNameField, person.firstName)],
+    ['lastName', issueOf(PersonNameField, person.lastName)],
+    ['nationalId', nationalId],
+    ['email', issueOf(EmailField, person.email)],
+    ['phone', issueOf(PhoneRule, splitPhone(person.phone).number)],
+  ]
+  const errors: FormErrors = {}
+  for (const [field, code] of entries) if (code) errors[`${scope}.${field}`] = code
+  return errors
+}
+
+/** One field's problem, under it, in the panel's words. */
+function FieldMessage({ code }: { code: FieldErrorCode | undefined }) {
+  const t = useTranslations('bo')
+  if (!code) return null
+  return (
+    <span className="text-xs font-medium normal-case tracking-normal text-red-600">
+      {t(`new_student.error.${code}`)}
+    </span>
+  )
+}
+
 /**
  * Registering a student from the panel. This is the flow the enrollment form
  * refuses to do on the side (`new-enrollment-form.tsx`): a person is not a side
@@ -104,10 +156,17 @@ export function NewStudentForm({
    * string carried into the markup — a domain code never reaches the screen
    * (CLAUDE.md §4).
    */
-  const [submitError, setSubmitError] = useState<'none' | 'generic' | 'duplicate'>('none')
+  const [submitError, setSubmitError] = useState<'none' | 'generic' | 'duplicate' | 'invalid'>('none')
+  /** Fields left at least once, and whether a save was attempted — a field's
+      error shows from either, never while the first letter is being typed. */
+  const [left, setLeft] = useState<ReadonlySet<string>>(() => new Set())
+  const [attempted, setAttempted] = useState(false)
+  /** What the API refused on the last save; cleared by the next edit. */
+  const [serverErrors, setServerErrors] = useState<FormErrors>({})
 
   function set<K extends keyof EditableStudent>(key: K, next: EditableStudent[K]) {
     setStudent((prev) => ({ ...prev, [key]: next }))
+    setServerErrors({})
   }
 
   function setGuardianField<K extends keyof EditableGuardian>(
@@ -115,6 +174,14 @@ export function NewStudentForm({
     next: EditableGuardian[K],
   ) {
     setGuardian((prev) => ({ ...prev, [key]: next }))
+    setServerErrors({})
+  }
+
+  /** Blur that leaves the field for good — the phone's dial code and number
+      are one field, so moving between them is not leaving. */
+  const leave = (path: string) => (event: React.FocusEvent<HTMLElement>) => {
+    if (event.currentTarget.contains(event.relatedTarget as Node | null)) return
+    setLeft((prev) => (prev.has(path) ? prev : new Set(prev).add(path)))
   }
 
   /** Country drives the address cascade: outside Peru there is no region list. */
@@ -156,9 +223,26 @@ export function NewStudentForm({
 
   const ready = studentReady && guardianReady
 
+  const birthDateError: FieldErrorCode | null =
+    filled(student.birthDate) && !isPlausibleAge(ageFrom(student.birthDate))
+      ? 'birth_date_range'
+      : null
+  const cityError = issueOf(CityField, student.city)
+  const errors: FormErrors = {
+    ...personErrors('student', student),
+    ...(birthDateError ? { 'student.birthDate': birthDateError } : {}),
+    ...(cityError ? { 'student.city': cityError } : {}),
+    ...(inPeru && student.region === null ? { 'student.region': 'required' as const } : {}),
+    ...(guardianOpen ? personErrors('guardian', guardian) : {}),
+  }
+  const shown = (path: string): FieldErrorCode | undefined =>
+    serverErrors[path] ?? (attempted || left.has(path) ? errors[path] : undefined)
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (pending || !ready) return
+    setAttempted(true)
+    if (Object.keys(errors).length > 0) return
     setPending(true)
     setSubmitError('none')
 
@@ -198,6 +282,15 @@ export function NewStudentForm({
            (docs/ARCHITECTURE.md §5.7). Only the one reason this form can act
            on is read; anything else is a failure the person can only retry. */
         const failure = (await response.json().catch(() => null)) as { reason?: string } | null
+        /* A field the API refused (OOC-64): shown under that field, in the
+           panel's own words — the same rules ran here, so this is a stale
+           page or a rule only the server can check. */
+        const fields = parseFieldErrors(failure)
+        if (fields.length > 0) {
+          setServerErrors(Object.fromEntries(fields.map((field) => [field.path, field.code])))
+          setSubmitError('invalid')
+          return
+        }
         setSubmitError(failure?.reason === 'student.already_registered' ? 'duplicate' : 'generic')
         return
       }
@@ -247,7 +340,7 @@ export function NewStudentForm({
           </p>
 
           <AutoGrid min="15rem">
-            <label className={labelClass}>
+            <label className={labelClass} onBlur={leave('student.firstName')}>
               <span>
                 {t('student_file.field_first_name')}
                 <RequiredMark label={t('common.required')} />
@@ -258,8 +351,9 @@ export function NewStudentForm({
                 onChange={(e) => set('firstName', e.target.value)}
                 required
               />
+              <FieldMessage code={shown('student.firstName')} />
             </label>
-            <label className={labelClass}>
+            <label className={labelClass} onBlur={leave('student.lastName')}>
               <span>
                 {t('student_file.field_last_name')}
                 <RequiredMark label={t('common.required')} />
@@ -270,6 +364,7 @@ export function NewStudentForm({
                 onChange={(e) => set('lastName', e.target.value)}
                 required
               />
+              <FieldMessage code={shown('student.lastName')} />
             </label>
             <label className={labelClass}>
               <span>
@@ -288,7 +383,7 @@ export function NewStudentForm({
                 ))}
               </select>
             </label>
-            <label className={labelClass}>
+            <label className={labelClass} onBlur={leave('student.nationalId')}>
               <span>
                 {t('student_file.field_id_number')}
                 <RequiredMark label={t('common.required')} />
@@ -299,8 +394,9 @@ export function NewStudentForm({
                 onChange={(e) => set('nationalId', e.target.value)}
                 required
               />
+              <FieldMessage code={shown('student.nationalId')} />
             </label>
-            <label className={labelClass}>
+            <label className={labelClass} onBlur={leave('student.email')}>
               <span>
                 {t('student_file.field_email')}
                 <RequiredMark label={t('common.required')} />
@@ -312,8 +408,9 @@ export function NewStudentForm({
                 onChange={(e) => set('email', e.target.value)}
                 required
               />
+              <FieldMessage code={shown('student.email')} />
             </label>
-            <label className={labelClass}>
+            <label className={labelClass} onBlur={leave('student.phone')}>
               <span>
                 {t('student_file.field_phone')}
                 <RequiredMark label={t('common.required')} />
@@ -323,9 +420,10 @@ export function NewStudentForm({
                 onChange={(next) => set('phone', next)}
                 required
               />
+              <FieldMessage code={shown('student.phone')} />
             </label>
             {/* The one field that decides whether the guardian is optional. */}
-            <label className={labelClass}>
+            <label className={labelClass} onBlur={leave('student.birthDate')}>
               <span>
                 {t('student_file.field_birth_date')}
                 <RequiredMark label={t('common.required')} />
@@ -337,6 +435,7 @@ export function NewStudentForm({
                 onChange={(e) => set('birthDate', e.target.value)}
                 required
               />
+              <FieldMessage code={shown('student.birthDate')} />
             </label>
             <label className={labelClass}>
               <span>
@@ -356,7 +455,7 @@ export function NewStudentForm({
               </select>
             </label>
             {inPeru && (
-              <label className={labelClass}>
+              <label className={labelClass} onBlur={leave('student.region')}>
                 <span>
                   {t('student_file.field_region')}
                   <RequiredMark label={t('common.required')} />
@@ -377,9 +476,10 @@ export function NewStudentForm({
                     </option>
                   ))}
                 </select>
+                <FieldMessage code={shown('student.region')} />
               </label>
             )}
-            <label className={labelClass}>
+            <label className={labelClass} onBlur={leave('student.city')}>
               <span>
                 {t('student_file.field_city')}
                 <RequiredMark label={t('common.required')} />
@@ -411,6 +511,7 @@ export function NewStudentForm({
                   required
                 />
               )}
+              <FieldMessage code={shown('student.city')} />
             </label>
           </AutoGrid>
         </section>
@@ -441,7 +542,7 @@ export function NewStudentForm({
           {guardianOpen && (
             <>
               <AutoGrid min="15rem" className="mt-4">
-                <label className={labelClass}>
+                <label className={labelClass} onBlur={leave('guardian.firstName')}>
                   <span>
                     {t('student_file.field_first_name')}
                     <RequiredMark label={t('common.required')} />
@@ -452,8 +553,9 @@ export function NewStudentForm({
                     onChange={(e) => setGuardianField('firstName', e.target.value)}
                     required
                   />
+                  <FieldMessage code={shown('guardian.firstName')} />
                 </label>
-                <label className={labelClass}>
+                <label className={labelClass} onBlur={leave('guardian.lastName')}>
                   <span>
                     {t('student_file.field_last_name')}
                     <RequiredMark label={t('common.required')} />
@@ -464,6 +566,7 @@ export function NewStudentForm({
                     onChange={(e) => setGuardianField('lastName', e.target.value)}
                     required
                   />
+                  <FieldMessage code={shown('guardian.lastName')} />
                 </label>
                 <label className={labelClass}>
                   <span>
@@ -506,7 +609,7 @@ export function NewStudentForm({
                     ))}
                   </select>
                 </label>
-                <label className={labelClass}>
+                <label className={labelClass} onBlur={leave('guardian.nationalId')}>
                   <span>
                     {t('student_file.field_id_number')}
                     <RequiredMark label={t('common.required')} />
@@ -517,8 +620,9 @@ export function NewStudentForm({
                     onChange={(e) => setGuardianField('nationalId', e.target.value)}
                     required
                   />
+                  <FieldMessage code={shown('guardian.nationalId')} />
                 </label>
-                <label className={labelClass}>
+                <label className={labelClass} onBlur={leave('guardian.email')}>
                   <span>
                     {t('student_file.field_email')}
                     <RequiredMark label={t('common.required')} />
@@ -530,8 +634,9 @@ export function NewStudentForm({
                     onChange={(e) => setGuardianField('email', e.target.value)}
                     required
                   />
+                  <FieldMessage code={shown('guardian.email')} />
                 </label>
-                <label className={labelClass}>
+                <label className={labelClass} onBlur={leave('guardian.phone')}>
                   <span>
                     {t('student_file.field_phone')}
                     <RequiredMark label={t('common.required')} />
@@ -541,6 +646,7 @@ export function NewStudentForm({
                     onChange={(next) => setGuardianField('phone', next)}
                     required
                   />
+                  <FieldMessage code={shown('guardian.phone')} />
                 </label>
               </AutoGrid>
 
@@ -579,7 +685,9 @@ export function NewStudentForm({
             <span className="text-xs font-medium text-red-600">
               {submitError === 'duplicate'
                 ? t('new_student.duplicate_error')
-                : t('new_student.submit_error')}
+                : submitError === 'invalid'
+                  ? t('new_student.invalid_error')
+                  : t('new_student.submit_error')}
             </span>
           )}
         </div>

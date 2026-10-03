@@ -92,7 +92,10 @@
         "consent_given": "Accepted (version {version})",
         "what_happens": "When you send, your seat is held and your receipt goes to review. You have up to {days} days for the payment to be approved; we will email you as soon as it is.",
         "submit_failed": "We could not submit your enrollment. You can try again — it will not create a duplicate seat.",
-        "operation_number_used": "That operation number was already used for another enrollment. Check it on the payment step; if it is right, message us on WhatsApp."
+        "operation_number_used": "That operation number was already used for another enrollment. Check it on the payment step; if it is right, message us on WhatsApp.",
+        "invalid_fields": "We couldn't register your enrollment: check these details and send again.",
+        "other_field": "Another detail",
+        "guardian_field": "Guardian — {field}"
       }
     },
     "time_range": "{start} to {end}",
@@ -176,7 +179,7 @@
     },
     "error": {
       "required": "Please fill in this field.",
-      "national_id_format": "Check the number: a DNI has 8 digits.",
+      "national_id_format": "Check the number: a DNI has 8 digits; a foreigner's card, 9 to 12 letters or digits; a passport, 6 to 12.",
       "phone_format": "Enter a valid mobile number.",
       "email_format": "Enter a valid email address.",
       "email_must_be_gmail": "It must be a Gmail account. Institutional and corporate addresses are not accepted.",
@@ -188,7 +191,9 @@
       "receipt_type": "Upload an image (JPG, PNG or HEIC).",
       "receipt_size": "That file is too large. Try a lighter screenshot.",
       "receipt_upload_failed": "The upload failed. Check your connection and try again.",
-      "fix_fields": "Please check the highlighted fields before continuing."
+      "fix_fields": "Please check the highlighted fields before continuing.",
+      "too_long": "This is too long. Please shorten it.",
+      "invalid": "Please check this."
     },
     "submitted": {
       "title": "We have your enrolment",

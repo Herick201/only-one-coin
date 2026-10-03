@@ -76,6 +76,8 @@ export function StepStudent({
 }) {
   const t = useTranslations('enrollment')
   const [touched, setTouched] = useState(false)
+  /** Fields the reader has already left, as `student.email` / `guardian.phone`. */
+  const [left, setLeft] = useState<ReadonlySet<string>>(() => new Set())
 
   const course = courseById(catalog, draft.course.courseId)
   const minor = isMinor(draft.student.birthDate)
@@ -91,9 +93,10 @@ export function StepStudent({
   )
 
   const ready = !hasErrors(studentErrors) && !hasErrors(guardianErrors)
-  /** Errors stay quiet until the reader tries to move on — nobody wants to be
-      told their name is invalid after typing one letter of it. */
-  const show = touched
+  /** A field's error shows once the reader leaves it, or once they try to
+      move on — never while they are still typing the first letter of it. */
+  const leave = (key: string) => () =>
+    setLeft((prev) => (prev.has(key) ? prev : new Set(prev).add(key)))
 
   function patchStudent(patch: Partial<CheckoutDraft['student']>) {
     setDraft((prev) => ({ ...prev, student: { ...prev.student, ...patch } }))
@@ -108,7 +111,12 @@ export function StepStudent({
     if (ready) onContinue()
   }
 
-  const err = (key: string | undefined) => (show && key ? t(`error.${key}`) : undefined)
+  const show = touched
+  const errFor = (scope: 'student' | 'guardian') => (field: string, key: string | undefined) =>
+    (touched || left.has(`${scope}.${field}`)) && key ? t(`error.${key}`) : undefined
+  const sErr = errFor('student')
+  const gErr = errFor('guardian')
+  const consentError = gErr('consentAccepted', guardianErrors.consentAccepted)
 
   return (
     <div className="flex flex-col gap-5">
@@ -122,13 +130,14 @@ export function StepStudent({
           <FieldGroup
             label={t('field.first_name')}
             htmlFor="first-name"
-            error={err(studentErrors.firstName)}
+            onLeave={leave('student.firstName')}
+            error={sErr('firstName', studentErrors.firstName)}
           >
             <TextInput
               id="first-name"
               autoComplete="given-name"
               value={draft.student.firstName}
-              invalid={Boolean(err(studentErrors.firstName))}
+              invalid={Boolean(sErr('firstName', studentErrors.firstName))}
               onChange={(e) => patchStudent({ firstName: e.target.value })}
             />
           </FieldGroup>
@@ -136,14 +145,15 @@ export function StepStudent({
           <FieldGroup
             label={t('field.last_name')}
             htmlFor="last-name"
-            error={err(studentErrors.lastName)}
+            onLeave={leave('student.lastName')}
+            error={sErr('lastName', studentErrors.lastName)}
             hint={t('step.student.full_name_hint')}
           >
             <TextInput
               id="last-name"
               autoComplete="family-name"
               value={draft.student.lastName}
-              invalid={Boolean(err(studentErrors.lastName))}
+              invalid={Boolean(sErr('lastName', studentErrors.lastName))}
               onChange={(e) => patchStudent({ lastName: e.target.value })}
             />
           </FieldGroup>
@@ -167,13 +177,14 @@ export function StepStudent({
           <FieldGroup
             label={t('field.national_id')}
             htmlFor="national-id"
-            error={err(studentErrors.nationalId)}
+            onLeave={leave('student.nationalId')}
+            error={sErr('nationalId', studentErrors.nationalId)}
           >
             <TextInput
               id="national-id"
               inputMode="numeric"
               value={draft.student.nationalId}
-              invalid={Boolean(err(studentErrors.nationalId))}
+              invalid={Boolean(sErr('nationalId', studentErrors.nationalId))}
               onChange={(e) => patchStudent({ nationalId: e.target.value })}
             />
           </FieldGroup>
@@ -181,13 +192,14 @@ export function StepStudent({
           <FieldGroup
             label={t('field.phone')}
             htmlFor="phone"
-            error={err(studentErrors.phone)}
+            onLeave={leave('student.phone')}
+            error={sErr('phone', studentErrors.phone)}
             hint={t('step.student.phone_hint')}
           >
             <PhoneField
               id="phone"
               value={draft.student.phone}
-              invalid={Boolean(err(studentErrors.phone))}
+              invalid={Boolean(sErr('phone', studentErrors.phone))}
               onChange={(phone) => patchStudent({ phone })}
             />
           </FieldGroup>
@@ -195,7 +207,8 @@ export function StepStudent({
           <FieldGroup
             label={t('field.birth_date')}
             htmlFor="birth-date"
-            error={err(studentErrors.birthDate) ?? err(studentErrors.minAge)}
+            onLeave={leave('student.birthDate')}
+            error={sErr('birthDate', studentErrors.birthDate) ?? sErr('birthDate', studentErrors.minAge)}
             hint={
               course ? t('step.student.min_age_hint', { age: course.minAge }) : undefined
             }
@@ -204,7 +217,7 @@ export function StepStudent({
               id="birth-date"
               value={draft.student.birthDate}
               invalid={Boolean(
-                err(studentErrors.birthDate) ?? err(studentErrors.minAge),
+                sErr('birthDate', studentErrors.birthDate) ?? sErr('birthDate', studentErrors.minAge),
               )}
               onChange={(birthDate) => patchStudent({ birthDate })}
             />
@@ -213,7 +226,8 @@ export function StepStudent({
           <FieldGroup
             label={t('field.email')}
             htmlFor="email"
-            error={err(studentErrors.email)}
+            onLeave={leave('student.email')}
+            error={sErr('email', studentErrors.email)}
             hint={t('step.student.email_hint')}
           >
             <TextInput
@@ -221,7 +235,7 @@ export function StepStudent({
               type="email"
               autoComplete="email"
               value={draft.student.email}
-              invalid={Boolean(err(studentErrors.email))}
+              invalid={Boolean(sErr('email', studentErrors.email))}
               onChange={(e) => patchStudent({ email: e.target.value })}
             />
           </FieldGroup>
@@ -234,12 +248,13 @@ export function StepStudent({
               <FieldGroup
                 label={t('field.region')}
                 htmlFor="region"
-                error={err(studentErrors.region)}
+                onLeave={leave('student.region')}
+                error={sErr('region', studentErrors.region)}
               >
                 <SelectInput
                   id="region"
                   value={draft.student.region ?? ''}
-                  invalid={Boolean(err(studentErrors.region))}
+                  invalid={Boolean(sErr('region', studentErrors.region))}
                   onChange={(e) =>
                     patchStudent({ region: e.target.value || null, city: '' })
                   }
@@ -253,11 +268,16 @@ export function StepStudent({
                 </SelectInput>
               </FieldGroup>
 
-              <FieldGroup label={t('field.city')} htmlFor="city" error={err(studentErrors.city)}>
+              <FieldGroup
+                label={t('field.city')}
+                htmlFor="city"
+                onLeave={leave('student.city')}
+                error={sErr('city', studentErrors.city)}
+              >
                 <SelectInput
                   id="city"
                   value={draft.student.city}
-                  invalid={Boolean(err(studentErrors.city))}
+                  invalid={Boolean(sErr('city', studentErrors.city))}
                   disabled={cities.length === 0}
                   onChange={(e) => patchStudent({ city: e.target.value })}
                 >
@@ -292,13 +312,14 @@ export function StepStudent({
             <FieldGroup
               label={t('field.first_name')}
               htmlFor="guardian-first-name"
-              error={err(guardianErrors.firstName)}
+              onLeave={leave('guardian.firstName')}
+              error={gErr('firstName', guardianErrors.firstName)}
             >
               <TextInput
                 id="guardian-first-name"
                 autoComplete="given-name"
                 value={draft.guardian.firstName}
-                invalid={Boolean(err(guardianErrors.firstName))}
+                invalid={Boolean(gErr('firstName', guardianErrors.firstName))}
                 onChange={(e) => patchGuardian({ firstName: e.target.value })}
               />
             </FieldGroup>
@@ -306,13 +327,14 @@ export function StepStudent({
             <FieldGroup
               label={t('field.last_name')}
               htmlFor="guardian-last-name"
-              error={err(guardianErrors.lastName)}
+              onLeave={leave('guardian.lastName')}
+              error={gErr('lastName', guardianErrors.lastName)}
             >
               <TextInput
                 id="guardian-last-name"
                 autoComplete="family-name"
                 value={draft.guardian.lastName}
-                invalid={Boolean(err(guardianErrors.lastName))}
+                invalid={Boolean(gErr('lastName', guardianErrors.lastName))}
                 onChange={(e) => patchGuardian({ lastName: e.target.value })}
               />
             </FieldGroup>
@@ -354,13 +376,14 @@ export function StepStudent({
             <FieldGroup
               label={t('field.national_id')}
               htmlFor="guardian-national-id"
-              error={err(guardianErrors.nationalId)}
+              onLeave={leave('guardian.nationalId')}
+              error={gErr('nationalId', guardianErrors.nationalId)}
             >
               <TextInput
                 id="guardian-national-id"
                 inputMode="numeric"
                 value={draft.guardian.nationalId}
-                invalid={Boolean(err(guardianErrors.nationalId))}
+                invalid={Boolean(gErr('nationalId', guardianErrors.nationalId))}
                 onChange={(e) => patchGuardian({ nationalId: e.target.value })}
               />
             </FieldGroup>
@@ -368,12 +391,13 @@ export function StepStudent({
             <FieldGroup
               label={t('field.phone')}
               htmlFor="guardian-phone"
-              error={err(guardianErrors.phone)}
+              onLeave={leave('guardian.phone')}
+              error={gErr('phone', guardianErrors.phone)}
             >
               <PhoneField
                 id="guardian-phone"
                 value={draft.guardian.phone}
-                invalid={Boolean(err(guardianErrors.phone))}
+                invalid={Boolean(gErr('phone', guardianErrors.phone))}
                 onChange={(phone) => patchGuardian({ phone })}
               />
             </FieldGroup>
@@ -384,14 +408,15 @@ export function StepStudent({
             <FieldGroup
               label={t('field.email')}
               htmlFor="guardian-email"
-              error={err(guardianErrors.email)}
+              onLeave={leave('guardian.email')}
+              error={gErr('email', guardianErrors.email)}
               hint={t('step.student.guardian_email_hint')}
             >
               <TextInput
                 id="guardian-email"
                 type="email"
                 value={draft.guardian.email}
-                invalid={Boolean(err(guardianErrors.email))}
+                invalid={Boolean(gErr('email', guardianErrors.email))}
                 onChange={(e) => patchGuardian({ email: e.target.value })}
               />
             </FieldGroup>
@@ -415,10 +440,10 @@ export function StepStudent({
                   </span>
                 </span>
               </label>
-              {err(guardianErrors.consentAccepted) && (
+              {consentError && (
                 <p className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-red-600">
                   <CheckoutIcon name="alert" size={14} />
-                  {err(guardianErrors.consentAccepted)}
+                  {consentError}
                 </p>
               )}
             </div>

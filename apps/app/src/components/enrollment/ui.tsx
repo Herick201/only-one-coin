@@ -75,16 +75,29 @@ export function FieldGroup({
   error,
   hint,
   htmlFor,
+  onLeave,
   children,
 }: {
   label: string
   error?: string
   hint?: string
   htmlFor?: string
+  /** Focus left the field for good — not just moved between its own parts
+      (the phone field's dial code and number are one field). */
+  onLeave?: () => void
   children: ReactNode
 }) {
   return (
-    <div className="flex min-w-0 flex-col gap-1.5">
+    <div
+      className="flex min-w-0 flex-col gap-1.5"
+      onBlur={
+        onLeave
+          ? (event) => {
+              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) onLeave()
+            }
+          : undefined
+      }
+    >
       <label
         htmlFor={htmlFor}
         className="text-xs font-medium uppercase tracking-wide text-muted-foreground"
