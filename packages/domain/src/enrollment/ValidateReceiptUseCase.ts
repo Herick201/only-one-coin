@@ -1,19 +1,7 @@
 import type { IPlatformSettingsRepository } from "../platform/ports/IPlatformSettingsRepository.js";
-import { DEFAULT_LOCALE } from "../notification/EmailNotification.js";
-import { paymentApprovedEmails } from "../notification/enrollmentEmails.js";
 import { BaseUseCase } from "../shared/base/BaseUseCase.js";
-import type { IEnrollmentEmailContextLookup } from "./EnrollmentEmailContextLookup.js";
 import { decideReceiptVerdict, type ReceiptVerdictOutcome } from "./ReceiptValidation.js";
-import type {
-  IReceiptValidationRepository,
-  ReceiptAutoApproval,
-  ReceiptValidationEffect,
-  ReceiptValidationSubject,
-} from "./ReceiptValidationRepository.js";
-
-/** `audit_log.actor_id` of an approval nobody clicked. Text, no FK — the
- * column already holds Better Auth ids, which are text too. */
-export const RECEIPT_VALIDATION_ACTOR = "system:receipt-validation";
+import type { IReceiptValidationRepository, ReceiptValidationEffect } from "./ReceiptValidationRepository.js";
 
 export interface ValidateReceiptInput {
   receiptUploadId: string;
@@ -31,17 +19,15 @@ export interface ValidateReceiptOutput {
  * Compares the amount read with the payment's frozen price under the
  * backoffice's settings, then hands the verdict to the repository.
  *
- * Green settles the payment on its own — the same seat, e-mail and audit
- * trail as `SettlePaymentUseCase`, signed by `RECEIPT_VALIDATION_ACTOR` —
- * but only out of `pending`: a payment the screening already sent to review
- * is a person's to decide. Red only suggests: rejecting hands back a seat,
- * and an OCR misreading must never do that to someone who paid in full.
+ * It only validates — approvals are never automatic (owner, 03/10/2026).
+ * Green leaves the payment `pending` with the verdict on it; yellow and red
+ * send it to `under_review`. Whoever approves or rejects is a person in
+ * Payments (`SettlePaymentUseCase`).
  */
 export class ValidateReceiptUseCase extends BaseUseCase<ValidateReceiptInput, ValidateReceiptOutput> {
   constructor(
     private readonly repository: IReceiptValidationRepository,
     private readonly settings: IPlatformSettingsRepository,
-    private readonly emailContextLookup: IEnrollmentEmailContextLookup,
   ) {
     super();
   }
@@ -68,36 +54,12 @@ export class ValidateReceiptUseCase extends BaseUseCase<ValidateReceiptInput, Va
       settings,
     });
 
-    const approval =
-      outcome.verdict === "approve" && subject.paymentStatus === "pending" ? await this.approval(subject, outcome) : null;
-
     const effect = await this.repository.record({
       subject,
       outcome,
       detail: { reason: outcome.reason, expectedCents: subject.expectedCents, readCents: subject.readAmountCents, ...settings },
-      approval,
     });
 
     return { outcome, effect };
-  }
-
-  /** Built before the transaction, like `SettlePaymentUseCase` does; the
-   * repository drops it if the payment moved in the meantime. */
-  private async approval(subject: ReceiptValidationSubject, outcome: ReceiptVerdictOutcome): Promise<ReceiptAutoApproval> {
-    const context = await this.emailContextLookup.find({
-      studentId: subject.studentId,
-      classGroupId: subject.classGroupId,
-    });
-
-    return {
-      notifications: context ? paymentApprovedEmails({ paymentId: subject.paymentId, ...context }, DEFAULT_LOCALE) : [],
-      audit: {
-        actorId: RECEIPT_VALIDATION_ACTOR,
-        action: "payment.auto_approved",
-        targetId: subject.paymentId,
-        metadata: { enrollmentId: subject.enrollmentId, receiptUploadId: subject.receiptUploadId, reason: outcome.reason },
-        at: new Date(),
-      },
-    };
   }
 }

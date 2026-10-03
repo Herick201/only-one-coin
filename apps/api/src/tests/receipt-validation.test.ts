@@ -1,8 +1,5 @@
 import {
-  RECEIPT_VALIDATION_ACTOR,
   ValidateReceiptUseCase,
-  type EnrollmentEmailContext,
-  type IEnrollmentEmailContextLookup,
   type IPlatformSettingsRepository,
   type IReceiptValidationRepository,
   type PlatformSettings,
@@ -13,10 +10,11 @@ import { describe, expect, it } from "vitest";
 
 /**
  * The traffic light at the usecase level (OOC-21): the verdict is decided
- * here, and an approval is only prepared for a payment still `pending`. What
- * the transaction guarantees — latest upload only, payment and seat moving
- * together, once — is SQL, covered by
- * DrizzleReceiptValidationRepository.integration.test.ts.
+ * here and handed to the repository with what it was decided from. It only
+ * validates — approvals are never automatic (owner, 03/10/2026). What the
+ * transaction guarantees — stamped once, only a non-green verdict on the
+ * latest upload of a pending payment routes it to review — is SQL, covered
+ * by DrizzleReceiptValidationRepository.integration.test.ts.
  */
 
 const UPLOAD = "018f2b5c-0000-7000-8000-00000000u001";
@@ -51,29 +49,12 @@ class FakeSettings implements IPlatformSettingsRepository {
   async setReceiptRejectBelowPercent() {}
 }
 
-class FakeEmailContextLookup implements IEnrollmentEmailContextLookup {
-  constructor(private readonly context: EnrollmentEmailContext | null) {}
-  async find() {
-    return this.context;
-  }
-}
-
-const ADULT_CONTEXT: EnrollmentEmailContext = {
-  student: { firstName: "Luis", lastName: "Huamán", email: "luis@gmail.com", birthDate: new Date("1995-05-01T00:00:00.000Z") },
-  guardian: null,
-  courseName: "Inglés Básico",
-  classGroupStartsOn: new Date("2026-11-02T00:00:00.000Z"),
-};
-
 const SETTINGS: PlatformSettings = { checkoutHoldMinutes: 15, receiptAmountToleranceCents: 0, receiptRejectBelowPercent: 50 };
 
 function subject(overrides: Partial<ReceiptValidationSubject> = {}): ReceiptValidationSubject {
   return {
     receiptUploadId: UPLOAD,
     paymentId: PAYMENT,
-    enrollmentId: "018f2b5c-0000-7000-8000-00000000e001",
-    studentId: "018f2b5c-0000-7000-8000-00000000s001",
-    classGroupId: "018f2b5c-0000-7000-8000-00000000g001",
     paymentStatus: "pending",
     expectedCents: 15000,
     declaredOperationNumber: "08312457",
@@ -86,26 +67,17 @@ function subject(overrides: Partial<ReceiptValidationSubject> = {}): ReceiptVali
 }
 
 function useCase(repository: FakeValidationRepository, settings: PlatformSettings = SETTINGS) {
-  return new ValidateReceiptUseCase(repository, new FakeSettings(settings), new FakeEmailContextLookup(ADULT_CONTEXT));
+  return new ValidateReceiptUseCase(repository, new FakeSettings(settings));
 }
 
 describe("ValidateReceiptUseCase", () => {
-  it("prepares the approval of a green receipt on a pending payment", async () => {
-    const repository = new FakeValidationRepository(subject(), "approved");
+  it("records a green verdict and hands nothing to settle — a person approves", async () => {
+    const repository = new FakeValidationRepository(subject(), "none");
 
     const result = await useCase(repository).run({ receiptUploadId: UPLOAD });
 
-    expect(result).toEqual({ outcome: { verdict: "approve", reason: "exact" }, effect: "approved" });
-    const recorded = repository.recorded[0]!;
-    expect(recorded.approval!.audit).toMatchObject({
-      actorId: RECEIPT_VALIDATION_ACTOR,
-      action: "payment.auto_approved",
-      targetId: PAYMENT,
-      metadata: { receiptUploadId: UPLOAD, reason: "exact" },
-    });
-    expect(recorded.approval!.notifications.map((email) => [email.templateKey, email.to])).toEqual([
-      ["payment_approved", "luis@gmail.com"],
-    ]);
+    expect(result).toEqual({ outcome: { verdict: "approve", reason: "exact" }, effect: "none" });
+    expect(Object.keys(repository.recorded[0]!).sort()).toEqual(["detail", "outcome", "subject"]);
   });
 
   it("records what the verdict was decided with", async () => {
@@ -124,22 +96,12 @@ describe("ValidateReceiptUseCase", () => {
     });
   });
 
-  it("never prepares an approval for a payment already under review", async () => {
-    const repository = new FakeValidationRepository(subject({ paymentStatus: "under_review" }), "none");
-
-    const result = await useCase(repository).run({ receiptUploadId: UPLOAD });
-
-    expect(result.outcome).toEqual({ verdict: "approve", reason: "exact" });
-    expect(repository.recorded[0]!.approval).toBeNull();
-  });
-
-  it("suggests rejection without preparing anything to settle", async () => {
+  it("suggests rejection", async () => {
     const repository = new FakeValidationRepository(subject({ readAmountCents: 4000 }));
 
     const result = await useCase(repository).run({ receiptUploadId: UPLOAD });
 
-    expect(result.outcome).toEqual({ verdict: "reject_suggested", reason: "far_below" });
-    expect(repository.recorded[0]!.approval).toBeNull();
+    expect(result).toEqual({ outcome: { verdict: "reject_suggested", reason: "far_below" }, effect: "routed_to_review" });
   });
 
   it("sends a failed reading to review", async () => {
@@ -157,7 +119,6 @@ describe("ValidateReceiptUseCase", () => {
     const result = await useCase(repository).run({ receiptUploadId: UPLOAD });
 
     expect(result.outcome).toEqual({ verdict: "review", reason: "payment_method_mismatch" });
-    expect(repository.recorded[0]!.approval).toBeNull();
   });
 
   it("does nothing when there is nothing to validate", async () => {

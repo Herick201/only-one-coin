@@ -1,5 +1,3 @@
-import type { AuditLogEntry } from "../identity/ports/IAuditLogRepository.js";
-import type { EmailNotification } from "../notification/EmailNotification.js";
 import type { PaymentMethod, PaymentStatus } from "./Payment.js";
 import type { ReceiptValidationSettings, ReceiptVerdictOutcome, ReceiptVerdictReason } from "./ReceiptValidation.js";
 
@@ -8,9 +6,6 @@ import type { ReceiptValidationSettings, ReceiptVerdictOutcome, ReceiptVerdictRe
 export interface ReceiptValidationSubject {
   receiptUploadId: string;
   paymentId: string;
-  enrollmentId: string;
-  studentId: string;
-  classGroupId: string;
   paymentStatus: PaymentStatus;
   /** `payments.amount_cents` — the price frozen at enrollment, never today's. */
   expectedCents: number;
@@ -33,23 +28,18 @@ export interface ReceiptValidationDetail extends ReceiptValidationSettings {
   readCents: number | null;
 }
 
-/** What recording the verdict did to the payment. */
+/** What recording the verdict did to the payment. Never an approval: the
+ * traffic light only validates, a person approves (owner, 03/10/2026). */
 export type ReceiptValidationEffect =
-  /** Green, latest upload, payment was `pending`: approved, seat confirmed. */
-  | "approved"
-  /** Not green (or green that could not approve), latest upload, payment
-   * was `pending`: moved to `under_review`. */
+  /** Not green, latest upload, payment was `pending`: moved to
+   * `under_review`. */
   | "routed_to_review"
-  /** Verdict recorded; the payment was not `pending` or this is not its
-   * latest upload, so it was left alone. */
+  /** Verdict recorded and the payment left as it was: green (it stays
+   * `pending`, waiting for a person), or the payment was not `pending`, or
+   * this is not its latest upload. */
   | "none"
   /** Another delivery already recorded a verdict — nothing written. */
   | "already_validated";
-
-export interface ReceiptAutoApproval {
-  notifications: EmailNotification[];
-  audit: AuditLogEntry;
-}
 
 export interface IReceiptValidationRepository {
   /** `null` when the upload is unknown, not attached to a payment, not
@@ -58,15 +48,13 @@ export interface IReceiptValidationRepository {
 
   /**
    * One transaction: stamps the verdict once (`validated_at is null`), then
-   * — only for the payment's latest upload and only while the payment is
-   * still `pending` — approves (when `approval` is given and the seat was
-   * not released: payment `approved`, seat `reserved → confirmed`, outbox,
-   * audit) or moves the payment to `under_review`.
+   * — only for the payment's latest upload, only while the payment is still
+   * `pending`, and only when the verdict is not green — moves the payment to
+   * `under_review`. It never approves, never rejects, never touches the seat.
    */
   record(params: {
     subject: ReceiptValidationSubject;
     outcome: ReceiptVerdictOutcome;
     detail: ReceiptValidationDetail;
-    approval: ReceiptAutoApproval | null;
   }): Promise<ReceiptValidationEffect>;
 }

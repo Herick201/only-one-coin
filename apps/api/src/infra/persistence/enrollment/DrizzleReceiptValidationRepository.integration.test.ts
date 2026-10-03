@@ -14,16 +14,8 @@ import {
   seatHolds,
   students,
 } from "@ooc/db";
-import {
-  DEFAULT_LOCALE,
-  RECEIPT_EXTRACTION_TIER_PRIMARY,
-  RECEIPT_VALIDATION_ACTOR,
-  paymentApprovedEmails,
-  type ReceiptAutoApproval,
-  type ReceiptValidationDetail,
-  type ReceiptVerdictOutcome,
-} from "@ooc/domain";
-import { eq } from "drizzle-orm";
+import { RECEIPT_EXTRACTION_TIER_PRIMARY, type ReceiptValidationDetail, type ReceiptVerdictOutcome } from "@ooc/domain";
+import { eq, like } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -33,8 +25,9 @@ import { DrizzleReceiptValidationRepository } from "./DrizzleReceiptValidationRe
 
 /**
  * The traffic light's SQL (OOC-21): which receipts the relay offers, the
- * once-only verdict stamp, and the payment/seat moving with it in one
- * transaction — only for the latest upload, only out of `pending`.
+ * once-only verdict stamp, and the one move it may make — a non-green
+ * verdict on the latest upload sends a `pending` payment to review. It never
+ * approves, rejects or touches the seat (owner, 03/10/2026).
  *
  * Same harness as DrizzleReceiptExtractionRepository.integration.test.ts:
  * every test runs in a transaction that is always rolled back (payments and
@@ -210,30 +203,6 @@ function detail(outcome: ReceiptVerdictOutcome, readCents: number | null = 15000
   return { reason: outcome.reason, expectedCents: 15000, readCents, toleranceCents: 0, rejectBelowPercent: 50 };
 }
 
-/** Built by the domain's own e-mail builder, so the outbox row is exactly
- * what the usecase would hand over. Adult student, no guardian: one e-mail. */
-function approval(paymentId: string): ReceiptAutoApproval {
-  return {
-    notifications: paymentApprovedEmails(
-      {
-        paymentId,
-        student: { firstName: "Alumno", lastName: "Validacion", email: "validate@gmail.com", birthDate: new Date("2000-01-01T00:00:00.000Z") },
-        guardian: null,
-        courseName: "Curso (validation integration)",
-        classGroupStartsOn: new Date("2026-03-02T00:00:00.000Z"),
-      },
-      DEFAULT_LOCALE,
-    ),
-    audit: {
-      actorId: RECEIPT_VALIDATION_ACTOR,
-      action: "payment.auto_approved",
-      targetId: paymentId,
-      metadata: { reason: "exact" },
-      at: new Date(),
-    },
-  };
-}
-
 async function state(tx: Tx, seeded: Seeded) {
   const [row] = await tx
     .select({ status: payments.status, seatStatus: enrollments.seatStatus })
@@ -241,6 +210,13 @@ async function state(tx: Tx, seeded: Seeded) {
     .innerJoin(enrollments, eq(enrollments.id, payments.enrollmentId))
     .where(eq(payments.id, seeded.paymentId));
   return row!;
+}
+
+/** The traffic light never approves: no e-mail, no audit entry, ever. */
+async function sideEffects(tx: Tx, seeded: Seeded) {
+  const audits = await tx.select().from(auditLog).where(eq(auditLog.targetId, seeded.paymentId));
+  const emails = await tx.select().from(outbox).where(like(outbox.dedupeKey, `%:${seeded.paymentId}:%`));
+  return { audits: audits.length, emails: emails.length };
 }
 
 describe("listValidatableIds + findSubject", () => {
@@ -254,7 +230,7 @@ describe("listValidatableIds + findSubject", () => {
       const notScreened = await receipt(tx, (await payment(tx)).paymentId, { screened: false });
       const notRead = await receipt(tx, (await payment(tx)).paymentId, { read: "none" });
       const done = await receipt(tx, (await payment(tx)).paymentId);
-      await repository.record({ subject: (await repository.findSubject(done))!, outcome: RED, detail: detail(RED), approval: null });
+      await repository.record({ subject: (await repository.findSubject(done))!, outcome: RED, detail: detail(RED) });
 
       const offered = await uploads.listValidatableIds(1000, TIER);
       expect(offered).toEqual(expect.arrayContaining([ready, failedRead]));
@@ -293,7 +269,7 @@ describe("listValidatableIds + findSubject", () => {
 });
 
 describe("record", () => {
-  it("approves a green pending payment: payment, seat, outbox and audit together", async () => {
+  it("records a green verdict and leaves the payment pending for a person to approve", async () => {
     await rolledBack(async (tx) => {
       const repository = new DrizzleReceiptValidationRepository(tx as unknown as Db);
       const seeded = await payment(tx);
@@ -303,19 +279,14 @@ describe("record", () => {
         subject: (await repository.findSubject(uploadId))!,
         outcome: GREEN,
         detail: detail(GREEN),
-        approval: approval(seeded.paymentId),
       });
 
-      expect(effect).toBe("approved");
-      expect(await state(tx, seeded)).toEqual({ status: "approved", seatStatus: "confirmed" });
+      expect(effect).toBe("none");
+      expect(await state(tx, seeded)).toEqual({ status: "pending", seatStatus: "reserved" });
+      expect(await sideEffects(tx, seeded)).toEqual({ audits: 0, emails: 0 });
       const [upload] = await tx.select().from(receiptUploads).where(eq(receiptUploads.id, uploadId));
       expect(upload).toMatchObject({ validationVerdict: "approve", validationDetail: detail(GREEN) });
       expect(upload!.validatedAt).not.toBeNull();
-      const audits = await tx.select().from(auditLog).where(eq(auditLog.targetId, seeded.paymentId));
-      expect(audits).toMatchObject([{ actorId: RECEIPT_VALIDATION_ACTOR, action: "payment.auto_approved" }]);
-      const [expected] = approval(seeded.paymentId).notifications;
-      const emails = await tx.select().from(outbox).where(eq(outbox.dedupeKey, expected!.dedupeKey));
-      expect(emails).toMatchObject([{ templateKey: "payment_approved" }]);
     });
   });
 
@@ -329,33 +300,56 @@ describe("record", () => {
         subject: (await repository.findSubject(uploadId))!,
         outcome: RED,
         detail: detail(RED, 4000),
-        approval: null,
       });
 
       expect(effect).toBe("routed_to_review");
       expect(await state(tx, seeded)).toEqual({ status: "under_review", seatStatus: "reserved" });
+      expect(await sideEffects(tx, seeded)).toEqual({ audits: 0, emails: 0 });
       const [group] = await tx.select({ seatsTaken: classGroups.seatsTaken }).from(classGroups).where(eq(classGroups.id, GROUP));
       expect(group!.seatsTaken).toBe(10);
     });
   });
 
-  it("only records the verdict for a payment already under review — green never approves it", async () => {
+  it("routes a yellow pending payment to review", async () => {
     await rolledBack(async (tx) => {
       const repository = new DrizzleReceiptValidationRepository(tx as unknown as Db);
-      const seeded = await payment(tx, { status: "under_review" });
+      const seeded = await payment(tx);
       const uploadId = await receipt(tx, seeded.paymentId);
+      const yellow: ReceiptVerdictOutcome = { verdict: "review", reason: "underpaid" };
 
       const effect = await repository.record({
         subject: (await repository.findSubject(uploadId))!,
-        outcome: GREEN,
-        detail: detail(GREEN),
-        approval: approval(seeded.paymentId),
+        outcome: yellow,
+        detail: detail(yellow, 14990),
       });
 
-      expect(effect).toBe("none");
+      expect(effect).toBe("routed_to_review");
       expect(await state(tx, seeded)).toEqual({ status: "under_review", seatStatus: "reserved" });
-      const [upload] = await tx.select().from(receiptUploads).where(eq(receiptUploads.id, uploadId));
-      expect(upload!.validationVerdict).toBe("approve");
+    });
+  });
+
+  it("only records the verdict for a payment that is no longer pending", async () => {
+    await rolledBack(async (tx) => {
+      const repository = new DrizzleReceiptValidationRepository(tx as unknown as Db);
+      const reviewed = await payment(tx, { status: "under_review" });
+      const settled = await payment(tx, { status: "approved", seatStatus: "confirmed" });
+      const reviewedUpload = await receipt(tx, reviewed.paymentId);
+      const settledUpload = await receipt(tx, settled.paymentId);
+
+      const onReviewed = await repository.record({
+        subject: (await repository.findSubject(reviewedUpload))!,
+        outcome: RED,
+        detail: detail(RED, 4000),
+      });
+      const onSettled = await repository.record({
+        subject: (await repository.findSubject(settledUpload))!,
+        outcome: RED,
+        detail: detail(RED, 4000),
+      });
+
+      expect([onReviewed, onSettled]).toEqual(["none", "none"]);
+      expect(await state(tx, reviewed)).toEqual({ status: "under_review", seatStatus: "reserved" });
+      expect(await state(tx, settled)).toEqual({ status: "approved", seatStatus: "confirmed" });
     });
   });
 
@@ -366,8 +360,8 @@ describe("record", () => {
       const uploadId = await receipt(tx, seeded.paymentId);
       const subject = (await repository.findSubject(uploadId))!;
 
-      await repository.record({ subject, outcome: RED, detail: detail(RED), approval: null });
-      const second = await repository.record({ subject, outcome: GREEN, detail: detail(GREEN), approval: approval(seeded.paymentId) });
+      await repository.record({ subject, outcome: RED, detail: detail(RED) });
+      const second = await repository.record({ subject, outcome: GREEN, detail: detail(GREEN) });
 
       expect(second).toBe("already_validated");
       expect(await state(tx, seeded)).toEqual({ status: "under_review", seatStatus: "reserved" });
@@ -376,25 +370,7 @@ describe("record", () => {
     });
   });
 
-  it("does not approve onto a released seat — it routes to review instead", async () => {
-    await rolledBack(async (tx) => {
-      const repository = new DrizzleReceiptValidationRepository(tx as unknown as Db);
-      const seeded = await payment(tx, { seatStatus: "released" });
-      const uploadId = await receipt(tx, seeded.paymentId);
-
-      const effect = await repository.record({
-        subject: (await repository.findSubject(uploadId))!,
-        outcome: GREEN,
-        detail: detail(GREEN),
-        approval: approval(seeded.paymentId),
-      });
-
-      expect(effect).toBe("routed_to_review");
-      expect(await state(tx, seeded)).toEqual({ status: "under_review", seatStatus: "released" });
-    });
-  });
-
-  it("lets only the latest upload move the payment", async () => {
+  it("lets only the latest upload move the payment, and still stamps the older one", async () => {
     await rolledBack(async (tx) => {
       const repository = new DrizzleReceiptValidationRepository(tx as unknown as Db);
       const seeded = await payment(tx);
@@ -403,13 +379,15 @@ describe("record", () => {
 
       const effect = await repository.record({
         subject: (await repository.findSubject(older))!,
-        outcome: GREEN,
-        detail: detail(GREEN),
-        approval: approval(seeded.paymentId),
+        outcome: RED,
+        detail: detail(RED, 4000),
       });
 
       expect(effect).toBe("none");
       expect(await state(tx, seeded)).toEqual({ status: "pending", seatStatus: "reserved" });
+      const [upload] = await tx.select().from(receiptUploads).where(eq(receiptUploads.id, older));
+      expect(upload!.validationVerdict).toBe("reject_suggested");
     });
   });
 });
+
