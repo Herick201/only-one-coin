@@ -24,6 +24,8 @@ declare module "fastify" {
 
   interface FastifyRequest {
     currentUser?: AuthenticatedUser;
+    /** The raw session cookie the request was authorized with — set with `currentUser`. */
+    sessionToken?: string;
   }
 }
 
@@ -123,6 +125,7 @@ async function authorizationPlugin(app: FastifyInstance) {
     }
 
     request.currentUser = user;
+    request.sessionToken = sessionToken;
   });
 }
 

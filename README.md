@@ -277,7 +277,7 @@ Sessão 7) já existem. Domínio e fila já existem, independentes dessa escolha
   papel, gerencia a própria conta em `/backoffice/account` (aberta pelo
   dropdown do usuário no rodapé do menu, que junta perfil, a ficha do docente e
   a saída): senha
-  com as exigências listadas enquanto se digita, verificação em dois passos —
+  com as exigências listadas enquanto se digita (troca real desde OOC-31), verificação em dois passos —
   obrigatória e sem botão de desligar para `admin` e `billing`
   (`CLAUDE.md` §8), opcional para os demais —, códigos de
   recuperação, sessões abertas com o encerramento por linha, e o idioma do
@@ -329,7 +329,7 @@ o que é real:
 | E-mails (`/backoffice/emails*`) | Mock |
 | Relatórios (`/backoffice/reports`) | Mock — a agregação roda no navegador porque o dataset é mockado; contra a API real vira query no servidor |
 | Configuração (`/backoffice/settings`) | Parcial: **Real** só a reserva durante o pagamento (`GET /settings`, `PUT /settings/checkout-hold`, com `audit_log`) — o resto são constantes fixas, alteradas só na tela |
-| Conta (`/backoffice/account`) | Estado local — toda escrita fica só na sessão do navegador |
+| Conta (`/backoffice/account`) | **Real**: troca da própria senha (`POST /api/v1/me/password`, OOC-31) — pede a senha atual, aplica as mesmas exigências da tela, encerra as demais sessões abertas e grava no `audit_log`; a data da última troca vem de `GET /api/v1/me/password`. O idioma do painel fica no navegador |
 | Login do backoffice, convite e redefinição de senha | **Real** — fala direto com o Better Auth (`/api/auth/sign-in/email`). MFA ainda não (nenhum plugin `twoFactor` configurado) |
 | Login do aluno (`/login`) | Mock — qualquer submissão válida redireciona pro portal, sem checar credencial |
 | Portal do aluno (`/portal/*`, todas as telas) | Mock — nenhuma chamada à API ainda |

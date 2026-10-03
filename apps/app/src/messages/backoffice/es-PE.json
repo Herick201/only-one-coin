@@ -71,7 +71,10 @@
       "password_rule_match": "Las dos veces que la escribes coinciden",
       "password_save": "Guardar contraseña",
       "password_saving": "Guardando…",
-      "password_saved_toast": "Contraseña cambiada solo en pantalla. Todavía no hay servidor conectado.",
+      "password_current_wrong": "La contraseña actual no es correcta.",
+      "password_failed": "No se pudo cambiar la contraseña. Inténtalo de nuevo.",
+      "password_sessions_note": "Al guardar, se cierran las sesiones abiertas en otros dispositivos. Esta sigue abierta.",
+      "password_saved_toast": "Contraseña cambiada. Las demás sesiones abiertas con tu cuenta se cerraron.",
       "language_title": "Idioma del panel",
       "audit_notice": "Cada cambio de contraseña, de verificación en dos pasos o de sesión queda registrado en la bitácora de auditoría."
     },

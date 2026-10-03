@@ -4,8 +4,10 @@
  *
  * The password requirements are the panel's own floor, not a confirmed
  * institutional policy: they exist so the screen can say what it expects
- * *before* a save fails. The check that counts runs server-side in `apps/api`
- * when the flow is wired.
+ * *before* a save fails. They mirror `StaffPasswordPolicy`
+ * (`packages/domain/src/identity/StaffPasswordPolicy.ts`) — apps/app does not
+ * import the domain, so keep the two in sync. The check that counts is the
+ * server's (`POST /api/v1/me/password`).
  */
 
 export const PASSWORD_MIN_LENGTH = 12

@@ -208,7 +208,10 @@ export {
   NotFreshlyAuthenticatedError,
   InsufficientPrivilegeError,
   CannotActOnSelfError,
+  CurrentPasswordIncorrectError,
+  NewPasswordRejectedError,
 } from "./identity/errors.js";
+export { STAFF_PASSWORD_MIN_LENGTH, meetsStaffPasswordPolicy } from "./identity/StaffPasswordPolicy.js";
 export type { ICurrentSessionPort } from "./identity/ports/ICurrentSessionPort.js";
 export type { IUserRoleRepository } from "./identity/ports/IUserRoleRepository.js";
 export type { IAuditLogRepository, AuditLogEntry } from "./identity/ports/IAuditLogRepository.js";
@@ -231,6 +234,7 @@ export type {
   CreateStaffPasswordResetRecord,
 } from "./identity/ports/IStaffPasswordResetRepository.js";
 export type { IStaffPasswordSetter } from "./identity/ports/IStaffPasswordSetter.js";
+export type { IStaffSessionRevoker } from "./identity/ports/IStaffSessionRevoker.js";
 export {
   PromoteUserRoleUseCase,
   type PromoteUserRoleInput,
@@ -282,6 +286,11 @@ export {
   type CompleteStaffPasswordResetInput,
   type CompleteStaffPasswordResetOutput,
 } from "./identity/CompleteStaffPasswordResetUseCase.js";
+export {
+  ChangeOwnPasswordUseCase,
+  type ChangeOwnPasswordInput,
+  type ChangeOwnPasswordOutput,
+} from "./identity/ChangeOwnPasswordUseCase.js";
 
 export type {
   FeatureFlagOverride,

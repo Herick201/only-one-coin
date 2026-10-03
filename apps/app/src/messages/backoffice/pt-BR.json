@@ -71,7 +71,10 @@
       "password_rule_match": "As duas vezes que você digita coincidem",
       "password_save": "Salvar senha",
       "password_saving": "Salvando…",
-      "password_saved_toast": "Senha alterada só na tela. Ainda não há servidor conectado.",
+      "password_current_wrong": "A senha atual não está correta.",
+      "password_failed": "Não foi possível alterar a senha. Tente de novo.",
+      "password_sessions_note": "Ao salvar, as sessões abertas em outros dispositivos são encerradas. Esta continua aberta.",
+      "password_saved_toast": "Senha alterada. As outras sessões abertas com a sua conta foram encerradas.",
       "language_title": "Idioma do painel",
       "audit_notice": "Toda troca de senha, de verificação em duas etapas ou de sessão fica registrada no log de auditoria."
     },
