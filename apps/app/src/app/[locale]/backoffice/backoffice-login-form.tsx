@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n/navigation'
 import {
   ArrowLeftIcon,
@@ -13,6 +13,14 @@ import {
 } from './icons'
 
 type Step = 'credentials' | 'mfa' | 'recover' | 'recover_sent'
+
+// The app routes on short codes; apps/api and the e-mail templates speak
+// the full locale names (packages/domain, `LocaleSchema`).
+const EMAIL_LOCALE: Record<string, 'es-PE' | 'pt-BR' | 'en'> = {
+  es: 'es-PE',
+  pt: 'pt-BR',
+  en: 'en',
+}
 
 function Heading({ title, subtitle }: { title: string; subtitle: string }) {
   return (
@@ -40,22 +48,27 @@ function Heading({ title, subtitle }: { title: string; subtitle: string }) {
  *
  * Password recovery lives here as a step instead of its own route so the
  * anti-enumeration answer is structural: the confirmation screen is identical
- * whether or not the address exists (CLAUDE.md §8). Recovery itself is still
- * mocked — no backend route for it yet.
+ * whether or not the address exists (CLAUDE.md §8). It asks
+ * `POST /staff/password-resets/request` (OOC-30), which answers 202 either
+ * way and e-mails the link to the account, if there is one, in this screen's
+ * language. Only a request that never got that answer — network, 5xx — shows
+ * an error.
  */
 export function BackofficeLoginForm() {
   const t = useTranslations('backoffice')
+  const locale = useLocale()
   const router = useRouter()
   const [step, setStep] = useState<Step>('credentials')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState(false)
+  const [recoverError, setRecoverError] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const timer = useRef<number | undefined>(undefined)
 
   useEffect(() => () => window.clearTimeout(timer.current), [])
 
-  // Mock only: fake a round-trip so the pending UI is exercisable. Recovery
-  // still uses this — sign-in below does not.
+  // Mock only: fake a round-trip so the pending UI is exercisable. Only the
+  // MFA step still uses this.
   function mockRoundTrip(next: () => void) {
     setPending(true)
     timer.current = window.setTimeout(() => {
@@ -98,10 +111,37 @@ export function BackofficeLoginForm() {
     mockRoundTrip(() => router.push('/backoffice/home'))
   }
 
-  function onRecover(event: React.FormEvent<HTMLFormElement>) {
+  async function onRecover(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (pending) return
-    mockRoundTrip(() => setStep('recover_sent'))
+
+    setRecoverError(false)
+    setPending(true)
+
+    const formData = new FormData(event.currentTarget)
+    let ok = false
+    try {
+      const response = await fetch('/api/v1/staff/password-resets/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.get('email'),
+          locale: EMAIL_LOCALE[locale] ?? 'es-PE',
+        }),
+      })
+      ok = response.ok
+    } catch {
+      ok = false
+    }
+
+    setPending(false)
+
+    if (!ok) {
+      setRecoverError(true)
+      return
+    }
+
+    setStep('recover_sent')
   }
 
   const cardClass =
@@ -140,8 +180,17 @@ export function BackofficeLoginForm() {
 
   if (step === 'recover') {
     return (
-      <form onSubmit={onRecover} className={cardClass} noValidate>
+      <form onSubmit={(event) => void onRecover(event)} className={cardClass} noValidate>
         <Heading title={t('recover_title')} subtitle={t('recover_subtitle')} />
+
+        {recoverError && (
+          <div
+            role="alert"
+            className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          >
+            {t('recover_error')}
+          </div>
+        )}
 
         <label className={labelClass}>
           {t('email_label')}

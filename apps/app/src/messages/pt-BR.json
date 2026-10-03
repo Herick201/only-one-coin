@@ -57,6 +57,7 @@
     "recover_subtitle": "Informe seu e-mail e enviamos um link para criar uma nova senha.",
     "recover_submit": "Enviar link",
     "recover_sending": "Enviando…",
+    "recover_error": "Não conseguimos enviar o pedido. Confira o e-mail e sua conexão e tente de novo.",
     "recover_sent_title": "Confira seu e-mail",
     "recover_sent_body": "Se esse e-mail pertence a uma conta do painel, o link para criar uma nova senha chega por lá.",
     "back_to_login": "Voltar ao acesso",
