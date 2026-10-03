@@ -689,7 +689,7 @@ export const receiptUploads = pgTable(
       sql`(${table.validationVerdict} is null) = (${table.validatedAt} is null)`,
     ),
     // The validation relay's query: screened, attached, not validated. The
-    // level-1 reading is an anti-join on payment_receipts' unique index.
+    // level-1 reading is a semi-join (`exists`) on payment_receipts' unique index.
     index("receipt_uploads_validate_pending_idx")
       .on(table.createdAt)
       .where(sql`${table.paymentId} is not null and ${table.screenedAt} is not null and ${table.validatedAt} is null`),

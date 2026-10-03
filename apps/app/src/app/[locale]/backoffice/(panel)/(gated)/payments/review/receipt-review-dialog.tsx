@@ -431,8 +431,8 @@ export function ReceiptReviewDialog({
 /**
  * The receipt traffic light's verdict (OOC-21), in words. A suggested
  * rejection is only that — the reviewer still rejects, with a reason. A green
- * verdict only shows up here when something else (the screening) had already
- * sent the payment to a person.
+ * verdict only shows up here when the payment could not be settled on its own —
+ * the screening had already sent it to a person, or its seat had been released.
  */
 function VerdictNotice({ verdict }: { verdict: ReviewVerdict }) {
   const t = useTranslations('bo')
