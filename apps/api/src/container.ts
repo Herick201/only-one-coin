@@ -37,6 +37,8 @@ import {
   SetFeatureFlagOverrideUseCase,
   SubmitPublicEnrollmentUseCase,
   UpdateCheckoutHoldMinutesUseCase,
+  UpdateReceiptAmountToleranceUseCase,
+  UpdateReceiptRejectBelowPercentUseCase,
   UpdateCourseUseCase,
   type IAuditLogRepository,
   type ICatalogEntryRepository,
@@ -186,6 +188,8 @@ export interface AppUseCases {
   platform: {
     setFeatureFlag: SetFeatureFlagOverrideUseCase;
     updateCheckoutHoldMinutes: UpdateCheckoutHoldMinutesUseCase;
+    updateReceiptAmountTolerance: UpdateReceiptAmountToleranceUseCase;
+    updateReceiptRejectBelowPercent: UpdateReceiptRejectBelowPercentUseCase;
   };
   catalog: {
     retire: RetireCatalogEntryUseCase;
@@ -354,6 +358,8 @@ function buildContainer(): AppContainer {
 
   const setFeatureFlag = new SetFeatureFlagOverrideUseCase(featureFlagOverrideRepository, auditLogRepository);
   const updateCheckoutHoldMinutes = new UpdateCheckoutHoldMinutesUseCase(platformSettingsRepository, auditLogRepository);
+  const updateReceiptAmountTolerance = new UpdateReceiptAmountToleranceUseCase(platformSettingsRepository, auditLogRepository);
+  const updateReceiptRejectBelowPercent = new UpdateReceiptRejectBelowPercentUseCase(platformSettingsRepository, auditLogRepository);
 
   const retireCatalogEntry = new RetireCatalogEntryUseCase(catalogEntryRepository, auditLogRepository);
   const restoreCatalogEntry = new RestoreCatalogEntryUseCase(catalogEntryRepository, auditLogRepository);
@@ -471,6 +477,8 @@ function buildContainer(): AppContainer {
       platform: {
         setFeatureFlag,
         updateCheckoutHoldMinutes,
+        updateReceiptAmountTolerance,
+        updateReceiptRejectBelowPercent,
       },
       catalog: {
         retire: retireCatalogEntry,

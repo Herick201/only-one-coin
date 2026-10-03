@@ -887,9 +887,10 @@ export const outbox = pgTable(
 // setting carries its own CHECK — a setting the database cannot bound is one
 // a bad request can set to zero.
 //
-// Only the checkout hold lives here so far. The review window, the value
-// tolerance and the OCR confidence floor are still screen-only in the
-// backoffice; each lands as its own column when something server-side reads it.
+// The checkout hold and the receipt traffic light's two numbers (OOC-21) live
+// here. The review window and the OCR confidence floor are still screen-only
+// in the backoffice; each lands as its own column when something server-side
+// reads it.
 //
 // `updated_by` is Better Auth's "user".id (text), no FK — same situation as
 // `feature_flag_overrides.updated_by`. Who changed what is answered by
@@ -899,6 +900,12 @@ export const platformSettings = pgTable(
   {
     id: boolean("id").primaryKey().default(true),
     checkoutHoldMinutes: integer("checkout_hold_minutes").notNull().default(15),
+    // OOC-21: how far ABOVE the expected amount still approves on its own.
+    // Never below — "Sem descontos. Nunca." (CLAUDE.md §1).
+    receiptAmountToleranceCents: integer("receipt_amount_tolerance_cents").notNull().default(0),
+    // OOC-21: below this percentage of the expected amount, rejection is
+    // suggested to the reviewer. 50 is provisional (owner, 03/10/2026).
+    receiptRejectBelowPercent: integer("receipt_reject_below_percent").notNull().default(50),
     updatedBy: text("updated_by"),
     ...timestamps(),
   },
@@ -907,6 +914,14 @@ export const platformSettings = pgTable(
     check(
       "platform_settings_checkout_hold_minutes_check",
       sql`${table.checkoutHoldMinutes} between 5 and 60`,
+    ),
+    check(
+      "platform_settings_receipt_amount_tolerance_cents_check",
+      sql`${table.receiptAmountToleranceCents} between 0 and 5000`,
+    ),
+    check(
+      "platform_settings_receipt_reject_below_percent_check",
+      sql`${table.receiptRejectBelowPercent} between 1 and 99`,
     ),
   ],
 );

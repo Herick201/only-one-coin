@@ -67,6 +67,8 @@ import { listFeatureFlagsRoute } from "@/http/platform/ListFeatureFlagsRoute.js"
 import { setFeatureFlagRoute } from "@/http/platform/SetFeatureFlagRoute.js";
 import { getPlatformSettingsRoute } from "@/http/platform/GetPlatformSettingsRoute.js";
 import { updateCheckoutHoldMinutesRoute } from "@/http/platform/UpdateCheckoutHoldMinutesRoute.js";
+import { updateReceiptAmountToleranceRoute } from "@/http/platform/UpdateReceiptAmountToleranceRoute.js";
+import { updateReceiptRejectBelowPercentRoute } from "@/http/platform/UpdateReceiptRejectBelowPercentRoute.js";
 import { container } from "@/container.js";
 
 export async function buildApp(): Promise<FastifyInstance> {
@@ -162,6 +164,8 @@ export async function buildApp(): Promise<FastifyInstance> {
         instance.withTypeProvider<ZodTypeProvider>().route(setFeatureFlagRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(getPlatformSettingsRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(updateCheckoutHoldMinutesRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(updateReceiptAmountToleranceRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(updateReceiptRejectBelowPercentRoute);
         done();
       },
       { prefix: "/api/v1" },

@@ -282,6 +282,12 @@ export {
   CHECKOUT_HOLD_MINUTES_MIN,
   CHECKOUT_HOLD_MINUTES_MAX,
   CheckoutHoldMinutesSchema,
+  RECEIPT_AMOUNT_TOLERANCE_CENTS_MIN,
+  RECEIPT_AMOUNT_TOLERANCE_CENTS_MAX,
+  RECEIPT_REJECT_BELOW_PERCENT_MIN,
+  RECEIPT_REJECT_BELOW_PERCENT_MAX,
+  ReceiptAmountToleranceCentsSchema,
+  ReceiptRejectBelowPercentSchema,
   type PlatformSettings,
 } from "./platform/PlatformSettings.js";
 export type { IPlatformSettingsRepository } from "./platform/ports/IPlatformSettingsRepository.js";
@@ -289,6 +295,14 @@ export {
   UpdateCheckoutHoldMinutesUseCase,
   type UpdateCheckoutHoldMinutesInput,
 } from "./platform/UpdateCheckoutHoldMinutesUseCase.js";
+export {
+  UpdateReceiptAmountToleranceUseCase,
+  type UpdateReceiptAmountToleranceInput,
+} from "./platform/UpdateReceiptAmountToleranceUseCase.js";
+export {
+  UpdateReceiptRejectBelowPercentUseCase,
+  type UpdateReceiptRejectBelowPercentInput,
+} from "./platform/UpdateReceiptRejectBelowPercentUseCase.js";
 export {
   SetFeatureFlagOverrideUseCase,
   type SetFeatureFlagOverrideInput,

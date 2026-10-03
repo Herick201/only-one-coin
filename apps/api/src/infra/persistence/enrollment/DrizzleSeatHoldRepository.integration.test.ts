@@ -211,13 +211,39 @@ describe("DrizzlePlatformSettingsRepository", () => {
 
     try {
       await settings.setCheckoutHoldMinutes(20, "integration-test");
-      expect(await settings.get()).toEqual({ checkoutHoldMinutes: 20 });
+      expect(await settings.get()).toEqual({ ...before, checkoutHoldMinutes: 20 });
 
       const rows = await db.select().from(platformSettings);
       expect(rows).toHaveLength(1);
     } finally {
       await settings.setCheckoutHoldMinutes(before.checkoutHoldMinutes, "integration-test");
     }
+  });
+
+  it("reads and writes the receipt traffic light's two numbers without touching the hold", async () => {
+    const settings = new DrizzlePlatformSettingsRepository(db);
+    const before = await settings.get();
+
+    try {
+      await settings.setReceiptAmountToleranceCents(50, "integration-test");
+      await settings.setReceiptRejectBelowPercent(70, "integration-test");
+      expect(await settings.get()).toEqual({
+        checkoutHoldMinutes: before.checkoutHoldMinutes,
+        receiptAmountToleranceCents: 50,
+        receiptRejectBelowPercent: 70,
+      });
+    } finally {
+      await settings.setReceiptAmountToleranceCents(before.receiptAmountToleranceCents, "integration-test");
+      await settings.setReceiptRejectBelowPercent(before.receiptRejectBelowPercent, "integration-test");
+    }
+  });
+
+  it("is refused by the database outside the tolerance and red-line bounds", async () => {
+    const settings = new DrizzlePlatformSettingsRepository(db);
+    await expect(settings.setReceiptAmountToleranceCents(5001, "integration-test")).rejects.toThrow();
+    await expect(settings.setReceiptAmountToleranceCents(-1, "integration-test")).rejects.toThrow();
+    await expect(settings.setReceiptRejectBelowPercent(0, "integration-test")).rejects.toThrow();
+    await expect(settings.setReceiptRejectBelowPercent(100, "integration-test")).rejects.toThrow();
   });
 
   it("is refused by the database outside 5–60 minutes", async () => {

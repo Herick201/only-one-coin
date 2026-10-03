@@ -80,13 +80,17 @@ class FakeSettings implements IPlatformSettingsRepository {
   constructor(public checkoutHoldMinutes = 15) {}
 
   async get() {
-    return { checkoutHoldMinutes: this.checkoutHoldMinutes };
+    return { checkoutHoldMinutes: this.checkoutHoldMinutes, receiptAmountToleranceCents: 0, receiptRejectBelowPercent: 50 };
   }
 
   async setCheckoutHoldMinutes(minutes: number, actorId: string) {
     this.writes.push({ minutes, actorId });
     this.checkoutHoldMinutes = minutes;
   }
+
+  async setReceiptAmountToleranceCents() {}
+
+  async setReceiptRejectBelowPercent() {}
 }
 
 class FakeAuditLog implements IAuditLogRepository {
