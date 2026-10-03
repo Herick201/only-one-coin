@@ -1,6 +1,7 @@
-import { HttpError } from "@ooc/domain";
+import { HttpError, InvalidFieldsError, toFieldErrors } from "@ooc/domain";
 import type { FastifyError, FastifyInstance } from "fastify";
 import fp from "fastify-plugin";
+import { hasZodFastifySchemaValidationErrors } from "fastify-type-provider-zod";
 
 async function errorHandlerPlugin(app: FastifyInstance) {
   app.setErrorHandler((error: FastifyError, request, reply) => {
@@ -9,6 +10,7 @@ async function errorHandlerPlugin(app: FastifyInstance) {
         status: error.status,
         reason: error.reason,
         path: error.path ?? request.url,
+        ...(error instanceof InvalidFieldsError ? { fields: error.fields } : {}),
       });
       return;
     }
@@ -18,6 +20,11 @@ async function errorHandlerPlugin(app: FastifyInstance) {
         status: error.statusCode ?? 400,
         reason: "validation_error",
         path: request.url,
+        // Body fields only — a bad query string or path param is a client
+        // bug with nothing for a person to fix.
+        ...(hasZodFastifySchemaValidationErrors(error) && error.validationContext === "body"
+          ? { fields: toFieldErrors(error.validation.map((item) => item.params.issue)) }
+          : {}),
       });
       return;
     }

@@ -1,4 +1,14 @@
-import { CreateGuardianSchema, CreateStudentSchema, DEFAULT_LOCALE, LocaleSchema, PaymentMethodSchema } from "@ooc/domain";
+import {
+  CreateStudentSchema,
+  DEFAULT_LOCALE,
+  GuardianFieldsSchema,
+  LocaleSchema,
+  MethodDetailField,
+  OperationNumberField,
+  PaymentMethodSchema,
+  refineGmail,
+  refineNationalId,
+} from "@ooc/domain";
 import { z } from "zod";
 import { RouteBuilder } from "@/shared/http/RouteBuilder.js";
 import { ErrorResponseSchema } from "@/shared/http/ErrorResponseSchema.js";
@@ -22,8 +32,11 @@ const SubmitPublicEnrollmentBodySchema = z
     receiptUploadId: z.string().uuid(),
     classGroupId: z.string().uuid(),
     planId: z.string().uuid(),
-    student: CreateStudentSchema,
-    guardian: CreateGuardianSchema.omit({ studentId: true })
+    // Same field rules as the entity (normalized, then checked — fields.ts),
+    // plus the checkout's own Gmail gate. A refusal is a 400 naming each
+    // field and its code; the checkout translates the code.
+    student: CreateStudentSchema.superRefine(refineGmail),
+    guardian: GuardianFieldsSchema.omit({ studentId: true })
       .extend({
         // The checkbox, not the record — CLAUDE.md §8: "quem aceita é o
         // apoderado, com a data, a versão e o IP dele", all three stamped
@@ -32,6 +45,7 @@ const SubmitPublicEnrollmentBodySchema = z
         // request, not a business decision for the usecase to make.
         consentAccepted: z.literal(true),
       })
+      .superRefine(refineNationalId)
       .nullable(),
     // The language the form was filled in; the e-mails follow it (CLAUDE.md
     // §4). Optional so an older client still enrolls — in es-PE, the default.
@@ -39,14 +53,14 @@ const SubmitPublicEnrollmentBodySchema = z
     payment: z
       .object({
         method: PaymentMethodSchema,
-        methodDetail: z.string().min(1).nullable(),
-        operationNumber: z.string().min(1),
+        methodDetail: MethodDetailField.nullable(),
+        operationNumber: OperationNumberField,
         // Minted once by the client at submit and resent unchanged on
         // retry (CLAUDE.md §5) — never generated here.
         idempotencyKey: z.string().uuid(),
       })
       .refine((payment) => payment.method !== "other" || payment.methodDetail !== null, {
-        message: "methodDetail is required when method is 'other'",
+        message: "required",
         path: ["methodDetail"],
       }),
   });
