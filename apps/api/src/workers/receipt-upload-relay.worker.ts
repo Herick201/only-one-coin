@@ -8,8 +8,7 @@ import {
   type ReceiptExtractPayload,
   type ReceiptNormalizePayload,
   type ReceiptScreenPayload,
-  type ReceiptValidatePayload,
-} from "@ooc/queue";
+  type ReceiptValidatePayload, QUEUE_PREFIX } from "@ooc/queue";
 import { RECEIPT_EXTRACTION_TIER_PRIMARY } from "@ooc/domain";
 import type { FastifyBaseLogger } from "fastify";
 import type { IReceiptNormalizationStore } from "@/infra/persistence/enrollment/DrizzleReceiptUploadRepository.js";
@@ -89,6 +88,6 @@ export function startReceiptUploadRelayWorker(
         logger.debug({ offered: validatable.length }, "receipt upload relay offered rows to validate");
       }
     },
-    { connection, concurrency: 1 },
+    { connection, prefix: QUEUE_PREFIX, concurrency: 1 },
   );
 }

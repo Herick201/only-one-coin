@@ -1,8 +1,9 @@
 import { Queue, type ConnectionOptions } from "bullmq";
+import { QUEUE_PREFIX } from "../prefix.js";
 import { RECEIPT_UPLOAD_RELAY_EVERY_MS, RECEIPT_UPLOAD_RELAY_QUEUE } from "../jobs/receipt-upload-relay.job.js";
 
 export function createReceiptUploadRelayQueue(connection: ConnectionOptions): Queue {
-  return new Queue(RECEIPT_UPLOAD_RELAY_QUEUE, { connection });
+  return new Queue(RECEIPT_UPLOAD_RELAY_QUEUE, { connection, prefix: QUEUE_PREFIX });
 }
 
 /** Idempotent: upserting the scheduler on every boot leaves exactly one. */

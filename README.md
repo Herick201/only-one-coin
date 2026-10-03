@@ -25,7 +25,8 @@ backoffice administrativo e módulo de e-mail.
 Astro (site público) · Next.js App Router (portal + backoffice) · Fastify
 (`apps/api`, hospedado no Fly.io) · Postgres gerenciado (Neon) · Better Auth
 (embutido em `apps/api`) · Tigris (storage de comprovante, nativo do
-Fly.io) · Vercel (landing + app) · Redis (Upstash) + BullMQ · Gemini (OCR) ·
+Fly.io) · Vercel (landing + app) · Redis self-hospedado no Fly.io + BullMQ ·
+Gemini (OCR) ·
 Brevo (e-mail transacional/campanhas) + Zoho Mail (caixa de e-mail de
 staff) · Sentry + PostHog.
 

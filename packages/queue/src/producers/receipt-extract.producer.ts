@@ -1,4 +1,5 @@
 import { Queue, type ConnectionOptions } from "bullmq";
+import { QUEUE_PREFIX } from "../prefix.js";
 import { RECEIPT_EXTRACT_QUEUE, ReceiptExtractPayloadSchema, type ReceiptExtractPayload } from "../jobs/receipt-extract.job.js";
 
 /** Level 1r of the OCR ladder (apps/api/CLAUDE.md): a technical failure
@@ -10,6 +11,7 @@ export const RECEIPT_EXTRACT_ATTEMPTS = 4;
 export function createReceiptExtractQueue(connection: ConnectionOptions): Queue<ReceiptExtractPayload> {
   return new Queue<ReceiptExtractPayload>(RECEIPT_EXTRACT_QUEUE, {
     connection,
+    prefix: QUEUE_PREFIX,
     defaultJobOptions: {
       attempts: RECEIPT_EXTRACT_ATTEMPTS,
       // 15s, 30s, 60s: long enough for a 429 window to pass.

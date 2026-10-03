@@ -1,4 +1,5 @@
 import { Queue, type ConnectionOptions } from "bullmq";
+import { QUEUE_PREFIX } from "../prefix.js";
 import { RECEIPT_NORMALIZE_QUEUE, ReceiptNormalizePayloadSchema, type ReceiptNormalizePayload } from "../jobs/receipt-normalize.job.js";
 
 /** Retry policy for a normalize attempt lost to something transient (bucket
@@ -10,6 +11,7 @@ export const RECEIPT_NORMALIZE_ATTEMPTS = 3;
 export function createReceiptNormalizeQueue(connection: ConnectionOptions): Queue<ReceiptNormalizePayload> {
   return new Queue<ReceiptNormalizePayload>(RECEIPT_NORMALIZE_QUEUE, {
     connection,
+    prefix: QUEUE_PREFIX,
     defaultJobOptions: {
       attempts: RECEIPT_NORMALIZE_ATTEMPTS,
       backoff: { type: "exponential", delay: 10_000 },

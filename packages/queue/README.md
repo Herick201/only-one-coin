@@ -5,8 +5,17 @@ quando um pagamento é aprovado) e quem **consome** (`apps/api`, workers
 BullMQ). Existir como pacote separado evita que os dois lados dupliquem nome
 de fila e schema de payload.
 
-Roda sobre a instância **Upstash Redis** já usada para rate limit/idempotência
-(ver `CLAUDE.md`, seção 3) — não é um Redis novo.
+Roda sobre o **Redis self-hospedado no Fly.io** (`redis-nrlabs`, no repo
+NR-Labs/services), alcançado pela rede privada da org.
+
+Todas as chaves ficam sob o prefixo `ooc:` (`QUEUE_PREFIX`, em `src/prefix.ts`):
+o user de ACL `ooc` só autoriza `~ooc:*` e `&ooc:*`, então chave fora do prefixo
+volta `NOPERM` em vez de ir pro lugar errado. O prefixo tem que ser a opção
+`prefix` do BullMQ — o `keyPrefix` do ioredis não serve, o BullMQ lança na
+conexão se encontrar.
+
+O rate limit/idempotência de borda **continua no Upstash**: a borda da Vercel
+não alcança a rede privada do Fly (ver `CLAUDE.md`, seção 3).
 
 ## Estrutura
 

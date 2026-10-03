@@ -1,5 +1,5 @@
 import { Worker, type ConnectionOptions } from "bullmq";
-import { SEAT_HOLD_SWEEP_QUEUE } from "@ooc/queue";
+import { SEAT_HOLD_SWEEP_QUEUE, QUEUE_PREFIX } from "@ooc/queue";
 import type { ExpireSeatHoldsUseCase } from "@ooc/domain";
 import type { FastifyBaseLogger } from "fastify";
 
@@ -23,6 +23,6 @@ export function startSeatHoldSweepWorker(
         logger.info({ expired }, "seat hold sweep returned expired holds to their class groups");
       }
     },
-    { connection, concurrency: 1 },
+    { connection, prefix: QUEUE_PREFIX, concurrency: 1 },
   );
 }

@@ -1,3 +1,5 @@
+export { QUEUE_PREFIX } from "./prefix.js";
+
 export { createRedisConnection } from "./connection.js";
 
 export { SEND_EMAIL_QUEUE, SendEmailPayloadSchema } from "./jobs/send-email.job.js";

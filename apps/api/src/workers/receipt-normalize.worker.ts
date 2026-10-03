@@ -1,5 +1,5 @@
 import { Worker, type ConnectionOptions } from "bullmq";
-import { RECEIPT_NORMALIZE_QUEUE, ReceiptNormalizePayloadSchema, type ReceiptNormalizePayload } from "@ooc/queue";
+import { RECEIPT_NORMALIZE_QUEUE, ReceiptNormalizePayloadSchema, type ReceiptNormalizePayload, QUEUE_PREFIX } from "@ooc/queue";
 import type { IReceiptUploadRepository } from "@ooc/domain";
 import type { FastifyBaseLogger } from "fastify";
 import type { IReceiptNormalizationStore } from "@/infra/persistence/enrollment/DrizzleReceiptUploadRepository.js";
@@ -66,6 +66,6 @@ export function startReceiptNormalizeWorker(
         throw error;
       }
     },
-    { connection, concurrency: 3 },
+    { connection, prefix: QUEUE_PREFIX, concurrency: 3 },
   );
 }

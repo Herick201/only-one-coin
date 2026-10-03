@@ -1,4 +1,5 @@
 import { Queue, type ConnectionOptions } from "bullmq";
+import { QUEUE_PREFIX } from "../prefix.js";
 import { RECEIPT_VALIDATE_QUEUE, ReceiptValidatePayloadSchema, type ReceiptValidatePayload } from "../jobs/receipt-validate.job.js";
 
 /** Validation only fails on something transient (database timeout) — same
@@ -8,6 +9,7 @@ export const RECEIPT_VALIDATE_ATTEMPTS = 3;
 export function createReceiptValidateQueue(connection: ConnectionOptions): Queue<ReceiptValidatePayload> {
   return new Queue<ReceiptValidatePayload>(RECEIPT_VALIDATE_QUEUE, {
     connection,
+    prefix: QUEUE_PREFIX,
     defaultJobOptions: {
       attempts: RECEIPT_VALIDATE_ATTEMPTS,
       backoff: { type: "exponential", delay: 10_000 },
