@@ -71,7 +71,10 @@
       "password_rule_match": "Both times you type it match",
       "password_save": "Save password",
       "password_saving": "Saving…",
-      "password_saved_toast": "Password changed on screen only. There is no server behind this yet.",
+      "password_current_wrong": "The current password is not correct.",
+      "password_failed": "The password could not be changed. Please try again.",
+      "password_sessions_note": "Saving signs out the sessions open on other devices. This one stays open.",
+      "password_saved_toast": "Password changed. Every other open session on your account was signed out.",
       "language_title": "Panel language",
       "audit_notice": "Every password change, two-step verification change and closed session is written to the append-only audit log."
     },

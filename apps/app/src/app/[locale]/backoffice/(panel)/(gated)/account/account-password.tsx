@@ -25,9 +25,9 @@ const labelClass =
  * being typed into, not thrown back after a failed save — the reader should
  * never learn the rule from a rejection.
  *
- * Frontend stub: nothing leaves the browser. The real change is a usecase in
- * `apps/api` that re-checks the current password server-side and writes to the
- * append-only audit log (CLAUDE.md §8).
+ * `POST /api/v1/me/password` (ChangeOwnPasswordUseCase) is where the rules
+ * count: it re-checks the current password, applies the same requirements,
+ * closes every other open session and writes the audit log (CLAUDE.md §8).
  */
 export function AccountPassword({
   updatedAt,
@@ -41,6 +41,8 @@ export function AccountPassword({
   const [draft, setDraft] = useState<PasswordDraft>(EMPTY)
   const [reveal, setReveal] = useState(false)
   const [pending, setPending] = useState(false)
+  const [error, setError] = useState<'current_incorrect' | 'failed' | null>(null)
+  const [changedAt, setChangedAt] = useState(updatedAt)
   const [toast, setToast] = useState<string | null>(null)
 
   const rules = passwordRules(draft)
@@ -48,24 +50,40 @@ export function AccountPassword({
 
   function set<K extends keyof PasswordDraft>(key: K, value: string) {
     setDraft((prev) => ({ ...prev, [key]: value }))
+    setError(null)
   }
 
   function close() {
     setOpen(false)
     setDraft(EMPTY)
     setReveal(false)
+    setError(null)
   }
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!ready || pending) return
-    // Mock only: fake the round-trip so the pending state is exercisable.
     setPending(true)
-    window.setTimeout(() => {
-      setPending(false)
+    try {
+      const response = await fetch('/api/v1/me/password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword: draft.current, newPassword: draft.next }),
+      })
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as { reason?: string } | null
+        setError(body?.reason === 'staff_password.current_incorrect' ? 'current_incorrect' : 'failed')
+        return
+      }
+      const result = (await response.json()) as { changedAt: string }
+      setChangedAt(result.changedAt)
       close()
       setToast(t('account.password_saved_toast'))
-    }, 500)
+    } catch {
+      setError('failed')
+    } finally {
+      setPending(false)
+    }
   }
 
   return (
@@ -73,8 +91,8 @@ export function AccountPassword({
       <SectionTitle icon="shield">{t('account.password_title')}</SectionTitle>
 
       <p className="mt-3 text-sm text-muted-foreground">
-        {updatedAt
-          ? t('account.password_updated', { date: formatDate(updatedAt, locale) })
+        {changedAt
+          ? t('account.password_updated', { date: formatDate(changedAt, locale) })
           : t('account.password_never')}
       </p>
 
@@ -91,7 +109,7 @@ export function AccountPassword({
         // A password field is short by nature — running it the full width of a
         // page-wide card only makes it harder to read what was typed.
         <form
-          onSubmit={handleSubmit}
+          onSubmit={(event) => void handleSubmit(event)}
           className="mt-4 flex max-w-md flex-col gap-3"
           noValidate
         >
@@ -104,6 +122,8 @@ export function AccountPassword({
                 className={`${fieldClass} w-full`}
                 value={draft.current}
                 onChange={(event) => set('current', event.target.value)}
+                aria-invalid={error === 'current_incorrect'}
+                aria-describedby={error === 'current_incorrect' ? 'password-current-error' : undefined}
                 required
               />
               <RevealButton
@@ -113,6 +133,17 @@ export function AccountPassword({
               />
             </span>
           </label>
+          {/* Outside the label on purpose: inside it, the error would become
+              part of the field's accessible name (same as the role dialog). */}
+          {error === 'current_incorrect' && (
+            <p
+              id="password-current-error"
+              role="alert"
+              className="-mt-2 text-xs font-semibold text-red-600"
+            >
+              {t('account.password_current_wrong')}
+            </p>
+          )}
 
           <label className={labelClass}>
             {t('account.password_new_label')}
@@ -158,6 +189,14 @@ export function AccountPassword({
               </li>
             ))}
           </ul>
+
+          <p className="text-xs text-muted-foreground">{t('account.password_sessions_note')}</p>
+
+          {error === 'failed' && (
+            <p role="alert" className="text-xs font-semibold text-red-600">
+              {t('account.password_failed')}
+            </p>
+          )}
 
           <div className="flex items-center gap-2">
             <button

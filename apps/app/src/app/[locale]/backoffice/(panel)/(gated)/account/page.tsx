@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { getStaffSession } from '@/lib/backoffice/session'
+import { getPasswordChangedAt } from '@/lib/backoffice/account-server'
 import { initials, type Locale } from '@/lib/format'
 import {
   Card,
@@ -40,6 +41,7 @@ export default async function AccountPage({
   const t = await getTranslations('bo')
 
   const user = await getStaffSession()
+  const passwordChangedAt = await getPasswordChangedAt()
   const fullName = `${user.firstName} ${user.lastName}`
 
   return (
@@ -93,7 +95,7 @@ export default async function AccountPage({
       </AutoGrid>
 
       <Card>
-        <AccountPassword updatedAt={null} locale={locale} />
+        <AccountPassword updatedAt={passwordChangedAt} locale={locale} />
       </Card>
 
       <p className="flex items-start gap-2 rounded-lg border border-dashed border-line bg-sky-soft px-3 py-2 text-xs text-muted-foreground">
