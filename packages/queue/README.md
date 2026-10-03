@@ -14,8 +14,13 @@ volta `NOPERM` em vez de ir pro lugar errado. O prefixo tem que ser a opção
 `prefix` do BullMQ — o `keyPrefix` do ioredis não serve, o BullMQ lança na
 conexão se encontrar.
 
-O rate limit/idempotência de borda **continua no Upstash**: a borda da Vercel
-não alcança a rede privada do Fly (ver `CLAUDE.md`, seção 3).
+O user de ACL precisa de `+info` além do `+@all -@dangerous`: o BullMQ roda
+`INFO` ao conectar (lê versão e `maxmemory-policy`), e o `INFO` mora em
+`@dangerous`. Sem ele a API cai no boot com `NOPERM ... 'info' command` — foi o
+incidente de 03/10/2026, corrigido no `redis-entrypoint.sh` do repo services.
+
+O rate limit/idempotência (Sessão 25) vai usar este mesmo Redis, dentro de
+`apps/api` — o Upstash saiu da stack (ver `CLAUDE.md`, seção 3).
 
 ## Estrutura
 
