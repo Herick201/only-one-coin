@@ -18,19 +18,21 @@ import {
   SummaryRow,
 } from '@/components/enrollment/ui'
 import { CheckoutIcon } from '@/components/enrollment/icons'
+import { Turnstile } from '@/components/enrollment/turnstile'
+import { env } from '@/env'
 
 /** How a submit that did not throw ended. A refused operation number, or a
  * field the API refused, is not a failure to retry — sending the same thing
- * again gets the same answer. */
+ * again gets the same answer. A refused captcha or a rate limit is: after a
+ * new captcha, or after a wait. */
 export type SubmitOutcome =
   | 'sent'
   | 'operation_number_used'
+  | 'captcha_failed'
+  | 'rate_limited'
   | { kind: 'invalid_fields'; fields: FieldError[] }
 
-type SubmitError =
-  | 'failed'
-  | 'operation_number_used'
-  | { kind: 'invalid_fields'; fields: FieldError[] }
+type SubmitError = Exclude<SubmitOutcome, 'sent'> | 'failed'
 
 /**
  * Field paths the API can name, mapped to the label the reader saw. The rules
@@ -74,12 +76,17 @@ export function StepReview({
   draft: CheckoutDraft
   onEdit: (step: StepId) => void
   onBack: () => void
-  onSubmit: () => Promise<SubmitOutcome>
+  onSubmit: (captchaToken: string) => Promise<SubmitOutcome>
 }) {
   const t = useTranslations('enrollment')
   const locale = useLocale() as Locale
   const [sending, setSending] = useState(false)
   const [submitError, setSubmitError] = useState<SubmitError | null>(null)
+  // Turnstile (OOC-24): one token per submit. Bumping the reset key after an
+  // attempt makes the widget issue the next one.
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const [captchaResetKey, setCaptchaResetKey] = useState(0)
+  const [captchaUnavailable, setCaptchaUnavailable] = useState(false)
 
   const course = courseById(catalog, draft.course.courseId)
   const group = groupById(catalog, draft.course.classGroupId)
@@ -89,22 +96,24 @@ export function StepReview({
   async function send() {
     // Guards the double POST from a bad phone connection on the screen side;
     // the guarantee is the idempotency key on the payment (`CLAUDE.md` §5).
-    if (sending) return
+    if (sending || !captchaToken) return
     setSending(true)
     setSubmitError(null)
     try {
-      const outcome = await onSubmit()
-      // Both refused before anything was written: the reader corrects the
-      // value through the edit links and sends again.
+      const outcome = await onSubmit(captchaToken)
+      // Refused before anything was written: the reader corrects the value
+      // through the edit links, or waits, and sends again.
       if (outcome !== 'sent') {
         setSending(false)
         setSubmitError(outcome)
+        setCaptchaResetKey((key) => key + 1)
       }
     } catch {
       // Retriable: the idempotency key is stable across attempts, so a
       // second click is safe rather than a second seat.
       setSending(false)
       setSubmitError('failed')
+      setCaptchaResetKey((key) => key + 1)
     }
   }
 
@@ -234,7 +243,24 @@ export function StepReview({
         {t('step.review.what_happens', { days: catalog.settings.reservationDays })}
       </Note>
 
+      <div className="flex flex-col gap-2">
+        <Turnstile
+          siteKey={env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+          locale={locale}
+          resetKey={captchaResetKey}
+          onToken={setCaptchaToken}
+          onUnavailable={() => setCaptchaUnavailable(true)}
+        />
+        {captchaUnavailable ? (
+          <Note tone="danger">{t('step.review.captcha_unavailable')}</Note>
+        ) : (
+          !captchaToken && <p className="text-xs text-muted-foreground">{t('step.review.captcha_hint')}</p>
+        )}
+      </div>
+
       {submitError === 'failed' && <Note tone="danger">{t('step.review.submit_failed')}</Note>}
+      {submitError === 'captcha_failed' && <Note tone="danger">{t('step.review.captcha_failed')}</Note>}
+      {submitError === 'rate_limited' && <Note tone="danger">{t('step.review.rate_limited')}</Note>}
       {submitError === 'operation_number_used' && (
         <Note tone="danger">{t('step.review.operation_number_used')}</Note>
       )}
@@ -268,7 +294,7 @@ export function StepReview({
           </GhostButton>
         }
       >
-        <PrimaryButton onClick={() => void send()} disabled={sending}>
+        <PrimaryButton onClick={() => void send()} disabled={sending || !captchaToken}>
           <CheckoutIcon name="check" size={16} />
           {t('action.submit')}
         </PrimaryButton>

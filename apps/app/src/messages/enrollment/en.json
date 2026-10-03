@@ -95,7 +95,11 @@
         "operation_number_used": "That operation number was already used for another enrollment. Check it on the payment step; if it is right, message us on WhatsApp.",
         "invalid_fields": "We couldn't register your enrollment: check these details and send again.",
         "other_field": "Another detail",
-        "guardian_field": "Guardian — {field}"
+        "guardian_field": "Guardian — {field}",
+        "captcha_hint": "Complete the security check to submit your enrollment.",
+        "captcha_failed": "The security check expired or was not accepted. Complete it again and resubmit.",
+        "captcha_unavailable": "We could not load the security check. Reload the page; if it keeps happening, turn off your ad blocker or message us on WhatsApp.",
+        "rate_limited": "We received too many attempts from your connection. Wait a few minutes and submit again — your details and your seat are still here."
       }
     },
     "time_range": "{start} to {end}",

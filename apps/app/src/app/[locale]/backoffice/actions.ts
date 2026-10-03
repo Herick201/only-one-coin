@@ -5,6 +5,7 @@ import { getLocale } from 'next-intl/server'
 import { redirect } from '@/i18n/navigation'
 import { serverEnv } from '@/server-env'
 import { resolveSessionCookie } from '@/lib/backoffice/api-client'
+import { requestIdentityHeaders } from '@/lib/api-identity'
 
 /**
  * Signs the session out with Better Auth itself — not just a cookie wipe —
@@ -19,7 +20,7 @@ export async function logoutStaff() {
   if (session) {
     await fetch(new URL('/api/auth/sign-out', serverEnv.API_INTERNAL_URL), {
       method: 'POST',
-      headers: { cookie: `${session.name}=${session.value}` },
+      headers: { ...(await requestIdentityHeaders()), cookie: `${session.name}=${session.value}` },
     }).catch(() => {
       // Best-effort: the cookie clears below either way.
     })

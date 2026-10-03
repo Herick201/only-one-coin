@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers'
 import { serverEnv } from '@/server-env'
+import { requestIdentityHeaders } from '@/lib/api-identity'
 
 // Duplicated from apps/api/src/infra/auth/betterAuth.ts (SESSION_COOKIE_NAME)
 // on purpose — apps/app never instantiates Better Auth itself (CLAUDE.md §3),
@@ -42,6 +43,7 @@ export async function apiFetch(path: string, init?: RequestInit): Promise<Respon
   return fetch(new URL(path, serverEnv.API_INTERNAL_URL), {
     ...init,
     headers: {
+      ...(await requestIdentityHeaders()),
       ...init?.headers,
       ...(session ? { cookie: `${session.name}=${session.value}` } : {}),
     },

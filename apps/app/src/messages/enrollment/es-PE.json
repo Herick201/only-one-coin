@@ -95,7 +95,11 @@
         "operation_number_used": "Ese número de operación ya fue usado en otra matrícula. Revísalo en el paso de pago; si es correcto, escríbenos por WhatsApp.",
         "invalid_fields": "No pudimos registrar tu matrícula: revisa estos datos y vuelve a enviar.",
         "other_field": "Otro dato",
-        "guardian_field": "Apoderado — {field}"
+        "guardian_field": "Apoderado — {field}",
+        "captcha_hint": "Completa la verificación de seguridad para enviar tu matrícula.",
+        "captcha_failed": "La verificación de seguridad venció o no fue aceptada. Complétala de nuevo y vuelve a enviar.",
+        "captcha_unavailable": "No pudimos cargar la verificación de seguridad. Recarga la página; si sigue igual, desactiva el bloqueador de anuncios o escríbenos por WhatsApp.",
+        "rate_limited": "Recibimos demasiados intentos desde tu conexión. Espera unos minutos y vuelve a enviar — tus datos y tu vacante siguen aquí."
       }
     },
     "time_range": "{start} a {end}",
