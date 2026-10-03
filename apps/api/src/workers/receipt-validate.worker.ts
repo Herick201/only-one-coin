@@ -1,5 +1,5 @@
 import { Worker, type ConnectionOptions } from "bullmq";
-import { RECEIPT_VALIDATE_QUEUE, ReceiptValidatePayloadSchema, type ReceiptValidatePayload } from "@ooc/queue";
+import { RECEIPT_VALIDATE_QUEUE, ReceiptValidatePayloadSchema, type ReceiptValidatePayload, QUEUE_PREFIX } from "@ooc/queue";
 import type { ValidateReceiptUseCase } from "@ooc/domain";
 import type { FastifyBaseLogger } from "fastify";
 
@@ -30,6 +30,6 @@ export function startReceiptValidateWorker(
         throw error;
       }
     },
-    { connection, concurrency: 3 },
+    { connection, prefix: QUEUE_PREFIX, concurrency: 3 },
   );
 }

@@ -16,7 +16,10 @@ services:
       timeout: 5s
       retries: 5
 
-  # BullMQ queues/workers run inside apps/api (CLAUDE.md §3) — Upstash in prod.
+  # BullMQ queues/workers run inside apps/api (CLAUDE.md §3). Prod uses the
+  # self-hosted Redis on Fly (NR-Labs/services, `redis-nrlabs`), reached over
+  # the private network. Keys are prefixed `ooc:` there (QUEUE_PREFIX) because
+  # the ACL user only grants `~ooc:*`; the prefix applies here too.
   redis:
     image: redis:7-alpine
     restart: unless-stopped

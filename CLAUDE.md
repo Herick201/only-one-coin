@@ -109,11 +109,11 @@ Se algo parecer exigir um desses, **pare e pergunte**.
 | Banco | **Postgres** gerenciado — **Neon** (`sa-east-1`/São Paulo) |
 | Storage (comprovante + backup) | **Tigris** (nativo do Fly.io — `fly storage create`, S3-compatible, egress zero) — mesmo bucket-provider pros dois usos, sem conta separada |
 | Auth | **Better Auth** — biblioteca embutida no processo de `apps/api` (Fastify), nunca instanciada em `apps/app` |
-| Fila | **Redis (Upstash) + BullMQ** — workers em `apps/api` |
+| Fila | **Redis self-hospedado no Fly.io** (`redis-nrlabs`, repo NR-Labs/services) **+ BullMQ** — workers em `apps/api`. Chaves sob o prefixo `ooc:` (`QUEUE_PREFIX`), que é o que o user de ACL `ooc` autoriza |
 | OCR / IA | **OpenRouter** pra todos os níveis — **Gemini 3.1 Flash-Lite** (nível 1) · modelo de outra família (nível 2, a escolher) |
 | E-mail (transacional/campanhas) | **Brevo**, atrás de adapter |
 | E-mail (caixa/mailbox de staff) | **Zoho Mail Lite** — Brevo não hospeda caixa (sem IMAP próprio); usar só se alguém precisar **receber e ler** e-mail em `contato@`/`matricula@` |
-| Rate limit + idempotência | **Upstash Redis** (borda) — mesma instância usada pela fila |
+| Rate limit + idempotência | **Upstash Redis** (borda) — **não** é mais a mesma instância da fila. O Redis do Fly não tem IP público e só responde na rede privada da org, que função de borda na Vercel não alcança; migrar isso exigiria trazer o rate limit pra dentro de `apps/api` |
 | Captcha | **Cloudflare Turnstile** |
 | Backup | `pg_dump` → **Tigris** via Scheduled Function (mesmo storage do comprovante) |
 | Observabilidade | **Sentry** + **PostHog** (EU Cloud) |

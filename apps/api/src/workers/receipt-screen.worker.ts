@@ -1,5 +1,5 @@
 import { Worker, type ConnectionOptions } from "bullmq";
-import { RECEIPT_SCREEN_QUEUE, ReceiptScreenPayloadSchema, type ReceiptScreenPayload } from "@ooc/queue";
+import { RECEIPT_SCREEN_QUEUE, ReceiptScreenPayloadSchema, type ReceiptScreenPayload, QUEUE_PREFIX } from "@ooc/queue";
 import type { ScreenReceiptUploadUseCase } from "@ooc/domain";
 import type { FastifyBaseLogger } from "fastify";
 
@@ -33,6 +33,6 @@ export function startReceiptScreenWorker(
         throw error;
       }
     },
-    { connection, concurrency: 3 },
+    { connection, prefix: QUEUE_PREFIX, concurrency: 3 },
   );
 }

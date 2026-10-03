@@ -1,5 +1,5 @@
 import { Worker, type ConnectionOptions, type Queue } from "bullmq";
-import { OUTBOX_RELAY_QUEUE, enqueueSendEmail, type SendEmailPayload } from "@ooc/queue";
+import { OUTBOX_RELAY_QUEUE, enqueueSendEmail, type SendEmailPayload, QUEUE_PREFIX } from "@ooc/queue";
 import type { FastifyBaseLogger } from "fastify";
 import type { IOutboxStore } from "@/infra/persistence/notification/DrizzleOutboxRepository.js";
 
@@ -32,6 +32,6 @@ export function startOutboxRelayWorker(
         logger.debug({ offered: ids.length }, "outbox relay offered pending rows");
       }
     },
-    { connection, concurrency: 1 },
+    { connection, prefix: QUEUE_PREFIX, concurrency: 1 },
   );
 }

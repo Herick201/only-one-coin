@@ -1,4 +1,5 @@
 import { Queue, type ConnectionOptions } from "bullmq";
+import { QUEUE_PREFIX } from "../prefix.js";
 import { SEND_EMAIL_QUEUE, SendEmailPayloadSchema, type SendEmailPayload } from "../jobs/send-email.job.js";
 
 /** Retry policy for a delivery the provider refused for a transient reason
@@ -8,6 +9,7 @@ export const SEND_EMAIL_ATTEMPTS = 5;
 export function createSendEmailQueue(connection: ConnectionOptions): Queue<SendEmailPayload> {
   return new Queue<SendEmailPayload>(SEND_EMAIL_QUEUE, {
     connection,
+    prefix: QUEUE_PREFIX,
     defaultJobOptions: {
       attempts: SEND_EMAIL_ATTEMPTS,
       backoff: { type: "exponential", delay: 60_000 },

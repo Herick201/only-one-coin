@@ -1,6 +1,6 @@
 import { Worker, type ConnectionOptions } from "bullmq";
 import type { NotificationProvider } from "@ooc/notifications";
-import { SEND_EMAIL_ATTEMPTS, SEND_EMAIL_QUEUE, SendEmailPayloadSchema, type SendEmailPayload } from "@ooc/queue";
+import { SEND_EMAIL_ATTEMPTS, SEND_EMAIL_QUEUE, SendEmailPayloadSchema, type SendEmailPayload, QUEUE_PREFIX } from "@ooc/queue";
 import type { FastifyBaseLogger } from "fastify";
 import type { IOutboxStore } from "@/infra/persistence/notification/DrizzleOutboxRepository.js";
 import { deliverOutboxEmail } from "./deliverOutboxEmail.js";
@@ -34,6 +34,6 @@ export function startSendEmailWorker(
         throw error;
       }
     },
-    { connection, concurrency: 5 },
+    { connection, prefix: QUEUE_PREFIX, concurrency: 5 },
   );
 }

@@ -1,5 +1,5 @@
 import { Worker, type ConnectionOptions } from "bullmq";
-import { RECEIPT_EXTRACT_QUEUE, ReceiptExtractPayloadSchema, type ReceiptExtractPayload } from "@ooc/queue";
+import { RECEIPT_EXTRACT_QUEUE, ReceiptExtractPayloadSchema, type ReceiptExtractPayload, QUEUE_PREFIX } from "@ooc/queue";
 import { ReceiptExtractionError, findExtractedField, type ExtractReceiptUseCase } from "@ooc/domain";
 import type { FastifyBaseLogger } from "fastify";
 
@@ -54,6 +54,6 @@ export function startReceiptExtractWorker(
       }
     },
     // Each job is one network call that mostly waits on the provider.
-    { connection, concurrency: 5 },
+    { connection, prefix: QUEUE_PREFIX, concurrency: 5 },
   );
 }
