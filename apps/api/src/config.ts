@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { receiptOcrEnvShape } from "./infra/ocr/receiptOcrEnv.js";
 
-const ConfigSchema = z
+export const ConfigSchema = z
   .object({
     // environment
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
