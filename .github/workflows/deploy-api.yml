@@ -32,13 +32,48 @@ jobs:
           check-regexp: '(secrets-scan|build|test-api|migrations)'
           wait-interval: 10
 
+  # Toda variável que o apps/api exige no boot (ConfigSchema sem default e
+  # não opcional) tem que existir no Fly antes de qualquer coisa. Sem isso a
+  # release nova cai no boot em loop até o Fly desistir e deixar a máquina
+  # parada — e setar a secret depois não religa (03/10/2026,
+  # TURNSTILE_SECRET_KEY). Roda antes do backup/migration: falhou aqui, nada
+  # em produção foi tocado. Variável obrigatória nova = `fly secrets set`
+  # ANTES do merge.
+  check-secrets:
+    needs: wait-for-ci
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Variáveis obrigatórias do apps/api existem no Fly
+        run: |
+          set -euo pipefail
+          required=$(pnpm --silent --filter @ooc/api env:required | sort -u)
+          # Presente = secret do Fly ou chave do bloco [env] do fly.toml.
+          present=$( { flyctl secrets list --json | jq -r '.[].name'
+                       sed -n '/^\[env\]/,/^\[/p' fly.toml | grep -oE '^[[:space:]]*[A-Z0-9_]+[[:space:]]*=' | tr -d ' =' ; } | sort -u)
+          missing=$(comm -23 <(echo "$required") <(echo "$present"))
+          if [ -n "$missing" ]; then
+            echo "::error::apps/api não sobe sem: $(echo $missing). Rode 'flyctl secrets set NOME=valor' e refaça o deploy (workflow_dispatch)."
+            exit 1
+          fi
+          echo "As $(echo "$required" | wc -l) variáveis obrigatórias estão no Fly."
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
   # CLAUDE.md §7: "Migration em produção sempre depois de backup." Este job
   # mecaniza a regra — backup sempre roda, e só se ele terminar OK a
   # migration roda em seguida. Não substitui o backup periódico do §3
   # ("pg_dump → Tigris via Scheduled Function", ainda não construído) — é
   # só o snapshot imediatamente antes de qualquer deploy que mude schema.
   backup-and-migrate:
-    needs: wait-for-ci
+    needs: [wait-for-ci, check-secrets]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -22,6 +22,17 @@ primary_region = "gru"
   PORT = "3333"
   HOST = "0.0.0.0"
 
+# Blue-green: a máquina nova sobe AO LADO da antiga e só assume o tráfego
+# depois que o health check (/health, abaixo) passa. Release que cai no boot
+# (secret faltando, erro de config) falha o deploy e a antiga segue no ar —
+# em vez de entrar em loop de restart até o Fly desistir e deixar a API
+# parada (03/10/2026). Custo: por alguns segundos rodam duas máquinas, com
+# os workers do BullMQ nas duas — seguro, os jobs têm jobId e os schedulers
+# são idempotentes. Exige health check, e por isso o `[[http_service.checks]]`
+# não pode sair.
+[deploy]
+  strategy = "bluegreen"
+
 [http_service]
   internal_port = 3333
   force_https = true
