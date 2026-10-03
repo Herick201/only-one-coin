@@ -74,6 +74,8 @@ export function StepPayment({
   const locale = useLocale() as Locale
   const fileInput = useRef<HTMLInputElement>(null)
   const [touched, setTouched] = useState(false)
+  /** The operation number shows its error once the reader leaves it. */
+  const [leftOperation, setLeftOperation] = useState(false)
   const [copied, setCopied] = useState<string | null>(null)
   const [fileError, setFileError] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
@@ -86,6 +88,10 @@ export function StepPayment({
   const ready = !hasErrors(errors)
   const show = touched
   const err = (key: string | undefined) => (show && key ? t(`error.${key}`) : undefined)
+  const operationError =
+    (show || leftOperation) && errors.operationNumber
+      ? t(`error.${errors.operationNumber}`)
+      : undefined
 
   const account =
     catalog.accounts.find((item) => item.method === draft.payment.method) ?? null
@@ -299,13 +305,14 @@ export function StepPayment({
           <FieldGroup
             label={t('field.operation_number')}
             htmlFor="operation-number"
-            error={err(errors.operationNumber)}
+            error={operationError}
             hint={t('step.payment.operation_hint')}
+            onLeave={() => setLeftOperation(true)}
           >
             <TextInput
               id="operation-number"
               value={draft.payment.operationNumber}
-              invalid={Boolean(err(errors.operationNumber))}
+              invalid={Boolean(operationError)}
               onChange={(e) =>
                 setDraft((prev) => ({
                   ...prev,

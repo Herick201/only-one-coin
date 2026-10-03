@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
+import type { FieldError } from '@ooc/domain/fields'
 import type { CheckoutDraft, PublicCatalog, StepId } from '@/lib/enrollment/types'
 import { courseById, groupById, planOfCourse } from '@/lib/enrollment/checkout'
 import { scheduleLines } from '@/lib/enrollment/schedule'
@@ -18,11 +19,36 @@ import {
 } from '@/components/enrollment/ui'
 import { CheckoutIcon } from '@/components/enrollment/icons'
 
-/** How a submit that did not throw ended. A refused operation number is not
- * a failure to retry — sending the same number again gets the same answer. */
-export type SubmitOutcome = 'sent' | 'operation_number_used'
+/** How a submit that did not throw ended. A refused operation number, or a
+ * field the API refused, is not a failure to retry — sending the same thing
+ * again gets the same answer. */
+export type SubmitOutcome =
+  | 'sent'
+  | 'operation_number_used'
+  | { kind: 'invalid_fields'; fields: FieldError[] }
 
-type SubmitError = 'failed' | 'operation_number_used'
+type SubmitError =
+  | 'failed'
+  | 'operation_number_used'
+  | { kind: 'invalid_fields'; fields: FieldError[] }
+
+/**
+ * Field paths the API can name, mapped to the label the reader saw. The rules
+ * are the same copy on both sides (`@ooc/domain/fields`), so landing here
+ * means a stale page or a rule that only the server can check — rare, but the
+ * reader still deserves to know which box to fix.
+ */
+const FIELD_LABELS: Record<string, string> = {
+  firstName: 'field.first_name',
+  lastName: 'field.last_name',
+  nationalId: 'field.national_id',
+  phone: 'field.phone',
+  email: 'field.email',
+  birthDate: 'field.birth_date',
+  region: 'field.region',
+  city: 'field.city',
+  operationNumber: 'field.operation_number',
+}
 
 /**
  * Step 4 — everything in one place, then send.
@@ -67,11 +93,12 @@ export function StepReview({
     setSending(true)
     setSubmitError(null)
     try {
-      if ((await onSubmit()) === 'operation_number_used') {
-        // Refused before anything was written: the reader corrects the
-        // number on the payment step and sends again.
+      const outcome = await onSubmit()
+      // Both refused before anything was written: the reader corrects the
+      // value through the edit links and sends again.
+      if (outcome !== 'sent') {
         setSending(false)
-        setSubmitError('operation_number_used')
+        setSubmitError(outcome)
       }
     } catch {
       // Retriable: the idempotency key is stable across attempts, so a
@@ -210,6 +237,27 @@ export function StepReview({
       {submitError === 'failed' && <Note tone="danger">{t('step.review.submit_failed')}</Note>}
       {submitError === 'operation_number_used' && (
         <Note tone="danger">{t('step.review.operation_number_used')}</Note>
+      )}
+      {typeof submitError === 'object' && submitError !== null && (
+        <Note tone="danger">
+          {t('step.review.invalid_fields')}
+          <ul className="mt-1.5 list-disc pl-5">
+            {submitError.fields.map((field) => {
+              const [scope, name = ''] = field.path.split('.')
+              const labelKey = FIELD_LABELS[name]
+              const label = labelKey ? t(labelKey) : t('step.review.other_field')
+              return (
+                <li key={field.path}>
+                  {scope === 'guardian'
+                    ? t('step.review.guardian_field', { field: label })
+                    : label}
+                  {': '}
+                  {t(`error.${field.code}`)}
+                </li>
+              )
+            })}
+          </ul>
+        </Note>
       )}
 
       <StepNav

@@ -95,14 +95,14 @@ describe("RegisterStudentUseCase — one person, one record", () => {
     const students = new FakeStudentRepository(onFile);
     const usecase = new RegisterStudentUseCase(students, new FakeGuardianRepository());
 
-    // A CE and a DNI carrying the same digits are two different documents —
-    // the pair is what identifies, never the number alone.
+    // A passport and a DNI carrying the same digits are two different
+    // documents — the pair is what identifies, never the number alone.
     const result = await usecase.run({
-      student: { ...A_STUDENT, nationalIdType: "CE" },
+      student: { ...A_STUDENT, nationalIdType: "passport" },
       guardian: null,
     });
 
-    expect(result.student.nationalIdType).toBe("CE");
+    expect(result.student.nationalIdType).toBe("passport");
     expect(students.created).toHaveLength(1);
   });
 });

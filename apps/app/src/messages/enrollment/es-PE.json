@@ -92,7 +92,10 @@
         "consent_given": "Aceptado (versión {version})",
         "what_happens": "Al enviar, tu vacante queda reservada y tu comprobante entra a revisión. Tienes hasta {days} días para que se apruebe el pago; te avisamos por correo en cuanto esté listo.",
         "submit_failed": "No pudimos enviar tu matrícula. Puedes volver a intentarlo — no se creará una vacante duplicada.",
-        "operation_number_used": "Ese número de operación ya fue usado en otra matrícula. Revísalo en el paso de pago; si es correcto, escríbenos por WhatsApp."
+        "operation_number_used": "Ese número de operación ya fue usado en otra matrícula. Revísalo en el paso de pago; si es correcto, escríbenos por WhatsApp.",
+        "invalid_fields": "No pudimos registrar tu matrícula: revisa estos datos y vuelve a enviar.",
+        "other_field": "Otro dato",
+        "guardian_field": "Apoderado — {field}"
       }
     },
     "time_range": "{start} a {end}",
@@ -176,7 +179,7 @@
     },
     "error": {
       "required": "Completa este campo.",
-      "national_id_format": "Revisa el número: el DNI tiene 8 dígitos.",
+      "national_id_format": "Revisa el número: el DNI tiene 8 dígitos; el carné de extranjería, de 9 a 12 letras o números; el pasaporte, de 6 a 12.",
       "phone_format": "Escribe un número de celular válido.",
       "email_format": "Escribe un correo válido.",
       "email_must_be_gmail": "Debe ser una cuenta de Gmail. No se aceptan correos institucionales ni corporativos.",
@@ -188,7 +191,9 @@
       "receipt_type": "Sube una imagen (JPG, PNG o HEIC).",
       "receipt_size": "El archivo pesa demasiado. Prueba con una captura más liviana.",
       "receipt_upload_failed": "El envío falló. Revisa tu conexión e inténtalo de nuevo.",
-      "fix_fields": "Revisa los campos marcados antes de continuar."
+      "fix_fields": "Revisa los campos marcados antes de continuar.",
+      "too_long": "Es demasiado largo. Acórtalo un poco.",
+      "invalid": "Revisa este dato."
     },
     "submitted": {
       "title": "Recibimos tu matrícula",

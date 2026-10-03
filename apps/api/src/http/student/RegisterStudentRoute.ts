@@ -1,12 +1,14 @@
-import { CreateGuardianSchema, CreateStudentSchema } from "@ooc/domain";
+import { CreateStudentSchema, GuardianFieldsSchema, refineNationalId } from "@ooc/domain";
 import { z } from "zod";
 import { RouteBuilder } from "@/shared/http/RouteBuilder.js";
 import { ErrorResponseSchema } from "@/shared/http/ErrorResponseSchema.js";
 import { container } from "@/container.js";
 
+// Same field rules as the public checkout, minus its Gmail gate — whether the
+// backoffice is held to that is OOC-65's call.
 const RegisterStudentBodySchema = z.object({
   student: CreateStudentSchema,
-  guardian: CreateGuardianSchema.omit({ studentId: true }).nullable(),
+  guardian: GuardianFieldsSchema.omit({ studentId: true }).superRefine(refineNationalId).nullable(),
 });
 
 const GuardianResponseSchema = z.object({

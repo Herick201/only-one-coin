@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import type { Locale } from '@/lib/format'
+import { parseFieldErrors } from '@/lib/field-errors'
 import type {
   CheckoutDraft,
   PublicCatalog,
@@ -148,6 +149,13 @@ export function Checkout({
     })
 
     if (!response.ok) {
+      // A field the API refused (OOC-64). Same rules as this page, so this is
+      // a stale bundle or a server-only check; nothing was written and the
+      // hold is intact.
+      if (response.status === 400) {
+        const fields = parseFieldErrors(await response.json().catch(() => null))
+        if (fields.length > 0) return { kind: 'invalid_fields', fields }
+      }
       if (response.status === 422) {
         const body = (await response.json().catch(() => null)) as { reason?: string } | null
         // The server says the hold is gone — expired, or swept, while the

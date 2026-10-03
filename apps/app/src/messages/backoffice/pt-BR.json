@@ -195,7 +195,19 @@
       "created": "Aluno cadastrado.",
       "submit_error": "Não foi possível cadastrar o aluno. Tente novamente.",
       "duplicate_error": "Já existe um aluno cadastrado com este documento. Procure-o no diretório: a ficha já existe e a matrícula é aberta sobre ela.",
-      "missing_fields": "Preencha os campos obrigatórios para cadastrar o aluno."
+      "missing_fields": "Preencha os campos obrigatórios para cadastrar o aluno.",
+      "invalid_error": "O sistema recusou alguns dados. Corrija os campos marcados e tente de novo.",
+      "error": {
+        "required": "Preencha este campo.",
+        "too_long": "Está longo demais.",
+        "national_id_format": "Número inválido: DNI com 8 dígitos; carnê de estrangeiro com 9 a 12 letras ou números; passaporte com 6 a 12.",
+        "phone_format": "Celular inválido: faltam dígitos.",
+        "email_format": "E-mail inválido.",
+        "email_must_be_gmail": "Precisa ser uma conta do Gmail.",
+        "birth_date_range": "Confira a data de nascimento.",
+        "operation_format": "Número de operação inválido.",
+        "invalid": "Confira este dado."
+      }
     },
     "national_id_type": {
       "DNI": "DNI",

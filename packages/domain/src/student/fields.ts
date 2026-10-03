@@ -1,0 +1,217 @@
+import { z } from "zod";
+
+/*
+ * The person-record field rules — one copy, read by `apps/api` (through the
+ * entity schemas in this folder) and by `apps/app` (the public checkout and the
+ * backoffice registration form, through the `@ooc/domain/fields` subpath).
+ *
+ * This file is imported raw by the Next.js bundle, so it stays self-contained:
+ * `zod` and nothing else, no relative import. A rule that needs more than that
+ * belongs in the entity, not here.
+ *
+ * Every rule answers with a code from `FIELD_ERROR_CODES`, never a sentence:
+ * the text lives in the locale files of whoever shows it (CLAUDE.md §4).
+ */
+
+export const NationalIdTypeSchema = z.enum(["DNI", "CE", "passport"]);
+export type NationalIdType = z.infer<typeof NationalIdTypeSchema>;
+
+export const FIELD_ERROR_CODES = [
+  "required",
+  "too_long",
+  "national_id_format",
+  "phone_format",
+  "email_format",
+  "email_must_be_gmail",
+  "birth_date_range",
+  "operation_format",
+  "invalid",
+] as const;
+
+export const FieldErrorCodeSchema = z.enum(FIELD_ERROR_CODES);
+export type FieldErrorCode = z.infer<typeof FieldErrorCodeSchema>;
+
+/** One refused field: the dotted path inside the request body and why. */
+export interface FieldError {
+  path: string;
+  code: FieldErrorCode;
+}
+
+/** Longest value each free-text field takes. Generous on purpose — they exist
+ * to stop a megabyte in a name column, not to second-guess a long surname. */
+export const FIELD_LIMITS = {
+  name: 80,
+  city: 80,
+  region: 80,
+  email: 254,
+  phone: 30,
+  methodDetail: 80,
+} as const;
+
+/* -------------------------------------------------------------------------- */
+/* Normalization — runs before every rule and before every write              */
+/* -------------------------------------------------------------------------- */
+
+/** Trimmed, with inner runs of whitespace folded to one space. */
+export function normalizeText(value: string): string {
+  return value.trim().replace(/\s+/g, " ");
+}
+
+export function normalizeEmail(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+/**
+ * Separators out, letters up. `12.345.678` and `12345678` are the same DNI,
+ * and the "one document, one record" lookup (CLAUDE.md §1, 21/09/2026)
+ * compares the stored string — two spellings would be two people.
+ */
+export function normalizeNationalId(value: string): string {
+  return value.replace(/[\s.\-]/g, "").toUpperCase();
+}
+
+/* -------------------------------------------------------------------------- */
+/* Rules                                                                      */
+/* -------------------------------------------------------------------------- */
+
+/** DNI is 8 digits; CE and passport are alphanumeric and vary by country. */
+const NATIONAL_ID_PATTERNS: Record<NationalIdType, RegExp> = {
+  DNI: /^\d{8}$/,
+  CE: /^[A-Z0-9]{9,12}$/,
+  passport: /^[A-Z0-9]{6,12}$/,
+};
+
+/** Format of an already-normalized document number, by type. */
+export function nationalIdIssue(type: NationalIdType, nationalId: string): FieldErrorCode | null {
+  if (nationalId === "") return "required";
+  return NATIONAL_ID_PATTERNS[type].test(nationalId) ? null : "national_id_format";
+}
+
+/**
+ * Digit floor for a mobile number. Deliberately low — the Asociación does
+ * enroll students abroad, and a rule that only knows Lima turns a paying
+ * student away at the last step.
+ */
+export const PHONE_MIN_DIGITS = 6;
+
+export function hasEnoughPhoneDigits(phone: string): boolean {
+  return phone.replace(/\D/g, "").length >= PHONE_MIN_DIGITS;
+}
+
+/**
+ * The student's address has to be a personal Gmail account (CLAUDE.md §1):
+ * class access arrives through Google Classroom. Which domains count, and
+ * whether the backoffice registration is held to it too, is OOC-65's call —
+ * this is the rule the public checkout already applied.
+ */
+export function isGmail(email: string): boolean {
+  return /@gmail\.com$/.test(normalizeEmail(email));
+}
+
+export const AGE_RANGE = { min: 0, max: 120 } as const;
+
+/** Full years old on `now`, UTC — the "has the birthday happened yet" rule. */
+export function ageOn(birthDate: Date, now: Date = new Date()): number {
+  let age = now.getUTCFullYear() - birthDate.getUTCFullYear();
+  const hasHadBirthdayThisYear =
+    now.getUTCMonth() > birthDate.getUTCMonth() ||
+    (now.getUTCMonth() === birthDate.getUTCMonth() && now.getUTCDate() >= birthDate.getUTCDate());
+  if (!hasHadBirthdayThisYear) age -= 1;
+  return age;
+}
+
+export function isPlausibleAge(age: number): boolean {
+  return age >= AGE_RANGE.min && age <= AGE_RANGE.max;
+}
+
+/** Operation numbers run 6–20 characters across Yape, Plin and the banks. */
+const OPERATION_NUMBER = /^[A-Za-z0-9-]{6,20}$/;
+
+/* -------------------------------------------------------------------------- */
+/* Field schemas — normalize, then check                                      */
+/* -------------------------------------------------------------------------- */
+
+const requiredText = (max: number) =>
+  z.string().transform(normalizeText).pipe(z.string().min(1, "required").max(max, "too_long"));
+
+export const PersonNameField = requiredText(FIELD_LIMITS.name);
+export const CityField = requiredText(FIELD_LIMITS.city);
+export const RegionField = requiredText(FIELD_LIMITS.region);
+export const MethodDetailField = requiredText(FIELD_LIMITS.methodDetail);
+
+export const EmailField = z
+  .string()
+  .transform(normalizeEmail)
+  .pipe(z.string().min(1, "required").max(FIELD_LIMITS.email, "too_long").email("email_format"));
+
+/** Format is checked against the type at object level (`refineNationalId`). */
+export const NationalIdField = z.string().transform(normalizeNationalId).pipe(z.string().min(1, "required"));
+
+export const PhoneField = z
+  .string()
+  .transform(normalizeText)
+  .pipe(
+    z
+      .string()
+      .min(1, "required")
+      .max(FIELD_LIMITS.phone, "too_long")
+      .refine(hasEnoughPhoneDigits, "phone_format"),
+  );
+
+export const BirthDateField = z.coerce
+  .date({ errorMap: () => ({ message: "birth_date_range" }) })
+  .refine((birthDate) => isPlausibleAge(ageOn(birthDate)), "birth_date_range");
+
+export const OperationNumberField = z
+  .string()
+  .transform((value) => value.trim())
+  .pipe(z.string().min(1, "required").regex(OPERATION_NUMBER, "operation_format"));
+
+/** Object-level: the document's format depends on its type. */
+export function refineNationalId(
+  value: { nationalIdType: NationalIdType; nationalId: string },
+  ctx: z.RefinementCtx,
+): void {
+  const code = nationalIdIssue(value.nationalIdType, value.nationalId);
+  // An empty number already failed as `required` on the field itself.
+  if (code && code !== "required") {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["nationalId"], message: code });
+  }
+}
+
+/** Object-level, public checkout only (see `isGmail`). */
+export function refineGmail(value: { email: string }, ctx: z.RefinementCtx): void {
+  if (!isGmail(value.email)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["email"], message: "email_must_be_gmail" });
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Reading the result                                                         */
+/* -------------------------------------------------------------------------- */
+
+const KNOWN_CODES = new Set<string>(FIELD_ERROR_CODES);
+
+/**
+ * Zod issues → `{path, code}`. Every rule above sets its code as the issue
+ * message; anything else zod raises on its own (a missing key, a wrong type, an
+ * enum outside its list) is `required` when the value is absent and `invalid`
+ * otherwise — the client is malformed, not the person.
+ */
+export function toFieldErrors(issues: readonly z.ZodIssue[], prefix?: string): FieldError[] {
+  return issues.map((issue) => {
+    const path = [...(prefix ? [prefix] : []), ...issue.path].join(".");
+    if (KNOWN_CODES.has(issue.message)) return { path, code: issue.message as FieldErrorCode };
+    if (issue.code === z.ZodIssueCode.invalid_type && issue.received === "undefined") {
+      return { path, code: "required" };
+    }
+    return { path, code: "invalid" };
+  });
+}
+
+/** The first problem with one value against one field schema, or null. */
+export function issueOf(schema: z.ZodTypeAny, value: unknown): FieldErrorCode | null {
+  const result = schema.safeParse(value);
+  if (result.success) return null;
+  return toFieldErrors(result.error.issues)[0]?.code ?? "invalid";
+}

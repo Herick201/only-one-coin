@@ -195,7 +195,19 @@
       "created": "Alumno registrado.",
       "submit_error": "No se pudo registrar al alumno. Intenta de nuevo.",
       "duplicate_error": "Ya hay un alumno registrado con este documento. Búscalo en el directorio: su ficha ya existe y la matrícula se abre sobre ella.",
-      "missing_fields": "Completa los campos obligatorios para registrar al alumno."
+      "missing_fields": "Completa los campos obligatorios para registrar al alumno.",
+      "invalid_error": "El sistema rechazó algunos datos. Corrige los campos marcados e intenta de nuevo.",
+      "error": {
+        "required": "Completa este campo.",
+        "too_long": "Es demasiado largo.",
+        "national_id_format": "Número inválido: DNI de 8 dígitos; carné de extranjería de 9 a 12 letras o números; pasaporte de 6 a 12.",
+        "phone_format": "Celular inválido: faltan dígitos.",
+        "email_format": "Correo inválido.",
+        "email_must_be_gmail": "Debe ser una cuenta de Gmail.",
+        "birth_date_range": "Revisa la fecha de nacimiento.",
+        "operation_format": "Número de operación inválido.",
+        "invalid": "Revisa este dato."
+      }
     },
     "national_id_type": {
       "DNI": "DNI",

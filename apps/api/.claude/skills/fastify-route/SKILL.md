@@ -70,7 +70,12 @@ who can do what, the `rbac-role-change` skill.
   the `HttpError` subclasses from `packages/domain`
   (`UnauthorizedError`/`ForbiddenError`/`NotFoundError`/`UnableToProcessEntryError`)
   — `infra/plugins/errorHandler.ts` maps them to the public envelope
-  `{status, reason, path?, errorId?}`. A raw message reaching the client is
+  `{status, reason, path?, errorId?, fields?}`. `fields` (`[{path, code}]`)
+  comes with `validation_error` only: a body the zod schema refused, or an
+  `InvalidFieldsError` from the domain. Build person fields from
+  `@ooc/domain`'s field schemas (`CreateStudentSchema`,
+  `GuardianFieldsSchema` + `refineNationalId`), never a bare `z.string()`,
+  so each refusal carries a code the client can translate. A raw message reaching the client is
   the exact bug class `CLAUDE.md` §4/§6 exist to prevent.
 - Anti-IDOR: never trust an id from `request.params`/`request.body` as
   sufficient authorization by itself — compare it against something derived
