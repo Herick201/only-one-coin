@@ -1614,8 +1614,8 @@
       "save": "Save changes",
       "cancel": "Discard",
       "saved_toast": "Changes applied on screen only. No server is connected yet.",
-      "receipts_saved_toast": "Saved: applies to the next receipts. Minimum confidence and reservation validity still change on screen only.",
-      "receipts_save_failed_toast": "Could not save the checkout hold. Try again."
+      "receipts_saved_toast": "Changes saved: they apply from now on. Minimum confidence and reservation validity still change on screen only.",
+      "receipts_save_failed_toast": "Could not save the changes. Check the values and try again."
     },
     "features": {
       "title": "Features",

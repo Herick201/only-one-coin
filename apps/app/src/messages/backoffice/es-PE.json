@@ -1614,8 +1614,8 @@
       "save": "Guardar cambios",
       "cancel": "Descartar",
       "saved_toast": "Cambios aplicados solo en pantalla. Todavía no hay servidor conectado.",
-      "receipts_saved_toast": "Guardado: vale para los próximos comprobantes. La confianza mínima y la vigencia de la reserva todavía se cambian solo en pantalla.",
-      "receipts_save_failed_toast": "No se pudo guardar la reserva durante el pago. Inténtalo de nuevo."
+      "receipts_saved_toast": "Cambios guardados: valen de aquí en adelante. La confianza mínima y la vigencia de la reserva todavía se cambian solo en pantalla.",
+      "receipts_save_failed_toast": "No se pudieron guardar los cambios. Revisa los valores e inténtalo de nuevo."
     },
     "features": {
       "title": "Funcionalidades",
