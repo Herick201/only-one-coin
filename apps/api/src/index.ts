@@ -40,6 +40,15 @@ const app = await buildApp();
 
 const connection = createRedisConnection(REDIS_URL);
 
+// The rate limit's own connection (OOC-24) is lazy so tests never dial
+// Redis, which made the first request after a boot pay for the TCP + AUTH
+// handshake — longer than its 250 ms command timeout, so that request's
+// counter always failed open with an error in the log. Dial it here instead.
+// Not fatal: a counter that cannot reach Redis lets the request through.
+await edge.redis.connect().catch((err: unknown) => {
+  logger.error({ err }, "edge redis did not connect at boot; rate limits fail open until it does");
+});
+
 // Outbox → queue → provider (apps/api/CLAUDE.md, "Notificações"). The relay
 // sweeps pending outbox rows onto the send-email queue; the send-email worker
 // delivers them through the guarded provider.
