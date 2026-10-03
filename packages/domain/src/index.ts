@@ -144,6 +144,18 @@ export {
   type ReceiptExtractionTier,
   type ReceiptImage,
 } from "./enrollment/ReceiptExtraction.js";
+export {
+  RECEIPT_VERDICTS,
+  RECEIPT_VERDICT_REASONS,
+  classifyReceiptAmount,
+  decideReceiptVerdict,
+  isReceiptVerdict,
+  isReceiptVerdictReason,
+  type ReceiptValidationSettings,
+  type ReceiptVerdict,
+  type ReceiptVerdictOutcome,
+  type ReceiptVerdictReason,
+} from "./enrollment/ReceiptValidation.js";
 export type {
   IReceiptExtractionRepository,
   IReceiptImageReader,
