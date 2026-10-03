@@ -65,6 +65,8 @@ describe("decideReceiptVerdict", () => {
       declaredOperationNumber: "08312457",
       readAmountCents: 15000,
       readOperationNumber: "08312457",
+      declaredMethod: "yape",
+      readMethod: "yape",
       settings: DEFAULTS,
       ...params,
     });
@@ -101,5 +103,31 @@ describe("decideReceiptVerdict", () => {
       reason: "far_below",
     });
     expect(decide({ readAmountCents: 14990, readOperationNumber: "999" })).toEqual({ verdict: "review", reason: "underpaid" });
+  });
+
+  it("reviews a green amount and number when the payment method was not read", () => {
+    expect(decide({ readMethod: null })).toEqual({ verdict: "review", reason: "payment_method_unread" });
+  });
+
+  it("reviews a green amount and number when the method read is not the declared one", () => {
+    expect(decide({ declaredMethod: "bcp", readMethod: "yape" })).toEqual({ verdict: "review", reason: "payment_method_mismatch" });
+  });
+
+  it("compares other by enum only", () => {
+    expect(decide({ declaredMethod: "other", readMethod: "other" })).toEqual({ verdict: "approve", reason: "exact" });
+  });
+
+  it("lets the amount speak before the method", () => {
+    expect(decide({ readAmountCents: 4000, declaredMethod: "bcp", readMethod: "yape" })).toEqual({
+      verdict: "reject_suggested",
+      reason: "far_below",
+    });
+  });
+
+  it("lets the operation number speak before the method", () => {
+    expect(decide({ readOperationNumber: "999", declaredMethod: "bcp", readMethod: "yape" })).toEqual({
+      verdict: "review",
+      reason: "operation_number_mismatch",
+    });
   });
 });

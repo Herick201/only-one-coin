@@ -1,3 +1,4 @@
+import type { PaymentMethod } from "./Payment.js";
 import { normalizeOperationNumber } from "./ReceiptScreening.js";
 
 /**
@@ -36,6 +37,13 @@ export const RECEIPT_VERDICT_REASONS = [
    * the person typed. Without this, a screenshot of another payment for the
    * same price would be approved unseen. */
   "operation_number_mismatch",
+  /** review — amount and number green, but no usable payment method was
+   * read. */
+  "payment_method_unread",
+  /** review — the method read is not the one declared — the operation-number
+   * guard is unique per method, so a screenshot of another method's payment
+   * would otherwise pass. */
+  "payment_method_mismatch",
 ] as const;
 export type ReceiptVerdictReason = (typeof RECEIPT_VERDICT_REASONS)[number];
 
@@ -82,14 +90,17 @@ export function classifyReceiptAmount(
 
 /**
  * The whole verdict for one receipt. The amount speaks first; only a green
- * amount goes on to the operation-number check, so a reviewer always sees
- * the money problem before anything else.
+ * amount goes on to the operation-number and then the payment-method check,
+ * so a reviewer always sees the money problem before anything else. `other`
+ * compares by enum only — the free-text detail is not compared.
  */
 export function decideReceiptVerdict(params: {
   expectedCents: number;
   declaredOperationNumber: string | null;
   readAmountCents: number | null;
   readOperationNumber: string | null;
+  declaredMethod: PaymentMethod;
+  readMethod: PaymentMethod | null;
   settings: ReceiptValidationSettings;
 }): ReceiptVerdictOutcome {
   if (params.readAmountCents === null) {
@@ -112,6 +123,13 @@ export function decideReceiptVerdict(params: {
   const declared = params.declaredOperationNumber === null ? "" : normalizeOperationNumber(params.declaredOperationNumber);
   if (read !== declared) {
     return { verdict: "review", reason: "operation_number_mismatch" };
+  }
+
+  if (params.readMethod === null) {
+    return { verdict: "review", reason: "payment_method_unread" };
+  }
+  if (params.readMethod !== params.declaredMethod) {
+    return { verdict: "review", reason: "payment_method_mismatch" };
   }
 
   return amount;

@@ -431,6 +431,8 @@
       "verdict_reason_amount_unread": "la IA no pudo leer el monto.",
       "verdict_reason_operation_number_unread": "el monto coincide, pero la IA no leyó el número de operación.",
       "verdict_reason_operation_number_mismatch": "el monto coincide, pero el número de operación leído no es el que declaró el alumno.",
+      "verdict_reason_payment_method_unread": "el monto y el número coinciden, pero la IA no leyó el medio de pago.",
+      "verdict_reason_payment_method_mismatch": "el monto y el número coinciden, pero el medio de pago leído no es el que declaró el alumno.",
       "decide_error": "No se pudo registrar la decisión. Inténtalo de nuevo; si sigue igual, avisa al equipo técnico.",
       "notice_already_settled": "Otra persona ya resolvió este pago, así que no queda nada por decidir aquí. La cola ya se actualizó.",
       "notice_not_found": "Este pago ya no está en la cola. La cola ya se actualizó.",

@@ -157,7 +157,7 @@ async function payment(
 async function receipt(
   tx: Tx,
   paymentId: string,
-  params: { screened?: boolean; read?: "read" | "failed" | "none"; createdAt?: Date } = {},
+  params: { screened?: boolean; read?: "read" | "failed" | "none"; createdAt?: Date; methodValue?: string } = {},
 ): Promise<string> {
   const n = ++sequence;
   const [hold] = await tx
@@ -189,7 +189,7 @@ async function receipt(
       modelName: "google/gemini-3.1-flash-lite",
       amountCents: 15000,
       operationNumber: "08312457",
-      extractedFields: [],
+      extractedFields: [{ field: "payment_method", value: params.methodValue ?? "yape", detail: null, confidence: 0.99 }],
     });
   } else if (read === "failed") {
     await tx.insert(paymentReceipts).values({
@@ -265,14 +265,29 @@ describe("listValidatableIds + findSubject", () => {
       expect(await repository.findSubject(notScreened)).toBeNull();
       expect(await repository.findSubject(notRead)).toBeNull();
       expect(await repository.findSubject(done)).toBeNull();
-      expect(await repository.findSubject(failedRead)).toMatchObject({ readAmountCents: null, readOperationNumber: null });
+      expect(await repository.findSubject(failedRead)).toMatchObject({
+        readAmountCents: null,
+        readOperationNumber: null,
+        readMethod: null,
+      });
       expect(await repository.findSubject(ready)).toMatchObject({
         paymentStatus: "pending",
         expectedCents: 15000,
         declaredOperationNumber: "08312457",
         readAmountCents: 15000,
         readOperationNumber: "08312457",
+        declaredMethod: "yape",
+        readMethod: "yape",
       });
+    });
+  });
+
+  it("reads a payment method outside the enum as not read", async () => {
+    await rolledBack(async (tx) => {
+      const repository = new DrizzleReceiptValidationRepository(tx as unknown as Db);
+      const uploadId = await receipt(tx, (await payment(tx)).paymentId, { methodValue: "visa" });
+
+      expect(await repository.findSubject(uploadId)).toMatchObject({ declaredMethod: "yape", readMethod: null });
     });
   });
 });

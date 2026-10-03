@@ -1,6 +1,6 @@
 import type { AuditLogEntry } from "../identity/ports/IAuditLogRepository.js";
 import type { EmailNotification } from "../notification/EmailNotification.js";
-import type { PaymentStatus } from "./Payment.js";
+import type { PaymentMethod, PaymentStatus } from "./Payment.js";
 import type { ReceiptValidationSettings, ReceiptVerdictOutcome, ReceiptVerdictReason } from "./ReceiptValidation.js";
 
 /** A receipt ready for the traffic light: screened (level 0) and read at
@@ -19,6 +19,10 @@ export interface ReceiptValidationSubject {
   /** `null` when the reading failed or found no amount. */
   readAmountCents: number | null;
   readOperationNumber: string | null;
+  /** `payments.method` — what the person declared at checkout. */
+  declaredMethod: PaymentMethod;
+  /** `null` when the reading failed or found no usable method. */
+  readMethod: PaymentMethod | null;
 }
 
 /** Stored with the verdict (`receipt_uploads.validation_detail`): what it was

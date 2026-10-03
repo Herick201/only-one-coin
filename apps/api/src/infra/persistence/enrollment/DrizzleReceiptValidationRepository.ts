@@ -1,6 +1,8 @@
 import {
   RECEIPT_EXTRACTION_TIER_PRIMARY,
+  PaymentMethodSchema,
   type IReceiptValidationRepository,
+  type PaymentMethod,
   type PaymentStatus,
   type ReceiptValidationEffect,
   type ReceiptValidationSubject,
@@ -9,6 +11,17 @@ import { auditLog, enrollments, paymentReceipts, payments, receiptUploads } from
 import { and, eq, isNotNull, isNull, sql } from "drizzle-orm";
 import type { Db } from "@/infra/db/client.js";
 import { insertOutboxEmails } from "@/infra/persistence/notification/DrizzleOutboxRepository.js";
+
+/** The `payment_method` entry of `extracted_fields`, read defensively — a
+ * value outside the enum counts as not read. */
+function readPaymentMethod(fields: unknown): PaymentMethod | null {
+  if (!Array.isArray(fields)) return null;
+  const entry = fields.find(
+    (item): item is { value?: unknown } => typeof item === "object" && item !== null && (item as { field?: unknown }).field === "payment_method",
+  );
+  const parsed = PaymentMethodSchema.safeParse(entry?.value);
+  return parsed.success ? parsed.data : null;
+}
 
 /**
  * The receipt traffic light's writes (OOC-21). The automatic approval
@@ -31,6 +44,8 @@ export class DrizzleReceiptValidationRepository implements IReceiptValidationRep
         paymentStatus: payments.status,
         expectedCents: payments.amountCents,
         declaredOperationNumber: payments.operationNumber,
+        declaredMethod: payments.method,
+        extractedFields: paymentReceipts.extractedFields,
         readAmountCents: paymentReceipts.amountCents,
         readOperationNumber: paymentReceipts.operationNumber,
       })
@@ -48,7 +63,14 @@ export class DrizzleReceiptValidationRepository implements IReceiptValidationRep
       )
       .limit(1);
 
-    return row ? { ...row, paymentStatus: row.paymentStatus as PaymentStatus } : null;
+    if (!row) return null;
+    const { extractedFields, ...rest } = row;
+    return {
+      ...rest,
+      paymentStatus: row.paymentStatus as PaymentStatus,
+      declaredMethod: row.declaredMethod as PaymentMethod,
+      readMethod: readPaymentMethod(extractedFields),
+    };
   }
 
   async record(params: Parameters<IReceiptValidationRepository["record"]>[0]): Promise<ReceiptValidationEffect> {

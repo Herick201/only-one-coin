@@ -431,6 +431,8 @@
       "verdict_reason_amount_unread": "a IA não conseguiu ler o valor.",
       "verdict_reason_operation_number_unread": "o valor confere, mas a IA não leu o número de operação.",
       "verdict_reason_operation_number_mismatch": "o valor confere, mas o número de operação lido não é o que o aluno declarou.",
+      "verdict_reason_payment_method_unread": "o valor e o número conferem, mas a IA não leu o meio de pagamento.",
+      "verdict_reason_payment_method_mismatch": "o valor e o número conferem, mas o meio de pagamento lido não é o que o aluno declarou.",
       "decide_error": "Não foi possível registrar a decisão. Tente de novo; se continuar igual, avise a equipe técnica.",
       "notice_already_settled": "Outra pessoa já decidiu este pagamento, então não há mais nada a decidir aqui. A fila já foi atualizada.",
       "notice_not_found": "Este pagamento não está mais na fila. A fila já foi atualizada.",

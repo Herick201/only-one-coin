@@ -79,6 +79,8 @@ function subject(overrides: Partial<ReceiptValidationSubject> = {}): ReceiptVali
     declaredOperationNumber: "08312457",
     readAmountCents: 15000,
     readOperationNumber: "08312457",
+    declaredMethod: "yape",
+    readMethod: "yape",
     ...overrides,
   };
 }
@@ -147,6 +149,15 @@ describe("ValidateReceiptUseCase", () => {
 
     expect(result.outcome).toEqual({ verdict: "review", reason: "amount_unread" });
     expect(repository.recorded[0]!.detail.readCents).toBeNull();
+  });
+
+  it("sends a green amount to review when the method read is not the declared one", async () => {
+    const repository = new FakeValidationRepository(subject({ readMethod: "bcp" }));
+
+    const result = await useCase(repository).run({ receiptUploadId: UPLOAD });
+
+    expect(result.outcome).toEqual({ verdict: "review", reason: "payment_method_mismatch" });
+    expect(repository.recorded[0]!.approval).toBeNull();
   });
 
   it("does nothing when there is nothing to validate", async () => {

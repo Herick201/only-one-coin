@@ -981,6 +981,8 @@ export type ReceiptVerdictReason =
   | 'amount_unread'
   | 'operation_number_unread'
   | 'operation_number_mismatch'
+  | 'payment_method_unread'
+  | 'payment_method_mismatch'
 
 export interface ReviewVerdict {
   verdict: ReceiptVerdict

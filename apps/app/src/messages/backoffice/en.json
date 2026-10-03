@@ -431,6 +431,8 @@
       "verdict_reason_amount_unread": "the AI could not read the amount.",
       "verdict_reason_operation_number_unread": "the amount matches, but the AI did not read the operation number.",
       "verdict_reason_operation_number_mismatch": "the amount matches, but the operation number read is not the one the student declared.",
+      "verdict_reason_payment_method_unread": "the amount and number match, but the AI did not read the payment method.",
+      "verdict_reason_payment_method_mismatch": "the amount and number match, but the payment method read is not the one the student declared.",
       "decide_error": "The decision could not be recorded. Try again; if nothing changes, tell the tech team.",
       "notice_already_settled": "Someone else already decided this payment, so there is nothing left to decide here. The queue was refreshed.",
       "notice_not_found": "This payment is no longer in the queue. The queue was refreshed.",

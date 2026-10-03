@@ -33,6 +33,14 @@ backoffice (`settings/receipts`), mas é mock — o servidor só conhece
    com o digitado (normalizado com `normalizeOperationNumber`). Não lido ou
    divergente → revisão. Sem isso, um print de outro pagamento do mesmo preço
    seria aprovado sozinho.
+6. **Trava do meio de pagamento no verde** (regra do controlador na revisão
+   final, 03/10/2026, a confirmar com o dono): o meio que a IA leu tem que ser
+   o `payments.method` declarado. A trava do nº de operação é única **por
+   meio**, então um print de Yape (S/150, nº N) reenviado como `bcp` + N
+   passaria no submit, seria lido como 150 e N e aprovado sozinho. Vem depois
+   do nº de operação (valor → nº → meio). Meio não lido → `payment_method_unread`;
+   lido diferente do declarado → `payment_method_mismatch`; ambos revisão.
+   `other` compara só o enum, nunca o texto livre.
 
 ## 1. A regra — `packages/domain/src/enrollment/ReceiptValidation.ts`
 
@@ -49,7 +57,9 @@ type ReceiptVerdictReason =
   | "far_below"                  // reject_suggested — abaixo de X%
   | "amount_unread"              // review — valor nulo ou leitura falhou
   | "operation_number_unread"    // review — valor ok, nº não lido
-  | "operation_number_mismatch"; // review — valor ok, nº diverge
+  | "operation_number_mismatch"  // review — valor ok, nº diverge
+  | "payment_method_unread"      // review — valor e nº ok, meio não lido
+  | "payment_method_mismatch";   // review — valor e nº ok, meio lido ≠ declarado
 ```
 
 - `classifyReceiptAmount({ expectedCents, readCents, toleranceCents,
@@ -57,8 +67,9 @@ type ReceiptVerdictReason =
   `readCents * 100 < expectedCents * rejectBelowPercent` (comparação estrita:
   exatamente X% é amarelo).
 - `decideReceiptVerdict({ expectedCents, declaredOperationNumber, reading,
-  settings })` compõe: leitura falhou ou valor nulo → `amount_unread`; senão
-  classifica o valor; **só se o valor deu verde**, confere o nº de operação.
+  declaredMethod, readMethod, settings })` compõe: leitura falhou ou valor nulo → `amount_unread`; senão
+  classifica o valor; **só se o valor deu verde**, confere o nº de operação e, só se ele bateu, o
+  meio de pagamento (`declaredMethod` × `readMethod`).
   Vermelho e amarelo de valor não olham o nº (o motivo do valor é o que o
   revisor precisa ver primeiro).
 - O valor esperado é `payments.amount_cents` — o preço congelado na matrícula

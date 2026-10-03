@@ -63,6 +63,8 @@ export class ValidateReceiptUseCase extends BaseUseCase<ValidateReceiptInput, Va
       declaredOperationNumber: subject.declaredOperationNumber,
       readAmountCents: subject.readAmountCents,
       readOperationNumber: subject.readOperationNumber,
+      declaredMethod: subject.declaredMethod,
+      readMethod: subject.readMethod,
       settings,
     });
 
