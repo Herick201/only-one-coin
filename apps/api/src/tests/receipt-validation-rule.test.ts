@@ -20,7 +20,7 @@ describe("classifyReceiptAmount — the done criteria", () => {
     expect(classify(15000)).toEqual({ verdict: "approve", reason: "exact" });
   });
 
-  it("sends cents short to review — a shortfall is never approved on its own", () => {
+  it("sends cents short to review — a shortfall is never green", () => {
     expect(classify(14990)).toEqual({ verdict: "review", reason: "underpaid" });
   });
 

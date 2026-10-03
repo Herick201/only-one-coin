@@ -10,12 +10,12 @@ export interface UpdateReceiptAmountToleranceInput {
 }
 
 /**
- * How far above the plan price a receipt still approves on its own (OOC-21,
+ * How far above the plan price a receipt is still green (OOC-21,
  * apps/api/CLAUDE.md: "Tolerância de validação configurável no backoffice").
  * Applies to the next validation; a verdict already recorded keeps the
  * tolerance it was decided with (`receipt_uploads.validation_detail`).
  *
- * Audited: this number decides which money enters unseen.
+ * Audited: this number decides which receipts the reviewer sees as green.
  */
 export class UpdateReceiptAmountToleranceUseCase extends BaseUseCase<
   UpdateReceiptAmountToleranceInput,

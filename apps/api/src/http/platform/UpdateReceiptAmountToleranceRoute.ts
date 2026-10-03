@@ -14,7 +14,7 @@ const ResponseSchema = z.object({
 });
 
 /**
- * How far above the plan price a receipt still approves on its own (OOC-21).
+ * How far above the plan price a receipt is still green (OOC-21).
  * Management only, like the rest of the settings screen. Applies to the next
  * validation; writes audit_log.
  */

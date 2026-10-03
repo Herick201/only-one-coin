@@ -920,7 +920,8 @@ export const platformSettings = pgTable(
   {
     id: boolean("id").primaryKey().default(true),
     checkoutHoldMinutes: integer("checkout_hold_minutes").notNull().default(15),
-    // OOC-21: how far ABOVE the expected amount still approves on its own.
+    // OOC-21: how far ABOVE the expected amount is still green (it only
+    // validates — a person approves).
     // Never below — "Sem descontos. Nunca." (CLAUDE.md §1).
     receiptAmountToleranceCents: integer("receipt_amount_tolerance_cents").notNull().default(0),
     // OOC-21: below this percentage of the expected amount, rejection is

@@ -62,7 +62,7 @@ src/
     receipt-upload-relay.worker.ts  # a cada 5 s oferece comprovantes `uploaded` ao normalize e os `processed` + ligados a pagamento ao screen
     receipt-normalize.worker.ts     # magic bytes, HEIC, downscale/cinza/strip EXIF + impressão digital (sha256, pHash, EXIF)
     receipt-screen.worker.ts        # antifraude nível 0: compara com comprovantes de outros pagamentos, grava os sinais
-    receipt-validate.worker.ts      # semáforo (OOC-21): compara valor e nº de operação lidos com o esperado; verde aprova pagamento pendente, o resto vai pra revisão
+    receipt-validate.worker.ts      # semáforo (OOC-21): compara valor, nº de operação e meio lidos com o esperado; só valida (verde fica pendente), o resto vai pra revisão
   infra/
     db/client.ts                  # pg.Pool + drizzle(), aponta pro Postgres local ou Neon via DATABASE_URL
     logger.ts                     # pino compartilhado (container.logger)
