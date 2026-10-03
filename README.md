@@ -320,7 +320,7 @@ o que é real:
 | --- | --- |
 | Alunos (`/backoffice/students`) | **Real**: listagem (sem quem só tem matrícula reservada), ficha e criação chamam a API. Edição é stub de frontend (fica em estado local; a escrita real ainda não existe) |
 | Matrículas (`/backoffice/enrollments`) | **Real**: só vagas confirmadas (quem pagou e foi aprovado), busca/filtros e abertura manual, que avisa que a matrícula foi enviada a Pagos (`GET`/`POST /api/v1/enrollments`). A aba Reservas foi removida |
-| Pagamentos e fila de revisão (`/backoffice/payments`, `/payments/review`) | **Real** (OOC-55): livro e fila leem `GET /api/v1/payments` e `/payments/review`; o comprovante abre por URL assinada (`audit_log`); aprovar (vaga `reserved → confirmed`) e rejeitar com motivo (vaga devolvida à turma) gravam e disparam o e-mail. O diálogo de revisão mostra a **leitura da IA** do comprovante (OOC-20): os cinco campos com a confiança de cada um, ou que a leitura falhou ou ainda não aconteceu — só exibição, sem semáforo. Fora: credenciais do portal na aprovação, cron da janela de 5 dias, comparação automática da leitura com o preço (Sessão 27), trâmites (constancia), ação em lote, ordenação por confiança e atalhos de teclado. O painel inicial (Home) continua mock |
+| Pagamentos e fila de revisão (`/backoffice/payments`, `/payments/review`) | **Real** (OOC-55): livro e fila leem `GET /api/v1/payments` e `/payments/review`; o comprovante abre por URL assinada (`audit_log`); aprovar (vaga `reserved → confirmed`) e rejeitar com motivo (vaga devolvida à turma) gravam e disparam o e-mail. O diálogo de revisão mostra a **leitura da IA** do comprovante (OOC-20): os cinco campos com a confiança de cada um, ou que a leitura falhou ou ainda não aconteceu — e o **veredito do semáforo** (OOC-21), em texto. Fora: credenciais do portal na aprovação, cron da janela de 5 dias, trâmites (constancia), ação em lote, ordenação por confiança e atalhos de teclado. O painel inicial (Home) continua mock |
 | Cursos (`/backoffice/courses`) | **Real**: lista (aposentados inclusos, sinalizados), criar curso, opções (resumo, regra de certificado, congelamento, transferência), sair do catálogo/voltar com aviso de matrícula viva, e planos com preço agendado (`/api/v1/catalog`, com `audit_log`). A coluna `courses.local_only` deixou de existir |
 | Turmas (`/backoffice/class-groups`) | **Real**: lista por período, períodos (criar, duplicar), criar/editar turma, rascunho e ciclo de vida (`draft → enrolling → in_progress → finished → closed`), ficha da turma e lista de espera manual (`/api/v1/catalog`, com `audit_log`). Continua mock: visão do docente (precisa de `teachers`, Sessão 36), roster, notas e certificados |
 | Docentes (`/backoffice/teachers`) | Mock — não existe tabela `teachers` ainda (decisão deliberada, `docs/ROADMAP.md` Sessão 36) |
@@ -414,18 +414,20 @@ o que é real:
   JSON schema e grava em `payment_receipts` os cinco campos (valor, nº de
   operação, meio, titular, data) com confiança por campo, nível, modelo e
   versão servida. Falha técnica é retentada 3x com backoff (nível 1r);
-  esgotadas, a linha é gravada com `failure_reason`. **Só lê, não decide:**
-  nenhum status muda pela leitura — a comparação com o preço é a Sessão 27, a
-  escalada pro nível 2 é a Sessão 29 (o modelo dele já se configura e se mede,
-  mas nada escala). A leitura aparece no diálogo de revisão de Pagos e no
+  esgotadas, a linha é gravada com `failure_reason`. **Só lê:**
+  quem decide é o semáforo (abaixo); a escalada pro nível 2 é a Sessão 29 (o
+  modelo dele já se configura e se mede, mas nada escala). A leitura aparece no diálogo de revisão de Pagos e no
   terminal com `pnpm --filter @ooc/api ocr:show`. Sem
   `OPENROUTER_API_KEY` o worker não sobe e os comprovantes ficam sem leitura. Taxa de acerto medida em [`docs/OCR-AVALIACAO.md`](docs/OCR-AVALIACAO.md).
+  **Semáforo do comprovante (OOC-21):** compara o valor lido com o preço
+  congelado sob tolerância (só pra cima) e limite de rejeição configuráveis no
+  backoffice; verde aprova sozinho pagamento pendente, amarelo e vermelho vão
+  pra revisão — vermelho como rejeição sugerida.
 
 **Autorização e domínio de negócio já não dependem de Neon de staging/produção
 provisionado** — rodam sobre o Postgres local. **A reconstruir** quando
 staging/produção tiverem seus próprios dados de verdade: OCR e notificações
 reais (o comprovante do checkout público já sobe via signed URL, é
-normalizado e lido pelo nível 1 da OCR — acima —, mas a leitura ainda não
-decide nada; não há envio de e-mail real —
+normalizado e lido pelo nível 1 da OCR — acima —, mas só o semáforo decide, e só o verde; não há envio de e-mail real —
 `send-email.worker.ts` só loga o payload). Autorização é feita na camada de
 aplicação (`apps/api`), não em RLS — ver `CLAUDE.md` §8.
