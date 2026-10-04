@@ -8,7 +8,7 @@ const COMMAND_TIMEOUT_MS = 250;
  * The connection the HTTP edge (rate limit, idempotency cache) uses — same
  * Redis as the queue, different contract: a request must not hang on it.
  * `lazyConnect` so building the container (tests do, at import) never dials
- * Redis; the first command does. Keys go under `ooc:` by hand (QUEUE_PREFIX),
+ * Redis; index.ts connects it at boot, so no request pays for the handshake. Keys go under `ooc:` by hand (QUEUE_PREFIX),
  * never through ioredis's `keyPrefix`: the ACL user only reaches `ooc:*`.
  */
 export function createEdgeRedis(redisUrl: string, logger: FastifyBaseLogger): Redis {
