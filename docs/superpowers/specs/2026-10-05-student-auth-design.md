@@ -46,6 +46,9 @@ vira auto-cadastro no instante em que o login do aluno for real.
   documento normalizado) apontam pra mesma conta. Quando o índice único de
   documento existir (consolidação das duplicatas, `CLAUDE.md` §1), isso se
   resolve sozinho.
+- **`students_portal_national_id_idx`**: índice de expressão sobre o documento
+  normalizado em SQL (só fichas com conta), que serve a busca do login por
+  documento sem depender de a ficha ter sido gravada normalizada.
 - **`portal_access_tokens`**: `id uuid`, `user_id text` (FK → `"user"`),
   `token_hash text` único, `purpose text` (`activation` | `reset`, CHECK),
   `expires_at timestamptz`, `used_at timestamptz` nulo, `created_at timestamptz`.
@@ -122,8 +125,10 @@ Audit `portal_access.issued` (com o caso). A ficha do aluno mostra o estado:
    mesmo 401** de credencial errada — nunca um 400 que diga o campo.
 2. **Resolução no servidor** (`IStudentCredentialLookup`):
    - e-mail → `normalizeEmail` → `"user"` com `role = 'student'` e não banido;
-   - documento → `normalizeNationalId` → `students` com `user_id` preenchido e
-     `deleted_at is null` → `"user"` (mesmos filtros).
+   - documento → `students` com `user_id` preenchido e `deleted_at is null` (a
+     busca exige ficha viva ligada à conta) → `"user"` (mesmos filtros). A
+     comparação normaliza em SQL, então fichas gravadas antes da OOC-64 também
+     entram.
    - Não achou → e-mail sentinela que nunca existe (`no-account@invalid.local`).
 3. **Delegação:** `auth.api.signInEmail({ body: { email, password }, returnHeaders: true })`;
    repassa o `Set-Cookie`. Staff que tente pela porta do portal cai no sentinela.
@@ -170,8 +175,8 @@ convite e de recuperação do staff, que hoje aceitam `min(8)`, passam a usar a
 ## 6. Sessão do aluno no resto da API
 
 `GET /api/v1/portal/me` — `.roles("student")`, a primeira rota com papel de
-aluno. Devolve `{ name, email }` da ficha ligada à conta (a mais recente não
-aposentada, quando há duplicatas). O `/me` do staff segue recusando aluno.
+aluno. Devolve `{ firstName, lastName, email }` da ficha ligada à conta (a mais
+recente não aposentada, quando há duplicatas); conta `student` sem ficha → 403. O `/me` do staff segue recusando aluno.
 
 ## 7. Front (`apps/app`)
 
@@ -234,6 +239,9 @@ aposentada, quando há duplicatas). O `/me` do staff segue recusando aluno.
 ## Fora
 
 Dados reais do portal (cursos, pagamentos, trâmites); MFA do staff; conta de
-apoderado; índice único de documento e normalização das fichas antigas (com o
-documento cru, essas fichas não casam pela porta do documento até a
-consolidação — a porta do e-mail funciona).
+apoderado; índice único de documento e consolidação das duplicatas.
+
+Limitações conhecidas: o contador por identificador do sign-in aceita tipo de
+documento em texto livre (limitado pelo teto por IP); o cooldown da recuperação
+é checado sem trava, então um duplo envio simultâneo pode emitir dois tokens
+(só o último vale).
