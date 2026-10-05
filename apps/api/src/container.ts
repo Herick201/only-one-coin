@@ -80,6 +80,7 @@ import { TurnstileCaptchaVerifier, type CaptchaVerifier } from "./infra/edge/Tur
 import { createAuth, type Auth } from "./infra/auth/betterAuth.js";
 import { BetterAuthCurrentSessionPort } from "./infra/identity/BetterAuthCurrentSessionPort.js";
 import { BetterAuthFreshAuthVerifier } from "./infra/identity/BetterAuthFreshAuthVerifier.js";
+import { PortalLinkBuilder } from "./infra/identity/PortalLinkBuilder.js";
 import { BackofficePasswordResetLinkBuilder } from "./infra/identity/BackofficePasswordResetLinkBuilder.js";
 import { BetterAuthStaffAccountProvisioner } from "./infra/identity/BetterAuthStaffAccountProvisioner.js";
 import { BetterAuthStaffPasswordSetter } from "./infra/identity/BetterAuthStaffPasswordSetter.js";
@@ -433,7 +434,8 @@ function buildContainer(): AppContainer {
   const joinWaitlist = new JoinWaitlistUseCase(classGroupRepository, waitlistRepository, auditLogRepository);
   const leaveWaitlist = new LeaveWaitlistUseCase(waitlistRepository, auditLogRepository);
 
-  const settlePayment = new SettlePaymentUseCase(paymentSettlementRepository, enrollmentEmailContextLookup);
+  const portalLinkBuilder = new PortalLinkBuilder(config.PORTAL_PUBLIC_URL);
+  const settlePayment = new SettlePaymentUseCase(paymentSettlementRepository, enrollmentEmailContextLookup, portalLinkBuilder);
 
   const receiptValidationRepository = new DrizzleReceiptValidationRepository(db);
   const validateReceipt = new ValidateReceiptUseCase(

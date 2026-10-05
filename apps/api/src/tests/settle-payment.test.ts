@@ -6,7 +6,11 @@ import {
   type EnrollmentEmailContext,
   type IEnrollmentEmailContextLookup,
   type IPaymentSettlementRepository,
+  type IPortalLinkBuilder,
+  type Locale,
   type PaymentToSettle,
+  type PortalAccessOutcome,
+  type PortalAccount,
 } from "@ooc/domain";
 import { beforeEach, describe, expect, it } from "vitest";
 
@@ -21,6 +25,7 @@ const PAYMENT = "018f2b5c-0000-7000-8000-00000000p001";
 
 class FakeSettlementRepository implements IPaymentSettlementRepository {
   public settled: Parameters<IPaymentSettlementRepository["settle"]>[0][] = [];
+  public portalOutcome: PortalAccessOutcome = "created";
   constructor(public target: PaymentToSettle | null) {}
 
   async findForSettlement(): Promise<PaymentToSettle | null> {
@@ -31,7 +36,13 @@ class FakeSettlementRepository implements IPaymentSettlementRepository {
     this.settled.push(params);
     const seatStatus =
       this.target!.seatStatus === "reserved" ? (params.to === "approved" ? "confirmed" : "released") : this.target!.seatStatus;
-    return { seatStatus };
+    return { seatStatus, portalAccess: params.portalAccess ? this.portalOutcome : null };
+  }
+}
+
+class FakePortalLinkBuilder implements IPortalLinkBuilder {
+  access(token: string, locale: Locale) {
+    return `https://student.test/${locale}/access/${token}`;
   }
 }
 
@@ -66,16 +77,50 @@ let useCase: SettlePaymentUseCase;
 
 beforeEach(() => {
   repository = new FakeSettlementRepository(target());
-  useCase = new SettlePaymentUseCase(repository, new FakeEmailContextLookup(MINOR_CONTEXT));
+  useCase = new SettlePaymentUseCase(repository, new FakeEmailContextLookup(MINOR_CONTEXT), new FakePortalLinkBuilder());
 });
 
 describe("SettlePaymentUseCase", () => {
   it("approves an open payment and confirms the seat", async () => {
     const result = await useCase.run({ actorId: ACTOR, paymentId: PAYMENT, decision: { kind: "approve" } });
 
-    expect(result).toEqual({ paymentId: PAYMENT, status: "approved", seatStatus: "confirmed" });
+    expect(result).toEqual({ paymentId: PAYMENT, status: "approved", seatStatus: "confirmed", portalAccess: "created" });
     expect(repository.settled[0]!.to).toBe("approved");
     expect(repository.settled[0]!.audit).toMatchObject({ actorId: ACTOR, action: "payment.approved", targetId: PAYMENT });
+  });
+
+  it("asks for the student's portal account on approval, with a credentials e-mail behind a link", async () => {
+    await useCase.run({ actorId: ACTOR, paymentId: PAYMENT, decision: { kind: "approve" } });
+
+    const request = repository.settled[0]!.portalAccess!;
+    expect(request.studentId).toBe(target().studentId);
+    expect(request.actorId).toBe(ACTOR);
+    expect(request.activation.purpose).toBe("activation");
+
+    const account: PortalAccount = { userId: "usr_ana", email: "ana@gmail.com", name: "Ana Quispe", hasPassword: false };
+    expect(request.notify(account, "tok_1")).toEqual([
+      expect.objectContaining({
+        templateKey: "portal_credentials",
+        to: "ana@gmail.com",
+        vars: expect.objectContaining({ accessUrl: `https://student.test/es-PE/access/${request.activation.token}` }),
+      }),
+    ]);
+  });
+
+  it("never asks for an account on a rejection", async () => {
+    const result = await useCase.run({
+      actorId: ACTOR,
+      paymentId: PAYMENT,
+      decision: { kind: "reject", reason: "illegible", note: "" },
+    });
+    expect(repository.settled[0]!.portalAccess).toBeNull();
+    expect(result.portalAccess).toBeNull();
+  });
+
+  it("passes an e-mail conflict through without failing the approval", async () => {
+    repository.portalOutcome = "email_conflict";
+    const result = await useCase.run({ actorId: ACTOR, paymentId: PAYMENT, decision: { kind: "approve" } });
+    expect(result).toMatchObject({ status: "approved", seatStatus: "confirmed", portalAccess: "email_conflict" });
   });
 
   it("tells the student and, for a minor, the guardian", async () => {

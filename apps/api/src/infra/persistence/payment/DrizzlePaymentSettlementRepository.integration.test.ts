@@ -1,6 +1,12 @@
 import * as schema from "@ooc/db";
 import { academicPeriods, auditLog, classGroups, courses, enrollments, outbox, payments, planPrices, plans, students } from "@ooc/db";
-import { PaymentAlreadySettledError, PaymentSeatReleasedError, type AuditLogEntry } from "@ooc/domain";
+import {
+  newPortalToken,
+  PaymentAlreadySettledError,
+  PaymentSeatReleasedError,
+  portalCredentialsEmail,
+  type AuditLogEntry,
+} from "@ooc/domain";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
@@ -84,7 +90,7 @@ let sequence = 0;
 async function openPayment(
   tx: Tx,
   params: { seatStatus?: "reserved" | "confirmed" | "released"; status?: string } = {},
-): Promise<{ paymentId: string; enrollmentId: string }> {
+): Promise<{ paymentId: string; enrollmentId: string; studentId: string }> {
   sequence += 1;
   const [student] = await tx
     .insert(students)
@@ -115,7 +121,7 @@ async function openPayment(
       operationNumber: `OPSETTLE${sequence}${Date.now()}`,
     })
     .returning({ id: payments.id });
-  return { paymentId: payment!.id, enrollmentId: enrollment!.id };
+  return { paymentId: payment!.id, enrollmentId: enrollment!.id, studentId: student!.id };
 }
 
 function audit(paymentId: string, action: string): AuditLogEntry {
@@ -159,6 +165,7 @@ describe("DrizzlePaymentSettlementRepository", () => {
           },
         ],
         audit: audit(paymentId, "payment.approved"),
+        portalAccess: null,
       });
 
       expect(result.seatStatus).toBe("confirmed");
@@ -184,6 +191,7 @@ describe("DrizzlePaymentSettlementRepository", () => {
         to: "rejected",
         notifications: [],
         audit: audit(paymentId, "payment.rejected"),
+        portalAccess: null,
       });
 
       expect(result.seatStatus).toBe("released");
@@ -195,7 +203,7 @@ describe("DrizzlePaymentSettlementRepository", () => {
     await rolledBack(async (tx) => {
       const repository = new DrizzlePaymentSettlementRepository(tx as unknown as Db);
       const { paymentId, enrollmentId } = await openPayment(tx);
-      const params = { paymentId, enrollmentId, classGroupId: GROUP, notifications: [] };
+      const params = { paymentId, enrollmentId, classGroupId: GROUP, notifications: [], portalAccess: null };
 
       await repository.settle({ ...params, to: "rejected", audit: audit(paymentId, "payment.rejected") });
       await expect(
@@ -221,6 +229,7 @@ describe("DrizzlePaymentSettlementRepository", () => {
           to: "approved",
           notifications: [],
           audit: audit(paymentId, "payment.approved"),
+          portalAccess: null,
         }),
       ).rejects.toBeInstanceOf(PaymentSeatReleasedError);
 
@@ -241,10 +250,41 @@ describe("DrizzlePaymentSettlementRepository", () => {
         to: "rejected",
         notifications: [],
         audit: audit(paymentId, "payment.rejected"),
+        portalAccess: null,
       });
 
       expect(result.seatStatus).toBe("confirmed");
       expect(await seatsTaken(tx)).toBe(1);
+    });
+  });
+
+  it("creates the student's portal account with the approval, and rolls it back with it", async () => {
+    await rolledBack(async (tx) => {
+      const { paymentId, enrollmentId, studentId } = await openPayment(tx);
+      const repository = new DrizzlePaymentSettlementRepository(tx as unknown as Db);
+      const activation = newPortalToken("activation");
+
+      const result = await repository.settle({
+        paymentId,
+        enrollmentId,
+        classGroupId: GROUP,
+        to: "approved",
+        notifications: [],
+        audit: audit(paymentId, "payment.approved"),
+        portalAccess: {
+          studentId,
+          actorId: "usr_billing",
+          activation,
+          at: new Date(),
+          notify: (account, tokenId) => [portalCredentialsEmail(account, "https://student.test/access/x", tokenId, "es-PE")],
+        },
+      });
+
+      expect(result).toEqual({ seatStatus: "confirmed", portalAccess: "created" });
+      const [student] = await tx.select({ userId: students.userId }).from(students).where(eq(students.id, studentId));
+      expect(student!.userId).toBeTruthy();
+      const mails = await tx.select().from(outbox).where(eq(outbox.templateKey, "portal_credentials"));
+      expect(mails).toHaveLength(1);
     });
   });
 });

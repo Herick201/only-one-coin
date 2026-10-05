@@ -1,5 +1,8 @@
 import { DEFAULT_LOCALE } from "../notification/EmailNotification.js";
 import { paymentApprovedEmails, paymentRejectedEmails } from "../notification/enrollmentEmails.js";
+import { newPortalToken, type PortalAccessOutcome } from "../identity/portal/PortalAccess.js";
+import { portalCredentialsEmail } from "../identity/portal/portalEmails.js";
+import type { IPortalLinkBuilder, PortalAccountProvisioning } from "../identity/portal/ports.js";
 import { BaseUseCase } from "../shared/base/BaseUseCase.js";
 import type { SeatStatus } from "./Enrollment.js";
 import type { IEnrollmentEmailContextLookup } from "./EnrollmentEmailContextLookup.js";
@@ -16,6 +19,7 @@ export interface SettlePaymentOutput {
   paymentId: string;
   status: "approved" | "rejected";
   seatStatus: SeatStatus;
+  portalAccess: PortalAccessOutcome | null;
 }
 
 /**
@@ -25,6 +29,9 @@ export interface SettlePaymentOutput {
  * and never from the enrollment screen: whoever opens a manual enrollment is
  * not who settles its money (CLAUDE.md §1, lock (d)).
  *
+ * Approving also creates the student's portal account (first approval only —
+ * later ones find it linked).
+ *
  * The e-mail goes out in es-PE: the enrollment does not record the language
  * its form was filled in.
  */
@@ -32,6 +39,7 @@ export class SettlePaymentUseCase extends BaseUseCase<SettlePaymentInput, Settle
   constructor(
     private readonly settlements: IPaymentSettlementRepository,
     private readonly emailContextLookup: IEnrollmentEmailContextLookup,
+    private readonly portalLinkBuilder: IPortalLinkBuilder,
   ) {
     super();
   }
@@ -55,8 +63,25 @@ export class SettlePaymentUseCase extends BaseUseCase<SettlePaymentInput, Settle
         : paymentRejectedEmails(facts, DEFAULT_LOCALE)
       : [];
 
+    // The first approval opens the portal (CLAUDE.md §1, reopened 05/10/2026):
+    // the account is created with the settlement, and its e-mail carries a
+    // link to set the password — never the password (outbox.vars is plain).
+    const now = new Date();
+    const activation = newPortalToken("activation", now);
+    const portalAccess: PortalAccountProvisioning | null = approving
+      ? {
+          studentId: target.studentId,
+          actorId: input.actorId,
+          activation,
+          at: now,
+          notify: (account, tokenId) => [
+            portalCredentialsEmail(account, this.portalLinkBuilder.access(activation.token, DEFAULT_LOCALE), tokenId, DEFAULT_LOCALE),
+          ],
+        }
+      : null;
+
     const to = approving ? "approved" : "rejected";
-    const { seatStatus } = await this.settlements.settle({
+    const { seatStatus, portalAccess: portalOutcome } = await this.settlements.settle({
       paymentId: target.paymentId,
       enrollmentId: target.enrollmentId,
       classGroupId: target.classGroupId,
@@ -72,8 +97,9 @@ export class SettlePaymentUseCase extends BaseUseCase<SettlePaymentInput, Settle
             : { enrollmentId: target.enrollmentId },
         at: new Date(),
       },
+      portalAccess,
     });
 
-    return { paymentId: target.paymentId, status: to, seatStatus };
+    return { paymentId: target.paymentId, status: to, seatStatus, portalAccess: portalOutcome };
   }
 }
