@@ -257,3 +257,14 @@ Em aberto:
   e-mail de login de uma conta não estão construídos; um `email_conflict` só se
   resolve quando isso existir. A cópia do painel diz que o e-mail precisa ser
   corrigido antes de enviar o acesso, sem prometer edição na ficha.
+- **E-mail de contato × e-mail de login.** `/portal/me` mostra o e-mail da
+  ficha; o login é o e-mail da conta, gravado na primeira aprovação, e pode
+  divergir depois que o aluno atualiza o contato num checkout novo.
+- **Conta tomada por documento.** O checkout público reaproveita a ficha pelo
+  documento e atualiza o e-mail dela; a conta nasce do e-mail da ficha na
+  primeira aprovação. Então quem se matricula com o DNI de outra pessoa só é
+  barrado pela pessoa que aprova o pagamento — rever antes de o portal mostrar
+  dado real.
+- **Bloqueio por terceiros.** Os limites por identificador deixam um terceiro
+  trancar um aluno (ou staff) por 15 min só disparando tentativas com o
+  identificador dele. Aceito; números provisórios.
