@@ -4,7 +4,6 @@ import {
   PORTAL_ACTIVATION_TTL_DAYS,
   PORTAL_RESET_TTL_MINUTES,
   PORTAL_SIGN_IN_SENTINEL_EMAIL,
-  PORTAL_TOKEN_COOLDOWN_SECONDS,
   RequestPortalPasswordResetUseCase,
   ResolvePortalSignInEmailUseCase,
   hashPortalToken,
@@ -25,7 +24,6 @@ import {
   type PortalAccount,
   type PortalAccountProvisioning,
   type PortalIdentifier,
-  type IssuePortalAccessOutcome,
 } from "@ooc/domain";
 import { beforeEach, describe, expect, it } from "vitest";
 
