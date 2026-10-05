@@ -24,6 +24,11 @@ export function createAuth(config: Config) {
         : [...config.APP_PUBLIC_URLS, `http://localhost:${config.PORT}`],
     emailAndPassword: {
       enabled: true,
+      // No self sign-up, staff or student (CLAUDE.md §1): every account is
+      // created by apps/api (infra/auth/credentialAccount.ts). Before this
+      // the public POST /api/auth/sign-up/email created a `student` account
+      // for anyone who called it.
+      disableSignUp: true,
     },
     plugins: [
       openAPI({ disableDefaultReference: config.NODE_ENV === "production" }),

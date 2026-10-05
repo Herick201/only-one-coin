@@ -331,7 +331,7 @@ function buildContainer(): AppContainer {
   const auditLogRepository = new DrizzleAuditLogRepository(db);
   const staffInviteRepository = new DrizzleStaffInviteRepository(db);
   const staffAccessRepository = new DrizzleStaffAccessRepository(db);
-  const staffAccountProvisioner = new BetterAuthStaffAccountProvisioner(auth, db);
+  const staffAccountProvisioner = new BetterAuthStaffAccountProvisioner(db);
   const staffUserLookup = new DrizzleStaffUserLookup(db);
   const staffPasswordResetRepository = new DrizzleStaffPasswordResetRepository(db);
   const staffPasswordSetter = new BetterAuthStaffPasswordSetter(db);
