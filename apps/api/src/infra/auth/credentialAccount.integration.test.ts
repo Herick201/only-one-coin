@@ -5,6 +5,8 @@ import * as schema from "@ooc/db";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Config } from "@/config.js";
 import type { Db } from "@/infra/db/client.js";
+import { ConflictError } from "@ooc/domain";
+import { BetterAuthStaffAccountProvisioner } from "@/infra/identity/BetterAuthStaffAccountProvisioner.js";
 import { createAuth, type Auth } from "./betterAuth.js";
 import { insertCredentialUser, insertPasswordlessUser, upsertCredentialPassword } from "./credentialAccount.js";
 
@@ -90,5 +92,21 @@ describe("credential accounts written directly", () => {
     await expect(
       auth.api.signUpEmail({ body: { email: `signup-${RUN}@example.com`, password: "whatever-123", name: "X" } }),
     ).rejects.toMatchObject({ body: { code: "EMAIL_PASSWORD_SIGN_UP_DISABLED" } });
+  });
+
+  it("refuses a staff account for an e-mail already taken, leaving no extra rows", async () => {
+    const email = `taken-${RUN}@example.com`;
+    const userId = await insertCredentialUser(db, { email, name: "First", role: "admin", password: "correct-horse-1" });
+    created.push(userId);
+
+    const provisioner = new BetterAuthStaffAccountProvisioner(db);
+    await expect(
+      provisioner.provision({ email: email.toUpperCase(), name: "Second", role: "teacher", password: "correct-horse-2" }),
+    ).rejects.toSatisfy((e: unknown) => e instanceof ConflictError && e.reason === "staff_invite.email_taken");
+
+    const users = await db.execute(sql`select count(*)::int as n from "user" where "email" = ${email}`);
+    const accounts = await db.execute(sql`select count(*)::int as n from "account" where "userId" = ${userId}`);
+    expect(users.rows[0]?.n).toBe(1);
+    expect(accounts.rows[0]?.n).toBe(1);
   });
 });
