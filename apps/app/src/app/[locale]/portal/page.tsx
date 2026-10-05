@@ -1,6 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
-import { getPortalSession } from '@/lib/portal/mock-data'
+import { getPortalView } from '@/lib/portal/session'
 import { getFeatureFlags } from '@/lib/feature-flags/server'
 import { formatDateTime } from '@/lib/portal/format'
 import type { Locale } from '@/lib/portal/types'
@@ -24,7 +24,7 @@ export default async function DashboardPage({
   const t = await getTranslations('portal')
 
   const flags = await getFeatureFlags()
-  const { student, enrollments, nextClass } = getPortalSession()
+  const { student, enrollments, nextClass } = await getPortalView()
   const current = enrollments.filter((e) => e.status !== 'completed')
 
   /* An action whose section is off is not a greyed card — it is not an

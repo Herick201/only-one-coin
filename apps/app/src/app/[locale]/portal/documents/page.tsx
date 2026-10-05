@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { getPortalSession } from '@/lib/portal/mock-data'
+import { getStudentSession } from '@/lib/portal/session'
 import { formatDate } from '@/lib/portal/format'
 import type { Enrollment, Locale, RequestType } from '@/lib/portal/types'
 import {
@@ -60,6 +61,7 @@ export default async function DocumentsPage({
   const { locale: raw } = await params
   const locale = raw as Locale
   setRequestLocale(raw)
+  await getStudentSession()
   const t = await getTranslations('portal')
 
   const { enrollments, documents, procedures, requests } = getPortalSession()
