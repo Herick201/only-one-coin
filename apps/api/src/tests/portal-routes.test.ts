@@ -77,6 +77,23 @@ describe("POST /portal/sign-in", () => {
     expect(response.headers["set-cookie"]).toBeUndefined();
   });
 
+  it.each([
+    ["an array body", { payload: "[]", headers: { "content-type": "application/json" } }],
+    ["a JSON null body", { payload: "null", headers: { "content-type": "application/json" } }],
+    ["a JSON string body", { payload: '"x"', headers: { "content-type": "application/json" } }],
+    ["no body at all", {}],
+  ])("answers %s with the same 401, no cookie, and still runs the sign-in", async (_label, options) => {
+    vi.spyOn(container.useCases.portal.resolveSignInEmail, "run").mockResolvedValue(PORTAL_SIGN_IN_SENTINEL_EMAIL);
+    const signInSpy = stubSignIn("ana@gmail.com", "clave-segura-1");
+
+    const response = await app.inject({ method: "POST", url: "/api/v1/portal/sign-in", ...options });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.json()).toEqual({ status: 401, reason: "auth.invalid_credentials", path: "/api/v1/portal/sign-in" });
+    expect(response.headers["set-cookie"]).toBeUndefined();
+    expect(signInSpy).toHaveBeenCalledWith(expect.objectContaining({ body: { email: PORTAL_SIGN_IN_SENTINEL_EMAIL, password: "" } }));
+  });
+
   it("always runs Better Auth's sign-in, even for a malformed identifier (same time spent)", async () => {
     vi.spyOn(container.useCases.portal.resolveSignInEmail, "run").mockResolvedValue(PORTAL_SIGN_IN_SENTINEL_EMAIL);
     const signInSpy = stubSignIn("ana@gmail.com", "clave-segura-1");

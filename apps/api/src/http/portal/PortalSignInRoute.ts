@@ -9,10 +9,10 @@ import { container } from "@/container.js";
 
 const MINUTE = 60;
 
-// Loose on purpose: a strict schema would answer a malformed field with a 400
-// naming it. Everything is read inside the handler and every failure is the
-// same 401 (CLAUDE.md §8).
-const PortalSignInBodySchema = z.object({}).passthrough();
+// Loose on purpose: a strict schema would answer a malformed body (an array,
+// null, a string, no body at all) with a 400 naming the problem. Everything is
+// read inside the handler and every failure is the same 401 (CLAUDE.md §8).
+const PortalSignInBodySchema = z.unknown();
 
 function invalidCredentials(path: string): UnauthorizedError {
   return new UnauthorizedError({ reason: "auth.invalid_credentials", message: "Portal sign-in refused.", path });
@@ -38,7 +38,10 @@ export const portalSignInRoute = RouteBuilder.post("/portal/sign-in")
   .response(204, z.null())
   .response(401, ErrorResponseSchema)
   .handler(async (request, reply) => {
-    const body = request.body as Record<string, unknown>;
+    const body =
+      typeof request.body === "object" && request.body !== null && !Array.isArray(request.body)
+        ? (request.body as Record<string, unknown>)
+        : {};
     const identifier = parsePortalIdentifier(body);
     const password = typeof body.password === "string" ? body.password : "";
     const email = await container.useCases.portal.resolveSignInEmail.run({ identifier });
