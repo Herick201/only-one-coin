@@ -2,17 +2,7 @@ import { ConflictError } from "@ooc/domain";
 import type { IStaffAccountProvisioner, ProvisionStaffAccountInput, ProvisionStaffAccountOutput } from "@ooc/domain";
 import type { Db } from "@/infra/db/client.js";
 import { insertCredentialUser } from "@/infra/auth/credentialAccount.js";
-
-const PG_UNIQUE_VIOLATION = "23505";
-
-/** drizzle wraps the driver error, so the pg code can sit on `cause`. */
-function isUniqueViolation(error: unknown): boolean {
-  for (let current: unknown = error, depth = 0; current && depth < 4; depth += 1) {
-    if (typeof current === "object" && (current as { code?: unknown }).code === PG_UNIQUE_VIOLATION) return true;
-    current = (current as { cause?: unknown }).cause;
-  }
-  return false;
-}
+import { isUniqueViolation } from "@/infra/db/isUniqueViolation.js";
 
 /**
  * Writes the account directly — Better Auth's sign-up is closed
