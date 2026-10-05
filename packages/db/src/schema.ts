@@ -268,9 +268,11 @@ const nationalIdTypeCheck = (columnName: string) =>
 // nothing to derive from until they do (apps/app/src/lib/backoffice/types.ts,
 // StudentStatus: "Derived, not a stored column").
 //
-// No user_id here: portal credentials are issued only after an enrollment is
-// approved (CLAUDE.md §1, "aprovado: recebe credenciais") — out of scope for
-// a manual backoffice registration, which never approves anything by itself.
+// `user_id` links the file to its portal account (Better Auth's "user".id,
+// text). Set when the first payment is approved (CLAUDE.md §1, reopened
+// 05/10/2026) — not unique: two files of the same person (same normalized
+// document, still not consolidated — CLAUDE.md §1, "Um documento, uma
+// pessoa") point at the same account.
 export const students = pgTable(
   "students",
   {
@@ -287,6 +289,7 @@ export const students = pgTable(
     // First-level division ("departamento" in Peru). Null outside it.
     region: text("region"),
     city: text("city").notNull(),
+    userId: text("user_id"),
     ...softDeletable(),
     // Soft delete only — no DELETE grant on students (CLAUDE.md §6).
   },
@@ -296,6 +299,15 @@ export const students = pgTable(
       table.nationalIdType,
       table.nationalId,
     ),
+    index("students_user_id_idx").on(table.userId),
+    // The portal sign-in by document (apps/api, PortalSignInRoute): matches
+    // on the document normalized in SQL — the same rule as
+    // `normalizeNationalId` — so a file written before OOC-64 (with dots or
+    // dashes) still finds its account. Only files with an account are
+    // searched, which keeps the index small.
+    index("students_portal_national_id_idx")
+      .on(table.nationalIdType, sql`regexp_replace(upper(${table.nationalId}), '[[:space:].-]', '', 'g')`)
+      .where(sql`${table.userId} is not null`),
     // Trigram GIN indexes back "busca por nome/DNI/telefone" (docs/ROADMAP.md
     // Sessão 5) — pg_trgm enabled in migrations/0003_enable_pg_trgm.sql,
     // which must apply before this migration.
@@ -819,6 +831,33 @@ export const staffPasswordResets = pgTable(
       "staff_password_resets_status_check",
       sql`${table.status} in ('pending', 'completed', 'cancelled')`,
     ),
+  ],
+);
+
+// One-time links that set a portal password: `activation` (the account was
+// just created, no password yet) and `reset` ("forgot my password"). One
+// table, because both land on the same screen and do the same thing.
+//
+// Unlike `staffInvites`, the token is stored as a SHA-256 hash: these are
+// thousands of student accounts, the link is e-mailed rather than handed over
+// by someone who checked who was asking, and the token alone hands over the
+// account. A new token marks the pending ones of the same user and purpose as
+// used — only the latest link works.
+export const portalAccessTokens = pgTable(
+  "portal_access_tokens",
+  {
+    id: uuidPk(),
+    userId: text("user_id").notNull(),
+    tokenHash: text("token_hash").notNull(),
+    purpose: text("purpose").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    usedAt: timestamp("used_at", { withTimezone: true }),
+    ...timestamps(),
+  },
+  (table) => [
+    uniqueIndex("portal_access_tokens_token_hash_uidx").on(table.tokenHash),
+    index("portal_access_tokens_user_id_created_at_idx").on(table.userId, table.createdAt),
+    check("portal_access_tokens_purpose_check", sql`${table.purpose} in ('activation', 'reset')`),
   ],
 );
 
