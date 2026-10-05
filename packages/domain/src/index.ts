@@ -481,3 +481,8 @@ export type {
   PortalAccountProvisioning,
 } from "./identity/portal/ports.js";
 export { portalCredentialsEmail, portalPasswordResetEmail } from "./identity/portal/portalEmails.js";
+export { ResolvePortalSignInEmailUseCase } from "./identity/portal/ResolvePortalSignInEmailUseCase.js";
+export { RequestPortalPasswordResetUseCase } from "./identity/portal/RequestPortalPasswordResetUseCase.js";
+export { CompletePortalAccessUseCase } from "./identity/portal/CompletePortalAccessUseCase.js";
+export { IssuePortalAccessUseCase } from "./identity/portal/IssuePortalAccessUseCase.js";
+export type { IssuePortalAccessOutcome } from "./identity/portal/IssuePortalAccessUseCase.js";
