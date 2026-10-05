@@ -4,6 +4,7 @@ import type { FastifyInstance } from "fastify";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { buildApp } from "@/app.js";
 import { container } from "@/container.js";
+import { describeWithoutParams } from "@/http/portal/RequestPortalPasswordResetRoute.js";
 import { AUTH_SIGN_IN_BY_EMAIL, portalIdentifierKey } from "@/shared/http/rateLimit.js";
 
 /**
@@ -155,6 +156,35 @@ describe("POST /portal/password-resets/request", () => {
     const response = await app.inject({ method: "POST", url: "/api/v1/portal/password-resets/request", payload, headers: { "content-type": "application/json" } });
     expect(response.statusCode).toBe(202);
     expect(response.json()).toEqual({});
+  });
+
+  it.each([
+    ["the use case", "run"],
+    ["the captcha check", "verify"],
+  ] as const)("still answers 202 {} when %s throws", async (_label, which) => {
+    const verify = vi.spyOn(container.edge.captcha, "verify");
+    const run = vi.spyOn(container.useCases.portal.requestPasswordReset, "run");
+    if (which === "verify") {
+      verify.mockRejectedValue(new Error("network down"));
+    } else {
+      verify.mockResolvedValue("passed");
+      run.mockRejectedValue(new Error("Failed query: select ...\nparams: ana@gmail.com"));
+    }
+
+    const response = await request({ method: "email", identifier: "ana@gmail.com", captchaToken: "t" });
+
+    expect(response.statusCode).toBe(202);
+    expect(response.json()).toEqual({});
+    if (which === "run") expect(run).toHaveBeenCalledTimes(1);
+  });
+
+  it("logs a failure by its name and driver codes, never its message", () => {
+    const failure = new Error("Failed query: select ...\nparams: ana@gmail.com", {
+      cause: Object.assign(new Error("connect ECONNREFUSED"), { code: "ECONNREFUSED" }),
+    });
+    const described = describeWithoutParams(failure);
+    expect(described).toEqual({ name: "Error", codes: ["ECONNREFUSED"] });
+    expect(JSON.stringify(described)).not.toContain("ana@gmail.com");
   });
 });
 

@@ -10,6 +10,17 @@ const HOUR = 3600;
 // malformed body (array, null, string) gets the same 202 as a good one.
 const BodySchema = z.unknown();
 
+/** The error's type and driver code along its cause chain — never a message. */
+export function describeWithoutParams(error: unknown): { name: string; codes: string[] } {
+  const codes: string[] = [];
+  for (let current: unknown = error, depth = 0; current && depth < 4; depth += 1) {
+    const code = typeof current === "object" ? (current as { code?: unknown }).code : undefined;
+    if (typeof code === "string") codes.push(code);
+    current = typeof current === "object" ? (current as { cause?: unknown }).cause : undefined;
+  }
+  return { name: error instanceof Error ? error.name : typeof error, codes };
+}
+
 /**
  * Student "forgot my password" (spec 2026-10-05 §4). 202 with an empty body on
  * every path — account or not, captcha passed or not. The captcha sits here
@@ -30,11 +41,20 @@ export const requestPortalPasswordResetRoute = RouteBuilder.post("/portal/passwo
     const captchaToken = typeof body.captchaToken === "string" ? body.captchaToken : "";
     const locale = LocaleSchema.catch(DEFAULT_LOCALE).parse(body.locale);
 
-    const captcha = captchaToken ? await container.edge.captcha.verify(captchaToken, request.clientIp) : "failed";
-    if (captcha === "passed") {
-      await container.useCases.portal.requestPasswordReset.run({ identifier: parsePortalIdentifier(body), locale });
-    } else {
-      request.log.info({ captcha }, "portal reset request without a passed captcha");
+    // A failure here (database down) only happens once an account was found,
+    // so letting it become a 500 would answer "this identifier exists". It is
+    // logged and the caller gets the same 202. Only the error's name and code
+    // go to the log: a drizzle query error's message carries the query params,
+    // and those are the identifier.
+    try {
+      const captcha = captchaToken ? await container.edge.captcha.verify(captchaToken, request.clientIp) : "failed";
+      if (captcha === "passed") {
+        await container.useCases.portal.requestPasswordReset.run({ identifier: parsePortalIdentifier(body), locale });
+      } else {
+        request.log.info({ captcha }, "portal reset request without a passed captcha");
+      }
+    } catch (error) {
+      request.log.error({ err: describeWithoutParams(error) }, "portal reset request failed");
     }
 
     reply.status(202).send({});
