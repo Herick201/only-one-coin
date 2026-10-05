@@ -453,3 +453,31 @@ export {
   type IPaymentSettlementRepository,
 } from "./enrollment/PaymentSettlement.js";
 export { SettlePaymentUseCase, type SettlePaymentInput, type SettlePaymentOutput } from "./enrollment/SettlePaymentUseCase.js";
+
+export {
+  PORTAL_ACTIVATION_TTL_DAYS,
+  PORTAL_RESET_TTL_MINUTES,
+  PORTAL_SIGN_IN_SENTINEL_EMAIL,
+  PORTAL_TOKEN_COOLDOWN_SECONDS,
+  hashPortalToken,
+  newPortalToken,
+  parsePortalIdentifier,
+} from "./identity/portal/PortalAccess.js";
+export type {
+  NewPortalToken,
+  PortalAccessOutcome,
+  PortalAccessState,
+  PortalAccessToken,
+  PortalAccessTokenPurpose,
+  PortalAccount,
+  PortalIdentifier,
+  PortalIdentity,
+} from "./identity/portal/PortalAccess.js";
+export type {
+  IPortalAccessRepository,
+  IPortalLinkBuilder,
+  IPortalPasswordSetter,
+  IssuePortalTokenRequest,
+  PortalAccountProvisioning,
+} from "./identity/portal/ports.js";
+export { portalCredentialsEmail, portalPasswordResetEmail } from "./identity/portal/portalEmails.js";

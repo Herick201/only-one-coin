@@ -32,6 +32,7 @@ export const LOCALE_CATALOGS: Record<Locale, LocaleCatalog> = {
 /** Which var holds the URL behind a template's button. */
 const ACTION_URL_VAR: Partial<Record<EmailTemplateKey, string>> = {
   portal_credentials: "accessUrl",
+  portal_password_reset: "resetUrl",
   staff_password_reset: "resetUrl",
 };
 
