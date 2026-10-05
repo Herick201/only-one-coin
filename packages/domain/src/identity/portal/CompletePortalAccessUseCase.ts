@@ -24,7 +24,9 @@ function linkInvalid(): HttpError {
 /**
  * Sets the password from an activation or reset link. Unknown, used and
  * expired are one answer. The link is burned before the password is written:
- * two clicks race to `consumeToken`, and only one wins.
+ * two clicks race to `consumeToken`, and only one wins. If writing the
+ * password then fails, the link is already spent: the student asks for a new
+ * one ("forgot my password"), which is the accepted cost of that ordering.
  *
  * Every session on the account is closed — same stance as the staff reset: a
  * session opened with the old password must not outlive it. The session

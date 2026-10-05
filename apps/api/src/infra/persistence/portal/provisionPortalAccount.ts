@@ -9,8 +9,9 @@ import { insertOutboxEmails } from "@/infra/persistence/notification/DrizzleOutb
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
 
 /** The document as `normalizeNationalId` writes it, computed in SQL — so a
- * file written before OOC-64 (dots, dashes) matches too. Same expression as
- * the `students_portal_national_id_idx` index (0022). */
+ * file written before OOC-64 (dots, dashes) matches too. Must stay identical
+ * to the expression of index `students_portal_national_id_idx` (0022): the
+ * planner only uses the index for that exact expression. */
 const normalizedNationalIdSql = sql`regexp_replace(upper(${students.nationalId}), '[[:space:].-]', '', 'g')`;
 
 /**

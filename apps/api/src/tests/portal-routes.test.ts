@@ -115,6 +115,8 @@ describe("portal rate-limit keys", () => {
   it("count the catch-all's sign-in by e-mail, and nothing else there", () => {
     const key = AUTH_SIGN_IN_BY_EMAIL.by === "key" ? AUTH_SIGN_IN_BY_EMAIL.key : () => null;
     expect(key({ url: "/api/auth/sign-in/email", body: { email: "Rosa@X.com" } } as never)).toBe("rosa@x.com");
+    expect(key({ url: "/api/auth/sign-in/email/", body: { email: "Rosa@X.com" } } as never)).toBe("rosa@x.com");
+    expect(key({ url: "/api/auth/sign-in/email//?x=1", body: { email: "Rosa@X.com" } } as never)).toBe("rosa@x.com");
     expect(key({ url: "/api/auth/get-session", body: undefined } as never)).toBeNull();
   });
 });

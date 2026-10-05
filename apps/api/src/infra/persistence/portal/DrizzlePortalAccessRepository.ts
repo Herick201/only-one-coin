@@ -40,6 +40,8 @@ export class DrizzlePortalAccessRepository implements IPortalAccessRepository {
   }
 
   async findAccountByIdentifier(identifier: PortalIdentifier): Promise<PortalAccount | null> {
+    // The document expression must stay identical to index
+    // `students_portal_national_id_idx` (0022), or the planner stops using it.
     const fileMatches =
       identifier.method === "email"
         ? sql`u."email" = ${identifier.email}`

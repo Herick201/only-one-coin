@@ -113,7 +113,8 @@ export const AUTH_SIGN_IN_BY_EMAIL: RateLimitRule = {
   name: "auth-sign-in:email",
   by: "key",
   key: (request: FastifyRequest) => {
-    if (!request.url.split("?")[0]!.endsWith("/sign-in/email")) return null;
+    // Trailing slashes trimmed: the router may well serve `/sign-in/email/`.
+    if (!request.url.split("?")[0]!.replace(/\/+$/, "").endsWith("/sign-in/email")) return null;
     const email = (request.body as Record<string, unknown> | undefined)?.email;
     return typeof email === "string" ? normalizeEmail(email) : null;
   },
