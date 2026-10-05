@@ -110,7 +110,8 @@
       "approved_toast": "Pago aprobado. La matrícula quedó activa.",
       "rejected_toast": "Pago rechazado. La vacante volvió a la sección.",
       "load_error_title": "No se pudo cargar la cola de revisión",
-      "load_error_body": "El sistema no respondió. Recarga la página; si sigue igual, avisa al equipo técnico."
+      "load_error_body": "El sistema no respondió. Recarga la página; si sigue igual, avisa al equipo técnico.",
+      "approved_portal_conflict_toast": "Pago aprobado, pero no creamos la cuenta del portal: el correo del alumno ya pertenece a otra cuenta. Corrígelo en la ficha y envía el acceso."
     },
     "review_queue": {
       "search_label": "Buscar comprobante",
@@ -216,7 +217,6 @@
     },
     "student_file": {
       "back_to_list": "Volver a alumnos",
-      "resend_credentials": "Reenviar credenciales",
       "tab_data": "Datos",
       "tab_enrollments": "Matrículas",
       "tab_documents": "Documentos",
@@ -325,7 +325,26 @@
       "no_attachments_title": "Sin archivos",
       "no_attachments_body": "Aquí aparecen los archivos que sube el alumno desde su portal y los que adjunta el equipo.",
       "attachments_hint": "Archivos adjuntos, no documentos de la institución: no llevan código de verificación.",
-      "file_meta": "{size} · {source} · {date}"
+      "file_meta": "{size} · {source} · {date}",
+      "portal_access_state": {
+        "none": "Sin acceso al portal",
+        "pending_activation": "Acceso enviado, contraseña pendiente",
+        "active": "Acceso al portal activo"
+      },
+      "portal_access_send": "Enviar acceso al portal",
+      "portal_access_sending": "Enviando…",
+      "portal_access_outcome": {
+        "created": "Cuenta creada. Enviamos al alumno el enlace para crear su contraseña.",
+        "linked_existing": "Esta ficha quedó unida a la cuenta que el alumno ya tenía.",
+        "already_linked": "El alumno ya tenía su cuenta.",
+        "email_conflict": "El correo de esta ficha ya pertenece a otra cuenta. Corrige el correo y vuelve a enviar el acceso.",
+        "activation_resent": "Reenviamos el enlace para crear la contraseña.",
+        "reset_sent": "Enviamos un enlace para que el alumno cree una contraseña nueva."
+      },
+      "portal_access_error": {
+        "no_confirmed_enrollment": "El acceso al portal se envía solo a alumnos con una matrícula confirmada.",
+        "generic": "No pudimos enviar el acceso. Inténtalo de nuevo."
+      }
     },
     "relationship": {
       "mother": "Madre",
