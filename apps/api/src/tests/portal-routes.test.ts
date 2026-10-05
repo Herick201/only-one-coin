@@ -117,3 +117,72 @@ describe("portal rate-limit keys", () => {
     expect(key({ url: "/api/auth/get-session", body: undefined } as never)).toBeNull();
   });
 });
+
+describe("POST /portal/password-resets/request", () => {
+  const request = (payload: object) => app.inject({ method: "POST", url: "/api/v1/portal/password-resets/request", payload });
+
+  it.each([
+    ["a passed captcha", "passed", 1],
+    ["a failed captcha", "failed", 0],
+    ["an unavailable captcha", "unavailable", 0],
+  ] as const)("answers 202 {} with %s, asking the use case only when it passed", async (_label, outcome, calls) => {
+    vi.spyOn(container.edge.captcha, "verify").mockResolvedValue(outcome);
+    const run = vi.spyOn(container.useCases.portal.requestPasswordReset, "run").mockResolvedValue();
+
+    const response = await request({ method: "email", identifier: "ana@gmail.com", captchaToken: "t", locale: "pt-BR" });
+
+    expect(response.statusCode).toBe(202);
+    expect(response.json()).toEqual({});
+    expect(run).toHaveBeenCalledTimes(calls);
+    if (calls) expect(run).toHaveBeenCalledWith({ identifier: { method: "email", email: "ana@gmail.com" }, locale: "pt-BR" });
+  });
+
+  it("answers a malformed identifier the same way", async () => {
+    vi.spyOn(container.edge.captcha, "verify").mockResolvedValue("passed");
+    vi.spyOn(container.useCases.portal.requestPasswordReset, "run").mockResolvedValue();
+    const response = await request({ method: "national_id", identifier: "x", captchaToken: "t" });
+    expect(response.statusCode).toBe(202);
+    expect(response.json()).toEqual({});
+  });
+
+  it.each([
+    ["an array body", "[]"],
+    ["a JSON null body", "null"],
+    ["a JSON string body", '"x"'],
+  ])("answers %s with 202 {} too", async (_label, payload) => {
+    vi.spyOn(container.edge.captcha, "verify").mockResolvedValue("passed");
+    vi.spyOn(container.useCases.portal.requestPasswordReset, "run").mockResolvedValue();
+    const response = await app.inject({ method: "POST", url: "/api/v1/portal/password-resets/request", payload, headers: { "content-type": "application/json" } });
+    expect(response.statusCode).toBe(202);
+    expect(response.json()).toEqual({});
+  });
+});
+
+describe("portal access links", () => {
+  it("say whether a link is usable, nothing about whose it is", async () => {
+    vi.spyOn(container.repositories.portalAccess, "findToken").mockResolvedValue({
+      id: "tok_1",
+      userId: "usr_ana",
+      purpose: "activation",
+      expiresAt: new Date(Date.now() + 60_000),
+      usedAt: null,
+    });
+    const response = await app.inject({ method: "GET", url: "/api/v1/portal/access-tokens/abc" });
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({ state: "valid", purpose: "activation" });
+  });
+
+  it("answers an unknown link as expired_or_used", async () => {
+    vi.spyOn(container.repositories.portalAccess, "findToken").mockResolvedValue(null);
+    const response = await app.inject({ method: "GET", url: "/api/v1/portal/access-tokens/abc" });
+    expect(response.json()).toEqual({ state: "expired_or_used", purpose: null });
+  });
+
+  it("complete hands the password to the use case", async () => {
+    const run = vi.spyOn(container.useCases.portal.completeAccess, "run").mockResolvedValue({ userId: "usr_ana", purpose: "reset" });
+    const response = await app.inject({ method: "POST", url: "/api/v1/portal/access-tokens/abc/complete", payload: { password: "nueva-clave-1" } });
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({ purpose: "reset" });
+    expect(run).toHaveBeenCalledWith({ token: "abc", password: "nueva-clave-1" });
+  });
+});

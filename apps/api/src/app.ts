@@ -11,9 +11,13 @@ import { rootRoute } from "@/http/RootRoute.js";
 import { healthCheckRoute } from "@/http/HealthCheckRoute.js";
 import { registerAuthRoutes } from "@/http/auth/AuthCatchAllRoute.js";
 import { portalSignInRoute } from "@/http/portal/PortalSignInRoute.js";
+import { requestPortalPasswordResetRoute } from "@/http/portal/RequestPortalPasswordResetRoute.js";
+import { getPortalAccessTokenRoute, completePortalAccessTokenRoute } from "@/http/portal/PortalAccessTokenRoutes.js";
+import { getPortalMeRoute } from "@/http/portal/GetPortalMeRoute.js";
 import { registerStudentRoute } from "@/http/student/RegisterStudentRoute.js";
 import { listStudentsRoute } from "@/http/student/ListStudentsRoute.js";
 import { getStudentRoute } from "@/http/student/GetStudentRoute.js";
+import { issuePortalAccessRoute } from "@/http/student/IssuePortalAccessRoute.js";
 import { createManualEnrollmentRoute } from "@/http/enrollment/CreateManualEnrollmentRoute.js";
 import { listPaymentsRoute } from "@/http/payment/ListPaymentsRoute.js";
 import { listPaymentReviewQueueRoute } from "@/http/payment/ListPaymentReviewQueueRoute.js";
@@ -116,9 +120,14 @@ export async function buildApp(): Promise<FastifyInstance> {
     provider.register(
       (instance, _opts, done) => {
         instance.withTypeProvider<ZodTypeProvider>().route(portalSignInRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(requestPortalPasswordResetRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(getPortalAccessTokenRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(completePortalAccessTokenRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(getPortalMeRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(registerStudentRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(listStudentsRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(getStudentRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(issuePortalAccessRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(createManualEnrollmentRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(listEnrollmentsRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(listPaymentsRoute);
