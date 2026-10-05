@@ -111,7 +111,7 @@
       "rejected_toast": "Payment rejected. The seat went back to the class group.",
       "load_error_title": "The review queue could not be loaded",
       "load_error_body": "The system did not respond. Reload the page; if nothing changes, tell the tech team.",
-      "approved_portal_conflict_toast": "Payment approved, but the portal account was not created: the student's e-mail already belongs to another account. Fix it on the file and send the access."
+      "approved_portal_conflict_toast": "Payment approved, but we did not create the portal account: the student's e-mail already belongs to another account. The e-mail has to be corrected before the access is sent."
     },
     "review_queue": {
       "search_label": "Search receipt",
@@ -337,7 +337,7 @@
         "created": "Account created. We sent the student the link to create their password.",
         "linked_existing": "This file is now linked to the account the student already had.",
         "already_linked": "The student already had an account.",
-        "email_conflict": "This file's e-mail already belongs to another account. Fix the e-mail and send the access again.",
+        "email_conflict": "This file's e-mail already belongs to another account, so we did not create the access. The student's e-mail has to be corrected before it is sent again.",
         "activation_resent": "We re-sent the link to create the password.",
         "reset_sent": "We sent the student a link to create a new password."
       },

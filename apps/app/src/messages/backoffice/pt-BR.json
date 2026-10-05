@@ -111,7 +111,7 @@
       "rejected_toast": "Pagamento rejeitado. A vaga voltou para a turma.",
       "load_error_title": "Não foi possível carregar a fila de revisão",
       "load_error_body": "O sistema não respondeu. Recarregue a página; se continuar igual, avise a equipe técnica.",
-      "approved_portal_conflict_toast": "Pagamento aprovado, mas a conta do portal não foi criada: o e-mail do aluno já pertence a outra conta. Corrija na ficha e envie o acesso."
+      "approved_portal_conflict_toast": "Pagamento aprovado, mas não criamos a conta do portal: o e-mail do aluno já pertence a outra conta. É preciso corrigir o e-mail antes de enviar o acesso."
     },
     "review_queue": {
       "search_label": "Buscar comprovante",
@@ -337,7 +337,7 @@
         "created": "Conta criada. Enviamos ao aluno o link para criar a senha.",
         "linked_existing": "Esta ficha foi ligada à conta que o aluno já tinha.",
         "already_linked": "O aluno já tinha conta.",
-        "email_conflict": "O e-mail desta ficha já pertence a outra conta. Corrija o e-mail e envie o acesso de novo.",
+        "email_conflict": "O e-mail desta ficha já pertence a outra conta, então não criamos o acesso. É preciso corrigir o e-mail do aluno antes de enviá-lo de novo.",
         "activation_resent": "Reenviamos o link para criar a senha.",
         "reset_sent": "Enviamos um link para o aluno criar uma senha nova."
       },

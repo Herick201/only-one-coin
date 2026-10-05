@@ -249,3 +249,11 @@ Limitações conhecidas: o contador por identificador do sign-in aceita tipo de
 documento em texto livre (limitado pelo teto por IP); o cooldown da recuperação
 é checado sem trava, então um duplo envio simultâneo pode emitir dois tokens
 (só o último vale).
+
+Em aberto:
+
+- **Corrigir o e-mail em conflito ainda não tem caminho.** Editar o e-mail de
+  contato da ficha (o formulário da ficha é mock, sem rota na API) e trocar o
+  e-mail de login de uma conta não estão construídos; um `email_conflict` só se
+  resolve quando isso existir. A cópia do painel diz que o e-mail precisa ser
+  corrigido antes de enviar o acesso, sem prometer edição na ficha.

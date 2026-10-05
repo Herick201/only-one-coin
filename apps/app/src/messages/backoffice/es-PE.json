@@ -111,7 +111,7 @@
       "rejected_toast": "Pago rechazado. La vacante volvió a la sección.",
       "load_error_title": "No se pudo cargar la cola de revisión",
       "load_error_body": "El sistema no respondió. Recarga la página; si sigue igual, avisa al equipo técnico.",
-      "approved_portal_conflict_toast": "Pago aprobado, pero no creamos la cuenta del portal: el correo del alumno ya pertenece a otra cuenta. Corrígelo en la ficha y envía el acceso."
+      "approved_portal_conflict_toast": "Pago aprobado, pero no creamos la cuenta del portal: el correo del alumno ya pertenece a otra cuenta. Hay que corregir el correo antes de enviar el acceso."
     },
     "review_queue": {
       "search_label": "Buscar comprobante",
@@ -337,7 +337,7 @@
         "created": "Cuenta creada. Enviamos al alumno el enlace para crear su contraseña.",
         "linked_existing": "Esta ficha quedó unida a la cuenta que el alumno ya tenía.",
         "already_linked": "El alumno ya tenía su cuenta.",
-        "email_conflict": "El correo de esta ficha ya pertenece a otra cuenta. Corrige el correo y vuelve a enviar el acceso.",
+        "email_conflict": "El correo de esta ficha ya pertenece a otra cuenta, así que no creamos el acceso. Hace falta corregir el correo del alumno antes de volver a enviarlo.",
         "activation_resent": "Reenviamos el enlace para crear la contraseña.",
         "reset_sent": "Enviamos un enlace para que el alumno cree una contraseña nueva."
       },
