@@ -63,7 +63,9 @@
     "invalid_title": "Este enlace ya no sirve",
     "invalid_body": "El enlace venció o ya se usó. Pide uno nuevo y te llegará a tu correo.",
     "request_new_link": "Pedir un enlace nuevo",
-    "server_error": "Algo salió mal. Inténtalo de nuevo."
+    "server_error": "Algo salió mal. Inténtalo de nuevo.",
+    "server_error_title": "No pudimos abrir el enlace",
+    "retry": "Intentar de nuevo"
   },
   "backoffice": {
     "title": "Panel administrativo",

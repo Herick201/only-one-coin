@@ -10,6 +10,24 @@ export const metadata: Metadata = { robots: { index: false, follow: false } }
 type TokenState = { state: 'valid'; purpose: 'activation' | 'reset' } | { state: 'expired_or_used'; purpose: null }
 
 /**
+ * What the page can say about a link. Only a 200 is read as an answer about
+ * the link itself; a 429, a 5xx or a request that never got an answer is
+ * `unreachable` — the link may be perfectly good, and sending the student to
+ * ask for a new one would burn it.
+ */
+type LinkLookup = TokenState | { state: 'unreachable' }
+
+async function lookUpLink(token: string): Promise<LinkLookup> {
+  try {
+    const response = await apiFetch(`/api/v1/portal/access-tokens/${encodeURIComponent(token)}`)
+    if (response.status !== 200) return { state: 'unreachable' }
+    return (await response.json()) as TokenState
+  } catch {
+    return { state: 'unreachable' }
+  }
+}
+
+/**
  * Where both portal e-mails land — the activation (account just created) and
  * the reset. The API says only whether the link works and what it is for.
  */
@@ -18,22 +36,34 @@ export default async function AccessPage({ params }: { params: Promise<{ locale:
   setRequestLocale(locale)
   const t = await getTranslations('portal_auth')
 
-  const response = await apiFetch(`/api/v1/portal/access-tokens/${encodeURIComponent(token)}`)
-  const link: TokenState = response.ok ? ((await response.json()) as TokenState) : { state: 'expired_or_used', purpose: null }
+  const link = await lookUpLink(token)
+
+  if (link.state === 'valid') {
+    return (
+      <AuthShell>
+        <AccessForm token={token} purpose={link.purpose} />
+      </AuthShell>
+    )
+  }
+
+  const unreachable = link.state === 'unreachable'
 
   return (
     <AuthShell>
-      {link.state === 'valid' ? (
-        <AccessForm token={token} purpose={link.purpose} />
-      ) : (
-        <div className="rounded-[28px] border border-line bg-white p-6 shadow-float sm:p-7">
-          <h1 className="font-display text-3xl font-semibold text-ink">{t('invalid_title')}</h1>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t('invalid_body')}</p>
-          <Link href="/forgot-password" className="mt-6 inline-flex text-sm font-bold text-brand-blue hover:text-brand-blue-deep">
-            {t('request_new_link')}
-          </Link>
-        </div>
-      )}
+      <div className="rounded-[28px] border border-line bg-white p-6 shadow-float sm:p-7">
+        <h1 className="font-display text-3xl font-semibold text-ink">
+          {unreachable ? t('server_error_title') : t('invalid_title')}
+        </h1>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+          {unreachable ? t('server_error') : t('invalid_body')}
+        </p>
+        <Link
+          href={unreachable ? `/access/${encodeURIComponent(token)}` : '/forgot-password'}
+          className="mt-6 inline-flex text-sm font-bold text-brand-blue hover:text-brand-blue-deep"
+        >
+          {unreachable ? t('retry') : t('request_new_link')}
+        </Link>
+      </div>
     </AuthShell>
   )
 }

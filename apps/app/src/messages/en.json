@@ -63,7 +63,9 @@
     "invalid_title": "This link no longer works",
     "invalid_body": "The link expired or was already used. Ask for a new one and it will reach your e-mail.",
     "request_new_link": "Ask for a new link",
-    "server_error": "Something went wrong. Try again."
+    "server_error": "Something went wrong. Try again.",
+    "server_error_title": "We could not open the link",
+    "retry": "Try again"
   },
   "backoffice": {
     "title": "Admin panel",

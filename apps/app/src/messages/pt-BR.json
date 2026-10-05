@@ -63,7 +63,9 @@
     "invalid_title": "Este link não vale mais",
     "invalid_body": "O link venceu ou já foi usado. Peça um novo e ele chegará no seu e-mail.",
     "request_new_link": "Pedir um link novo",
-    "server_error": "Algo deu errado. Tente de novo."
+    "server_error": "Algo deu errado. Tente de novo.",
+    "server_error_title": "Não conseguimos abrir o link",
+    "retry": "Tentar de novo"
   },
   "backoffice": {
     "title": "Painel administrativo",
