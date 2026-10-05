@@ -210,6 +210,13 @@ export {
   NewPasswordRejectedError,
 } from "./identity/errors.js";
 export { STAFF_PASSWORD_MIN_LENGTH, meetsStaffPasswordPolicy } from "./identity/StaffPasswordPolicy.js";
+export {
+  STUDENT_PASSWORD_MAX_LENGTH,
+  STUDENT_PASSWORD_MIN_LENGTH,
+  meetsStudentPasswordPolicy,
+  studentPasswordIssues,
+} from "./identity/StudentPasswordPolicy.js";
+export type { StudentPasswordIssue } from "./identity/StudentPasswordPolicy.js";
 export type { ICurrentSessionPort } from "./identity/ports/ICurrentSessionPort.js";
 export type { IUserRoleRepository } from "./identity/ports/IUserRoleRepository.js";
 export type { IAuditLogRepository, AuditLogEntry } from "./identity/ports/IAuditLogRepository.js";

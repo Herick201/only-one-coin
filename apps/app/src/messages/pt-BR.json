@@ -75,7 +75,7 @@
     "invite_confirm_label": "Confirme a senha",
     "invite_confirm_placeholder": "••••••••",
     "invite_role_note": "Você vai entrar com o cargo {role}. Se não for o que esperava, avise quem te convidou antes de continuar.",
-    "invite_error_short": "A senha precisa ter pelo menos {min} caracteres.",
+    "invite_error_short": "A senha precisa ter ao menos {min} caracteres, com letras e números.",
     "invite_error_mismatch": "As senhas não coincidem.",
     "invite_error_server": "Não conseguimos concluir seu cadastro. Tente de novo ou peça um novo link a quem te convidou.",
     "invite_submit": "Concluir cadastro",

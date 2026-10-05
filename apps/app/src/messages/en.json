@@ -75,7 +75,7 @@
     "invite_confirm_label": "Confirm the password",
     "invite_confirm_placeholder": "••••••••",
     "invite_role_note": "You will sign in with the role {role}. If that's not what you expected, tell whoever invited you before continuing.",
-    "invite_error_short": "The password must be at least {min} characters.",
+    "invite_error_short": "The password needs at least {min} characters, with letters and numbers.",
     "invite_error_mismatch": "The passwords don't match.",
     "invite_error_server": "We couldn't complete your registration. Try again or ask whoever invited you for a new link.",
     "invite_submit": "Complete registration",

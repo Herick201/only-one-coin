@@ -75,7 +75,7 @@
     "invite_confirm_label": "Confirma la contraseña",
     "invite_confirm_placeholder": "••••••••",
     "invite_role_note": "Ingresarás con el cargo {role}. Si no es el que esperabas, avisa a quien te invitó antes de continuar.",
-    "invite_error_short": "La contraseña debe tener al menos {min} caracteres.",
+    "invite_error_short": "La contraseña debe tener al menos {min} caracteres, con letras y números.",
     "invite_error_mismatch": "Las contraseñas no coinciden.",
     "invite_error_server": "No pudimos completar tu registro. Intenta de nuevo o pide un enlace nuevo a quien te invitó.",
     "invite_submit": "Completar registro",
