@@ -1,3 +1,4 @@
+import { normalizeEmail, normalizeNationalId } from "@ooc/domain";
 import type { FastifyRequest } from "fastify";
 
 /**
@@ -47,6 +48,14 @@ export const RATE_LIMITS = {
   /** "Forgot my password" — sends an e-mail. */
   staffResetRequest: { name: "staff-reset-request:ip", by: "ip", limit: 10, windowSeconds: 10 * MINUTE },
 
+  /** Student portal sign-in, per IP — loose for the same reason as the
+   * checkout: a school lab puts thirty students behind one address. */
+  portalSignIn: { name: "portal-sign-in:ip", by: "ip", limit: 30, windowSeconds: 10 * MINUTE },
+  /** Student "forgot my password" — sends an e-mail. */
+  portalResetRequest: { name: "portal-reset-request:ip", by: "ip", limit: 10, windowSeconds: 10 * MINUTE },
+  /** Reading and completing a portal access link. */
+  portalLink: { name: "portal-link:ip", by: "ip", limit: 30, windowSeconds: 10 * MINUTE },
+
   /** Checkout: taking and handing back a seat. */
   seatHold: { name: "seat-hold:ip", by: "ip", limit: 60, windowSeconds: 10 * MINUTE },
   /** Checkout: minting and confirming the receipt upload. */
@@ -72,3 +81,42 @@ export function perSeatHold(name: string, limit: number, field: string): RateLim
     windowSeconds: 10 * MINUTE,
   };
 }
+
+/**
+ * The identifier a portal request names, normalized the way the server reads
+ * it — "12.345.678" and "12345678" spend from one counter. Not validated: a
+ * malformed one still counts (it is a guess at somebody's account all the
+ * same). The plugin hashes the key before it reaches Redis.
+ */
+export function portalIdentifierKey(body: unknown): string | null {
+  const fields = body as Record<string, unknown> | undefined;
+  const method = fields?.method;
+  const identifier = fields?.identifier;
+  if (typeof method !== "string" || typeof identifier !== "string") return null;
+  const type = typeof fields?.nationalIdType === "string" ? fields.nationalIdType : "";
+  const normalized = method === "email" ? normalizeEmail(identifier) : normalizeNationalId(identifier);
+  return `${method}:${type}:${normalized}`;
+}
+
+/** Per-account ceiling on a portal route: what stops a guess at one account
+ * from thirty IPs that the per-IP rule lets through. */
+export function perPortalIdentifier(name: string, limit: number, windowSeconds: number): RateLimitRule {
+  return { name: `${name}:id`, by: "key", key: (request: FastifyRequest) => portalIdentifierKey(request.body), limit, windowSeconds };
+}
+
+/**
+ * Better Auth's own sign-in on the catch-all, per e-mail: the staff login uses
+ * it, and a student could call it directly instead of the portal route.
+ * Anything else on the catch-all has no key and skips the rule.
+ */
+export const AUTH_SIGN_IN_BY_EMAIL: RateLimitRule = {
+  name: "auth-sign-in:email",
+  by: "key",
+  key: (request: FastifyRequest) => {
+    if (!request.url.split("?")[0]!.endsWith("/sign-in/email")) return null;
+    const email = (request.body as Record<string, unknown> | undefined)?.email;
+    return typeof email === "string" ? normalizeEmail(email) : null;
+  },
+  limit: 10,
+  windowSeconds: 15 * MINUTE,
+};

@@ -10,6 +10,7 @@ import { mergeAuthIntoSwagger } from "@/infra/plugins/authSwagger.js";
 import { rootRoute } from "@/http/RootRoute.js";
 import { healthCheckRoute } from "@/http/HealthCheckRoute.js";
 import { registerAuthRoutes } from "@/http/auth/AuthCatchAllRoute.js";
+import { portalSignInRoute } from "@/http/portal/PortalSignInRoute.js";
 import { registerStudentRoute } from "@/http/student/RegisterStudentRoute.js";
 import { listStudentsRoute } from "@/http/student/ListStudentsRoute.js";
 import { getStudentRoute } from "@/http/student/GetStudentRoute.js";
@@ -114,6 +115,7 @@ export async function buildApp(): Promise<FastifyInstance> {
     // api routes, prefixed with /api/v1
     provider.register(
       (instance, _opts, done) => {
+        instance.withTypeProvider<ZodTypeProvider>().route(portalSignInRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(registerStudentRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(listStudentsRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(getStudentRoute);
