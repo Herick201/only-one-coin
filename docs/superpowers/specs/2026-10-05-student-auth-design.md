@@ -80,6 +80,10 @@ gastar o mesmo tempo — `sign-in.mjs:320-337` na 1.7.1).
 (`enrollmentEmails.ts`, regra já escrita). Vars: `recipientName`, `loginEmail`,
 `accessUrl` = `${PORTAL_PUBLIC_URL}{/pt|/en}/access/<token>`. Locale `es-PE`,
 como o resto da liquidação. Dedupe `portal_credentials:<userId>:<tokenId>`.
+O link carrega o token cru, então a linha do outbox não pode guardá-lo pra
+sempre: ao chegar num estado final (`sent`, `blocked`, `failed` definitivo) o
+mesmo UPDATE tira `accessUrl`/`resetUrl` de `vars`; tentativa que ainda vai
+ser repetida mantém o link.
 
 ### Na aprovação
 

@@ -58,6 +58,16 @@ export async function insertOutboxEmails(tx: OutboxWriter, notifications: EmailN
     .onConflictDoNothing({ target: outbox.dedupeKey });
 }
 
+/**
+ * The vars that carry a one-time link (activation, password reset). The link
+ * embeds the raw token, which `portal_access_tokens` and the staff reset
+ * table only keep hashed — so once a row reaches an end state nobody needs
+ * the link any more, and leaving it in `vars` would undo that hashing. Every
+ * final transition strips them in the same UPDATE; a non-final failed
+ * attempt keeps them, because the retry still has to send the link.
+ */
+const stripOneTimeLinks = sql`${outbox.vars} - 'accessUrl' - 'resetUrl'`;
+
 export class DrizzleOutboxRepository implements IOutboxStore {
   constructor(private readonly db: Db) {}
 
@@ -102,6 +112,7 @@ export class DrizzleOutboxRepository implements IOutboxStore {
       .update(outbox)
       .set({
         status: "sent",
+        vars: stripOneTimeLinks,
         providerMessageId,
         attempts: sql`${outbox.attempts} + 1`,
         lastError: null,
@@ -114,7 +125,7 @@ export class DrizzleOutboxRepository implements IOutboxStore {
   async markBlocked(id: string): Promise<void> {
     await this.db
       .update(outbox)
-      .set({ status: "blocked", updatedAt: new Date() })
+      .set({ status: "blocked", vars: stripOneTimeLinks, updatedAt: new Date() })
       .where(and(eq(outbox.id, id), eq(outbox.status, "pending")));
   }
 
@@ -122,7 +133,7 @@ export class DrizzleOutboxRepository implements IOutboxStore {
     await this.db
       .update(outbox)
       .set({
-        ...(final ? { status: "failed" } : {}),
+        ...(final ? { status: "failed", vars: stripOneTimeLinks } : {}),
         attempts: sql`${outbox.attempts} + 1`,
         lastError: errorCode,
         updatedAt: new Date(),
