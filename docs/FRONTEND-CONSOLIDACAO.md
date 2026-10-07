@@ -21,7 +21,7 @@ está implementado nesta sessão.
 - Prós: zero risco, cada stack faz o que é melhor nela (Astro pra
   conteúdo/SEO estático leve da landing, Next.js pro app dinâmico com sessão
   e dados) — decisão já fechada, testada, com telas construídas em cima dela
-  (`README.md` "Estado atual").
+  (`apps/app/README.md`, "Estado por tela").
 - Contras: troca de domínio visível na barra de endereço ao sair da landing
   pro app; dois projetos Vercel, duas envs, dois pipelines de build.
 
@@ -48,7 +48,7 @@ pra costurar site de marketing + dashboard (documentado como "Multi-Zones").
   modelo dele foi pensado pra conteúdo majoritariamente estático com
   interatividade pontual — um backoffice inteiro é o oposto do caso de uso
   em que ele brilha. Reescreveria tudo que já está implementado (layout, i18n
-  trilíngue, telas mockadas, wiring de auth — `README.md` "Estado atual").
+  trilíngue, telas mockadas, wiring de auth — `apps/app/README.md`, "Estado por tela").
 - **C2 — tudo em Next.js.** A landing (SEO/JSON-LD/sitemap/hreflang já
   implementados, geo edge function, i18n próprio do Astro) vira páginas
   estáticas dentro do App Router de `apps/app`. Menos radical que C1 — Next.js

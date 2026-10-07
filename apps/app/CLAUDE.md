@@ -175,4 +175,4 @@ A matriz tela-a-tela vive em `apps/app/src/lib/backoffice/permissions.ts` — é
 
 ---
 
-Regras de negócio, stack, i18n e o quadro de papéis/RBAC estão no `CLAUDE.md` da raiz — não duplicadas aqui. Estado real das telas (o que é mock, o que já lê da API): `README.md` da raiz, seção "Estado atual".
+Regras de negócio, stack, i18n e o quadro de papéis/RBAC estão no `CLAUDE.md` da raiz — não duplicadas aqui. Estado real das telas (o que é mock, o que já lê da API): [`README.md`](README.md) deste app, seção "Estado por tela" — atualize a linha no mesmo PR que muda a tela.

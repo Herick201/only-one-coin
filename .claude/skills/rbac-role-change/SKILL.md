@@ -51,8 +51,8 @@ change as touching **all** of the following, in the same PR:
   this is a rename. This file is cross-cutting on purpose (`apps/app` and
   `apps/api` both need the same vocabulary) — don't fork it into a
   per-app `CLAUDE.md`.
-- `README.md` (root) — anywhere a screen's permitted roles are named in the
-  "Estado atual" prose.
+- `apps/app/README.md` — anywhere a screen's permitted roles are named in the
+  "Estado por tela" table.
 - `docs/ARCHITECTURE.md` §3 — known pending item: the RBAC table there still
   describes the pre-07/09/2026 role board as of this writing. If you're
   already in this area, updating it closes that gap.
