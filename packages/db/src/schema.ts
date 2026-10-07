@@ -498,6 +498,46 @@ export const seatHolds = pgTable(
   ],
 );
 
+// The checkout's proof that the student's e-mail is theirs (spec
+// 2026-10-07): a 6-digit code mailed to the address, tied to the seat hold —
+// the only session an anonymous checkout has. The submit consumes a verified
+// row for its own hold and the student's e-mail inside its transaction, or
+// refuses; which enrollment consumed it is `seat_holds.enrollment_id`.
+//
+// `code_hash` is sha256(id + ":" + code). Six digits do not survive an offline
+// brute force — the protection is the 10-minute expiry and the 5 attempts; the
+// hash only keeps the code out of dumps and logs. `expires_at` is stamped and
+// compared on the database clock. A new code for the same hold expires the
+// pending ones (only the latest code works).
+//
+// No `deleted_at`: the timestamps tell the row's whole life.
+export const emailVerifications = pgTable(
+  "email_verifications",
+  {
+    id: uuidPk(),
+    seatHoldId: uuid("seat_hold_id")
+      .notNull()
+      .references(() => seatHolds.id, { onDelete: "restrict" }),
+    email: text("email").notNull(),
+    codeHash: text("code_hash").notNull(),
+    attempts: integer("attempts").notNull().default(0),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
+    consumedAt: timestamp("consumed_at", { withTimezone: true }),
+    ...timestamps(),
+  },
+  (table) => [
+    check("email_verifications_attempts_check", sql`${table.attempts} between 0 and 5`),
+    // Consumed only once verified.
+    check(
+      "email_verifications_consumed_check",
+      sql`${table.consumedAt} is null or ${table.verifiedAt} is not null`,
+    ),
+    // The cooldown and the send count, and the confirm's "newest for this hold".
+    index("email_verifications_seat_hold_id_created_at_idx").on(table.seatHoldId, table.createdAt),
+  ],
+);
+
 // payments is agnostic of origin (CLAUDE.md §5) — scoped to enrollments only
 // for now, since that is what both target forms (new-student-form.tsx,
 // new-enrollment-form.tsx) need. Paid procedures (constancia and the rest of
