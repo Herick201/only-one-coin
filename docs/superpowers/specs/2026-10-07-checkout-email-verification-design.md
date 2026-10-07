@@ -56,12 +56,12 @@ a API usarem a mesma regra.
   caixa, mas o Classroom precisa da conta;
 - sem ponto no começo, no fim, nem dois seguidos.
 
-Erro `email_gmail_username_invalid`, nos três locales. Aplicado a:
-
-| Onde | Campo |
-| --- | --- |
-| Checkout (front + `refineGmail` na rota + usecase) | e-mail do aluno |
-| Cadastro e matrícula manual do backoffice | e-mail do aluno, só se já for `@gmail.com` |
+Erro `email_gmail_username_invalid`, nos três locales. A regra entra no
+próprio `EmailField`, então vale para **todo e-mail novo que já é
+`@gmail.com`**: aluno e apoderado, no checkout e no cadastro do backoffice
+(front e API). Endereço de outro provedor não é tocado — exigir Gmail no
+backoffice continua sendo a OOC-65. Um Gmail com nome de usuário impossível não
+recebe e-mail de ninguém, seja aluno ou apoderado.
 
 Risco aceito: se existir conta Gmail antiga fora dessa regra, a recusa barra um
 aluno real. Afrouxa-se se aparecer caso.
@@ -90,7 +90,7 @@ Migration `0023`, tabela `email_verifications`:
 | `attempts` | int, CHECK entre 0 e 5 |
 | `expires_at` | relógio do banco, criação + 10 min |
 | `verified_at` | quando o código conferiu |
-| `consumed_at`, `enrollment_id` | a matrícula que usou a prova, na transação dela; os dois juntos ou nenhum (CHECK) |
+| `consumed_at` | quando a matrícula usou a prova, na transação dela — qual matrícula é `seat_holds.enrollment_id` |
 | `created_at`, `updated_at` | |
 
 Sem `deleted_at`: a vida da linha é contada pelos timestamps, como em
@@ -108,7 +108,8 @@ código novo — raro, a reserva dura `holdMinutes`.
 
 ### `POST /api/v1/enrollments/email-verifications`
 
-`.public()`, corpo `{holdId, email, locale, captchaToken}`.
+`.public()`, corpo `{holdId, email, recipientName, locale, captchaToken}` —
+`recipientName` é o nome que o aluno já digitou, para a saudação do e-mail.
 
 1. Turnstile, fechando como na matrícula: `captcha.failed` (422),
    `captcha.unavailable` (503).
@@ -117,10 +118,12 @@ código novo — raro, a reserva dura `holdMinutes`.
 3. E-mail passa nas regras do aluno (formato, Gmail, nome de usuário), senão
    400 com o erro de campo.
 4. Espera de 60 s desde o último envio da reserva, senão 429
-   `email_verification.cooldown` com os segundos restantes.
+   `email_verification.cooldown`.
 5. No máximo 5 envios por reserva, senão 429 `email_verification.too_many_sends`.
 6. Na mesma transação: invalida os códigos pendentes da reserva, grava a linha
-   nova e a linha do outbox. Responde 202.
+   nova e a linha do outbox. Responde 202 `{resendAfterSeconds}` — é com esse
+   número que a tela conta o "reenviar"; o envelope de erro só tem `reason`, então
+   nenhum erro carrega segundos ou tentativas restantes.
 
 Rate limit (plugin OOC-24): `emailVerificationSend:ip` 20 a cada 10 min, mais
 por reserva (`perSeatHold`). Sem risco de enumeração: a rota não consulta
@@ -138,7 +141,7 @@ tempo constante.
 | Caso | Resposta |
 | --- | --- |
 | Confere | 200, marca `verified_at` |
-| Não confere | 422 `email_verification.code_invalid`, com tentativas restantes; incrementa `attempts` |
+| Não confere | 422 `email_verification.code_invalid`; incrementa `attempts` (na quinta, `attempts_exhausted`) |
 | Vencido | 422 `email_verification.code_expired` |
 | Quinta tentativa errada já feita | 422 `email_verification.attempts_exhausted` |
 | Nada enviado para esse e-mail nessa reserva | 422 `email_verification.not_found` |
