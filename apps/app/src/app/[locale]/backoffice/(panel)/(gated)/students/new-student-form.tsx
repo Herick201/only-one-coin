@@ -31,6 +31,7 @@ import { hasPhoneNumber, PhoneField } from '@/components/backoffice/phone-field'
 import { Toggle } from '@/components/backoffice/controls'
 import { BoIcon } from '@/components/backoffice/icons'
 import { AutoGrid } from '@/components/layout/auto-grid'
+import { FieldMessage } from './field-message'
 import type { EditableStudent } from './[studentId]/student-edit-form'
 import type { EditableGuardian } from './[studentId]/guardian-edit-form'
 
@@ -99,17 +100,6 @@ function personErrors(
   const errors: FormErrors = {}
   for (const [field, code] of entries) if (code) errors[`${scope}.${field}`] = code
   return errors
-}
-
-/** One field's problem, under it, in the panel's words. */
-function FieldMessage({ code }: { code: FieldErrorCode | undefined }) {
-  const t = useTranslations('bo')
-  if (!code) return null
-  return (
-    <span className="text-xs font-medium normal-case tracking-normal text-red-600">
-      {t(`new_student.error.${code}`)}
-    </span>
-  )
 }
 
 /**

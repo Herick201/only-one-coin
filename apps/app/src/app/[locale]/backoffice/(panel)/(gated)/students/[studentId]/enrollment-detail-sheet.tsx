@@ -4,7 +4,9 @@ import { useLocale, useTranslations } from 'next-intl'
 import type { EnrollmentHistoryItem } from '@/lib/backoffice/types'
 import { formatPaymentMethod } from '@/lib/payment-method'
 import { formatDate, formatDateTime, formatMoney, type Locale } from '@/lib/format'
-import { Field, Meter, SectionTitle, StatusBadge } from '@/components/backoffice/ui'
+import { Link } from '@/i18n/navigation'
+import { Field, SectionTitle, StatusBadge } from '@/components/backoffice/ui'
+import { BoIcon } from '@/components/backoffice/icons'
 import {
   enrollmentTone,
   paymentTone,
@@ -25,13 +27,17 @@ import { AutoGrid } from '@/components/layout/auto-grid'
  * to crowd every cell lives here, one enrollment at a time.
  *
  * Read-only on purpose: approving or rejecting a payment is a `apps/api`
- * usecase with its own audit entry, never a click on a student file.
+ * usecase with its own audit entry, never a click on a student file. What the
+ * sheet offers instead is the way to Pagos (`paymentsHref`), where that
+ * decision is taken — null when the reader's cargo does not open Pagos.
  */
 export function EnrollmentDetailSheet({
   enrollment,
+  paymentsHref,
   onClose,
 }: {
   enrollment: EnrollmentHistoryItem | null
+  paymentsHref: string | null
   onClose: () => void
 }) {
   const t = useTranslations('bo')
@@ -86,9 +92,6 @@ export function EnrollmentDetailSheet({
                   <Field label={t('student_file.field_teacher')}>
                     {enrollment.teacherName}
                   </Field>
-                  <Field label={t('student_file.field_modality')}>
-                    {t(`modality.${enrollment.modality}`)}
-                  </Field>
                   <Field label={t('student_file.field_period')}>
                     {enrollment.academicPeriodName}
                   </Field>
@@ -137,6 +140,15 @@ export function EnrollmentDetailSheet({
                 <p className="mt-3 text-xs text-muted-foreground">
                   {t('student_file.frozen_price')}
                 </p>
+                {paymentsHref && (
+                  <Link
+                    href={paymentsHref}
+                    className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-blue transition hover:text-brand-blue-deep"
+                  >
+                    <BoIcon name="payments" size={16} />
+                    {t('student_file.open_in_payments')}
+                  </Link>
+                )}
               </section>
 
               <section>
@@ -144,31 +156,13 @@ export function EnrollmentDetailSheet({
                   {t('student_file.section_enrollment')}
                 </SectionTitle>
                 <AutoGrid as="dl" min="12rem" className="mt-3">
+                  <Field label={t('student_file.field_code')}>
+                    <span className="tabular-nums">{enrollment.code}</span>
+                  </Field>
                   <Field label={t('student_file.col_created')}>
                     {formatDate(enrollment.createdAt, locale)}
                   </Field>
                 </AutoGrid>
-                <div className="mt-4">
-                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    {t('student_file.field_progress')}
-                  </p>
-                  {enrollment.progressPct === null ? (
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {t('student_file.no_progress')}
-                    </p>
-                  ) : (
-                    <>
-                      <p className="mt-1 text-sm font-medium text-ink">
-                        {t('student_file.progress_value', {
-                          pct: enrollment.progressPct,
-                        })}
-                      </p>
-                      <div className="mt-2">
-                        <Meter value={enrollment.progressPct} max={100} tone="info" />
-                      </div>
-                    </>
-                  )}
-                </div>
               </section>
             </div>
           </>

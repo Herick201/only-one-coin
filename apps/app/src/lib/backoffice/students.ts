@@ -1,37 +1,36 @@
 import { apiFetch } from './api-client'
-import type { StudentDetail, StudentRow } from './types'
+import type { StudentActivityPage, StudentDetail, StudentRow } from './types'
+import { studentDirectorySearchParams, type StudentDirectoryQuery } from './student-directory-query'
 
-export interface StudentListPage {
+export {
+  parseStudentDirectoryQuery,
+  type StudentDirectoryQuery,
+} from './student-directory-query'
+
+/** One page of the student directory, as `GET /api/v1/students` answers it. */
+export interface StudentDirectoryPage {
   items: StudentRow[]
-  /** Non-null when another page of the directory browse follows — pass it
-   * straight back as `?cursor=` to fetch the next page. Always null for a
-   * `q` search (a short, non-paginated match list). */
-  nextCursor: string | null
-  /** Live students in total (directory browse only; null for a `q` search) —
-   * what lets the table offer pages it has not fetched yet. */
-  total: number | null
+  /** Students matching every filter, across every page. */
+  total: number
+  page: number
+  pageSize: number
+  /** Per chip, over the search alone — what choosing each chip would give. */
+  counts: { all: number; active: number; inactive: number; minors: number }
 }
 
 /**
- * The student directory (no `q`) and, elsewhere, the manual enrollment
- * form's picker (`q` set) — same `GET /api/v1/students` route, which
- * merges both concerns off one query (`apps/api/src/infra/persistence/
- * student/ListStudentsQuery.ts`).
- *
- * The directory browse is cursor-paginated server-side — this only fetches
- * one page. The client component (`students-table.tsx`) calls the
- * same-origin `/api/v1/students` proxy directly for subsequent pages, since
- * this function runs in a Server Component and can't be called again from
- * the browser.
+ * One page of the student directory (OOC-76). Search, status, age and paging
+ * all run in Postgres — with 30k students a filter over the loaded page
+ * answers the wrong question.
  *
  * `null` means the API failed (error response or unreachable) — the page
  * shows a visible error state for it. A silent empty page here is
  * indistinguishable from an empty directory, which reads as data loss.
  */
-export async function listStudents(cursor?: string): Promise<StudentListPage | null> {
-  const search = cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''
+export async function listStudents(query: StudentDirectoryQuery): Promise<StudentDirectoryPage | null> {
+  const search = studentDirectorySearchParams(query).toString()
   try {
-    const response = await apiFetch(`/api/v1/students${search}`)
+    const response = await apiFetch(`/api/v1/students${search ? `?${search}` : ''}`)
     if (!response.ok) return null
     return response.json()
   } catch {
@@ -40,14 +39,28 @@ export async function listStudents(cursor?: string): Promise<StudentListPage | n
 }
 
 /**
- * One student's file. Only the identity/guardian half is real —
- * `documents`, `documentRequests`, `attachments`, `activity` and
- * `enrollments` come back empty from the API itself (no table backs them
- * yet), not faked here, so a real id never mixes with unrelated mock
- * fixture content.
+ * One student's file: identity, guardian and the full enrollment history
+ * (OOC-73). `documents`, `documentRequests` and `attachments` come back empty
+ * from the API itself (no table backs them yet, OOC-33), not faked here, so a
+ * real id never mixes with unrelated mock fixture content.
  */
 export async function getStudent(id: string): Promise<StudentDetail | null> {
   const response = await apiFetch(`/api/v1/students/${id}`)
   if (!response.ok) return null
   return response.json()
+}
+
+/**
+ * The first page of a student's activity (OOC-75), newest first — later
+ * pages are fetched by the file itself through the same-origin proxy. `null`
+ * means the API failed: the tab says so instead of claiming nothing happened.
+ */
+export async function getStudentActivity(id: string): Promise<StudentActivityPage | null> {
+  try {
+    const response = await apiFetch(`/api/v1/students/${id}/activity`)
+    if (!response.ok) return null
+    return response.json()
+  } catch {
+    return null
+  }
 }

@@ -130,6 +130,38 @@ export class Student extends SoftDeletableModel {
     return Student.ageOf(birthDate) < Student.MAJORITY_AGE;
   }
 
+  /**
+   * Rewrites the record from a staff correction (OOC-74) and answers which
+   * fields actually changed — the audit line names those, never their values,
+   * and an empty answer means there is nothing to write. The same rules as a
+   * new record: a correction is held to what registration is held to.
+   *
+   * Name, document and birth date change only through here — the public
+   * checkout never rewrites them (decision of 21/09/2026).
+   */
+  rewrite(dto: CreateStudentDTO): (keyof CreateStudentDTO)[] {
+    const result = CreateStudentSchema.safeParse(dto);
+
+    if (!result.success) {
+      throw new InvalidFieldsError(toFieldErrors(result.error.issues, "student"));
+    }
+
+    const next = result.data;
+    const changed: (keyof CreateStudentDTO)[] = [];
+    for (const key of Object.keys(next) as (keyof CreateStudentDTO)[]) {
+      const before = this[key];
+      const after = next[key];
+      const same =
+        before instanceof Date && after instanceof Date ? before.getTime() === after.getTime() : before === after;
+      if (same) continue;
+      (this as Record<string, unknown>)[key] = after;
+      changed.push(key);
+    }
+
+    if (changed.length > 0) this.touch();
+    return changed;
+  }
+
   static create(dto: CreateStudentDTO): Student {
     const result = CreateStudentSchema.safeParse(dto);
 

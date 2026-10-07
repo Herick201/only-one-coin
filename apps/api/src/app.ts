@@ -16,7 +16,11 @@ import { getPortalAccessTokenRoute, completePortalAccessTokenRoute } from "@/htt
 import { getPortalMeRoute } from "@/http/portal/GetPortalMeRoute.js";
 import { registerStudentRoute } from "@/http/student/RegisterStudentRoute.js";
 import { listStudentsRoute } from "@/http/student/ListStudentsRoute.js";
+import { searchStudentsRoute } from "@/http/student/SearchStudentsRoute.js";
 import { getStudentRoute } from "@/http/student/GetStudentRoute.js";
+import { updateStudentRoute } from "@/http/student/UpdateStudentRoute.js";
+import { saveGuardianRoute } from "@/http/student/SaveGuardianRoute.js";
+import { listStudentActivityRoute } from "@/http/student/ListStudentActivityRoute.js";
 import { issuePortalAccessRoute } from "@/http/student/IssuePortalAccessRoute.js";
 import { createManualEnrollmentRoute } from "@/http/enrollment/CreateManualEnrollmentRoute.js";
 import { listPaymentsRoute } from "@/http/payment/ListPaymentsRoute.js";
@@ -126,7 +130,11 @@ export async function buildApp(): Promise<FastifyInstance> {
         instance.withTypeProvider<ZodTypeProvider>().route(getPortalMeRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(registerStudentRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(listStudentsRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(searchStudentsRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(getStudentRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(updateStudentRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(saveGuardianRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(listStudentActivityRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(issuePortalAccessRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(createManualEnrollmentRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(listEnrollmentsRoute);

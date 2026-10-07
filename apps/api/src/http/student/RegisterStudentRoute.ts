@@ -3,6 +3,7 @@ import { z } from "zod";
 import { RouteBuilder } from "@/shared/http/RouteBuilder.js";
 import { ErrorResponseSchema } from "@/shared/http/ErrorResponseSchema.js";
 import { container } from "@/container.js";
+import { STUDENT_FILE_ROLES } from "./studentRoles.js";
 
 // Same field rules as the public checkout, minus its Gmail gate — whether the
 // backoffice is held to that is OOC-65's call.
@@ -49,7 +50,7 @@ export const registerStudentRoute = RouteBuilder.post("/students")
     description:
       "Manual registration exception — the documented path is the student filling the public enrollment form themselves.",
   })
-  .roles("master", "admin", "enrollment_supervisor")
+  .roles(...STUDENT_FILE_ROLES)
   .body(RegisterStudentBodySchema)
   .response(201, RegisterStudentResponseSchema)
   .response(400, ErrorResponseSchema)
@@ -58,6 +59,7 @@ export const registerStudentRoute = RouteBuilder.post("/students")
     const { student, guardian } = request.body;
 
     const result = await container.useCases.student.register.run({
+      actorId: request.currentUser!.id,
       student,
       guardian,
     });

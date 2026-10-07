@@ -2,7 +2,16 @@
 
 import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
-import type { AuditReference, StudentDetail } from '@/lib/backoffice/types'
+import type {
+  AuditEntry,
+  AuditReference,
+  EnrollmentHistoryItem,
+  StudentActivityPage,
+  StudentDetail,
+} from '@/lib/backoffice/types'
+import { paymentLedgerSearchParams } from '@/lib/backoffice/payment-ledger-query'
+import { Link, useRouter } from '@/i18n/navigation'
+import { Toast } from '@/components/backoffice/controls'
 import { countryName } from '@/lib/geo'
 import { ageFrom, formatDate, formatDateTime, formatMoney, type Locale } from '@/lib/format'
 import {
@@ -43,15 +52,76 @@ function placeLabel(
 
 const TABS: Tab[] = ['data', 'enrollments', 'documents', 'activity']
 
+/** Where the "add guardian" form starts — consent is never part of it. */
+const EMPTY_GUARDIAN: EditableGuardian = {
+  firstName: '',
+  lastName: '',
+  relationship: 'mother',
+  nationalIdType: 'DNI',
+  nationalId: '',
+  email: '',
+  phone: '',
+}
+
 /**
  * Student file: personal data (editable), enrollment history with the money
- * trail, documents and the audit timeline. Edits live in component state only —
- * there is no backend yet, and the real write goes through `apps/api`, never
- * from the browser (CLAUDE.md §8).
+ * trail, documents and the audit timeline. Edits are written by `apps/api`
+ * (OOC-74), never from the browser (CLAUDE.md §8); after a save the page is
+ * refreshed from the server, so the derived figures (minor, status, activity)
+ * are the server's, not a guess made here.
  */
-export function StudentFile({ student }: { student: StudentDetail }) {
+export function StudentFile({
+  student,
+  canViewPayments,
+  canEdit,
+  activity,
+}: {
+  student: StudentDetail
+  /** Whether the reader's cargo opens Pagos — decides whether the file links there. */
+  canViewPayments: boolean
+  /** Whether the reader's cargo corrects the file — hides the edit controls otherwise. */
+  canEdit: boolean
+  /** First page of the timeline; null when the API could not answer. */
+  activity: StudentActivityPage | null
+}) {
   const t = useTranslations('bo')
   const locale = useLocale() as Locale
+  const router = useRouter()
+  const [toast, setToast] = useState<string | null>(null)
+  const [entries, setEntries] = useState<AuditEntry[]>(activity?.items ?? [])
+  const [activityCursor, setActivityCursor] = useState(activity?.nextCursor ?? null)
+  const [loadingActivity, setLoadingActivity] = useState(false)
+
+  /*
+   * A save refreshes the page from the server, and the timeline's first page
+   * comes back with the entry the save just wrote. Taking it over replaces
+   * whatever older pages were loaded — they are a click away again.
+   */
+  const [seenActivity, setSeenActivity] = useState(activity)
+  if (activity !== seenActivity) {
+    setSeenActivity(activity)
+    setEntries(activity?.items ?? [])
+    setActivityCursor(activity?.nextCursor ?? null)
+  }
+
+  /** The next page of the timeline, through the same-origin proxy. */
+  async function loadMoreActivity() {
+    if (!activityCursor || loadingActivity) return
+    setLoadingActivity(true)
+    try {
+      const response = await fetch(
+        `/api/v1/students/${student.id}/activity?cursor=${encodeURIComponent(activityCursor)}`,
+      )
+      if (!response.ok) throw new Error(String(response.status))
+      const next = (await response.json()) as StudentActivityPage
+      setEntries((current) => [...current, ...next.items])
+      setActivityCursor(next.nextCursor)
+    } catch {
+      setToast(t('student_file.activity_load_error'))
+    } finally {
+      setLoadingActivity(false)
+    }
+  }
   const [tab, setTab] = useState<Tab>('data')
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState<EditableStudent>({
@@ -66,7 +136,6 @@ export function StudentFile({ student }: { student: StudentDetail }) {
     region: student.region,
     city: student.city,
   })
-  const [savedAt, setSavedAt] = useState<string | null>(null)
   const [editingGuardian, setEditingGuardian] = useState(false)
   const [guardianDraft, setGuardianDraft] = useState<EditableGuardian | null>(
     student.guardian
@@ -81,11 +150,30 @@ export function StudentFile({ student }: { student: StudentDetail }) {
         }
       : null,
   )
-  const [guardianSavedAt, setGuardianSavedAt] = useState<string | null>(null)
   /** Read-only next to the editable fields — never part of the draft. */
   const consent = student.guardian?.consent ?? null
   /** Enrollment whose detail panel is open — the table shows status only. */
   const [openEnrollmentId, setOpenEnrollmentId] = useState<string | null>(null)
+
+  /**
+   * Pagos filtered down to this enrollment's payment. The ledger has no
+   * by-id deep link, so it is searched by what identifies the payment best:
+   * the operation number, or the student's name when none was ever written.
+   */
+  function paymentsHref(item: EnrollmentHistoryItem): string | null {
+    if (!canViewPayments || item.paymentId === null) return null
+    const search = paymentLedgerSearchParams({
+      page: 1,
+      status: null,
+      method: null,
+      q: item.operationNumber ?? `${student.firstName} ${student.lastName}`,
+      sort: 'newest',
+    })
+    return `/backoffice/payments?${search.toString()}`
+  }
+
+  const openEnrollment =
+    student.enrollments.find((item) => item.id === openEnrollmentId) ?? null
 
   /** Audit references carry domain data or a domain code — the screen only ever
    *  shows text (CLAUDE.md §4: zero UI string outside the locale files). */
@@ -95,16 +183,15 @@ export function StudentFile({ student }: { student: StudentDetail }) {
         return reference.name
       case 'operation':
         return t('student_file.activity_operation', { number: reference.number })
-      case 'review_flag':
-        return t(`review_flag.${reference.flag}`)
-      case 'student_field':
-        return t('student_file.activity_field', {
-          field: t(`student_file.field_${reference.field}`),
+      case 'fields':
+        return t('student_file.activity_fields', {
+          fields: reference.fields
+            .map((field) => t(`student_file.field_${field}`))
+            .join(', '),
         })
-      case 'email_template':
-        return t(`email_template.${reference.template}`)
     }
   }
+
 
   return (
     <div className="flex flex-col gap-5">
@@ -142,7 +229,7 @@ export function StudentFile({ student }: { student: StudentDetail }) {
               <SectionTitle icon="students">
                 {t('student_file.personal_title')}
               </SectionTitle>
-              {!editing && (
+              {canEdit && !editing && (
                 <button
                   type="button"
                   onClick={() => setEditing(true)}
@@ -156,12 +243,14 @@ export function StudentFile({ student }: { student: StudentDetail }) {
 
             {editing ? (
               <StudentEditForm
+                studentId={student.id}
                 value={draft}
                 onCancel={() => setEditing(false)}
                 onSave={(next) => {
                   setDraft(next)
                   setEditing(false)
-                  setSavedAt(new Date().toISOString())
+                  setToast(t('student_file.saved'))
+                  router.refresh()
                 }}
               />
             ) : (
@@ -194,14 +283,6 @@ export function StudentFile({ student }: { student: StudentDetail }) {
                     {formatDateTime(student.lastActivityAt, locale)}
                   </Field>
                 </AutoGrid>
-                {savedAt && (
-                  <p className="mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                    <BoIcon name="alert" size={14} className="mt-0.5 shrink-0" />
-                    {t('student_file.saved_local_only', {
-                      time: formatDateTime(savedAt, locale),
-                    })}
-                  </p>
-                )}
               </>
             )}
           </Card>
@@ -212,58 +293,51 @@ export function StudentFile({ student }: { student: StudentDetail }) {
               <SectionTitle icon="guardian">
                 {t('student_file.guardian_title')}
               </SectionTitle>
-              {guardianDraft && !editingGuardian && (
+              {canEdit && !editingGuardian && (
                 <button
                   type="button"
                   onClick={() => setEditingGuardian(true)}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs font-semibold text-brand-blue transition hover:bg-sky"
                 >
-                  <BoIcon name="edit" size={14} />
-                  {t('student_file.guardian_edit')}
+                  <BoIcon name={guardianDraft ? 'edit' : 'plus'} size={14} />
+                  {guardianDraft ? t('student_file.guardian_edit') : t('student_file.guardian_add')}
                 </button>
               )}
             </div>
-            {guardianDraft ? (
+            {editingGuardian ? (
+              <GuardianEditForm
+                studentId={student.id}
+                value={guardianDraft ?? EMPTY_GUARDIAN}
+                onCancel={() => setEditingGuardian(false)}
+                onSave={(next) => {
+                  setGuardianDraft(next)
+                  setEditingGuardian(false)
+                  setToast(t('student_file.saved'))
+                  router.refresh()
+                }}
+              />
+            ) : guardianDraft ? (
               <>
-                {editingGuardian ? (
-                  <GuardianEditForm
-                    value={guardianDraft}
-                    onCancel={() => setEditingGuardian(false)}
-                    onSave={(next) => {
-                      setGuardianDraft(next)
-                      setEditingGuardian(false)
-                      setGuardianSavedAt(new Date().toISOString())
-                    }}
-                  />
-                ) : (
-                  <AutoGrid as="dl" min="17rem">
-                    <Field label={t('student_file.field_guardian_name')}>
-                      {`${guardianDraft.firstName} ${guardianDraft.lastName}`}
-                    </Field>
-                    <Field label={t('student_file.field_relationship')}>
-                      {t(`relationship.${guardianDraft.relationship}`)}
-                    </Field>
-                    <Field label={t(`national_id_type.${guardianDraft.nationalIdType}`)}>
-                      <span className="tabular-nums">{guardianDraft.nationalId}</span>
-                    </Field>
-                    <Field label={t('student_file.field_email')}>
-                      {guardianDraft.email}
-                    </Field>
-                    <Field label={t('student_file.field_phone')}>
-                      {guardianDraft.phone}
-                    </Field>
-                  </AutoGrid>
-                )}
-                {guardianSavedAt && !editingGuardian && (
-                  <p className="mt-4 flex items-start gap-2 rounded-lg border border-dashed border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                    <BoIcon name="alert" size={14} className="mt-0.5 shrink-0" />
-                    {t('student_file.saved_local_only', {
-                      time: formatDateTime(guardianSavedAt, locale),
-                    })}
-                  </p>
-                )}
-                {/* Consent stays read-only in both modes: it records that a
-                    person accepted a text, not a field staff may set. */}
+                <AutoGrid as="dl" min="17rem">
+                  <Field label={t('student_file.field_guardian_name')}>
+                    {`${guardianDraft.firstName} ${guardianDraft.lastName}`}
+                  </Field>
+                  <Field label={t('student_file.field_relationship')}>
+                    {t(`relationship.${guardianDraft.relationship}`)}
+                  </Field>
+                  <Field label={t(`national_id_type.${guardianDraft.nationalIdType}`)}>
+                    <span className="tabular-nums">{guardianDraft.nationalId}</span>
+                  </Field>
+                  <Field label={t('student_file.field_email')}>
+                    {guardianDraft.email}
+                  </Field>
+                  <Field label={t('student_file.field_phone')}>
+                    {guardianDraft.phone}
+                  </Field>
+                </AutoGrid>
+                {/* Consent is read-only and never part of the edit form: it
+                    records that a person accepted a text, not a field staff
+                    may set. */}
                 <div className="mt-4 rounded-lg border border-line bg-sky-soft p-3">
                   {consent ? (
                     <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -294,7 +368,11 @@ export function StudentFile({ student }: { student: StudentDetail }) {
               <EmptyState
                 icon="guardian"
                 title={t('student_file.no_guardian_title')}
-                body={t('student_file.no_guardian_body')}
+                body={
+                  student.isMinor
+                    ? t('student_file.no_guardian_minor_body')
+                    : t('student_file.no_guardian_body')
+                }
               />
             )}
           </Card>
@@ -370,10 +448,22 @@ export function StudentFile({ student }: { student: StudentDetail }) {
                       />
                     </td>
                     <td className={tdClass}>
-                      <StatusBadge
-                        tone={paymentTone[item.paymentStatus]}
-                        label={t(`payment_status.${item.paymentStatus}`)}
-                      />
+                      <span className="flex flex-col items-start gap-1">
+                        <StatusBadge
+                          tone={paymentTone[item.paymentStatus]}
+                          label={t(`payment_status.${item.paymentStatus}`)}
+                        />
+                        {/* Money still open or refused is settled in Pagos,
+                            never from the file — the row points the way. */}
+                        {item.paymentStatus !== 'approved' && paymentsHref(item) && (
+                          <Link
+                            href={paymentsHref(item)!}
+                            className="text-xs font-semibold text-brand-blue transition hover:text-brand-blue-deep"
+                          >
+                            {t('student_file.open_in_payments')}
+                          </Link>
+                        )}
+                      </span>
                     </td>
                     <td className={`${tdClass} whitespace-nowrap font-semibold tabular-nums`}>
                       {formatMoney(item.amountCents, item.currency, locale)}
@@ -387,9 +477,8 @@ export function StudentFile({ student }: { student: StudentDetail }) {
             </TableShell>
           )}
           <EnrollmentDetailSheet
-            enrollment={
-              student.enrollments.find((item) => item.id === openEnrollmentId) ?? null
-            }
+            enrollment={openEnrollment}
+            paymentsHref={openEnrollment ? paymentsHref(openEnrollment) : null}
             onClose={() => setOpenEnrollmentId(null)}
           />
         </Card>
@@ -405,7 +494,13 @@ export function StudentFile({ student }: { student: StudentDetail }) {
               {t('student_file.activity_subtitle')}
             </p>
           </div>
-          {student.activity.length === 0 ? (
+          {activity === null ? (
+            <EmptyState
+              icon="alert"
+              title={t('student_file.activity_error_title')}
+              body={t('student_file.activity_error_body')}
+            />
+          ) : entries.length === 0 ? (
             <EmptyState
               icon="clock"
               title={t('student_file.no_activity_title')}
@@ -413,11 +508,11 @@ export function StudentFile({ student }: { student: StudentDetail }) {
             />
           ) : (
             <ol className="flex flex-col">
-              {student.activity.map((entry, index) => (
+              {entries.map((entry, index) => (
                 <li key={entry.id} className="flex gap-3">
                   <div className="flex flex-col items-center">
                     <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-brand-blue" />
-                    {index < student.activity.length - 1 && (
+                    {(index < entries.length - 1 || activityCursor) && (
                       <span className="w-px flex-1 bg-line" />
                     )}
                   </div>
@@ -433,10 +528,12 @@ export function StudentFile({ student }: { student: StudentDetail }) {
                       </span>
                     </div>
                     <p className="mt-1 text-sm text-ink">
-                      {t('student_file.activity_actor', {
-                        actor: entry.actorName,
-                        role: t(`role.${entry.actorRole}`),
-                      })}
+                      {entry.actorName && entry.actorRole
+                        ? t('student_file.activity_actor', {
+                            actor: entry.actorName,
+                            role: t(`role.${entry.actorRole}`),
+                          })
+                        : t('student_file.activity_actor_unknown')}
                     </p>
                     {entry.reference && (
                       <p className="text-xs text-muted-foreground">
@@ -448,8 +545,20 @@ export function StudentFile({ student }: { student: StudentDetail }) {
               ))}
             </ol>
           )}
+          {activity !== null && activityCursor && (
+            <button
+              type="button"
+              onClick={() => void loadMoreActivity()}
+              disabled={loadingActivity}
+              className="mt-1 min-h-tap rounded-lg border border-line bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:bg-cream disabled:opacity-50"
+            >
+              {loadingActivity ? t('student_file.activity_loading') : t('student_file.activity_load_more')}
+            </button>
+          )}
         </Card>
       )}
+
+      <Toast message={toast} onDismiss={() => setToast(null)} />
     </div>
   )
 }

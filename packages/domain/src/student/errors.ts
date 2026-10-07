@@ -1,3 +1,4 @@
+import { NotFoundError } from "../shared/base/errors/NotFoundError.js";
 import { UnableToProcessEntryError } from "../shared/base/errors/UnableToProcessEntryError.js";
 
 export class GuardianRequiredForMinorError extends UnableToProcessEntryError {
@@ -32,5 +33,11 @@ export class StudentAlreadyRegisteredError extends UnableToProcessEntryError {
       message: "A student is already registered under this national id.",
       ...params,
     });
+  }
+}
+
+export class StudentNotFoundError extends NotFoundError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "student.not_found", message: "No live student with that id.", ...params });
   }
 }

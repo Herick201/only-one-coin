@@ -55,6 +55,9 @@ export const createManualEnrollmentRoute = RouteBuilder.post("/enrollments")
   .response(404, ErrorResponseSchema)
   .response(422, ErrorResponseSchema)
   .handler(async (request, reply) => {
-    const result = await container.useCases.enrollment.createManual.run(request.body);
+    const result = await container.useCases.enrollment.createManual.run({
+      ...request.body,
+      actorId: request.currentUser!.id,
+    });
     reply.status(201).send(result);
   });

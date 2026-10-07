@@ -123,7 +123,7 @@ const trackingCodeSql = sql<string>`'OOC-' || to_char(${enrollments.createdAt} a
  * the schema can produce it yet — there is no grading, so no enrollment is
  * ever finished. It stays unreachable rather than faked.
  */
-function deriveStatus(seatStatus: string, paymentStatus: string): EnrollmentListStatus {
+export function deriveStatus(seatStatus: string, paymentStatus: string): EnrollmentListStatus {
   if (paymentStatus === "rejected" || seatStatus === "released") return "rejected";
   if (seatStatus === "confirmed" && paymentStatus === "approved") return "active";
   return "under_review";
