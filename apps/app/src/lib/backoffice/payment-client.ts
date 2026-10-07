@@ -54,7 +54,14 @@ async function paymentCall<T>(
 }
 
 /** Approve an open payment: the seat is confirmed and the enrollment finished. */
-export async function approvePayment(id: string): Promise<PaymentWriteResult<{ id: string }>> {
+export async function approvePayment(
+  id: string,
+): Promise<
+  PaymentWriteResult<{
+    id: string
+    portalAccess: 'created' | 'linked_existing' | 'already_linked' | 'email_conflict' | null
+  }>
+> {
   return paymentCall(`${encodeURIComponent(id)}/approve`, { method: 'POST', body: {} })
 }
 

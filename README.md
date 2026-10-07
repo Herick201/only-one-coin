@@ -18,6 +18,8 @@ backoffice administrativo e módulo de e-mail.
 - [`docs/OPEN-FINANCE-PERU.md`](docs/OPEN-FINANCE-PERU.md) — pesquisa (não decisão): regulação de Open Finance no Peru, provedores de API existentes e custos — e por que a maioria esbarra na regra de "sem pasarela de pago" (`CLAUDE.md` §2).
 - [`docs/superpowers/specs/2026-10-01-catalog-crud-design.md`](docs/superpowers/specs/2026-10-01-catalog-crud-design.md) — desenho do CRUD real de cursos e turmas (OOC-36/OOC-35): turma em rascunho, janela de inscrição, duplicar período, lista de espera manual, preço agendado.
 - [`docs/superpowers/plans/2026-10-01-catalog-crud.md`](docs/superpowers/plans/2026-10-01-catalog-crud.md) — plano de implementação desse desenho, em dois PRs (OOC-36 primeiro, depois OOC-35).
+- [`docs/superpowers/specs/2026-10-05-student-auth-design.md`](docs/superpowers/specs/2026-10-05-student-auth-design.md) — desenho da autenticação real do aluno: conta criada na aprovação do pagamento, login por e-mail ou documento, recuperação de senha, anti-enumeração.
+- [`docs/superpowers/plans/2026-10-05-student-auth.md`](docs/superpowers/plans/2026-10-05-student-auth.md) — plano de implementação desse desenho, em 15 tarefas (domínio e API primeiro, depois as telas e a documentação).
 - [`docs/DNS-MIGRATION-CLOUDFLARE.md`](docs/DNS-MIGRATION-CLOUDFLARE.md) — plano (em andamento): corte de nameservers para o Cloudflare sem downtime, preservando o e-mail no Google Workspace.
 
 ## Stack
@@ -108,11 +110,7 @@ autenticação real do backoffice já está de pé** — login, logout, convite 
 staff e recuperação de senha do painel (link por e-mail desde OOC-30) falam com o Better Auth de verdade
 (`/api/auth/sign-in/email` etc.); só falta o MFA (nenhum plugin `twoFactor`
 configurado ainda, então `admin`/`billing` entram sem o segundo fator por
-enquanto). **O login do aluno (`/login`) continua mockado**: qualquer
-submissão válida redireciona pro portal sem checar credencial — esse é o
-único pedaço da Sessão 31 do `ROADMAP.md` ainda não iniciado, e as duas peças
-que a bloqueavam (autorização deny-by-default da Sessão 8, `audit_log` da
-Sessão 7) já existem. Domínio e fila já existem, independentes dessa escolha:
+enquanto). **O login do aluno (`/login`) também é real** (05/10/2026): a aprovação do pagamento cria a conta, o aluno define a senha por link, entra por e-mail ou documento e recupera a senha por e-mail; o auto-cadastro está fechado. O que falta da Sessão 31 do `ROADMAP.md` é o MFA do staff. Domínio e fila já existem, independentes dessa escolha:
 
 - `apps/landing` — site público (Astro), trilíngue. Camada de SEO montada: título e
   descrição por página nos três idiomas (`src/i18n/ui.ts`), `canonical` + `hreflang`
@@ -321,7 +319,7 @@ o que é real:
 | --- | --- |
 | Alunos (`/backoffice/students`) | **Real**: listagem (sem quem só tem matrícula reservada), ficha e criação chamam a API. Edição é stub de frontend (fica em estado local; a escrita real ainda não existe) |
 | Matrículas (`/backoffice/enrollments`) | **Real**: só vagas confirmadas (quem pagou e foi aprovado), busca/filtros e abertura manual, que avisa que a matrícula foi enviada a Pagos (`GET`/`POST /api/v1/enrollments`). A aba Reservas foi removida |
-| Pagamentos e fila de revisão (`/backoffice/payments`, `/payments/review`) | **Real** (OOC-55): livro e fila leem `GET /api/v1/payments` e `/payments/review`; o comprovante abre por URL assinada (`audit_log`); aprovar (vaga `reserved → confirmed`) e rejeitar com motivo (vaga devolvida à turma) gravam e disparam o e-mail. O diálogo de revisão mostra a **leitura da IA** do comprovante (OOC-20): os cinco campos com a confiança de cada um, ou que a leitura falhou ou ainda não aconteceu — e o **veredito do semáforo** (OOC-21), em texto. Fora: credenciais do portal na aprovação, cron da janela de 5 dias, trâmites (constancia), ação em lote, ordenação por confiança e atalhos de teclado. O painel inicial (Home) continua mock |
+| Pagamentos e fila de revisão (`/backoffice/payments`, `/payments/review`) | **Real** (OOC-55): livro e fila leem `GET /api/v1/payments` e `/payments/review`; o comprovante abre por URL assinada (`audit_log`); aprovar (vaga `reserved → confirmed`) e rejeitar com motivo (vaga devolvida à turma) gravam e disparam o e-mail. O diálogo de revisão mostra a **leitura da IA** do comprovante (OOC-20): os cinco campos com a confiança de cada um, ou que a leitura falhou ou ainda não aconteceu — e o **veredito do semáforo** (OOC-21), em texto. A aprovação também cria a conta do portal do aluno e envia o link de definir senha; quando o e-mail do aluno já é de outra conta, a aprovação segue, a conta não é criada e a tela mostra o aviso de conflito de e-mail. A ficha do aluno tem *Enviar acesso ao portal* (reenvia o link de ativação ou de redefinição, para quem foi aprovado antes da conta existir). Fora: cron da janela de 5 dias, trâmites (constancia), ação em lote, ordenação por confiança e atalhos de teclado. O painel inicial (Home) continua mock |
 | Cursos (`/backoffice/courses`) | **Real**: lista (aposentados inclusos, sinalizados), criar curso, opções (resumo, regra de certificado, congelamento, transferência), sair do catálogo/voltar com aviso de matrícula viva, e planos com preço agendado (`/api/v1/catalog`, com `audit_log`). A coluna `courses.local_only` deixou de existir |
 | Turmas (`/backoffice/class-groups`) | **Real**: lista por período, períodos (criar, duplicar), criar/editar turma, rascunho e ciclo de vida (`draft → enrolling → in_progress → finished → closed`), ficha da turma e lista de espera manual (`/api/v1/catalog`, com `audit_log`). Continua mock: visão do docente (precisa de `teachers`, Sessão 36), roster, notas e certificados |
 | Docentes (`/backoffice/teachers`) | Mock — não existe tabela `teachers` ainda (decisão deliberada, `docs/ROADMAP.md` Sessão 36) |
@@ -332,8 +330,8 @@ o que é real:
 | Configuração (`/backoffice/settings`) | Parcial: **Real** só a reserva durante o pagamento (`GET /settings`, `PUT /settings/checkout-hold`, com `audit_log`) — o resto são constantes fixas, alteradas só na tela |
 | Conta (`/backoffice/account`) | **Real**: troca da própria senha (`POST /api/v1/me/password`, OOC-31) — pede a senha atual, aplica as mesmas exigências da tela, encerra as demais sessões abertas e grava no `audit_log`; a data da última troca vem de `GET /api/v1/me/password`. O idioma do painel fica no navegador |
 | Login do backoffice, convite e redefinição de senha | **Real** — fala direto com o Better Auth (`/api/auth/sign-in/email`). "Esqueci minha senha" manda o link por e-mail (`POST /staff/password-resets/request`, OOC-30); o link gerado pelo admin na tela de Equipe continua existindo. MFA ainda não (nenhum plugin `twoFactor` configurado) |
-| Login do aluno (`/login`) | Mock — qualquer submissão válida redireciona pro portal, sem checar credencial |
-| Portal do aluno (`/portal/*`, todas as telas) | Mock — nenhuma chamada à API ainda |
+| Login do aluno (`/login`), `/forgot-password`, `/access/[token]` | **Real** — entrada por e-mail ou documento, recuperação e definição de senha por link; sessão no cookie do Better Auth |
+| Portal do aluno (`/portal/*`, todas as telas) | Sessão real, dados mock (exceto identidade) — `GET /api/v1/portal/me` dá nome e e-mail; o resto ainda é mock |
 
 - `packages/domain` — domínio DDD puro (entidades, usecases, portas de
   repositório), sem framework nem provedor de banco. Já inclui a porta de

@@ -8,4 +8,5 @@ description = "Placeholders só de CI/test — segredo real nunca é literal em 
 regexes = [
   '''ci-placeholder-secret-at-least-32-chars''',
   '''test-secret-at-least-32-characters-long''',
+  '''integration-secret-at-least-32-characters''',
 ]

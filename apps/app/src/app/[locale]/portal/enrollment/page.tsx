@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
 import { getPortalSession } from '@/lib/portal/mock-data'
+import { getStudentSession } from '@/lib/portal/session'
 import { getFeatureFlags } from '@/lib/feature-flags/server'
 import type {
   Enrollment,
@@ -72,6 +73,7 @@ export default async function EnrollmentPage({
 }) {
   const { locale: raw } = await params
   setRequestLocale(raw)
+  await getStudentSession()
   const t = await getTranslations('portal')
 
   const flags = await getFeatureFlags()

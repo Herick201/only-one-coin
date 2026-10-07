@@ -33,6 +33,15 @@ export const ConfigSchema = z
       .string()
       .url()
       .transform((val) => new URL(val).origin),
+    // The origin the student portal is served from, for the links in the
+    // portal e-mails (activation and reset). Production:
+    // https://student.onlyonecoin.edu.pe; locally the apps/app origin.
+    // Required: a credentials e-mail pointing nowhere is an approval nobody
+    // can use. `fly secrets set` before merging (CLAUDE.md §7).
+    PORTAL_PUBLIC_URL: z
+      .string()
+      .url()
+      .transform((val) => new URL(val).origin),
 
     // Public-route protection (OOC-24). The Turnstile secret pairs with
     // apps/app's NEXT_PUBLIC_TURNSTILE_SITE_KEY — one widget per environment.

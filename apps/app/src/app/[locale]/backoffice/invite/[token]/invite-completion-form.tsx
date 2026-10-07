@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link, useRouter } from '@/i18n/navigation'
+import { PASSWORD_MIN_LENGTH } from '@/lib/backoffice/account'
 import {
   CheckCircleIcon,
   EyeIcon,
@@ -10,10 +11,6 @@ import {
   LockIcon,
   MailIcon,
 } from '../../icons'
-
-/** Better Auth's own floor (`CLAUDE.md` §8) — repeated here only so the
-    invitee sees the problem before submitting, not after. */
-const MIN_PASSWORD_LENGTH = 8
 
 /**
  * The one thing this screen exists to collect: a password nobody else ever
@@ -80,7 +77,11 @@ export function InviteCompletionForm({
     event.preventDefault()
     if (pending) return
 
-    if (password.length < MIN_PASSWORD_LENGTH) {
+    if (
+      password.length < PASSWORD_MIN_LENGTH ||
+      !/\p{L}/u.test(password) ||
+      !/\d/.test(password)
+    ) {
       setError('short')
       return
     }
@@ -145,7 +146,7 @@ export function InviteCompletionForm({
               : error === 'mismatch'
                 ? 'invite_error_mismatch'
                 : 'invite_error_server',
-            { min: MIN_PASSWORD_LENGTH },
+            { min: PASSWORD_MIN_LENGTH },
           )}
         </div>
       )}
@@ -173,7 +174,7 @@ export function InviteCompletionForm({
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               autoComplete="new-password"
-              minLength={MIN_PASSWORD_LENGTH}
+              minLength={PASSWORD_MIN_LENGTH}
               required
               placeholder={t('invite_password_placeholder')}
               className={`peer ${fieldClass} pr-11`}
@@ -191,7 +192,7 @@ export function InviteCompletionForm({
             </button>
           </span>
           <span className="text-xs font-normal text-muted-foreground">
-            {t('invite_password_hint', { min: MIN_PASSWORD_LENGTH })}
+            {t('invite_password_hint', { min: PASSWORD_MIN_LENGTH })}
           </span>
         </label>
 

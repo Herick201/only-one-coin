@@ -4,6 +4,7 @@ import {
   ClaimSeatHoldUseCase,
   CancelStaffPasswordResetUseCase,
   ChangeOwnPasswordUseCase,
+  CompletePortalAccessUseCase,
   CompleteStaffInviteUseCase,
   CompleteStaffPasswordResetUseCase,
   ConfirmReceiptUploadUseCase,
@@ -14,6 +15,7 @@ import {
   CreateClassGroupUseCase,
   UpdateClassGroupUseCase,
   AdvanceClassGroupStatusUseCase,
+  IssuePortalAccessUseCase,
   JoinWaitlistUseCase,
   LeaveWaitlistUseCase,
   CreateManualEnrollmentUseCase,
@@ -25,7 +27,9 @@ import {
   RegisterStudentUseCase,
   RenamePlanUseCase,
   ReleaseSeatHoldUseCase,
+  RequestPortalPasswordResetUseCase,
   RequestReceiptUploadUseCase,
+  ResolvePortalSignInEmailUseCase,
   ScreenReceiptUploadUseCase,
   RetireCatalogEntryUseCase,
   SettlePaymentUseCase,
@@ -57,6 +61,7 @@ import {
   type IPlanPriceLookup,
   type IPlanRepository,
   type IPlatformSettingsRepository,
+  type IPortalAccessRepository,
   type IPublicEnrollmentRepository,
   type IReceiptExtractionRepository,
   type IReceiptUploadRepository,
@@ -80,8 +85,10 @@ import { TurnstileCaptchaVerifier, type CaptchaVerifier } from "./infra/edge/Tur
 import { createAuth, type Auth } from "./infra/auth/betterAuth.js";
 import { BetterAuthCurrentSessionPort } from "./infra/identity/BetterAuthCurrentSessionPort.js";
 import { BetterAuthFreshAuthVerifier } from "./infra/identity/BetterAuthFreshAuthVerifier.js";
+import { PortalLinkBuilder } from "./infra/identity/PortalLinkBuilder.js";
 import { BackofficePasswordResetLinkBuilder } from "./infra/identity/BackofficePasswordResetLinkBuilder.js";
 import { BetterAuthStaffAccountProvisioner } from "./infra/identity/BetterAuthStaffAccountProvisioner.js";
+import { BetterAuthPortalPasswordSetter } from "./infra/identity/BetterAuthPortalPasswordSetter.js";
 import { BetterAuthStaffPasswordSetter } from "./infra/identity/BetterAuthStaffPasswordSetter.js";
 import { BetterAuthStaffSessionRevoker } from "./infra/identity/BetterAuthStaffSessionRevoker.js";
 import { DrizzleAuditLogRepository } from "./infra/identity/DrizzleAuditLogRepository.js";
@@ -91,6 +98,7 @@ import { DrizzleStaffPasswordResetRepository } from "./infra/identity/DrizzleSta
 import { DrizzleStaffUserLookup } from "./infra/identity/DrizzleStaffUserLookup.js";
 import { DrizzleUserRoleRepository } from "./infra/identity/DrizzleUserRoleRepository.js";
 import { createDb, type Db } from "./infra/db/client.js";
+import { DrizzlePortalAccessRepository } from "./infra/persistence/portal/DrizzlePortalAccessRepository.js";
 import { DrizzleStudentRepository } from "./infra/persistence/student/DrizzleStudentRepository.js";
 import { DrizzleGuardianRepository } from "./infra/persistence/student/DrizzleGuardianRepository.js";
 import { DrizzleEnrollmentRepository } from "./infra/persistence/enrollment/DrizzleEnrollmentRepository.js";
@@ -160,6 +168,7 @@ export interface AppRepositories {
    * index.ts builds it next to the workers. */
   receiptExtraction: IReceiptExtractionRepository;
   planPriceLookup: IPlanPriceLookup;
+  portalAccess: IPortalAccessRepository;
   staffInvite: IStaffInviteRepository;
   staffPasswordReset: IStaffPasswordResetRepository;
   featureFlagOverride: IFeatureFlagOverrideRepository;
@@ -201,6 +210,12 @@ export interface AppUseCases {
     completePasswordReset: CompleteStaffPasswordResetUseCase;
     requestPasswordReset: RequestStaffPasswordResetUseCase;
     changeOwnPassword: ChangeOwnPasswordUseCase;
+  };
+  portal: {
+    resolveSignInEmail: ResolvePortalSignInEmailUseCase;
+    requestPasswordReset: RequestPortalPasswordResetUseCase;
+    completeAccess: CompletePortalAccessUseCase;
+    issueAccess: IssuePortalAccessUseCase;
   };
   platform: {
     setFeatureFlag: SetFeatureFlagOverrideUseCase;
@@ -331,7 +346,7 @@ function buildContainer(): AppContainer {
   const auditLogRepository = new DrizzleAuditLogRepository(db);
   const staffInviteRepository = new DrizzleStaffInviteRepository(db);
   const staffAccessRepository = new DrizzleStaffAccessRepository(db);
-  const staffAccountProvisioner = new BetterAuthStaffAccountProvisioner(auth, db);
+  const staffAccountProvisioner = new BetterAuthStaffAccountProvisioner(db);
   const staffUserLookup = new DrizzleStaffUserLookup(db);
   const staffPasswordResetRepository = new DrizzleStaffPasswordResetRepository(db);
   const staffPasswordSetter = new BetterAuthStaffPasswordSetter(db);
@@ -433,7 +448,21 @@ function buildContainer(): AppContainer {
   const joinWaitlist = new JoinWaitlistUseCase(classGroupRepository, waitlistRepository, auditLogRepository);
   const leaveWaitlist = new LeaveWaitlistUseCase(waitlistRepository, auditLogRepository);
 
-  const settlePayment = new SettlePaymentUseCase(paymentSettlementRepository, enrollmentEmailContextLookup);
+  const portalLinkBuilder = new PortalLinkBuilder(config.PORTAL_PUBLIC_URL);
+  const settlePayment = new SettlePaymentUseCase(paymentSettlementRepository, enrollmentEmailContextLookup, portalLinkBuilder);
+
+  const portalAccessRepository = new DrizzlePortalAccessRepository(db);
+  const portal = {
+    resolveSignInEmail: new ResolvePortalSignInEmailUseCase(portalAccessRepository),
+    requestPasswordReset: new RequestPortalPasswordResetUseCase(portalAccessRepository, portalLinkBuilder, auditLogRepository),
+    completeAccess: new CompletePortalAccessUseCase(
+      portalAccessRepository,
+      new BetterAuthPortalPasswordSetter(db),
+      staffSessionRevoker,
+      auditLogRepository,
+    ),
+    issueAccess: new IssuePortalAccessUseCase(portalAccessRepository, portalLinkBuilder, auditLogRepository),
+  };
 
   const receiptValidationRepository = new DrizzleReceiptValidationRepository(db);
   const validateReceipt = new ValidateReceiptUseCase(
@@ -498,6 +527,7 @@ function buildContainer(): AppContainer {
       receiptUpload: receiptUploadRepository,
       receiptExtraction: receiptExtractionRepository,
       planPriceLookup,
+      portalAccess: portalAccessRepository,
       staffInvite: staffInviteRepository,
       staffPasswordReset: staffPasswordResetRepository,
       featureFlagOverride: featureFlagOverrideRepository,
@@ -536,6 +566,7 @@ function buildContainer(): AppContainer {
         requestPasswordReset,
         changeOwnPassword,
       },
+      portal,
       platform: {
         setFeatureFlag,
         updateCheckoutHoldMinutes,

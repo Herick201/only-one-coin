@@ -110,7 +110,8 @@
       "approved_toast": "Payment approved. The enrollment is now active.",
       "rejected_toast": "Payment rejected. The seat went back to the class group.",
       "load_error_title": "The review queue could not be loaded",
-      "load_error_body": "The system did not respond. Reload the page; if nothing changes, tell the tech team."
+      "load_error_body": "The system did not respond. Reload the page; if nothing changes, tell the tech team.",
+      "approved_portal_conflict_toast": "Payment approved, but we did not create the portal account: the student's e-mail already belongs to another account. The e-mail has to be corrected before the access is sent."
     },
     "review_queue": {
       "search_label": "Search receipt",
@@ -216,7 +217,6 @@
     },
     "student_file": {
       "back_to_list": "Back to students",
-      "resend_credentials": "Resend credentials",
       "tab_data": "Details",
       "tab_enrollments": "Enrollments",
       "tab_documents": "Documents",
@@ -325,7 +325,26 @@
       "no_attachments_title": "No files",
       "no_attachments_body": "Files the student uploads from the portal and files staff attach here show up in this list.",
       "attachments_hint": "Attached files, not institution documents: they carry no verification code.",
-      "file_meta": "{size} · {source} · {date}"
+      "file_meta": "{size} · {source} · {date}",
+      "portal_access_state": {
+        "none": "No portal access",
+        "pending_activation": "Access sent, password pending",
+        "active": "Portal access active"
+      },
+      "portal_access_send": "Send portal access",
+      "portal_access_sending": "Sending…",
+      "portal_access_outcome": {
+        "created": "Account created. We sent the student the link to create their password.",
+        "linked_existing": "This file is now linked to the account the student already had.",
+        "already_linked": "The student already had an account.",
+        "email_conflict": "This file's e-mail already belongs to another account, so we did not create the access. The student's e-mail has to be corrected before it is sent again.",
+        "activation_resent": "We re-sent the link to create the password.",
+        "reset_sent": "We sent the student a link to create a new password."
+      },
+      "portal_access_error": {
+        "no_confirmed_enrollment": "Portal access is only sent to students with a confirmed enrollment.",
+        "generic": "We couldn't send the access. Try again."
+      }
     },
     "relationship": {
       "mother": "Mother",

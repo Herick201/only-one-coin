@@ -372,8 +372,12 @@ export interface AuditEntry {
   reference: AuditReference | null
 }
 
+/** Where a student's portal account stands, as the API derives it. */
+export type PortalAccessState = 'none' | 'pending_activation' | 'active'
+
 /** Full student file. */
 export interface StudentDetail extends StudentRow {
+  portalAccess: PortalAccessState
   guardian: GuardianSummary | null
   enrollments: EnrollmentHistoryItem[]
   documents: DocumentItem[]

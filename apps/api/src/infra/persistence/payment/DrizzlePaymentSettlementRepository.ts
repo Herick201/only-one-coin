@@ -2,6 +2,7 @@ import {
   PaymentAlreadySettledError,
   PaymentSeatReleasedError,
   type IPaymentSettlementRepository,
+  type PortalAccessOutcome,
   type PaymentStatus,
   type PaymentToSettle,
   type SeatStatus,
@@ -9,6 +10,7 @@ import {
 import { auditLog, classGroups, enrollments, payments } from "@ooc/db";
 import { and, eq, gt, inArray, sql } from "drizzle-orm";
 import type { Db } from "@/infra/db/client.js";
+import { provisionPortalAccount } from "@/infra/persistence/portal/provisionPortalAccount.js";
 import { insertOutboxEmails } from "@/infra/persistence/notification/DrizzleOutboxRepository.js";
 
 const OPEN: PaymentStatus[] = ["pending", "under_review"];
@@ -33,7 +35,7 @@ export class DrizzlePaymentSettlementRepository implements IPaymentSettlementRep
     return row ? { ...row, status: row.status as PaymentStatus, seatStatus: row.seatStatus as SeatStatus } : null;
   }
 
-  async settle(params: Parameters<IPaymentSettlementRepository["settle"]>[0]): Promise<{ seatStatus: SeatStatus }> {
+  async settle(params: Parameters<IPaymentSettlementRepository["settle"]>[0]): Promise<{ seatStatus: SeatStatus; portalAccess: PortalAccessOutcome | null }> {
     return this.db.transaction(async (tx) => {
       // The guard against two reviewers (or one double click): the payment
       // only moves out of an open state, and Postgres serialises the two
@@ -56,7 +58,9 @@ export class DrizzlePaymentSettlementRepository implements IPaymentSettlementRep
         createdAt: params.audit.at,
       });
 
-      return { seatStatus };
+      const portalAccess = params.portalAccess ? await provisionPortalAccount(tx, params.portalAccess) : null;
+
+      return { seatStatus, portalAccess };
     });
   }
 

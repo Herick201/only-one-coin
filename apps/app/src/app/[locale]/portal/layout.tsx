@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { logout } from '../actions'
-import { getPortalSession } from '@/lib/portal/mock-data'
+import { getPortalView } from '@/lib/portal/session'
 import { getFeatureFlags, requireFeature } from '@/lib/feature-flags/server'
 import type { FeatureFlagKey } from '@/lib/feature-flags/registry'
 import type { NotificationKind } from '@/lib/portal/types'
@@ -26,7 +26,7 @@ export default async function PortalLayout({
   await requireFeature('portal')
   const flags = await getFeatureFlags()
 
-  const { student, notifications } = getPortalSession()
+  const { student, notifications } = await getPortalView()
   const fullName = `${student.firstName} ${student.lastName}`
   const monogram = initials(student.firstName, student.lastName)
 

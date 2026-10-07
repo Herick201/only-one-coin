@@ -9,7 +9,8 @@
       "development": "./src/index.ts",
       "default": "./dist/index.js"
     },
-    "./fields": "./src/student/fields.ts"
+    "./fields": "./src/student/fields.ts",
+    "./password-policy": "./src/identity/StudentPasswordPolicy.ts"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",

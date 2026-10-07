@@ -1,26 +1,33 @@
-import { sql } from "drizzle-orm";
+import { ConflictError } from "@ooc/domain";
 import type { IStaffAccountProvisioner, ProvisionStaffAccountInput, ProvisionStaffAccountOutput } from "@ooc/domain";
-import type { Auth } from "@/infra/auth/betterAuth.js";
 import type { Db } from "@/infra/db/client.js";
+import { insertCredentialUser } from "@/infra/auth/credentialAccount.js";
+import { isUniqueViolation } from "@/infra/db/isUniqueViolation.js";
 
 /**
- * Same two-step shape as apps/api/src/scripts/seed-admin.ts, for the same
- * reason: `role` is `additionalFields`, `input:false` on the public sign-up
- * call (CLAUDE.md §8), so it has to be set in a second, direct write.
+ * Writes the account directly — Better Auth's sign-up is closed
+ * (`disableSignUp`), server calls included. One transaction, so an invite
+ * never leaves a "user" without its password behind. An e-mail that already
+ * has an account is a 409, as Better Auth's sign-up used to answer.
  */
 export class BetterAuthStaffAccountProvisioner implements IStaffAccountProvisioner {
-  constructor(
-    private readonly auth: Auth,
-    private readonly db: Db,
-  ) {}
+  constructor(private readonly db: Db) {}
 
   async provision(input: ProvisionStaffAccountInput): Promise<ProvisionStaffAccountOutput> {
-    const result = await this.auth.api.signUpEmail({
-      body: { email: input.email, password: input.password, name: input.name },
-    });
-
-    await this.db.execute(sql`update "user" set "role" = ${input.role} where "id" = ${result.user.id}`);
-
-    return { userId: result.user.id };
+    try {
+      const userId = await this.db.transaction((tx) =>
+        insertCredentialUser(tx, { email: input.email, name: input.name, role: input.role, password: input.password }),
+      );
+      return { userId };
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        throw new ConflictError({
+          reason: "staff_invite.email_taken",
+          message: "An account with this e-mail already exists.",
+          cause: error,
+        });
+      }
+      throw error;
+    }
   }
 }

@@ -38,6 +38,7 @@ const GetStudentResponseSchema = z.object({
   totalEnrollments: z.number().int(),
   lastActivityAt: z.string(),
   guardian: GuardianResponseSchema.nullable(),
+  portalAccess: z.enum(["none", "pending_activation", "active"]),
   // Always empty for now — no `documents`, `document_requests`, upload or
   // `audit_log` table exists yet (docs/ROADMAP.md Sessão 7). Sent as empty
   // lists rather than omitted, so the frontend's existing empty states
@@ -79,8 +80,11 @@ export const getStudentRoute = RouteBuilder.get("/students/:studentId")
       });
     }
 
+    const portalAccess = await container.repositories.portalAccess.accessState(student.id);
+
     reply.status(200).send({
       ...student,
+      portalAccess,
       birthDate: student.birthDate.toISOString(),
       createdAt: student.createdAt.toISOString(),
       lastActivityAt: student.lastActivityAt.toISOString(),

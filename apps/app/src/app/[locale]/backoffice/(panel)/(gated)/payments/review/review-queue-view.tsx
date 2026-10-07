@@ -81,6 +81,7 @@ export function ReviewQueueView({
       : null,
   )
   const [toast, setToast] = useState<string | null>(null)
+  const [toastLong, setToastLong] = useState(false)
   const dismissToast = useCallback(() => setToast(null), [])
 
   /**
@@ -133,7 +134,21 @@ export function ReviewQueueView({
 
     if (result.ok) {
       setReviewing(null)
-      setToast(t(decision.kind === 'approve' ? 'review.approved_toast' : 'review.rejected_toast'))
+      const conflict =
+        decision.kind === 'approve' &&
+        'portalAccess' in result.data &&
+        result.data.portalAccess === 'email_conflict'
+      // The conflict toast is the only one that asks for action, so it stays longer.
+      setToastLong(conflict)
+      setToast(
+        t(
+          decision.kind === 'approve'
+            ? conflict
+              ? 'review.approved_portal_conflict_toast'
+              : 'review.approved_toast'
+            : 'review.rejected_toast',
+        ),
+      )
       refreshQueue()
       return { kind: 'done' }
     }
@@ -340,7 +355,7 @@ export function ReviewQueueView({
         onClose={() => setReviewing(null)}
         onDecide={decide}
       />
-      <Toast message={toast} onDismiss={dismissToast} />
+      <Toast message={toast} onDismiss={dismissToast} duration={toastLong ? 9000 : undefined} />
     </div>
   )
 }

@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
 import { getEnrollment } from '@/lib/portal/mock-data'
+import { getStudentSession } from '@/lib/portal/session'
 import { getFeatureFlags } from '@/lib/feature-flags/server'
 import { formatDate, formatMoney } from '@/lib/portal/format'
 import type { CourseMaterial, Locale } from '@/lib/portal/types'
@@ -24,6 +25,7 @@ export default async function CourseDetailPage({
   const { locale: raw, enrollmentId } = await params
   const locale = raw as Locale
   setRequestLocale(raw)
+  await getStudentSession()
   const t = await getTranslations('portal')
 
   const flags = await getFeatureFlags()
