@@ -4,18 +4,20 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { Db } from "@/infra/db/client.js";
-import { ListStudentsQuery } from "./ListStudentsQuery.js";
+import { DIRECTORY_PAGE_SIZE, ListStudentsQuery } from "./ListStudentsQuery.js";
 
 /**
  * OOC-55: the student directory is people who got in, plus people registered
  * by hand who have not enrolled yet. Someone whose only enrollment is still
- * being settled in Payments is not listed — but the manual enrollment
- * picker (`q`) still finds them, or staff would open a second file.
+ * being settled in Payments is not listed — but the pickers (`search`) still
+ * find them, or staff would open a second file.
+ *
+ * OOC-76: search, status and age run in Postgres over the whole directory,
+ * and the counts per chip agree with what each chip would list.
  *
  * `students` is under the delete lock (migration 0011): every test runs in a
- * transaction that is always rolled back. The rows are created in 2099 so
- * they are the first page of a newest-first browse whatever else the
- * database holds.
+ * transaction that is always rolled back, and every directory read is scoped
+ * by a search on this suite's own surname, so other rows never leak in.
  */
 
 const { Pool } = pg;
@@ -56,14 +58,26 @@ async function rolledBack(fn: (tx: Tx) => Promise<void>): Promise<void> {
   }
 }
 
+/** Ten years old today, whatever today is. */
+const CHILD = new Date(Date.UTC(new Date().getUTCFullYear() - 10, 0, 1));
+const ADULT = new Date("2000-01-01T00:00:00.000Z");
+
 /** One student per seat shape: none, reserved only, confirmed, released only, confirmed + reserved. */
-const SHAPES: { name: string; seats: ("reserved" | "confirmed" | "released")[]; listed: boolean }[] = [
-  { name: "SinMatricula", seats: [], listed: true },
-  { name: "SoloReservada", seats: ["reserved"], listed: false },
-  { name: "Confirmada", seats: ["confirmed"], listed: true },
-  { name: "SoloLiberada", seats: ["released"], listed: true },
-  { name: "ConfirmadaYReservada", seats: ["confirmed", "reserved"], listed: true },
+const SHAPES: {
+  name: string;
+  seats: ("reserved" | "confirmed" | "released")[];
+  listed: boolean;
+  status?: "active" | "inactive";
+  birthDate: Date;
+}[] = [
+  { name: "SinMatricula", seats: [], listed: true, status: "inactive", birthDate: ADULT },
+  { name: "SoloReservada", seats: ["reserved"], listed: false, birthDate: CHILD },
+  { name: "Confirmada", seats: ["confirmed"], listed: true, status: "active", birthDate: CHILD },
+  { name: "SoloLiberada", seats: ["released"], listed: true, status: "inactive", birthDate: ADULT },
+  { name: "ConfirmadaYReservada", seats: ["confirmed", "reserved"], listed: true, status: "active", birthDate: ADULT },
 ];
+
+const SURNAME = "Directorio";
 
 async function seed(tx: Tx): Promise<Map<string, string>> {
   await tx.insert(academicPeriods).values({
@@ -90,12 +104,12 @@ async function seed(tx: Tx): Promise<Map<string, string>> {
     .values(
       SHAPES.map((shape, i) => ({
         firstName: shape.name,
-        lastName: "Directorio",
+        lastName: SURNAME,
         nationalIdType: "DNI",
         nationalId: `DIRTEST${i}`,
         email: `dir.${i}@gmail.com`,
         phone: "+51900000000",
-        birthDate: new Date("2000-01-01T00:00:00.000Z"),
+        birthDate: shape.birthDate,
         country: "PE",
         city: "Lima",
         createdAt: new Date(Date.UTC(2099, 0, 1, 0, i)),
@@ -117,47 +131,77 @@ async function seed(tx: Tx): Promise<Map<string, string>> {
   return idOf;
 }
 
-describe("student directory (no q)", () => {
+describe("student directory", () => {
   it("leaves out a student whose only enrollment is still being settled", async () => {
     await rolledBack(async (tx) => {
       const query = new ListStudentsQuery(tx as unknown as Db);
-      const before = await query.run();
       const idOf = await seed(tx);
-      const after = await query.run();
+      const page = await query.directory({ q: SURNAME });
 
-      const listed = new Set(after.items.map((row) => row.id));
+      const listed = new Set(page.items.map((row) => row.id));
       for (const shape of SHAPES) {
         expect(listed.has(idOf.get(shape.name)!), shape.name).toBe(shape.listed);
       }
-      expect(after.total! - before.total!).toBe(SHAPES.filter((shape) => shape.listed).length);
+      expect(page.total).toBe(SHAPES.filter((shape) => shape.listed).length);
+    });
+  });
+
+  it("filters by status and by age in Postgres, and counts each chip over the search", async () => {
+    await rolledBack(async (tx) => {
+      const query = new ListStudentsQuery(tx as unknown as Db);
+      const idOf = await seed(tx);
+      const names = (rows: { id: string }[]) =>
+        rows.map((row) => [...idOf].find(([, id]) => id === row.id)?.[0]).sort();
+
+      const active = await query.directory({ q: SURNAME, status: "active" });
+      expect(names(active.items)).toEqual(["Confirmada", "ConfirmadaYReservada"]);
+
+      const inactive = await query.directory({ q: SURNAME, status: "inactive" });
+      expect(names(inactive.items)).toEqual(["SinMatricula", "SoloLiberada"]);
+
+      const minors = await query.directory({ q: SURNAME, minor: true });
+      expect(names(minors.items)).toEqual(["Confirmada"]);
+      expect(minors.items.every((row) => row.isMinor)).toBe(true);
+
+      // The chips ignore the chip filters themselves — same answer either way.
+      expect(minors.counts).toEqual({ all: 4, active: 2, inactive: 2, minors: 1 });
+      expect(active.counts).toEqual(minors.counts);
+      expect(active.total).toBe(2);
+    });
+  });
+
+  it("searches by partial document as well as by name", async () => {
+    await rolledBack(async (tx) => {
+      const query = new ListStudentsQuery(tx as unknown as Db);
+      const idOf = await seed(tx);
+      const page = await query.directory({ q: "DIRTEST2" });
+
+      expect(page.items.map((row) => row.id)).toEqual([idOf.get("Confirmada")]);
     });
   });
 });
 
-describe("manual enrollment picker (q)", () => {
+describe("pickers (search)", () => {
   it("still finds the student under review, so nobody opens a second file", async () => {
     await rolledBack(async (tx) => {
       const query = new ListStudentsQuery(tx as unknown as Db);
       const idOf = await seed(tx);
-      const found = await query.run("SoloReservada");
+      const found = await query.search("SoloReservada");
 
-      expect(found.items.map((row) => row.id)).toContain(idOf.get("SoloReservada"));
+      expect(found.map((row) => row.id)).toContain(idOf.get("SoloReservada"));
+      expect(found.find((row) => row.id === idOf.get("SoloReservada"))?.status).toBe("under_review");
     });
   });
 });
 
 /**
- * Regression for "the students directory stalls around page 3": `created_at`
- * carries microsecond precision, but a bulk insert evaluates `now()` once per
- * statement, so many rows share one non-zero-microsecond timestamp. A cursor
- * built from a millisecond `Date` cannot reconstruct that boundary, so the
- * tie-break by `id` never engages and the rest of the tie vanishes from the
- * next page. Rows go in through the raw pool, not Drizzle's typed insert:
- * binding a JS `Date` would re-truncate the timestamp on the way in.
- * Runs with the OOC-55 HAVING in place, so it also covers cursor paging with it.
+ * Regression for "the students directory stalls around page 3": a bulk insert
+ * evaluates `now()` once per statement, so many rows share one timestamp. The
+ * directory pages by offset now (OOC-76), ordered by `(created_at, id)`, so
+ * the id breaks the tie and every row lands on exactly one page.
  */
 describe("pagination across rows that share one timestamp", () => {
-  const TIED_ROW_COUNT = 70;
+  const TIED_ROW_COUNT = DIRECTORY_PAGE_SIZE * 2 + 5;
   const TIED_CREATED_AT = "2026-09-07 18:32:28.541523+00";
 
   let tiePool: pg.Pool;
@@ -187,7 +231,7 @@ describe("pagination across rows that share one timestamp", () => {
         `insert into students
            (first_name, last_name, national_id_type, national_id, email, phone, birth_date, country, city, created_at, updated_at)
          values
-           ($1, 'Tied', 'DNI', $2, $3, '+51900000000', '2000-01-01T00:00:00.000Z', 'PE', 'Lima', $4::timestamptz, $4::timestamptz)
+           ($1, 'Tiedbatch', 'DNI', $2, $3, '+51900000000', '2000-01-01T00:00:00.000Z', 'PE', 'Lima', $4::timestamptz, $4::timestamptz)
          returning id`,
         [`Row${i}`, `TIEDBATCH${i}`, `tied.${i}@gmail.com`, TIED_CREATED_AT],
       );
@@ -196,37 +240,17 @@ describe("pagination across rows that share one timestamp", () => {
     return ids;
   }
 
-  it("walks the whole tied batch, in full, across pages", async () => {
+  it("covers the whole tied batch exactly once across pages", async () => {
     const seededIds = await seedTiedBatch(TIED_ROW_COUNT);
 
-    const seen = new Set<string>();
-    let cursor: string | undefined;
-    let guard = 0;
+    const seen: string[] = [];
+    for (let page = 1; page <= 3; page++) {
+      const result = await tieQuery.directory({ q: "Tiedbatch", page });
+      seen.push(...result.items.map((row) => row.id));
+      expect(result.total).toBe(TIED_ROW_COUNT);
+    }
 
-    do {
-      const page = await tieQuery.run(undefined, cursor);
-      for (const item of page.items) seen.add(item.id);
-      cursor = page.nextCursor ?? undefined;
-      guard += 1;
-    } while (cursor && guard < 10);
-
-    // The dev database may hold other students, so count only ours.
-    expect(seededIds.filter((id) => seen.has(id))).toHaveLength(seededIds.length);
-    for (const id of seededIds) expect(seen.has(id)).toBe(true);
-  });
-
-  it("advances the cursor past a boundary row that shares its timestamp with the next page", async () => {
-    const seededIds = await seedTiedBatch(TIED_ROW_COUNT);
-
-    const first = await tieQuery.run();
-    expect(first.nextCursor).not.toBeNull();
-    expect(first.items.length).toBeGreaterThan(0);
-    expect(first.items.length).toBeLessThan(seededIds.length);
-
-    const second = await tieQuery.run(undefined, first.nextCursor ?? undefined);
-    expect(second.items.length).toBeGreaterThan(0);
-
-    const firstIds = new Set(first.items.map((row) => row.id));
-    for (const row of second.items) expect(firstIds.has(row.id)).toBe(false);
+    expect(seen).toHaveLength(seededIds.length);
+    expect(new Set(seen)).toEqual(new Set(seededIds));
   });
 });

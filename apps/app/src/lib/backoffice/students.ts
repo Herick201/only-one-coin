@@ -1,37 +1,36 @@
 import { apiFetch } from './api-client'
 import type { StudentActivityPage, StudentDetail, StudentRow } from './types'
+import { studentDirectorySearchParams, type StudentDirectoryQuery } from './student-directory-query'
 
-export interface StudentListPage {
+export {
+  parseStudentDirectoryQuery,
+  type StudentDirectoryQuery,
+} from './student-directory-query'
+
+/** One page of the student directory, as `GET /api/v1/students` answers it. */
+export interface StudentDirectoryPage {
   items: StudentRow[]
-  /** Non-null when another page of the directory browse follows — pass it
-   * straight back as `?cursor=` to fetch the next page. Always null for a
-   * `q` search (a short, non-paginated match list). */
-  nextCursor: string | null
-  /** Live students in total (directory browse only; null for a `q` search) —
-   * what lets the table offer pages it has not fetched yet. */
-  total: number | null
+  /** Students matching every filter, across every page. */
+  total: number
+  page: number
+  pageSize: number
+  /** Per chip, over the search alone — what choosing each chip would give. */
+  counts: { all: number; active: number; inactive: number; minors: number }
 }
 
 /**
- * The student directory (no `q`) and, elsewhere, the manual enrollment
- * form's picker (`q` set) — same `GET /api/v1/students` route, which
- * merges both concerns off one query (`apps/api/src/infra/persistence/
- * student/ListStudentsQuery.ts`).
- *
- * The directory browse is cursor-paginated server-side — this only fetches
- * one page. The client component (`students-table.tsx`) calls the
- * same-origin `/api/v1/students` proxy directly for subsequent pages, since
- * this function runs in a Server Component and can't be called again from
- * the browser.
+ * One page of the student directory (OOC-76). Search, status, age and paging
+ * all run in Postgres — with 30k students a filter over the loaded page
+ * answers the wrong question.
  *
  * `null` means the API failed (error response or unreachable) — the page
  * shows a visible error state for it. A silent empty page here is
  * indistinguishable from an empty directory, which reads as data loss.
  */
-export async function listStudents(cursor?: string): Promise<StudentListPage | null> {
-  const search = cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''
+export async function listStudents(query: StudentDirectoryQuery): Promise<StudentDirectoryPage | null> {
+  const search = studentDirectorySearchParams(query).toString()
   try {
-    const response = await apiFetch(`/api/v1/students${search}`)
+    const response = await apiFetch(`/api/v1/students${search ? `?${search}` : ''}`)
     if (!response.ok) return null
     return response.json()
   } catch {

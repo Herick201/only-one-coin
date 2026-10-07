@@ -22,7 +22,7 @@ const fieldClass =
 const smallButtonClass =
   'inline-flex min-h-tap items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-semibold text-muted-foreground transition hover:text-ink disabled:cursor-not-allowed disabled:opacity-40'
 
-/** The API's own floor for `GET /api/v1/students?q=` — shorter is not a search. */
+/** The API's own floor for `GET /api/v1/students/search?q=` — shorter is not a search. */
 const MIN_QUERY_LENGTH = 2
 
 /** Long enough to finish a word, short enough to feel like typing. */
@@ -223,7 +223,7 @@ export function WaitlistCard({
 }
 
 /**
- * Student search for the waitlist — the same `GET /api/v1/students?q=` the
+ * Student search for the waitlist — the same `GET /api/v1/students/search?q=` the
  * manual enrollment picks from. Only the newest request may write the list: a
  * slow answer for "Mar" must never land over the one for "Maria".
  */
@@ -253,7 +253,7 @@ function AddToWaitlist({
     const timer = window.setTimeout(() => {
       const controller = new AbortController()
       inflight.current = controller
-      fetch(`/api/v1/students?q=${encodeURIComponent(needle)}`, { signal: controller.signal })
+      fetch(`/api/v1/students/search?q=${encodeURIComponent(needle)}`, { signal: controller.signal })
         .then((response) =>
           response.ok ? (response.json() as Promise<{ items?: StudentMatch[] }>) : { items: [] },
         )

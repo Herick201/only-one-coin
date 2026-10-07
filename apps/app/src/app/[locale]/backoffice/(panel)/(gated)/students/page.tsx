@@ -1,5 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { listStudents } from '@/lib/backoffice/students'
+import { listStudents, parseStudentDirectoryQuery } from '@/lib/backoffice/students'
 import { getStaffSession } from '@/lib/backoffice/session'
 import {
   canBrowseStudents,
@@ -9,13 +9,16 @@ import { EmptyState, PageHeader } from '@/components/backoffice/ui'
 import { StudentsTable } from './students-table'
 
 /**
- * Student directory. The list itself is a client component so search and the
- * status filter work without a backend; the data still comes from the server.
+ * Student directory. Search, filters and paging live in the URL and run in
+ * Postgres (OOC-76): this server component reads them from `searchParams` and
+ * fetches exactly the page asked for; the client table only rewrites the URL.
  */
 export default async function StudentsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const { locale } = await params
   setRequestLocale(locale)
@@ -39,7 +42,8 @@ export default async function StudentsPage({
     )
   }
 
-  const page = await listStudents()
+  const query = parseStudentDirectoryQuery(await searchParams)
+  const page = await listStudents(query)
 
   /* API down or erroring. An honest failure screen, never an empty
      directory — "no students" and "could not load" are different facts. */
@@ -60,9 +64,8 @@ export default async function StudentsPage({
     <div className="flex flex-col gap-5">
       <PageHeader title={t('students.title')} />
       <StudentsTable
-        rows={page.items}
-        initialNextCursor={page.nextCursor}
-        total={page.total}
+        directory={page}
+        query={query}
         canCreate={canCreateStudent(staff.role)}
       />
     </div>

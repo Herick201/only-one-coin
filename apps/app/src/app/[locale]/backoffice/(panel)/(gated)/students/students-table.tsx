@@ -1,9 +1,14 @@
 'use client'
 
-import { useEffect, useMemo, useState, type MouseEvent } from 'react'
+import { useEffect, useState, useTransition, type MouseEvent } from 'react'
 import { useTranslations } from 'next-intl'
-import { Link, useRouter } from '@/i18n/navigation'
-import type { StudentRow, StudentStatus } from '@/lib/backoffice/types'
+import { Link, usePathname, useRouter } from '@/i18n/navigation'
+import type { StudentDirectoryPage } from '@/lib/backoffice/students'
+import {
+  MIN_SEARCH_LENGTH,
+  studentDirectorySearchParams,
+  type StudentDirectoryQuery,
+} from '@/lib/backoffice/student-directory-query'
 import {
   Card,
   EmptyState,
@@ -21,268 +26,75 @@ import { BoIcon } from '@/components/backoffice/icons'
 import { FiltersDropdown } from '@/components/backoffice/filters-dropdown'
 import { NewStudentForm } from './new-student-form'
 
-type StatusFilter = Exclude<StudentStatus, 'under_review'> | 'all'
+type StatusFilter = 'all' | 'active' | 'inactive'
 
 const STATUS_FILTERS: StatusFilter[] = ['all', 'active', 'inactive']
 
-/**
- * Guards `directory` against a page fetched twice ending up twice on screen —
- * belt-and-suspenders alongside the stalled-cursor guard in `loadUpTo`, since
- * a retry after a dropped response can otherwise re-append rows already held.
- */
-function dedupeById(rows: StudentRow[]): StudentRow[] {
-  const seen = new Set<string>()
-  return rows.filter((row) => {
-    if (seen.has(row.id)) return false
-    seen.add(row.id)
-    return true
-  })
-}
+/** A pause in typing before the search reaches the URL — and the database. */
+const SEARCH_DEBOUNCE_MS = 350
 
 /**
- * A screen of rows, not a scroll of them: past ~15 the eye stops scanning and
- * starts hunting, and the toolbar scrolls out of reach.
- */
-const PAGE_SIZE = 15
-
-/**
- * Student list. The server paginates the real directory (`ListStudentsQuery`,
- * 50 rows a page) rather than hand it over in one query at 20k
- * enrollments/month peak (CLAUDE.md §1); this table shows 15 at a time on top
- * of that.
- *
- * Those two used to be separate mechanisms and it showed: the pager counted
- * only the rows already loaded, so with 300 students in the table it offered
- * four pages, and "next" on the fourth did nothing — the remaining 250 lived
- * behind a "Carregar mais" button somewhere below the card. Now the pager owns
- * it: `total` says how many pages exist, and turning to a page that has not
- * been fetched pulls it from the cursor first. The button is gone.
- *
- * Search and the filters still run over what is loaded, which is the honest
- * limit of this design: they cannot find a student on a page nobody has
- * fetched. The directory's `q` search exists server-side but answers a capped
- * match list built for the enrollment picker (SEARCH_LIMIT), so wiring it here
- * is its own piece of work, not a line in this one.
+ * Student list (OOC-76). Search, the status filter, the minors filter and the
+ * pages all live in the URL and run in Postgres: this component only rewrites
+ * the URL, and the server component fetches exactly the page asked for. With
+ * 30k students a filter applied in the browser over the loaded rows only
+ * found whoever happened to be on the page — the reason this moved.
  *
  * The row carries only what tells one student from another — name, document,
- * state, load. Contact, place, age and enrollment history live
- * one click away in the ficha: repeating them per row made every line three
- * lines tall and pushed the table off the screen.
+ * state, load. Contact, place, age and enrollment history live one click away
+ * in the ficha.
  */
 export function StudentsTable({
-  rows,
-  initialNextCursor,
-  total: serverTotal,
+  directory,
+  query,
   canCreate,
 }: {
-  rows: StudentRow[]
-  initialNextCursor: string | null
-  /** Live students in total, from the server. Null only if the API could not
-   * say — the table then pages what it holds, as it used to. */
-  total: number | null
+  directory: StudentDirectoryPage
+  query: StudentDirectoryQuery
   canCreate: boolean
 }) {
   const t = useTranslations('bo')
   const router = useRouter()
-  const [directory, setDirectory] = useState<StudentRow[]>(rows)
-  const [nextCursor, setNextCursor] = useState(initialNextCursor)
-  const [loadingMore, setLoadingMore] = useState(false)
-  /**
-   * A fetch failed and the prefetch effect must not fire again on its own. It
-   * re-runs whenever `loadingMore` drops back to false, so without this a
-   * failing page turned into a request loop — the table sat on "Loading…"
-   * forever while the toast repeated. The reader turning the page is what
-   * clears it: a retry they asked for, not one the effect keeps making.
-   */
-  const [loadFailed, setLoadFailed] = useState(false)
+  const pathname = usePathname()
   const [creating, setCreating] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
-  const [query, setQuery] = useState('')
-  const [status, setStatus] = useState<StatusFilter>('all')
   /**
-   * Age is a second axis, not another status: "under review" and "minor"
-   * answer different questions, and guardian consent (CLAUDE.md §1) is chased
-   * across every status at once.
+   * True while the server renders the page just asked for. The table stays
+   * on screen, dimmed, instead of blanking: the rows being replaced are still
+   * the best answer until the new ones arrive.
    */
-  const [minorsOnly, setMinorsOnly] = useState(false)
-  const [page, setPage] = useState(0)
+  const [pending, startTransition] = useTransition()
 
-  /**
-   * Whether the reader is looking at a narrowed list. It decides which count
-   * the pager may trust: the server's total describes the whole directory, and
-   * says nothing about how many rows survive a filter applied here.
-   */
-  const filtering = query.trim() !== '' || status !== 'all' || minorsOnly
-
-  /**
-   * Brings the directory up to at least `rowsNeeded` rows, walking the cursor
-   * as many server pages as that takes — turning to page 12 of a 300-row
-   * directory is four fetches, and the reader should not have to make them one
-   * by one.
-   *
-   * The cursor is read from the response of each fetch rather than from state:
-   * inside one loop, state has not re-rendered yet, and reusing the stale
-   * cursor would fetch the same page over and over.
-   */
-  async function loadUpTo(rowsNeeded: number) {
-    if (loadingMore) return
-    setLoadingMore(true)
-    setLoadFailed(false)
-
-    let cursor = nextCursor
-    let loaded = directory.length
-
-    try {
-      while (cursor && loaded < rowsNeeded) {
-        const response = await fetch(`/api/v1/students?cursor=${encodeURIComponent(cursor)}`)
-        if (!response.ok) {
-          setLoadFailed(true)
-          setToast(t('students.load_more_error'))
-          return
-        }
-
-        const nextPage = (await response.json()) as {
-          items: StudentRow[]
-          nextCursor: string | null
-        }
-
-        if (!Array.isArray(nextPage.items) || nextPage.items.length === 0 || nextPage.nextCursor === cursor) {
-          // Nothing came back, or the server handed back the same cursor it
-          // was given: stop rather than spin on a cursor that is not
-          // advancing — that loop is what actually hammered the API in
-          // production (same URL, over and over) instead of failing safe.
-          if (nextPage.nextCursor === cursor && nextPage.items.length > 0) {
-            setDirectory((current) => dedupeById([...current, ...nextPage.items]))
-            setLoadFailed(true)
-            setToast(t('students.load_more_error'))
-          }
-          cursor = null
-          break
-        }
-
-        setDirectory((current) => dedupeById([...current, ...nextPage.items]))
-        loaded += nextPage.items.length
-        cursor = nextPage.nextCursor
-      }
-
-      setNextCursor(cursor)
-    } catch {
-      setLoadFailed(true)
-      setToast(t('students.load_more_error'))
-    } finally {
-      setLoadingMore(false)
-    }
-  }
-
-  /**
-   * Keeps the directory one page ahead of the reader.
-   *
-   * Two things at once, and deliberately: it fetches the rows the current page
-   * needs, and it keeps one page of slack beyond them. The slack is what makes
-   * paging feel instant — a query against a managed Postgres costs ~140ms of
-   * network before it does any work, so a fetch triggered by the click is a
-   * wait the reader sits through, while a fetch triggered by the previous
-   * click already finished by the time they press next.
-   *
-   * An effect rather than a line in the click handler because the handler only
-   * covers one way of arriving: two quick clicks on "next" and the second
-   * lands while a fetch is in flight, gets turned away by the in-flight guard,
-   * and leaves the reader on a page whose rows nobody ever asked for — an
-   * empty table that never fills. Stated as a condition of the rendered page,
-   * it settles itself: the fetch ends, this runs again, and it either fetches
-   * what is still missing or finds nothing to do.
-   */
-  useEffect(() => {
-    if (filtering || loadingMore || loadFailed || !nextCursor) return
-
-    // `page + 2`: the page being read, plus one held in reserve.
-    const rowsWanted = (page + 2) * PAGE_SIZE
-    if (directory.length >= rowsWanted) return
-
-    void loadUpTo(rowsWanted)
-    // `loadUpTo` is stable enough for this: it only reads state it re-reads
-    // itself at call time, and the guards above are what actually stop it.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, filtering, loadingMore, loadFailed, nextCursor, directory.length])
-
-  /**
-   * Whether the reader is actually waiting on rows, as opposed to a fetch
-   * running ahead of them. Only the first deserves to say so on screen — a
-   * prefetch that announces itself is a spinner for something nobody asked
-   * for.
-   */
-  const awaitingRows = loadingMore && directory.length < (page + 1) * PAGE_SIZE
-
-  function turnPage(next: number) {
-    setLoadFailed(false)
-    setPage(next)
-  }
-
-  const filtered = useMemo(() => {
-    const needle = query.trim().toLowerCase()
-    return directory.filter((row) => {
-      if (status !== 'all' && row.status !== status) return false
-      if (minorsOnly && !row.isMinor) return false
-      if (!needle) return true
-      return [
-        `${row.firstName} ${row.lastName}`,
-        row.nationalId,
-        row.email,
-        row.phone,
-        row.city,
-      ]
-        .join(' ')
-        .toLowerCase()
-        .includes(needle)
+  /** Any change to the query goes back to page 1, unless it IS the page. */
+  function navigate(next: Partial<StudentDirectoryQuery>, mode: 'push' | 'replace' = 'push') {
+    const search = studentDirectorySearchParams({ ...query, page: 1, ...next }).toString()
+    const href = search ? `${pathname}?${search}` : pathname
+    startTransition(() => {
+      router[mode](href, { scroll: false })
     })
-  }, [directory, query, status, minorsOnly])
-
-  const counts = useMemo(() => {
-    return {
-      all: directory.length,
-      active: directory.filter((r) => r.status === 'active').length,
-      inactive: directory.filter((r) => r.status === 'inactive').length,
-    } satisfies Record<StatusFilter, number>
-  }, [directory])
-
-  const minorCount = useMemo(
-    () => directory.filter((r) => r.isMinor).length,
-    [directory],
-  )
-  const activeFilters = (status !== 'all' ? 1 : 0) + (minorsOnly ? 1 : 0)
+  }
 
   /**
-   * How many pages there are.
-   *
-   * Unfiltered, that is the server's count — every page exists whether or not
-   * its rows have been fetched, which is the whole point: the reader asks for
-   * page 12 and the rows are fetched on the way. Filtered or searched, only
-   * the loaded rows can be counted, because a filter cannot see a page nobody
-   * has fetched.
+   * The search box is typed into locally and reaches the URL after a pause.
+   * Under the API's minimum length it is not a search yet, so nothing is sent.
    */
-  const total = filtering ? filtered.length : (serverTotal ?? filtered.length)
-  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE))
-  /* A filter that shrinks the list can leave the page behind it. */
-  const currentPage = Math.min(page, pageCount - 1)
-  const pageRows = filtered.slice(
-    currentPage * PAGE_SIZE,
-    currentPage * PAGE_SIZE + PAGE_SIZE,
-  )
+  const [searchText, setSearchText] = useState(query.q)
+  useEffect(() => {
+    const needle = searchText.trim()
+    if (needle === query.q) return
+    if (needle.length > 0 && needle.length < MIN_SEARCH_LENGTH) return
 
-  function search(value: string) {
-    setQuery(value)
-    setPage(0)
-  }
+    const timer = setTimeout(() => navigate({ q: needle }, 'replace'), SEARCH_DEBOUNCE_MS)
+    return () => clearTimeout(timer)
+    // `navigate` closes over `query`, which is already a dependency.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchText, query])
 
-  function filterByStatus(value: StatusFilter) {
-    setStatus(value)
-    setPage(0)
-  }
-
-  function toggleMinors() {
-    setMinorsOnly(!minorsOnly)
-    setPage(0)
-  }
+  const { items: pageRows, total, pageSize, counts } = directory
+  const status: StatusFilter = query.status ?? 'all'
+  const activeFilters = (query.status ? 1 : 0) + (query.minor ? 1 : 0)
+  const pageCount = Math.max(1, Math.ceil(total / pageSize))
+  const currentPage = Math.min(query.page, pageCount) - 1
 
   /**
    * The whole row opens the ficha, but the name stays a real link in the first
@@ -315,8 +127,8 @@ export function StudentsTable({
             />
             <input
               type="search"
-              value={query}
-              onChange={(event) => search(event.target.value)}
+              value={searchText}
+              onChange={(event) => setSearchText(event.target.value)}
               placeholder={t('students.search_placeholder')}
               className="w-full rounded-lg border border-line bg-white py-2 pl-9 pr-3 text-sm text-ink outline-none transition placeholder:text-muted-foreground focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15"
             />
@@ -333,7 +145,7 @@ export function StudentsTable({
                 <button
                   key={value}
                   type="button"
-                  onClick={() => filterByStatus(value)}
+                  onClick={() => navigate({ status: value === 'all' ? null : value })}
                   aria-pressed={active}
                   className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                     active
@@ -343,7 +155,7 @@ export function StudentsTable({
                 >
                   {value === 'all' ? t('students.filter_all') : t(`student_status.${value}`)}
                   <span className={active ? 'text-white/70' : 'text-slate-400'}>
-                    {counts[value]}
+                    {value === 'all' ? counts.all : counts[value]}
                   </span>
                 </button>
               )
@@ -353,17 +165,17 @@ export function StudentsTable({
 
             <button
               type="button"
-              onClick={toggleMinors}
-              aria-pressed={minorsOnly}
+              onClick={() => navigate({ minor: !query.minor })}
+              aria-pressed={query.minor}
               className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                minorsOnly
+                query.minor
                   ? 'bg-brand-blue text-white'
                   : 'border border-line bg-white text-muted-foreground hover:bg-cream hover:text-ink'
               }`}
             >
               {t('students.minor')}
-              <span className={minorsOnly ? 'text-white/70' : 'text-slate-400'}>
-                {minorCount}
+              <span className={query.minor ? 'text-white/70' : 'text-slate-400'}>
+                {counts.minors}
               </span>
             </button>
           </FiltersDropdown>
@@ -389,16 +201,19 @@ export function StudentsTable({
       {creating && (
         <NewStudentForm
           onCancel={() => setCreating(false)}
-          onCreate={(student) => {
-            setDirectory((current) => [student, ...current])
+          onCreate={() => {
             setCreating(false)
-            setPage(0)
             setToast(t('new_student.created'))
+            // The new file is the newest row: back to the first page, read
+            // from the server like every other row.
+            navigate({ page: 1, q: '', status: null, minor: false })
+            setSearchText('')
+            router.refresh()
           }}
         />
       )}
 
-      <Card>
+      <Card className={`min-w-0 transition-opacity ${pending ? 'opacity-60' : ''}`} aria-busy={pending}>
         {pageRows.length === 0 ? (
           <div className="p-4">
             <EmptyState
@@ -473,40 +288,19 @@ export function StudentsTable({
               <Pager
                 page={currentPage}
                 pageCount={pageCount}
-                status={
-                  awaitingRows
-                    ? t('students.loading_more')
-                    : t('students.page_status', {
-                        from: currentPage * PAGE_SIZE + 1,
-                        to: currentPage * PAGE_SIZE + pageRows.length,
-                        total,
-                      })
-                }
+                status={t('students.page_status', {
+                  from: currentPage * pageSize + 1,
+                  to: currentPage * pageSize + pageRows.length,
+                  total,
+                })}
                 prevLabel={t('students.page_prev')}
                 nextLabel={t('students.page_next')}
-                onChange={turnPage}
+                onChange={(page) => navigate({ page: page + 1 })}
               />
             )}
           </>
         )}
       </Card>
-
-      {/* No "Carregar mais" button any more: turning the page is what loads
-          the next rows. A second control for the same thing was how the pager
-          came to stop at 50 while the table held 300. When the reader has
-          narrowed the list, though, paging cannot reach further — the filter
-          only sees loaded rows — so the button comes back for that case
-          alone. */}
-      {filtering && nextCursor && (
-        <button
-          type="button"
-          onClick={() => void loadUpTo(directory.length + 1)}
-          disabled={loadingMore}
-          className="self-center rounded-lg border border-line bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:bg-cream disabled:opacity-50"
-        >
-          {loadingMore ? t('students.loading_more') : t('students.load_more')}
-        </button>
-      )}
 
       <Toast message={toast} onDismiss={() => setToast(null)} />
     </div>

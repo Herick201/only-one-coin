@@ -1,5 +1,5 @@
 import { enrollments, students } from "@ooc/db";
-import { and, desc, eq, ilike, isNull, lt, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, isNull, or, sql, type SQL } from "drizzle-orm";
 import type { Db } from "@/infra/db/client.js";
 
 export type StudentStatus = "active" | "under_review" | "inactive";
@@ -38,15 +38,17 @@ export interface StudentListRow {
   lastActivityAt: Date;
 }
 
-// The no-`q` directory listing is cursor-paginated (created_at, id) DESC —
-// `id` breaks ties since a bulk import can insert many rows in the same
-// statement-second (a real DEFAULT NOW() collision, not a hypothetical one).
-// `q` stays a small, non-paginated cap: it backs the manual enrollment
-// form's picker (CLAUDE.md §1), which only ever needs a short match list, not
-// a directory browse.
-const PAGE_SIZE = 50;
+/** The manual enrollment and waitlist pickers only ever need a short match list. */
 const SEARCH_LIMIT = 10;
 
+/** One screen of the directory (`students-table.tsx` shows exactly this many). */
+export const DIRECTORY_PAGE_SIZE = 15;
+
+/**
+ * Opaque `(created_at, id)` cursor at full microsecond precision. The
+ * directory pages by offset now (OOC-76); the student file's activity
+ * timeline still walks `audit_log` with it (`StudentActivityQuery`).
+ */
 export interface StudentListCursor {
   /**
    * UTC timestamp at full microsecond precision, as `to_char` renders it —
@@ -81,98 +83,110 @@ export function decodeStudentCursor(raw: string): StudentListCursor | null {
   }
 }
 
-export interface StudentListPage {
+/** The statuses the directory lists — a student whose only seat is still
+ * reserved is settled in Payments, not listed (OOC-55). */
+export type DirectoryStatus = Exclude<StudentStatus, "under_review">;
+
+/**
+ * What the reader narrowed the directory to (OOC-76). Every field optional —
+ * absent means "all" — and every one applied by Postgres: with 30k students a
+ * filter that only sees the loaded page answers the wrong question.
+ */
+export interface StudentDirectoryFilters {
+  /** Partial name, document or phone — served by the trigram indexes. */
+  q?: string;
+  status?: DirectoryStatus;
+  /** Only students under 18 today. */
+  minor?: boolean;
+  sort?: "newest" | "oldest";
+  /** 1-based. */
+  page?: number;
+}
+
+export interface StudentDirectoryPage {
   items: StudentListRow[];
-  nextCursor: string | null;
+  /** Students matching every filter, across every page. */
+  total: number;
+  page: number;
+  pageSize: number;
   /**
-   * How many live students there are in total — counted on the first page of
-   * a directory browse only. Null for a `q` search (a capped match list with
-   * nothing to page) and null for any page reached by cursor, where recounting
-   * would buy a stale-proof number nobody asked for at the price of a second
-   * round trip per page.
-   *
-   * It is what lets the pager offer pages whose rows have not been fetched:
-   * without it the screen could only page what it already held, so "next" on
-   * the last of 50 rows did nothing with 250 more behind the cursor.
+   * How many students the search reaches per chip, ignoring the status and
+   * age filters themselves — so each chip says what choosing it would give.
    */
-  total: number | null;
+  counts: { all: number; active: number; inactive: number; minors: number };
 }
 
 /**
  * Read-only, same reasoning as the rest of this folder for living outside
  * `packages/domain`: nothing here protects a business invariant, it only
- * shapes a read. Serves both the student directory (no `q`) and the manual
- * enrollment form's picker (`q` set — CLAUDE.md §1, "a exceção, não um
- * segundo caminho") off the same query, since the underlying join is
- * identical either way.
+ * shapes a read. Two readers, one join:
  *
- * The directory (no `q`) leaves out students whose only enrollments are still
- * reserved: they are being settled in Payments (OOC-55). `under_review` only
- * reaches the picker, which must still find them.
+ * - `directory` — the student directory (OOC-76). Search, status and age run
+ *   in Postgres and the result pages by offset, like the enrollment ledger.
+ *   It leaves out students whose only enrollments are still reserved: they
+ *   are being settled in Payments (OOC-55).
+ * - `search` — the manual enrollment and waitlist pickers (CLAUDE.md §1, "a
+ *   exceção, não um segundo caminho"): a short match list that still finds
+ *   the student under review, so nobody registers the person twice.
  *
  * `status` is derived from `seatStatus` across the student's enrollments —
- * confirmed beats reserved beats "none of the above" — matching the schema
- * comment on `students.ts` ("derived, not a stored column"). This is a
- * first-pass rule: it does not know about payment or grading yet, since
- * neither is queried here, so a student who paid but whose seat hasn't
- * flipped to `confirmed` still reads `under_review` — a status the picker shows,
- * since the directory itself no longer lists such a student (see above).
+ * confirmed beats reserved beats "none of the above" ("derived, not a stored
+ * column"). It does not know about payment or grading yet.
  */
 export class ListStudentsQuery {
   constructor(private readonly db: Db) {}
 
-  async run(q?: string, cursor?: string): Promise<StudentListPage> {
-    const needle = q ? `%${q}%` : null;
-    // Cursor pagination only applies to the directory browse — a search
-    // already returns a short, non-paginated list.
-    const decodedCursor = !needle && cursor ? decodeStudentCursor(cursor) : null;
-    const limit = needle ? SEARCH_LIMIT : PAGE_SIZE;
+  /** Per-student enrollment figures, retired enrollments left out (CLAUDE.md §6). */
+  private enrollmentStats() {
+    return this.db
+      .select({
+        studentId: enrollments.studentId,
+        total: sql<number>`count(*)`.mapWith(Number).as("total"),
+        confirmed: sql<number>`count(*) filter (where ${enrollments.seatStatus} = 'confirmed')`
+          .mapWith(Number)
+          .as("confirmed"),
+        reserved: sql<number>`count(*) filter (where ${enrollments.seatStatus} = 'reserved')`
+          .mapWith(Number)
+          .as("reserved"),
+        lastAt: sql<Date | null>`max(${enrollments.updatedAt})`.as("last_at"),
+      })
+      .from(enrollments)
+      .where(isNull(enrollments.deletedAt))
+      .groupBy(enrollments.studentId)
+      .as("stats");
+  }
 
-    const baseFilter = needle
-      ? and(
-          isNull(students.deletedAt),
-          or(ilike(sql`${students.firstName} || ' ' || ${students.lastName}`, needle), ilike(students.nationalId, needle)),
-        )
-      : isNull(students.deletedAt);
+  async directory(filters: StudentDirectoryFilters = {}): Promise<StudentDirectoryPage> {
+    const page = Math.max(1, Math.floor(filters.page ?? 1));
+    const stats = this.enrollmentStats();
 
-    // Cast as text, not bound as a `Date` — a driver-level `Date` parameter
-    // would re-truncate this back to milliseconds before Postgres ever sees
-    // it, undoing the point of carrying full precision in the cursor.
-    const cursorCreatedAt = decodedCursor ? sql`${decodedCursor.createdAt}::timestamptz` : undefined;
-    const cursorFilter = decodedCursor
-      ? or(
-          lt(students.createdAt, cursorCreatedAt!),
-          and(eq(students.createdAt, cursorCreatedAt!), lt(students.id, decodedCursor.id)),
-        )
-      : undefined;
+    const confirmed = sql`coalesce(${stats.confirmed}, 0)`;
+    const reserved = sql`coalesce(${stats.reserved}, 0)`;
+    const isActive = sql`${confirmed} > 0`;
+    // Under 18 today, in UTC — the same rule `isMinor` applies in JS.
+    const isMinorSql = sql`${students.birthDate} > ((now() at time zone 'UTC')::date - interval '18 years')`;
 
-    // OOC-55: a student whose only enrollments are still reserved is being
-    // settled in Payments, not enrolled — the directory leaves them out. The
-    // picker (`q`) does not: staff searching a national id must find the file
-    // that already exists, or they would register the person twice.
-    const underReviewOnly = sql`count(${enrollments.id}) filter (where ${enrollments.seatStatus} = 'confirmed') = 0
-      and count(${enrollments.id}) filter (where ${enrollments.seatStatus} = 'reserved') > 0`;
+    const base: SQL[] = [
+      isNull(students.deletedAt),
+      // OOC-55: a student whose only seats are still reserved is settled in Payments.
+      sql`not (${confirmed} = 0 and ${reserved} > 0)`,
+    ];
+    const q = filters.q?.trim();
+    if (q) {
+      const needle = `%${q}%`;
+      base.push(
+        or(
+          ilike(sql`${students.firstName} || ' ' || ${students.lastName}`, needle),
+          ilike(students.nationalId, needle),
+          ilike(students.phone, needle),
+        )!,
+      );
+    }
 
-    /* Counted on the first page of a browse, and nowhere else — see `total`
-       on StudentListPage. Started here rather than awaited after the rows,
-       because the two ask different questions of different indexes and
-       neither needs the other's answer: sequentially they cost two round
-       trips (~280ms against a managed Postgres), together they cost one. */
-    const totalPromise =
-      !needle && !cursor
-        ? this.db
-            .select({ value: sql<number>`count(*)`.mapWith(Number) })
-            .from(
-              this.db
-                .select({ id: students.id })
-                .from(students)
-                .leftJoin(enrollments, and(eq(enrollments.studentId, students.id), isNull(enrollments.deletedAt)))
-                .where(isNull(students.deletedAt))
-                .groupBy(students.id)
-                .having(sql`not (${underReviewOnly})`)
-                .as("listed_students"),
-            )
-        : null;
+    const narrowed: SQL[] = [...base];
+    if (filters.status === "active") narrowed.push(isActive);
+    if (filters.status === "inactive") narrowed.push(sql`not (${isActive})`);
+    if (filters.minor) narrowed.push(isMinorSql);
 
     const rowsPromise = this.db
       .select({
@@ -188,74 +202,139 @@ export class ListStudentsQuery {
         region: students.region,
         city: students.city,
         createdAt: students.createdAt,
-        // Full microsecond precision, for the cursor only — see
-        // `StudentListCursor.createdAt`. `AT TIME ZONE 'UTC'` fixes the
-        // rendering to UTC regardless of the session's own timezone setting.
-        createdAtCursor: sql<string>`to_char(${students.createdAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`,
         updatedAt: students.updatedAt,
-        totalEnrollments: sql<number>`count(${enrollments.id})`.mapWith(Number),
-        confirmedEnrollments:
-          sql<number>`count(${enrollments.id}) filter (where ${enrollments.seatStatus} = 'confirmed')`.mapWith(
-            Number,
-          ),
-        reservedEnrollments:
-          sql<number>`count(${enrollments.id}) filter (where ${enrollments.seatStatus} = 'reserved')`.mapWith(
-            Number,
-          ),
-        lastEnrollmentAt: sql<Date | null>`max(${enrollments.updatedAt})`,
+        totalEnrollments: sql<number>`coalesce(${stats.total}, 0)`.mapWith(Number),
+        confirmedEnrollments: sql<number>`${confirmed}`.mapWith(Number),
+        lastEnrollmentAt: stats.lastAt,
       })
       .from(students)
-      // Retired enrollments do not count towards the student's numbers
-      // (CLAUDE.md §6) — joined, not filtered in WHERE, so a student with
-      // only retired enrollments still lists, with zeroes.
-      .leftJoin(enrollments, and(eq(enrollments.studentId, students.id), isNull(enrollments.deletedAt)))
-      .where(cursorFilter ? and(baseFilter, cursorFilter) : baseFilter)
-      .groupBy(students.id)
-      .having(needle ? undefined : sql`not (${underReviewOnly})`)
-      .orderBy(desc(students.createdAt), desc(students.id))
-      // Fetch one extra row to learn whether another page follows, without
-      // a second round-trip — sliced back off before mapping to output.
-      .limit(limit + 1);
+      .leftJoin(stats, eq(stats.studentId, students.id))
+      .where(and(...narrowed))
+      .orderBy(
+        ...(filters.sort === "oldest"
+          ? [asc(students.createdAt), asc(students.id)]
+          : [desc(students.createdAt), desc(students.id)]),
+      )
+      .limit(DIRECTORY_PAGE_SIZE)
+      .offset((page - 1) * DIRECTORY_PAGE_SIZE);
 
-    const [rows, counted] = await Promise.all([rowsPromise, totalPromise]);
+    // One pass for the total and every chip: the chips ignore the status and
+    // age filters (they are the choice), the total honours them.
+    const statusSql =
+      filters.status === "active" ? isActive : filters.status === "inactive" ? sql`not (${isActive})` : sql`true`;
+    const minorFilterSql = filters.minor ? isMinorSql : sql`true`;
+    const countsPromise = this.db
+      .select({
+        total: sql<number>`count(*) filter (where ${statusSql} and ${minorFilterSql})`.mapWith(Number),
+        all: sql<number>`count(*)`.mapWith(Number),
+        active: sql<number>`count(*) filter (where ${isActive})`.mapWith(Number),
+        inactive: sql<number>`count(*) filter (where not (${isActive}))`.mapWith(Number),
+        minors: sql<number>`count(*) filter (where ${isMinorSql})`.mapWith(Number),
+      })
+      .from(students)
+      .leftJoin(stats, eq(stats.studentId, students.id))
+      .where(and(...base));
 
-    const hasMore = rows.length > limit;
-    const page = hasMore ? rows.slice(0, limit) : rows;
-    const nextCursor =
-      !needle && hasMore
-        ? encodeStudentCursor({ createdAt: page[page.length - 1]!.createdAtCursor, id: page[page.length - 1]!.id })
-        : null;
+    const [rows, [counted]] = await Promise.all([rowsPromise, countsPromise]);
 
-    const items = page.map((row): StudentListRow => {
-      const status: StudentStatus =
-        row.confirmedEnrollments > 0 ? "active" : row.reservedEnrollments > 0 ? "under_review" : "inactive";
-
-      const lastActivityAt =
-        row.lastEnrollmentAt && row.lastEnrollmentAt > row.updatedAt ? row.lastEnrollmentAt : row.updatedAt;
-
-      return {
-        id: row.id,
-        firstName: row.firstName,
-        lastName: row.lastName,
-        nationalIdType: row.nationalIdType,
-        nationalId: row.nationalId,
-        email: row.email,
-        phone: row.phone,
-        birthDate: row.birthDate,
-        country: row.country,
-        region: row.region,
-        city: row.city,
-        createdAt: row.createdAt,
-        isMinor: isMinor(row.birthDate),
-        status,
-        activeCourses: row.confirmedEnrollments,
-        totalEnrollments: row.totalEnrollments,
-        lastActivityAt,
-      };
-    });
-
-    const total = counted ? (counted[0]?.value ?? 0) : null;
-
-    return { items, nextCursor, total };
+    return {
+      items: rows.map((row) =>
+        toListRow({ ...row, reservedEnrollments: 0 }),
+      ),
+      total: counted?.total ?? 0,
+      page,
+      pageSize: DIRECTORY_PAGE_SIZE,
+      counts: {
+        all: counted?.all ?? 0,
+        active: counted?.active ?? 0,
+        inactive: counted?.inactive ?? 0,
+        minors: counted?.minors ?? 0,
+      },
+    };
   }
+
+  /** The pickers' short match list — by partial name or document, under review included. */
+  async search(q: string): Promise<StudentListRow[]> {
+    const needle = `%${q.trim()}%`;
+    const stats = this.enrollmentStats();
+
+    const rows = await this.db
+      .select({
+        id: students.id,
+        firstName: students.firstName,
+        lastName: students.lastName,
+        nationalIdType: students.nationalIdType,
+        nationalId: students.nationalId,
+        email: students.email,
+        phone: students.phone,
+        birthDate: students.birthDate,
+        country: students.country,
+        region: students.region,
+        city: students.city,
+        createdAt: students.createdAt,
+        updatedAt: students.updatedAt,
+        totalEnrollments: sql<number>`coalesce(${stats.total}, 0)`.mapWith(Number),
+        confirmedEnrollments: sql<number>`coalesce(${stats.confirmed}, 0)`.mapWith(Number),
+        reservedEnrollments: sql<number>`coalesce(${stats.reserved}, 0)`.mapWith(Number),
+        lastEnrollmentAt: stats.lastAt,
+      })
+      .from(students)
+      .leftJoin(stats, eq(stats.studentId, students.id))
+      .where(
+        and(
+          isNull(students.deletedAt),
+          or(ilike(sql`${students.firstName} || ' ' || ${students.lastName}`, needle), ilike(students.nationalId, needle)),
+        ),
+      )
+      .orderBy(desc(students.createdAt), desc(students.id))
+      .limit(SEARCH_LIMIT);
+
+    return rows.map(toListRow);
+  }
+}
+
+function toListRow(row: {
+  id: string;
+  firstName: string;
+  lastName: string;
+  nationalIdType: string;
+  nationalId: string;
+  email: string;
+  phone: string;
+  birthDate: Date;
+  country: string;
+  region: string | null;
+  city: string;
+  createdAt: Date;
+  updatedAt: Date;
+  totalEnrollments: number;
+  confirmedEnrollments: number;
+  reservedEnrollments: number;
+  lastEnrollmentAt: Date | string | null;
+}): StudentListRow {
+  const status: StudentStatus =
+    row.confirmedEnrollments > 0 ? "active" : row.reservedEnrollments > 0 ? "under_review" : "inactive";
+  // A raw `max()` out of a subquery can come back as text from the driver.
+  const lastEnrollmentAt = row.lastEnrollmentAt === null ? null : new Date(row.lastEnrollmentAt);
+  const lastActivityAt = lastEnrollmentAt && lastEnrollmentAt > row.updatedAt ? lastEnrollmentAt : row.updatedAt;
+
+  return {
+    id: row.id,
+    firstName: row.firstName,
+    lastName: row.lastName,
+    nationalIdType: row.nationalIdType,
+    nationalId: row.nationalId,
+    email: row.email,
+    phone: row.phone,
+    birthDate: row.birthDate,
+    country: row.country,
+    region: row.region,
+    city: row.city,
+    createdAt: row.createdAt,
+    isMinor: isMinor(row.birthDate),
+    status,
+    activeCourses: row.confirmedEnrollments,
+    totalEnrollments: row.totalEnrollments,
+    lastActivityAt,
+  };
 }

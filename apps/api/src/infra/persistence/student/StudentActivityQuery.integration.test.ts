@@ -159,7 +159,7 @@ describe("StudentActivityQuery", () => {
   });
 
   it("pages by cursor without repeating or skipping an entry", async () => {
-    const extra = Array.from({ length: ACTIVITY_PAGE_SIZE + 3 }, (_, i) => ({
+    const extra = Array.from({ length: ACTIVITY_PAGE_SIZE + 3 }, () => ({
       actorId: ACTOR,
       action: "payment.receipt_viewed",
       targetId: PAYMENT,

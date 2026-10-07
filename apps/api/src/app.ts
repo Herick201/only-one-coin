@@ -12,6 +12,7 @@ import { healthCheckRoute } from "@/http/HealthCheckRoute.js";
 import { registerAuthRoutes } from "@/http/auth/AuthCatchAllRoute.js";
 import { registerStudentRoute } from "@/http/student/RegisterStudentRoute.js";
 import { listStudentsRoute } from "@/http/student/ListStudentsRoute.js";
+import { searchStudentsRoute } from "@/http/student/SearchStudentsRoute.js";
 import { getStudentRoute } from "@/http/student/GetStudentRoute.js";
 import { updateStudentRoute } from "@/http/student/UpdateStudentRoute.js";
 import { saveGuardianRoute } from "@/http/student/SaveGuardianRoute.js";
@@ -119,6 +120,7 @@ export async function buildApp(): Promise<FastifyInstance> {
       (instance, _opts, done) => {
         instance.withTypeProvider<ZodTypeProvider>().route(registerStudentRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(listStudentsRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(searchStudentsRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(getStudentRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(updateStudentRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(saveGuardianRoute);
