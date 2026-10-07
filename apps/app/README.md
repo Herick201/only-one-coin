@@ -7,9 +7,7 @@ passa por `apps/api` via `fetch` (`src/lib/backoffice/api-client.ts`).
 
 Regras e convenções deste app (layout responsivo, regras de celular, feature
 flags, RBAC na UI) estão em [`CLAUDE.md`](CLAUDE.md), não aqui — este arquivo
-é só "o que é e como roda". Estado real de cada tela (o que já fala com a API,
-o que ainda é mock) está no `README.md` da raiz, seção "Estado de integração
-por tela".
+é só "o que é e como roda" e o estado de cada tela (abaixo).
 
 ## Rodar local
 
@@ -17,10 +15,9 @@ por tela".
 pnpm dev:web   # sobe apps/landing + apps/app (na raiz do monorepo)
 ```
 
-Várias telas do backoffice (alunos, equipe, funcionalidades, matrícula
-manual) chamam `apps/api` de verdade — para elas funcionarem, suba também
-`pnpm db:up` + `pnpm dev:api`. O resto do backoffice e todo o portal do aluno
-ainda são mock e funcionam sem API no ar.
+As telas marcadas como reais na tabela abaixo chamam `apps/api` — para elas
+funcionarem, suba também `pnpm db:up` + `pnpm dev:api`. As mock funcionam sem
+API no ar.
 
 | Comando | O que faz |
 | --- | --- |
@@ -28,6 +25,34 @@ ainda são mock e funcionam sem API no ar.
 | `pnpm --filter @ooc/app build` | build de produção (o que a Vercel roda) |
 | `pnpm --filter @ooc/app typecheck` | `tsc --noEmit` |
 | `pnpm --filter @ooc/app lint` | `next lint` |
+
+## Estado por tela (07/10/2026)
+
+O que já fala com `apps/api` e o que ainda é mock. Atualize a linha no mesmo PR
+que muda a tela.
+
+| Tela | Estado |
+| --- | --- |
+| Checkout público (`/enrollment`) | **Real**: hold de vaga, upload por URL assinada, Turnstile, submit |
+| Login do aluno (`/login`, `/forgot-password`, `/access/[token]`) | **Real**: e-mail ou documento, definir/recuperar senha por link |
+| Portal do aluno (`/portal/*`) | Sessão real; dados mock, exceto nome e e-mail (`GET /portal/me`) — OOC-32 |
+| Login, convite e senha do staff | **Real** (Better Auth). Falta MFA — OOC-29 |
+| Alunos (`/backoffice/students`) | **Real**: diretório com busca/filtros no servidor, cadastro, ficha com matrículas, edição de aluno e apoderado, aba Atividade. Faltam documentos emitidos e trâmites (OOC-33), suspensão e exportação |
+| Matrículas (`/backoffice/enrollments`) | **Real**: só vaga confirmada; abertura manual manda pra Pagos |
+| Pagos e fila de revisão (`/backoffice/payments*`) | **Real**: livro, fila, comprovante por URL assinada, leitura da IA, semáforo, aprovar/rejeitar (cria a conta do portal). Faltam lote, ordenação por confiança e atalhos |
+| Cursos (`/backoffice/courses`) | **Real**: CRUD, aposentar/reativar, planos com preço agendado |
+| Turmas (`/backoffice/class-groups`) | **Real**: períodos, duplicar, ciclo de vida, lista de espera manual. Visão do docente, roster, notas e certificados são mock |
+| Docentes (`/backoffice/teachers`) | Mock — sem tabela `teachers` (OOC-77) |
+| Equipe (`/backoffice/team`) | **Real**: contas, convite, troca de cargo com bitácora |
+| Funcionalidades (`/backoffice/features`) | **Real** |
+| Conta (`/backoffice/account`) | **Real**: troca da própria senha. MFA e sessões são mock |
+| Configuração (`/backoffice/settings`) | Parcial: reais só a reserva durante o pagamento, a tolerância de valor e o limite de rejeição do comprovante — OOC-41 |
+| Home do backoffice | Mock — OOC-67 |
+| E-mails (`/backoffice/emails*`) | Mock — OOC-42, OOC-88 |
+| Relatórios (`/backoffice/reports`) | Mock — OOC-40 |
+
+O papel `teacher` ainda entra pela ponte de demonstração em `getStaffSession()`
+(`DEMO_TEACHER_ID`), que morre com OOC-79.
 
 ## Estrutura
 

@@ -102,38 +102,36 @@ Se algo parecer exigir um desses, **pare e pergunte**.
 
 ## 3. Stack (fechada)
 
-| Camada | Escolha |
-| --- | --- |
-| Site público | **Astro** (estático) |
-| App (portal + backoffice) | **Next.js App Router** |
-| API de domínio + workers | **Fastify** (`apps/api`), processo Node separado |
-| Hospedagem | **Vercel** (landing + app) · **Fly.io** (`apps/api`, região GRU/São Paulo — VM always-on, workers de fila no mesmo processo da API) |
-| Banco | **Postgres** gerenciado — **Neon** (`sa-east-1`/São Paulo) |
-| Storage (comprovante + backup) | **Tigris** (nativo do Fly.io — `fly storage create`, S3-compatible, egress zero) — mesmo bucket-provider pros dois usos, sem conta separada |
-| Auth | **Better Auth** — biblioteca embutida no processo de `apps/api` (Fastify), nunca instanciada em `apps/app` |
-| Fila | **Redis self-hospedado no Fly.io** (`redis-nrlabs`, repo NR-Labs/services) **+ BullMQ** — workers em `apps/api`. Chaves sob o prefixo `ooc:` (`QUEUE_PREFIX`), que é o que o user de ACL `ooc` autoriza |
-| OCR / IA | **OpenRouter** pra todos os níveis — **Gemini 3.1 Flash-Lite** (nível 1) · modelo de outra família (nível 2, a escolher) |
-| E-mail (transacional/campanhas) | **Brevo**, atrás de adapter |
-| E-mail (caixa/mailbox de staff) | **Zoho Mail Lite** — Brevo não hospeda caixa (sem IMAP próprio); usar só se alguém precisar **receber e ler** e-mail em `contato@`/`matricula@` |
-| Rate limit + idempotência | **Mesmo Redis da fila** (`redis-nrlabs`), aplicado **dentro de `apps/api`** — não na borda da Vercel, que não alcança a rede privada do Fly. Construído no OOC-24 (`apps/api/CLAUDE.md`, Proteção da rota pública) |
-| Captcha | **Cloudflare Turnstile** |
-| Backup | `pg_dump` → **Tigris** via Scheduled Function (mesmo storage do comprovante) |
-| Observabilidade | **Sentry** + **PostHog** (EU Cloud) |
-| Realtime | a decidir — item de infra que segue em aberto por conta própria |
+| Camada | Escolha | Estado (07/10/2026) |
+| --- | --- | --- |
+| Site público | **Astro** (estático) | no ar na Vercel; o domínio ainda aponta pro WordPress antigo (OOC-44) |
+| App (portal + backoffice + checkout) | **Next.js App Router**, next-intl, shadcn/ui sobre Tailwind v4 | no ar na Vercel |
+| API de domínio + workers | **Fastify** (`apps/api`) — HTTP e workers de fila num processo só | no ar no Fly.io |
+| Hospedagem | **Vercel** (landing + app) · **Fly.io** (`apps/api`, GRU/São Paulo, VM always-on, deploy blue-green) | deploy por GitHub Actions a cada push em `main` |
+| Banco | **Postgres** gerenciado — **Neon** (`sa-east-1`), Drizzle ORM + Drizzle Kit | em uso |
+| Storage | **Tigris** (Fly.io, S3-compatible) — comprovantes e backups | em uso |
+| Auth | **Better Auth**, embutido em `apps/api`, nunca instanciado em `apps/app` | em uso (staff e aluno); MFA não configurado (OOC-29) |
+| Fila | **Redis self-hospedado no Fly.io** (`redis-nrlabs`, repo NR-Labs/services) **+ BullMQ**, chaves sob `ooc:` (`QUEUE_PREFIX`) | em uso |
+| Rate limit + idempotência | **Mesmo Redis**, aplicado **dentro de `apps/api`** (a borda da Vercel não alcança a rede privada do Fly) | em uso (OOC-24) |
+| Captcha | **Cloudflare Turnstile** | em uso (checkout e recuperação de senha) |
+| OCR / IA | **OpenRouter** pra todos os níveis — **Gemini 3.1 Flash-Lite** (nível 1) · outra família (nível 2, a escolher) | nível 1 em uso; nível 2 não escala (Sessão 29) |
+| E-mail transacional/campanhas | **Brevo**, atrás de `NotificationProvider` | em uso, autenticado no domínio raiz (DKIM + DMARC `p=none`) |
+| E-mail de staff (caixa) | **Google Workspace** — o que já roda no domínio | em uso |
+| DNS | **Cloudflare** (só DNS) | nameservers já no Cloudflare |
+| Backup | `pg_dump` → Tigris (`only-one-coin-backups`) **a cada deploy da API**, antes da migration; retenção de 30 dias | em uso. Backup agendado arquivado (07/10/2026) — o por deploy é a política |
+| Observabilidade | **Sentry** + **PostHog** (EU Cloud) | escolhidos, **não instalados** |
 
-Não trocar nada disso sem me perguntar. Já foram avaliadas e descartadas: Clerk, Pinecone, Resend, Cloudflare CDN, Upstash (03/10/2026 — fila e rate limit ficam no Redis self-hospedado; ver abaixo). O provedor de backend gerenciado que havia sido escolhido foi **removido**; Postgres, hospedagem de `apps/api`, storage de comprovante, caixa de e-mail e auth já foram refechados (acima, sessão 17/08/2026 para os quatro primeiros, `docs/ARCHITECTURE.md` §5; auth fechado depois — ver abaixo e `docs/ARCHITECTURE.md` §5.6).
+Não trocar nada disso sem me perguntar. **Avaliados e descartados:** Clerk, Pinecone, Resend, Cloudflare CDN, Netlify, Upstash, Zoho Mail, chamada direta ao Google (`@google/genai`), o provedor de backend gerenciado que cobria Postgres + auth + storage. Realtime não tem uso hoje — decidir quando aparecer o primeiro.
 
-**Decisão revertida — hospedagem de frontend (Netlify → Vercel, sessão 31/08/2026).** Vercel havia sido avaliado e descartado antes; reaberto e refechado nesta sessão a pedido meu, pensando num terceiro frontend futuro (portal do aluno) sobre a mesma conta/organização. Hoje `apps/app` continua **um único Next.js** (portal + backoffice juntos, `CLAUDE.md` §8) — nenhum desmembramento decidido ainda; o terceiro frontend é escopo em aberto, não confundir com decisão fechada.
+**Por que cada escolha não óbvia (para não reabrir):**
 
-**Decisão fechada — fila mesclada com a API (sessão 31/08/2026).** `apps/api` tinha dois entrypoints (`src/index.ts` HTTP e `src/worker.ts`) pensados pra escalar/reiniciar de forma independente — isso só se justificava se a hospedagem permitisse escalar cada um à parte. Como o Fly.io hospeda `apps/api` como uma VM always-on única, a separação parou de se justificar: um entrypoint só, HTTP + workers de fila no mesmo processo. Simplifica o deploy (uma imagem, uma máquina) sem abrir mão do requisito de always-on que os workers de BullMQ exigem.
-
-**Decisão fechada — Upstash fora da stack (03/10/2026).** A fila já tinha saído do Upstash para o Redis self-hospedado no Fly (`redis-nrlabs`, repo NR-Labs/services): o pay-as-you-go cobra por comando e o BullMQ é conversador. O que ainda apontava pro Upstash era o rate limit/idempotência de **borda** (Sessão 25, não construído), justamente porque a borda da Vercel não alcança a rede privada do Fly. Decisão: o rate limit **não** fica na borda — vai pra dentro de `apps/api`, sobre o mesmo Redis da fila, e o Upstash sai de vez (instância `only-one-coin-redis` destruída). Custo da escolha: rajada contra a rota pública chega até o processo da API (que pode recusar com 429 antes de tocar o banco); Turnstile continua na frente. Os users de ACL do Redis compartilhado precisam de `+info` — o BullMQ roda `INFO` ao conectar e, sem ele, a API cai no boot com `NOPERM` (incidente de 03/10/2026).
-
-**Decisão fechada — OCR via OpenRouter (sessão 02/10/2026).** O modelo do nível 1 continua o mesmo (Gemini 3.1 Flash-Lite); o que mudou é o caminho até ele: **todo nível da escada de OCR passa pela OpenRouter**, e a chamada direta ao Google saiu do código (sem `@google/genai`). Motivo: o nível 2 exige modelo de **outra família**, e com uma chave só o nível vira só um id de modelo — `RECEIPT_OCR_TIER1_MODEL` / `RECEIPT_OCR_TIER2_MODEL`, mesmo adapter, mesmo prompt, mesmo schema. O nível 2 está **ligado, não decidido**: sem modelo padrão, o boot recusa um da mesma família do nível 1, e nada escala pra ele até a Sessão 29. Custo da escolha: um intermediário a mais no caminho do comprovante, que é dado pessoal (Ley 29733) — por isso a chamada exige da OpenRouter endpoint com **retenção zero** (`zdr`), sem coleta de dados e que honre todo parâmetro (`require_parameters`). Detalhe em `apps/api/CLAUDE.md`, OCR.
-
-**Decisão fechada — auth.** O provedor removido cobria Postgres, auth e storage juntos; os três já foram resolvidos (Neon, Better Auth e Tigris, acima). Better Auth é uma **biblioteca embutida no processo do backend**, não um serviço hospedado externo — roda dentro do próprio `apps/api`, aceita conexão Postgres existente, e o campo `role` fica travado contra escrita client-side (`additionalFields.role`, `input:false`). Padrão de integração completo (porta em `packages/domain`, adapter em `apps/api/src/infra`, `apps/app` nunca instanciando o provedor) em `docs/ARCHITECTURE.md` §5.6.
-
-**Decisão fechada — modelo de autorização.** Autorização vive na **camada de aplicação** (`apps/api`, ver §8), não em RLS — motivo e comparação de caminhos em `docs/ARCHITECTURE.md` §2. RLS pode voltar depois como camada extra de defesa, mas nunca como o mecanismo de aceite documentado.
+- **Vercel** (31/08/2026, revertendo Netlify): mesma conta/organização para um possível terceiro frontend. Hoje `apps/app` continua **um único Next.js** — desmembrar não está decidido.
+- **API e workers no mesmo processo** (31/08/2026): o Fly hospeda `apps/api` como uma VM always-on única, então dois entrypoints não compravam nada.
+- **Redis self-hospedado, sem Upstash** (03/10/2026): o pay-as-you-go cobra por comando e o BullMQ é conversador. Custo aceito: rajada contra a rota pública chega ao processo da API, que recusa com 429 antes do banco. Users de ACL do Redis precisam de `+info`, senão o BullMQ derruba o boot com `NOPERM` (incidente de 03/10/2026).
+- **OCR via OpenRouter** (02/10/2026): o nível 2 exige outra família, e com uma chave só o nível vira um id de modelo (`RECEIPT_OCR_TIER1_MODEL`/`RECEIPT_OCR_TIER2_MODEL`); o boot recusa nível 2 da mesma família do 1. Custo: um intermediário a mais com dado pessoal (Ley 29733) — por isso a chamada exige **retenção zero** (`zdr`), sem coleta de dados e `require_parameters`. Detalhe em `apps/api/CLAUDE.md`.
+- **Google Workspace, não Zoho** (07/10/2026): o domínio já roda no Workspace; Brevo não hospeda caixa, então Brevo envia e o Workspace recebe.
+- **Better Auth** é biblioteca, não serviço: `role` travado contra escrita do cliente (`additionalFields.role`, `input:false`). Padrão de integração em `docs/ARCHITECTURE.md` §5.6.
+- **Autorização na camada de aplicação, não em RLS** — motivo em `docs/ARCHITECTURE.md` §2. RLS pode voltar como defesa extra, nunca como o mecanismo de aceite.
 
 ### Monorepo
 
@@ -328,8 +326,10 @@ Detalhe de implementação que consome este quadro de papéis — pontos de entr
 
 - **`CLAUDE.md`** é a fonte da verdade, agora **em camada**: a raiz tem o que vale para mais de um app/pacote (negócio, stack, i18n, erros proibidos, ambientes, quadro de segurança/papéis); `apps/*/CLAUDE.md` e `packages/*/CLAUDE.md` têm o que é específico de cada um (mapa completo no topo deste arquivo). Ao fechar uma decisão, ela entra **numa só** dessas camadas — nunca duplicada. Decisão que nasce específica de um app e passa a valer para outro sobe pra raiz; decisão da raiz que só um app ainda cumpre desce pro `CLAUDE.md` dele.
 - **`docs/ARCHITECTURE.md`** guarda o detalhe que não cabe no `CLAUDE.md` sem inchar (ex.: tabela completa de RBAC, comparação de caminhos de decisão, checklist de segurança) — `CLAUDE.md` referencia, não duplica.
-- **`README.md`** reflete o **estado real do repo** — o que existe hoje, não o plano. Se `Estado atual` descreve algo que não é mais verdade, é bug de documentação, trato como trato bug de código.
-- **`docs/ROADMAP.md`** é atrelado ao contrato — sinalizar quando ficar desatualizado, **nunca editar sem confirmação minha**.
+- **`README.md`** é curto de propósito: o que é o projeto, como rodar e onde estão os docs. **Não guarda estado.** O estado vive em dois lugares, e doc desatualizada ali é bug, tratado como bug de código: por sessão em `docs/ROADMAP.md`, tela a tela em `apps/app/README.md` ("Estado por tela").
+- **`docs/ROADMAP.md`** é atrelado ao contrato e tem duas partes com regras diferentes:
+  - **Coluna Estado — sempre atualizada, sem pedir.** Toda tarefa que fecha, avança ou destrava uma sessão atualiza a linha dela no mesmo PR (✅/🟡/⬜, o que falta, o ticket do Linear) e o quadro "Resumo" no topo. Ticket do Linear que não cabe em nenhuma sessão entra em "Trabalho no Linear fora das sessões do contrato".
+  - **Sessão, Entregável e Pronto quando — só com confirmação minha.** É o texto do contrato: sinalizar quando ficar desatualizado, nunca reescrever sozinho.
 - Doc nova (ex.: `docs/ARCHITECTURE.md`) é linkada na seção "Documentos" do `README.md` no mesmo commit que a cria — doc órfã não existe pra quem não sabe procurar.
 
-Antes de considerar uma sessão pronta: **alguma doc ficou desatualizada com o que acabei de fazer?** Se sim, atualiza antes de terminar, não depois.
+Antes de considerar uma sessão pronta: **o Estado no `docs/ROADMAP.md` reflete o que acabei de fazer? Alguma outra doc ficou desatualizada?** Se sim, atualiza antes de terminar, não depois.
