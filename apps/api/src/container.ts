@@ -112,6 +112,7 @@ import { ReceiptObjectStore } from "./infra/storage/ReceiptObjectStore.js";
 import { ListStudentsQuery } from "./infra/persistence/student/ListStudentsQuery.js";
 import { GetStudentQuery } from "./infra/persistence/student/GetStudentQuery.js";
 import { StudentEnrollmentHistoryQuery } from "./infra/persistence/student/StudentEnrollmentHistoryQuery.js";
+import { StudentActivityQuery } from "./infra/persistence/student/StudentActivityQuery.js";
 import { DrizzlePaymentSettlementRepository } from "./infra/persistence/payment/DrizzlePaymentSettlementRepository.js";
 import { ListPaymentsQuery } from "./infra/persistence/payment/ListPaymentsQuery.js";
 import { ListPaymentReviewQueueQuery } from "./infra/persistence/payment/ListPaymentReviewQueueQuery.js";
@@ -240,6 +241,7 @@ export interface AppQueries {
   paymentReceiptImage: PaymentReceiptImageQuery;
   getStudent: GetStudentQuery;
   studentEnrollmentHistory: StudentEnrollmentHistoryQuery;
+  studentActivity: StudentActivityQuery;
   listOpenClassGroups: ListOpenClassGroupsQuery;
   getPublicCatalog: GetPublicCatalogQuery;
   listCourses: ListCoursesQuery;
@@ -362,13 +364,14 @@ function buildContainer(): AppContainer {
   const receiptObjectStore = new ReceiptObjectStore(s3Client, config.BUCKET_NAME);
 
   // Use cases
-  const registerStudent = new RegisterStudentUseCase(studentRepository, guardianRepository);
+  const registerStudent = new RegisterStudentUseCase(studentRepository, guardianRepository, auditLogRepository);
   const updateStudent = new UpdateStudentUseCase(studentRepository, guardianRepository, auditLogRepository);
   const saveGuardian = new SaveGuardianUseCase(studentRepository, guardianRepository, auditLogRepository);
   const createManualEnrollment = new CreateManualEnrollmentUseCase(
     enrollmentRepository,
     planPriceLookup,
     enrollmentEmailContextLookup,
+    auditLogRepository,
   );
   const submitPublicEnrollment = new SubmitPublicEnrollmentUseCase(
     publicEnrollmentRepository,
@@ -453,6 +456,7 @@ function buildContainer(): AppContainer {
   const listStudents = new ListStudentsQuery(db);
   const getStudent = new GetStudentQuery(db);
   const studentEnrollmentHistory = new StudentEnrollmentHistoryQuery(db);
+  const studentActivity = new StudentActivityQuery(db);
   const listEnrollments = new ListEnrollmentsQuery(db);
   const listPayments = new ListPaymentsQuery(db);
   const listPaymentReviewQueue = new ListPaymentReviewQueueQuery(db);
@@ -575,6 +579,7 @@ function buildContainer(): AppContainer {
       listStudents,
       getStudent,
       studentEnrollmentHistory,
+      studentActivity,
       listEnrollments,
       listPayments,
       listPaymentReviewQueue,

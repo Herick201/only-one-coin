@@ -36,14 +36,12 @@ export interface StudentDetailRow {
 }
 
 /**
- * The student file — identity, contact and guardian, everything this table
- * actually models today. `StudentDetail` on the frontend
- * (`lib/backoffice/types.ts`) also carries documents, paid procedures,
- * uploaded attachments and an audit trail: none of those have a table yet
- * (`outbox`, `audit_log`, `materials`... are `docs/ROADMAP.md` Sessão 7, not
- * built), so this query does not return them — the route sends empty lists
- * rather than reaching for the old mock fixtures, since a real student found
- * through the real list has no mock counterpart to merge with.
+ * The student file's identity half — contact, guardian and consent. The rest
+ * of the file is read by its neighbours: the enrollment history by
+ * `StudentEnrollmentHistoryQuery` (OOC-73) and the activity timeline, out of
+ * `audit_log`, by `StudentActivityQuery` (OOC-75). Issued documents, paid
+ * procedures and uploaded attachments have no table yet (OOC-33), so the
+ * route sends those as empty lists rather than reaching for mock fixtures.
  */
 export class GetStudentQuery {
   constructor(private readonly db: Db) {}

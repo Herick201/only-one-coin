@@ -16,6 +16,7 @@ import {
   type SubmitPublicEnrollmentParams,
 } from "@ooc/domain";
 import { describe, expect, it } from "vitest";
+import { FakeAuditLogRepository } from "./fakes/catalog.js";
 
 /**
  * Which e-mails an enrollment queues, and for whom (decisions of 27/09/2026):
@@ -57,6 +58,7 @@ function contextLookup(context: EnrollmentEmailContext | null): IEnrollmentEmail
 }
 
 const MANUAL_INPUT = {
+  actorId: "staff-1",
   studentId: STUDENT_ID,
   classGroupId: CLASS_GROUP_ID,
   planId: PLAN_ID,
@@ -79,6 +81,7 @@ describe("CreateManualEnrollmentUseCase e-mails", () => {
         courseName: "Inglés Básico",
         classGroupStartsOn: STARTS_ON,
       }),
+      new FakeAuditLogRepository(),
     );
 
     const { enrollment } = await useCase.run(MANUAL_INPUT);
@@ -111,6 +114,7 @@ describe("CreateManualEnrollmentUseCase e-mails", () => {
         courseName: "Inglés Kids",
         classGroupStartsOn: STARTS_ON,
       }),
+      new FakeAuditLogRepository(),
     );
 
     const { enrollment } = await useCase.run(MANUAL_INPUT);
@@ -126,7 +130,12 @@ describe("CreateManualEnrollmentUseCase e-mails", () => {
 
   it("queues nothing when the student is not on file, and leaves the failure to the write", async () => {
     const repository = new FakeEnrollmentRepository();
-    const useCase = new CreateManualEnrollmentUseCase(repository, priceLookup, contextLookup(null));
+    const useCase = new CreateManualEnrollmentUseCase(
+      repository,
+      priceLookup,
+      contextLookup(null),
+      new FakeAuditLogRepository(),
+    );
 
     await useCase.run(MANUAL_INPUT);
     expect(repository.notifications).toEqual([]);
@@ -232,5 +241,21 @@ describe("SubmitPublicEnrollmentUseCase e-mails", () => {
       ["enrollment_received", "carmen@hotmail.com", "pt-BR"],
     ]);
     expect(notifications[0]!.dedupeKey).toBe(`enrollment_received:${repository.params!.enrollment.id}:student`);
+  });
+
+  it("audits the manual enrollment under its id, naming who opened it (OOC-75)", async () => {
+    const audit = new FakeAuditLogRepository();
+    const useCase = new CreateManualEnrollmentUseCase(new FakeEnrollmentRepository(), priceLookup, contextLookup(null), audit);
+
+    const { enrollment, payment } = await useCase.run(MANUAL_INPUT);
+
+    expect(audit.appended).toEqual([
+      expect.objectContaining({
+        actorId: "staff-1",
+        action: "enrollment.created",
+        targetId: enrollment.id,
+        metadata: { studentId: MANUAL_INPUT.studentId, paymentId: payment.id },
+      }),
+    ]);
   });
 });

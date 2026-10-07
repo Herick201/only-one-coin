@@ -1,5 +1,5 @@
 import { apiFetch } from './api-client'
-import type { StudentDetail, StudentRow } from './types'
+import type { StudentActivityPage, StudentDetail, StudentRow } from './types'
 
 export interface StudentListPage {
   items: StudentRow[]
@@ -49,4 +49,19 @@ export async function getStudent(id: string): Promise<StudentDetail | null> {
   const response = await apiFetch(`/api/v1/students/${id}`)
   if (!response.ok) return null
   return response.json()
+}
+
+/**
+ * The first page of a student's activity (OOC-75), newest first — later
+ * pages are fetched by the file itself through the same-origin proxy. `null`
+ * means the API failed: the tab says so instead of claiming nothing happened.
+ */
+export async function getStudentActivity(id: string): Promise<StudentActivityPage | null> {
+  try {
+    const response = await apiFetch(`/api/v1/students/${id}/activity`)
+    if (!response.ok) return null
+    return response.json()
+  } catch {
+    return null
+  }
 }

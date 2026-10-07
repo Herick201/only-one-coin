@@ -296,10 +296,16 @@
       "activity_title": "History",
       "activity_subtitle": "Append-only record: nothing is edited or deleted.",
       "activity_actor": "{actor} · {role}",
+      "activity_actor_unknown": "An account that no longer exists",
       "activity_operation": "Operation {number}",
-      "activity_field": "Field updated: {field}",
+      "activity_fields": "Fields changed: {fields}",
       "no_activity_title": "No activity",
       "no_activity_body": "No actions have been recorded for this student yet.",
+      "activity_load_more": "Show earlier activity",
+      "activity_loading": "Loading…",
+      "activity_load_error": "Could not load more activity. Try again.",
+      "activity_error_title": "Could not load the activity",
+      "activity_error_body": "The history exists, but the server did not answer. Reload the page in a few minutes.",
       "documents_title": "Issued documents",
       "issue_document": "Issue document",
       "issue_title": "Issue a document",
@@ -577,20 +583,6 @@
     "document_type": {
       "enrollment_certificate": "Enrollment certificate",
       "certificate": "Completion certificate"
-    },
-    "audit_action": {
-      "student_created": "Student registered",
-      "student_updated": "Details edited",
-      "enrollment_created": "Enrollment created",
-      "payment_approved": "Payment approved",
-      "payment_rejected": "Payment rejected",
-      "payment_flagged": "Payment sent to review",
-      "document_issued": "Document issued",
-      "email_sent": "Email sent",
-      "credentials_sent": "Credentials sent",
-      "document_requested": "Document requested",
-      "certificates_batch_issued": "Certificates issued in batch",
-      "attachment_uploaded": "File attached"
     },
     "email_template": {
       "enrollment_submitted": "Enrollment received",
@@ -1733,6 +1725,16 @@
       "waitlist_entry_closed": "That student already left the list.",
       "waitlist_entry_not_found": "That waitlist entry no longer exists.",
       "entry_not_found": "That catalog entry no longer exists."
+    },
+    "audit_action": {
+      "student_registered": "Student registered",
+      "student_updated": "Student data edited",
+      "guardian_added": "Guardian added",
+      "guardian_updated": "Guardian data edited",
+      "enrollment_created": "Enrollment opened from the panel",
+      "payment_approved": "Payment approved",
+      "payment_rejected": "Payment rejected",
+      "receipt_viewed": "Receipt viewed"
     }
   }
 }

@@ -87,18 +87,14 @@ export const fraudSignalTone: Record<ReceiptFraudSignalKind, Tone> = {
 }
 
 export const auditTone: Record<AuditAction, Tone> = {
-  student_created: 'info',
+  student_registered: 'info',
   student_updated: 'info',
+  guardian_added: 'info',
+  guardian_updated: 'info',
   enrollment_created: 'info',
   payment_approved: 'success',
   payment_rejected: 'danger',
-  payment_flagged: 'warning',
-  document_issued: 'success',
-  document_requested: 'info',
-  certificates_batch_issued: 'success',
-  attachment_uploaded: 'info',
-  email_sent: 'neutral',
-  credentials_sent: 'neutral',
+  receipt_viewed: 'neutral',
 }
 
 /** Outbox state of the e-mail that carries a document (CLAUDE.md §5). */

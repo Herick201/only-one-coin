@@ -59,6 +59,7 @@ export const registerStudentRoute = RouteBuilder.post("/students")
     const { student, guardian } = request.body;
 
     const result = await container.useCases.student.register.run({
+      actorId: request.currentUser!.id,
       student,
       guardian,
     });

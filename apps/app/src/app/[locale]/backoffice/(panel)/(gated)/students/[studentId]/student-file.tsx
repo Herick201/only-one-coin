@@ -2,7 +2,13 @@
 
 import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
-import type { AuditReference, EnrollmentHistoryItem, StudentDetail } from '@/lib/backoffice/types'
+import type {
+  AuditEntry,
+  AuditReference,
+  EnrollmentHistoryItem,
+  StudentActivityPage,
+  StudentDetail,
+} from '@/lib/backoffice/types'
 import { paymentLedgerSearchParams } from '@/lib/backoffice/payment-ledger-query'
 import { Link, useRouter } from '@/i18n/navigation'
 import { Toast } from '@/components/backoffice/controls'
@@ -68,17 +74,54 @@ export function StudentFile({
   student,
   canViewPayments,
   canEdit,
+  activity,
 }: {
   student: StudentDetail
   /** Whether the reader's cargo opens Pagos — decides whether the file links there. */
   canViewPayments: boolean
   /** Whether the reader's cargo corrects the file — hides the edit controls otherwise. */
   canEdit: boolean
+  /** First page of the timeline; null when the API could not answer. */
+  activity: StudentActivityPage | null
 }) {
   const t = useTranslations('bo')
   const locale = useLocale() as Locale
   const router = useRouter()
   const [toast, setToast] = useState<string | null>(null)
+  const [entries, setEntries] = useState<AuditEntry[]>(activity?.items ?? [])
+  const [activityCursor, setActivityCursor] = useState(activity?.nextCursor ?? null)
+  const [loadingActivity, setLoadingActivity] = useState(false)
+
+  /*
+   * A save refreshes the page from the server, and the timeline's first page
+   * comes back with the entry the save just wrote. Taking it over replaces
+   * whatever older pages were loaded — they are a click away again.
+   */
+  const [seenActivity, setSeenActivity] = useState(activity)
+  if (activity !== seenActivity) {
+    setSeenActivity(activity)
+    setEntries(activity?.items ?? [])
+    setActivityCursor(activity?.nextCursor ?? null)
+  }
+
+  /** The next page of the timeline, through the same-origin proxy. */
+  async function loadMoreActivity() {
+    if (!activityCursor || loadingActivity) return
+    setLoadingActivity(true)
+    try {
+      const response = await fetch(
+        `/api/v1/students/${student.id}/activity?cursor=${encodeURIComponent(activityCursor)}`,
+      )
+      if (!response.ok) throw new Error(String(response.status))
+      const next = (await response.json()) as StudentActivityPage
+      setEntries((current) => [...current, ...next.items])
+      setActivityCursor(next.nextCursor)
+    } catch {
+      setToast(t('student_file.activity_load_error'))
+    } finally {
+      setLoadingActivity(false)
+    }
+  }
   const [tab, setTab] = useState<Tab>('data')
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState<EditableStudent>({
@@ -140,16 +183,15 @@ export function StudentFile({
         return reference.name
       case 'operation':
         return t('student_file.activity_operation', { number: reference.number })
-      case 'review_flag':
-        return t(`review_flag.${reference.flag}`)
-      case 'student_field':
-        return t('student_file.activity_field', {
-          field: t(`student_file.field_${reference.field}`),
+      case 'fields':
+        return t('student_file.activity_fields', {
+          fields: reference.fields
+            .map((field) => t(`student_file.field_${field}`))
+            .join(', '),
         })
-      case 'email_template':
-        return t(`email_template.${reference.template}`)
     }
   }
+
 
   return (
     <div className="flex flex-col gap-5">
@@ -452,7 +494,13 @@ export function StudentFile({
               {t('student_file.activity_subtitle')}
             </p>
           </div>
-          {student.activity.length === 0 ? (
+          {activity === null ? (
+            <EmptyState
+              icon="alert"
+              title={t('student_file.activity_error_title')}
+              body={t('student_file.activity_error_body')}
+            />
+          ) : entries.length === 0 ? (
             <EmptyState
               icon="clock"
               title={t('student_file.no_activity_title')}
@@ -460,11 +508,11 @@ export function StudentFile({
             />
           ) : (
             <ol className="flex flex-col">
-              {student.activity.map((entry, index) => (
+              {entries.map((entry, index) => (
                 <li key={entry.id} className="flex gap-3">
                   <div className="flex flex-col items-center">
                     <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-brand-blue" />
-                    {index < student.activity.length - 1 && (
+                    {(index < entries.length - 1 || activityCursor) && (
                       <span className="w-px flex-1 bg-line" />
                     )}
                   </div>
@@ -480,10 +528,12 @@ export function StudentFile({
                       </span>
                     </div>
                     <p className="mt-1 text-sm text-ink">
-                      {t('student_file.activity_actor', {
-                        actor: entry.actorName,
-                        role: t(`role.${entry.actorRole}`),
-                      })}
+                      {entry.actorName && entry.actorRole
+                        ? t('student_file.activity_actor', {
+                            actor: entry.actorName,
+                            role: t(`role.${entry.actorRole}`),
+                          })
+                        : t('student_file.activity_actor_unknown')}
                     </p>
                     {entry.reference && (
                       <p className="text-xs text-muted-foreground">
@@ -494,6 +544,16 @@ export function StudentFile({
                 </li>
               ))}
             </ol>
+          )}
+          {activity !== null && activityCursor && (
+            <button
+              type="button"
+              onClick={() => void loadMoreActivity()}
+              disabled={loadingActivity}
+              className="mt-1 min-h-tap rounded-lg border border-line bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:bg-cream disabled:opacity-50"
+            >
+              {loadingActivity ? t('student_file.activity_loading') : t('student_file.activity_load_more')}
+            </button>
           )}
         </Card>
       )}

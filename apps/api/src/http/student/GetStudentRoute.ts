@@ -67,11 +67,11 @@ const GetStudentResponseSchema = z.object({
   enrollments: z.array(EnrollmentHistoryItemSchema),
   // Still empty: issued documents, paid procedures and uploaded attachments
   // have no table yet (OOC-33). Sent as empty lists rather than omitted, so
-  // the screen's empty states render without a "not built yet" branch.
+  // the screen's empty states render without a "not built yet" branch. The
+  // activity timeline is its own paged route (GET /students/:id/activity).
   documents: z.array(z.unknown()),
   documentRequests: z.array(z.unknown()),
   attachments: z.array(z.unknown()),
-  activity: z.array(z.unknown()),
 });
 
 // management + enrollment supervision only — same audience as the rest of the student
@@ -124,6 +124,5 @@ export const getStudentRoute = RouteBuilder.get("/students/:studentId")
       documents: [],
       documentRequests: [],
       attachments: [],
-      activity: [],
     });
   });

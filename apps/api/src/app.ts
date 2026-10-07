@@ -15,6 +15,7 @@ import { listStudentsRoute } from "@/http/student/ListStudentsRoute.js";
 import { getStudentRoute } from "@/http/student/GetStudentRoute.js";
 import { updateStudentRoute } from "@/http/student/UpdateStudentRoute.js";
 import { saveGuardianRoute } from "@/http/student/SaveGuardianRoute.js";
+import { listStudentActivityRoute } from "@/http/student/ListStudentActivityRoute.js";
 import { createManualEnrollmentRoute } from "@/http/enrollment/CreateManualEnrollmentRoute.js";
 import { listPaymentsRoute } from "@/http/payment/ListPaymentsRoute.js";
 import { listPaymentReviewQueueRoute } from "@/http/payment/ListPaymentReviewQueueRoute.js";
@@ -121,6 +122,7 @@ export async function buildApp(): Promise<FastifyInstance> {
         instance.withTypeProvider<ZodTypeProvider>().route(getStudentRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(updateStudentRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(saveGuardianRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(listStudentActivityRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(createManualEnrollmentRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(listEnrollmentsRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(listPaymentsRoute);

@@ -296,10 +296,16 @@
       "activity_title": "Histórico",
       "activity_subtitle": "Registro append-only: nada é editado nem apagado.",
       "activity_actor": "{actor} · {role}",
+      "activity_actor_unknown": "Conta que não existe mais",
       "activity_operation": "Operação {number}",
-      "activity_field": "Campo atualizado: {field}",
+      "activity_fields": "Campos alterados: {fields}",
       "no_activity_title": "Sem atividade",
       "no_activity_body": "Ainda não há ações registradas para este aluno.",
+      "activity_load_more": "Ver atividade anterior",
+      "activity_loading": "Carregando…",
+      "activity_load_error": "Não foi possível carregar mais atividade. Tente de novo.",
+      "activity_error_title": "Não foi possível carregar a atividade",
+      "activity_error_body": "O histórico existe, mas o servidor não respondeu. Recarregue a página em alguns minutos.",
       "documents_title": "Documentos emitidos",
       "issue_document": "Emitir documento",
       "issue_title": "Emitir um documento",
@@ -577,20 +583,6 @@
     "document_type": {
       "enrollment_certificate": "Constância de matrícula",
       "certificate": "Certificado de conclusão"
-    },
-    "audit_action": {
-      "student_created": "Aluno cadastrado",
-      "student_updated": "Dados editados",
-      "enrollment_created": "Matrícula criada",
-      "payment_approved": "Pagamento aprovado",
-      "payment_rejected": "Pagamento recusado",
-      "payment_flagged": "Pagamento enviado à revisão",
-      "document_issued": "Documento emitido",
-      "email_sent": "E-mail enviado",
-      "credentials_sent": "Credenciais enviadas",
-      "document_requested": "Documento solicitado",
-      "certificates_batch_issued": "Certificados emitidos em lote",
-      "attachment_uploaded": "Arquivo anexado"
     },
     "email_template": {
       "enrollment_submitted": "Matrícula recebida",
@@ -1733,6 +1725,16 @@
       "waitlist_entry_closed": "Esse aluno já saiu da lista.",
       "waitlist_entry_not_found": "Esse registro de espera não existe mais.",
       "entry_not_found": "Esse item não existe mais no catálogo."
+    },
+    "audit_action": {
+      "student_registered": "Aluno cadastrado",
+      "student_updated": "Dados do aluno editados",
+      "guardian_added": "Responsável adicionado",
+      "guardian_updated": "Dados do responsável editados",
+      "enrollment_created": "Matrícula aberta pelo painel",
+      "payment_approved": "Pagamento aprovado",
+      "payment_rejected": "Pagamento rejeitado",
+      "receipt_viewed": "Comprovante consultado"
     }
   }
 }
