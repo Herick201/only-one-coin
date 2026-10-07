@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import type { AuditReference, EnrollmentHistoryItem, StudentDetail } from '@/lib/backoffice/types'
 import { paymentLedgerSearchParams } from '@/lib/backoffice/payment-ledger-query'
-import { Link } from '@/i18n/navigation'
+import { Link, useRouter } from '@/i18n/navigation'
+import { Toast } from '@/components/backoffice/controls'
 import { countryName } from '@/lib/geo'
 import { ageFrom, formatDate, formatDateTime, formatMoney, type Locale } from '@/lib/format'
 import {
@@ -45,22 +46,39 @@ function placeLabel(
 
 const TABS: Tab[] = ['data', 'enrollments', 'documents', 'activity']
 
+/** Where the "add guardian" form starts — consent is never part of it. */
+const EMPTY_GUARDIAN: EditableGuardian = {
+  firstName: '',
+  lastName: '',
+  relationship: 'mother',
+  nationalIdType: 'DNI',
+  nationalId: '',
+  email: '',
+  phone: '',
+}
+
 /**
  * Student file: personal data (editable), enrollment history with the money
- * trail, documents and the audit timeline. Edits live in component state only —
- * there is no backend yet, and the real write goes through `apps/api`, never
- * from the browser (CLAUDE.md §8).
+ * trail, documents and the audit timeline. Edits are written by `apps/api`
+ * (OOC-74), never from the browser (CLAUDE.md §8); after a save the page is
+ * refreshed from the server, so the derived figures (minor, status, activity)
+ * are the server's, not a guess made here.
  */
 export function StudentFile({
   student,
   canViewPayments,
+  canEdit,
 }: {
   student: StudentDetail
   /** Whether the reader's cargo opens Pagos — decides whether the file links there. */
   canViewPayments: boolean
+  /** Whether the reader's cargo corrects the file — hides the edit controls otherwise. */
+  canEdit: boolean
 }) {
   const t = useTranslations('bo')
   const locale = useLocale() as Locale
+  const router = useRouter()
+  const [toast, setToast] = useState<string | null>(null)
   const [tab, setTab] = useState<Tab>('data')
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState<EditableStudent>({
@@ -75,7 +93,6 @@ export function StudentFile({
     region: student.region,
     city: student.city,
   })
-  const [savedAt, setSavedAt] = useState<string | null>(null)
   const [editingGuardian, setEditingGuardian] = useState(false)
   const [guardianDraft, setGuardianDraft] = useState<EditableGuardian | null>(
     student.guardian
@@ -90,7 +107,6 @@ export function StudentFile({
         }
       : null,
   )
-  const [guardianSavedAt, setGuardianSavedAt] = useState<string | null>(null)
   /** Read-only next to the editable fields — never part of the draft. */
   const consent = student.guardian?.consent ?? null
   /** Enrollment whose detail panel is open — the table shows status only. */
@@ -171,7 +187,7 @@ export function StudentFile({
               <SectionTitle icon="students">
                 {t('student_file.personal_title')}
               </SectionTitle>
-              {!editing && (
+              {canEdit && !editing && (
                 <button
                   type="button"
                   onClick={() => setEditing(true)}
@@ -185,12 +201,14 @@ export function StudentFile({
 
             {editing ? (
               <StudentEditForm
+                studentId={student.id}
                 value={draft}
                 onCancel={() => setEditing(false)}
                 onSave={(next) => {
                   setDraft(next)
                   setEditing(false)
-                  setSavedAt(new Date().toISOString())
+                  setToast(t('student_file.saved'))
+                  router.refresh()
                 }}
               />
             ) : (
@@ -223,14 +241,6 @@ export function StudentFile({
                     {formatDateTime(student.lastActivityAt, locale)}
                   </Field>
                 </AutoGrid>
-                {savedAt && (
-                  <p className="mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                    <BoIcon name="alert" size={14} className="mt-0.5 shrink-0" />
-                    {t('student_file.saved_local_only', {
-                      time: formatDateTime(savedAt, locale),
-                    })}
-                  </p>
-                )}
               </>
             )}
           </Card>
@@ -241,58 +251,51 @@ export function StudentFile({
               <SectionTitle icon="guardian">
                 {t('student_file.guardian_title')}
               </SectionTitle>
-              {guardianDraft && !editingGuardian && (
+              {canEdit && !editingGuardian && (
                 <button
                   type="button"
                   onClick={() => setEditingGuardian(true)}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs font-semibold text-brand-blue transition hover:bg-sky"
                 >
-                  <BoIcon name="edit" size={14} />
-                  {t('student_file.guardian_edit')}
+                  <BoIcon name={guardianDraft ? 'edit' : 'plus'} size={14} />
+                  {guardianDraft ? t('student_file.guardian_edit') : t('student_file.guardian_add')}
                 </button>
               )}
             </div>
-            {guardianDraft ? (
+            {editingGuardian ? (
+              <GuardianEditForm
+                studentId={student.id}
+                value={guardianDraft ?? EMPTY_GUARDIAN}
+                onCancel={() => setEditingGuardian(false)}
+                onSave={(next) => {
+                  setGuardianDraft(next)
+                  setEditingGuardian(false)
+                  setToast(t('student_file.saved'))
+                  router.refresh()
+                }}
+              />
+            ) : guardianDraft ? (
               <>
-                {editingGuardian ? (
-                  <GuardianEditForm
-                    value={guardianDraft}
-                    onCancel={() => setEditingGuardian(false)}
-                    onSave={(next) => {
-                      setGuardianDraft(next)
-                      setEditingGuardian(false)
-                      setGuardianSavedAt(new Date().toISOString())
-                    }}
-                  />
-                ) : (
-                  <AutoGrid as="dl" min="17rem">
-                    <Field label={t('student_file.field_guardian_name')}>
-                      {`${guardianDraft.firstName} ${guardianDraft.lastName}`}
-                    </Field>
-                    <Field label={t('student_file.field_relationship')}>
-                      {t(`relationship.${guardianDraft.relationship}`)}
-                    </Field>
-                    <Field label={t(`national_id_type.${guardianDraft.nationalIdType}`)}>
-                      <span className="tabular-nums">{guardianDraft.nationalId}</span>
-                    </Field>
-                    <Field label={t('student_file.field_email')}>
-                      {guardianDraft.email}
-                    </Field>
-                    <Field label={t('student_file.field_phone')}>
-                      {guardianDraft.phone}
-                    </Field>
-                  </AutoGrid>
-                )}
-                {guardianSavedAt && !editingGuardian && (
-                  <p className="mt-4 flex items-start gap-2 rounded-lg border border-dashed border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                    <BoIcon name="alert" size={14} className="mt-0.5 shrink-0" />
-                    {t('student_file.saved_local_only', {
-                      time: formatDateTime(guardianSavedAt, locale),
-                    })}
-                  </p>
-                )}
-                {/* Consent stays read-only in both modes: it records that a
-                    person accepted a text, not a field staff may set. */}
+                <AutoGrid as="dl" min="17rem">
+                  <Field label={t('student_file.field_guardian_name')}>
+                    {`${guardianDraft.firstName} ${guardianDraft.lastName}`}
+                  </Field>
+                  <Field label={t('student_file.field_relationship')}>
+                    {t(`relationship.${guardianDraft.relationship}`)}
+                  </Field>
+                  <Field label={t(`national_id_type.${guardianDraft.nationalIdType}`)}>
+                    <span className="tabular-nums">{guardianDraft.nationalId}</span>
+                  </Field>
+                  <Field label={t('student_file.field_email')}>
+                    {guardianDraft.email}
+                  </Field>
+                  <Field label={t('student_file.field_phone')}>
+                    {guardianDraft.phone}
+                  </Field>
+                </AutoGrid>
+                {/* Consent is read-only and never part of the edit form: it
+                    records that a person accepted a text, not a field staff
+                    may set. */}
                 <div className="mt-4 rounded-lg border border-line bg-sky-soft p-3">
                   {consent ? (
                     <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -323,7 +326,11 @@ export function StudentFile({
               <EmptyState
                 icon="guardian"
                 title={t('student_file.no_guardian_title')}
-                body={t('student_file.no_guardian_body')}
+                body={
+                  student.isMinor
+                    ? t('student_file.no_guardian_minor_body')
+                    : t('student_file.no_guardian_body')
+                }
               />
             )}
           </Card>
@@ -490,6 +497,8 @@ export function StudentFile({
           )}
         </Card>
       )}
+
+      <Toast message={toast} onDismiss={() => setToast(null)} />
     </div>
   )
 }

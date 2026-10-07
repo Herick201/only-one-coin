@@ -34,7 +34,9 @@ export {
 } from "./student/Guardian.js";
 export type { GuardianProps, CreateGuardianDTO, GuardianRelationship } from "./student/Guardian.js";
 export type { IGuardianRepository } from "./student/GuardianRepository.js";
-export { GuardianRequiredForMinorError, StudentAlreadyRegisteredError } from "./student/errors.js";
+export { GuardianRequiredForMinorError, StudentAlreadyRegisteredError, StudentNotFoundError } from "./student/errors.js";
+export { UpdateStudentUseCase, type UpdateStudentInput } from "./student/UpdateStudentUseCase.js";
+export { SaveGuardianUseCase, type SaveGuardianInput } from "./student/SaveGuardianUseCase.js";
 export {
   RegisterStudentUseCase,
   type RegisterStudentInput,

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { RouteBuilder } from "@/shared/http/RouteBuilder.js";
 import { ErrorResponseSchema } from "@/shared/http/ErrorResponseSchema.js";
 import { container } from "@/container.js";
+import { STUDENT_FILE_ROLES } from "./studentRoles.js";
 
 // `q` optional: omitted, this is the student directory (docs/ROADMAP.md
 // Sessão 34); set, it is the manual enrollment form's picker (CLAUDE.md §1).
@@ -59,7 +60,7 @@ export const listStudentsRoute = RouteBuilder.get("/students")
     summary: "List students, or search by name / national id",
     description: "Backs the student directory and the manual enrollment form's student picker.",
   })
-  .roles("master", "admin", "enrollment_supervisor")
+  .roles(...STUDENT_FILE_ROLES)
   .query(ListStudentsQuerySchema)
   .response(200, StudentListResponseSchema)
   .response(400, ErrorResponseSchema)

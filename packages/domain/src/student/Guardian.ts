@@ -78,6 +78,29 @@ export class Guardian extends SoftDeletableModel {
     this.phone = props.phone;
   }
 
+  /**
+   * Rewrites the guardian from a staff correction (OOC-74) and answers which
+   * fields changed — see `Student.rewrite`. The consent record is not
+   * touched: it is the guardian's own act, never a field staff may set.
+   */
+  rewrite(dto: Omit<CreateGuardianDTO, "studentId">): (keyof CreateGuardianDTO)[] {
+    const result = CreateGuardianSchema.safeParse({ ...dto, studentId: this.studentId });
+
+    if (!result.success) {
+      throw new InvalidFieldsError(toFieldErrors(result.error.issues, "guardian"));
+    }
+
+    const changed: (keyof CreateGuardianDTO)[] = [];
+    for (const key of Object.keys(result.data) as (keyof CreateGuardianDTO)[]) {
+      if (this[key] === result.data[key]) continue;
+      (this as Record<string, unknown>)[key] = result.data[key];
+      changed.push(key);
+    }
+
+    if (changed.length > 0) this.touch();
+    return changed;
+  }
+
   static create(dto: CreateGuardianDTO): Guardian {
     const result = CreateGuardianSchema.safeParse(dto);
 

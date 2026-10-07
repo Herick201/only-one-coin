@@ -1,13 +1,6 @@
 import { describe, expect, it } from "vitest";
-import {
-  Guardian,
-  RegisterStudentUseCase,
-  Student,
-  StudentAlreadyRegisteredError,
-  type IGuardianRepository,
-  type IStudentRepository,
-  type NationalIdType,
-} from "@ooc/domain";
+import { RegisterStudentUseCase, Student, StudentAlreadyRegisteredError, type NationalIdType } from "@ooc/domain";
+import { FakeGuardianRepository, FakeStudentRepository } from "./fakes/student.js";
 
 /**
  * One person, one record (CLAUDE.md §1 — "puxando o cadastro existente, nunca
@@ -34,37 +27,9 @@ const A_STUDENT = {
   city: "Chorrillos",
 };
 
-class FakeStudentRepository implements IStudentRepository {
-  public created: Student[] = [];
-
-  constructor(private readonly onFile: Student | null) {}
-
-  async create(student: Student): Promise<Student> {
-    this.created.push(student);
-    return student;
-  }
-
-  async findByNationalId(params: {
-    nationalIdType: NationalIdType;
-    nationalId: string;
-  }): Promise<Student | null> {
-    if (!this.onFile) return null;
-    const matches =
-      this.onFile.nationalIdType === params.nationalIdType &&
-      this.onFile.nationalId === params.nationalId;
-    return matches ? this.onFile : null;
-  }
-}
-
-class FakeGuardianRepository implements IGuardianRepository {
-  async create(guardian: Guardian): Promise<Guardian> {
-    return guardian;
-  }
-}
-
 describe("RegisterStudentUseCase — one person, one record", () => {
   it("registers somebody whose document is not on file yet", async () => {
-    const students = new FakeStudentRepository(null);
+    const students = new FakeStudentRepository();
     const usecase = new RegisterStudentUseCase(students, new FakeGuardianRepository());
 
     const result = await usecase.run({ student: A_STUDENT, guardian: null });

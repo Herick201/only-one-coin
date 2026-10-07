@@ -8,6 +8,12 @@ import type { NationalIdType, Student } from "./Student.js";
 export interface IStudentRepository {
   create(student: Student): Promise<Student>;
 
+  /** A live record by id — a retired one does not answer (CLAUDE.md §6). */
+  findById(id: string): Promise<Student | null>;
+
+  /** Writes the entity's current fields over its row (OOC-74). */
+  update(student: Student): Promise<Student>;
+
   /**
    * The person behind a document, if the institution already knows them.
    *

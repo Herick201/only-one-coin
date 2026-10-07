@@ -23,6 +23,8 @@ import {
   ExpireSeatHoldsUseCase,
   PromoteUserRoleUseCase,
   RegisterStudentUseCase,
+  UpdateStudentUseCase,
+  SaveGuardianUseCase,
   RenamePlanUseCase,
   ReleaseSeatHoldUseCase,
   RequestReceiptUploadUseCase,
@@ -170,6 +172,8 @@ export interface AppRepositories {
 export interface AppUseCases {
   student: {
     register: RegisterStudentUseCase;
+    update: UpdateStudentUseCase;
+    saveGuardian: SaveGuardianUseCase;
   };
   enrollment: {
     createManual: CreateManualEnrollmentUseCase;
@@ -359,6 +363,8 @@ function buildContainer(): AppContainer {
 
   // Use cases
   const registerStudent = new RegisterStudentUseCase(studentRepository, guardianRepository);
+  const updateStudent = new UpdateStudentUseCase(studentRepository, guardianRepository, auditLogRepository);
+  const saveGuardian = new SaveGuardianUseCase(studentRepository, guardianRepository, auditLogRepository);
   const createManualEnrollment = new CreateManualEnrollmentUseCase(
     enrollmentRepository,
     planPriceLookup,
@@ -509,6 +515,8 @@ function buildContainer(): AppContainer {
     useCases: {
       student: {
         register: registerStudent,
+        update: updateStudent,
+        saveGuardian,
       },
       enrollment: {
         createManual: createManualEnrollment,

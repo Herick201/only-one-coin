@@ -169,6 +169,16 @@ export function canCreateStudent(role: StaffRole): boolean {
 }
 
 /**
+ * Who corrects a student file — the student's data and the guardian's. The
+ * same three as registration (decision of 07/10/2026, OOC-74): `support` does
+ * not correct contact either. The enforcing check is `STUDENT_FILE_ROLES` on
+ * the routes in `apps/api`.
+ */
+export function canEditStudent(role: StaffRole): boolean {
+  return canCreateStudent(role)
+}
+
+/**
  * Who records a final grade — the teacher of that class group, nobody else.
  * The grade is what the docente signs, and everything downstream reads it: the
  * certificate (grade ≥ 14, `docs/REGRAS-NEGOCIO.md` §3) and the module
