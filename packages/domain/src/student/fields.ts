@@ -23,6 +23,7 @@ export const FIELD_ERROR_CODES = [
   "phone_format",
   "email_format",
   "email_must_be_gmail",
+  "email_gmail_username_invalid",
   "birth_date_range",
   "operation_format",
   "invalid",
@@ -108,6 +109,73 @@ export function isGmail(email: string): boolean {
   return /@gmail\.com$/.test(normalizeEmail(email));
 }
 
+/**
+ * Gmail's own username rules (6-30 characters; letters, digits and dots; no
+ * dot at either end or two in a row). An address that breaks them cannot
+ * exist, so it is refused wherever an e-mail is written - student or guardian,
+ * checkout or backoffice. Only `@gmail.com` is judged: other providers have
+ * their own rules and the Gmail requirement itself is the checkout's
+ * (`refineGmail`). `+` aliases are refused on purpose: they deliver to the same
+ * inbox, but Classroom needs the account itself.
+ */
+export function gmailUsernameIssue(email: string): FieldErrorCode | null {
+  const normalized = normalizeEmail(email);
+  if (!isGmail(normalized)) return null;
+  const username = normalized.slice(0, -"@gmail.com".length);
+  const valid =
+    username.length >= 6 &&
+    username.length <= 30 &&
+    /^[a-z0-9.]+$/.test(username) &&
+    !username.startsWith(".") &&
+    !username.endsWith(".") &&
+    !username.includes("..");
+  return valid ? null : "email_gmail_username_invalid";
+}
+
+/** Domain typos people actually make, each to the domain they meant. */
+const DOMAIN_TYPOS: Record<string, string> = {
+  "gmial.com": "gmail.com",
+  "gmai.com": "gmail.com",
+  "gmal.com": "gmail.com",
+  "gamil.com": "gmail.com",
+  "gmaill.com": "gmail.com",
+  "gnail.com": "gmail.com",
+  "gmail.co": "gmail.com",
+  "gmail.con": "gmail.com",
+  "gmail.cm": "gmail.com",
+  "gmail.om": "gmail.com",
+  "hotmial.com": "hotmail.com",
+  "hotmai.com": "hotmail.com",
+  "hotmail.co": "hotmail.com",
+  "hotmail.con": "hotmail.com",
+  "outlok.com": "outlook.com",
+  "outlook.co": "outlook.com",
+  "outlook.con": "outlook.com",
+  "yaho.com": "yahoo.com",
+  "yahoo.co": "yahoo.com",
+  "yahoo.con": "yahoo.com",
+};
+
+/** `name123gmail.com` - the "@" that never got typed (legacy import, parse-row.ts). */
+const MISSING_AT = /^(.+?)(gmail|hotmail|outlook|yahoo).com$/;
+
+/**
+ * "Did you mean ...?" - the corrected address, or null when there is nothing to
+ * suggest. A suggestion, never a refusal: the list can never be complete, so
+ * nothing is rejected for missing from it.
+ */
+export function suggestEmailDomain(email: string): string | null {
+  const normalized = normalizeEmail(email);
+  const at = normalized.lastIndexOf("@");
+  if (at === -1) {
+    const match = MISSING_AT.exec(normalized);
+    return match ? `${match[1]}@${match[2]}.com` : null;
+  }
+  if (at === 0) return null;
+  const fix = DOMAIN_TYPOS[normalized.slice(at + 1)];
+  return fix ? `${normalized.slice(0, at)}@${fix}` : null;
+}
+
 export const AGE_RANGE = { min: 0, max: 120 } as const;
 
 /** Full years old on `now`, UTC — the "has the birthday happened yet" rule. */
@@ -142,7 +210,14 @@ export const MethodDetailField = requiredText(FIELD_LIMITS.methodDetail);
 export const EmailField = z
   .string()
   .transform(normalizeEmail)
-  .pipe(z.string().min(1, "required").max(FIELD_LIMITS.email, "too_long").email("email_format"));
+  .pipe(
+    z
+      .string()
+      .min(1, "required")
+      .max(FIELD_LIMITS.email, "too_long")
+      .email("email_format")
+      .refine((email) => gmailUsernameIssue(email) === null, "email_gmail_username_invalid"),
+  );
 
 /** Format is checked against the type at object level (`refineNationalId`). */
 export const NationalIdField = z.string().transform(normalizeNationalId).pipe(z.string().min(1, "required"));

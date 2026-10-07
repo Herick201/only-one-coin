@@ -187,6 +187,7 @@
       "phone_format": "Escreva um número de celular válido.",
       "email_format": "Escreva um e-mail válido.",
       "email_must_be_gmail": "Precisa ser uma conta do Gmail. Não aceitamos e-mails institucionais nem corporativos.",
+      "email_gmail_username_invalid": "Esse e-mail do Gmail não existe: o nome de usuário precisa ter de 6 a 30 caracteres, só letras, números e pontos (sem «+», sem ponto no início ou no fim, sem dois pontos seguidos).",
       "birth_date_range": "Confira a data de nascimento.",
       "min_age": "A idade mínima deste curso é maior. Escolha outro curso ou fale com a gente.",
       "consent_required": "Precisamos da autorização do responsável para continuar.",

@@ -187,6 +187,7 @@
       "phone_format": "Enter a valid mobile number.",
       "email_format": "Enter a valid email address.",
       "email_must_be_gmail": "It must be a Gmail account. Institutional and corporate addresses are not accepted.",
+      "email_gmail_username_invalid": "That Gmail address cannot exist: the username must be 6–30 characters, only letters, numbers and dots (no “+”, no dot at the start or end, no two dots in a row).",
       "birth_date_range": "Check the date of birth.",
       "min_age": "This course has a higher minimum age. Choose another course or message us.",
       "consent_required": "We need the guardian's authorisation to continue.",

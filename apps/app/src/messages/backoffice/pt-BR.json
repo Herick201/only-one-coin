@@ -205,6 +205,7 @@
         "phone_format": "Celular inválido: faltam dígitos.",
         "email_format": "E-mail inválido.",
         "email_must_be_gmail": "Precisa ser uma conta do Gmail.",
+        "email_gmail_username_invalid": "Esse e-mail do Gmail não existe: o nome de usuário precisa ter de 6 a 30 caracteres, só letras, números e pontos (sem «+», sem ponto no início ou no fim, sem dois pontos seguidos).",
         "birth_date_range": "Confira a data de nascimento.",
         "operation_format": "Número de operação inválido.",
         "invalid": "Confira este dado."
