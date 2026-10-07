@@ -248,3 +248,73 @@ describe("the outbox store", () => {
     });
   });
 });
+
+describe("a one-time link never outlives its row's delivery", () => {
+  const WITH_LINKS: EmailNotification = {
+    templateKey: "portal_credentials",
+    to: "link.outbox.integration@gmail.com",
+    locale: "es-PE",
+    vars: {
+      recipientName: "Lucía",
+      loginEmail: "link.outbox.integration@gmail.com",
+      accessUrl: "https://student.example/access/raw-token",
+    },
+    dedupeKey: "portal_credentials:018f2b5c-4000-7000-8000-0000000000bb:student",
+  };
+
+  async function insertWithLinks(tx: Db): Promise<string> {
+    // `resetUrl` too, so one row proves both keys are stripped.
+    const both = { ...WITH_LINKS, vars: { ...WITH_LINKS.vars, resetUrl: "https://x/reset/raw" } } as EmailNotification;
+    await insertOutboxEmails(tx, [both]);
+    const [row] = await tx.select({ id: outbox.id }).from(outbox).where(eq(outbox.dedupeKey, WITH_LINKS.dedupeKey));
+    return row!.id;
+  }
+
+  async function varsOf(tx: Db, id: string): Promise<unknown> {
+    const [row] = await tx.select({ vars: outbox.vars }).from(outbox).where(eq(outbox.id, id));
+    return row!.vars;
+  }
+
+  const WITHOUT_LINKS = { recipientName: "Lucía", loginEmail: "link.outbox.integration@gmail.com" };
+
+  it("strips the link when the row is sent", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const id = await insertWithLinks(tx);
+      await new DrizzleOutboxRepository(tx).markSent(id, "<msg@brevo>");
+      expect(await varsOf(tx, id)).toEqual(WITHOUT_LINKS);
+    });
+  });
+
+  it("strips the link when the row is blocked", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const id = await insertWithLinks(tx);
+      await new DrizzleOutboxRepository(tx).markBlocked(id);
+      expect(await varsOf(tx, id)).toEqual(WITHOUT_LINKS);
+    });
+  });
+
+  it("keeps the link across a retryable failure, and strips it when the row finally fails", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const store = new DrizzleOutboxRepository(tx);
+      const id = await insertWithLinks(tx);
+
+      await store.recordFailedAttempt(id, "brevo_http_503", false);
+      expect(await varsOf(tx, id)).toEqual({
+        ...WITHOUT_LINKS,
+        accessUrl: "https://student.example/access/raw-token",
+        resetUrl: "https://x/reset/raw",
+      });
+
+      await store.recordFailedAttempt(id, "brevo_http_503", true);
+      expect(await varsOf(tx, id)).toEqual(WITHOUT_LINKS);
+    });
+  });
+
+  it("leaves vars without a link untouched", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const id = await insertOne(tx);
+      await new DrizzleOutboxRepository(tx).markSent(id, "<msg@brevo>");
+      expect(await varsOf(tx, id)).toEqual(A_NOTIFICATION.vars);
+    });
+  });
+});

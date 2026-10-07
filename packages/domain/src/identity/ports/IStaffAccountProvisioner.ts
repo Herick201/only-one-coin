@@ -12,10 +12,10 @@ export interface ProvisionStaffAccountOutput {
 }
 
 /**
- * Turns a completed invite into a real account. Two steps under the hood
- * (sign up, then set `role`), the same shape `apps/api/src/scripts/seed-admin.ts`
- * already uses and for the same reason: `role` is `additionalFields`,
- * `input:false` on the public sign-up call (CLAUDE.md §8).
+ * Turns a completed invite into a real account. The account is written
+ * directly (user plus credential, with `role`) — Better Auth's own sign-up is
+ * closed, server calls included, and `role` is `input:false` towards clients
+ * (CLAUDE.md §8).
  */
 export interface IStaffAccountProvisioner {
   provision(input: ProvisionStaffAccountInput): Promise<ProvisionStaffAccountOutput>;

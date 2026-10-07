@@ -1,7 +1,13 @@
 import * as schema from "@ooc/db";
 import { academicPeriods, auditLog, classGroups, courses, enrollments, outbox, payments, planPrices, plans, students } from "@ooc/db";
-import { PaymentAlreadySettledError, PaymentSeatReleasedError, type AuditLogEntry } from "@ooc/domain";
-import { eq } from "drizzle-orm";
+import {
+  newPortalToken,
+  PaymentAlreadySettledError,
+  PaymentSeatReleasedError,
+  portalCredentialsEmail,
+  type AuditLogEntry,
+} from "@ooc/domain";
+import { eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -84,7 +90,7 @@ let sequence = 0;
 async function openPayment(
   tx: Tx,
   params: { seatStatus?: "reserved" | "confirmed" | "released"; status?: string } = {},
-): Promise<{ paymentId: string; enrollmentId: string }> {
+): Promise<{ paymentId: string; enrollmentId: string; studentId: string }> {
   sequence += 1;
   const [student] = await tx
     .insert(students)
@@ -115,7 +121,7 @@ async function openPayment(
       operationNumber: `OPSETTLE${sequence}${Date.now()}`,
     })
     .returning({ id: payments.id });
-  return { paymentId: payment!.id, enrollmentId: enrollment!.id };
+  return { paymentId: payment!.id, enrollmentId: enrollment!.id, studentId: student!.id };
 }
 
 function audit(paymentId: string, action: string): AuditLogEntry {
@@ -159,6 +165,7 @@ describe("DrizzlePaymentSettlementRepository", () => {
           },
         ],
         audit: audit(paymentId, "payment.approved"),
+        portalAccess: null,
       });
 
       expect(result.seatStatus).toBe("confirmed");
@@ -184,6 +191,7 @@ describe("DrizzlePaymentSettlementRepository", () => {
         to: "rejected",
         notifications: [],
         audit: audit(paymentId, "payment.rejected"),
+        portalAccess: null,
       });
 
       expect(result.seatStatus).toBe("released");
@@ -195,7 +203,7 @@ describe("DrizzlePaymentSettlementRepository", () => {
     await rolledBack(async (tx) => {
       const repository = new DrizzlePaymentSettlementRepository(tx as unknown as Db);
       const { paymentId, enrollmentId } = await openPayment(tx);
-      const params = { paymentId, enrollmentId, classGroupId: GROUP, notifications: [] };
+      const params = { paymentId, enrollmentId, classGroupId: GROUP, notifications: [], portalAccess: null };
 
       await repository.settle({ ...params, to: "rejected", audit: audit(paymentId, "payment.rejected") });
       await expect(
@@ -221,6 +229,7 @@ describe("DrizzlePaymentSettlementRepository", () => {
           to: "approved",
           notifications: [],
           audit: audit(paymentId, "payment.approved"),
+          portalAccess: null,
         }),
       ).rejects.toBeInstanceOf(PaymentSeatReleasedError);
 
@@ -241,10 +250,124 @@ describe("DrizzlePaymentSettlementRepository", () => {
         to: "rejected",
         notifications: [],
         audit: audit(paymentId, "payment.rejected"),
+        portalAccess: null,
       });
 
       expect(result.seatStatus).toBe("confirmed");
       expect(await seatsTaken(tx)).toBe(1);
     });
   });
+
+  it("creates the student's portal account with the approval, and rolls it back with it", async () => {
+    await rolledBack(async (tx) => {
+      const { paymentId, enrollmentId, studentId } = await openPayment(tx);
+      const repository = new DrizzlePaymentSettlementRepository(tx as unknown as Db);
+      const activation = newPortalToken("activation");
+
+      const result = await repository.settle({
+        paymentId,
+        enrollmentId,
+        classGroupId: GROUP,
+        to: "approved",
+        notifications: [],
+        audit: audit(paymentId, "payment.approved"),
+        portalAccess: {
+          studentId,
+          actorId: "usr_billing",
+          activation,
+          at: new Date(),
+          notify: (account, tokenId) => [portalCredentialsEmail(account, "https://student.test/access/x", tokenId, "es-PE")],
+        },
+      });
+
+      expect(result).toEqual({ seatStatus: "confirmed", portalAccess: "created" });
+      const [student] = await tx.select({ userId: students.userId }).from(students).where(eq(students.id, studentId));
+      expect(student!.userId).toBeTruthy();
+      const mails = await tx.select().from(outbox).where(eq(outbox.templateKey, "portal_credentials"));
+      expect(mails).toHaveLength(1);
+    });
+  });
+
+  it("an account that appears between the e-mail check and the insert is an e-mail conflict, never a failed approval", async () => {
+    // A real race, made deterministic: another connection inserts a "user"
+    // with the student's e-mail and holds it uncommitted, so the settlement's
+    // existence SELECT sees nothing and its INSERT waits on the unique index.
+    // Committing the other side then makes that INSERT fail with 23505.
+    const rival = new pg.Client({ connectionString: DATABASE_URL });
+    await rival.connect();
+    let rivalUserId: string | null = null;
+    try {
+      await rolledBack(async (tx) => {
+        const { paymentId, enrollmentId, studentId } = await openPayment(tx);
+        const [student] = await tx.select({ email: students.email }).from(students).where(eq(students.id, studentId));
+        const { rows } = await tx.execute<{ pid: number }>(sql`select pg_backend_pid() as pid`);
+        const settlementPid = rows[0]!.pid;
+
+        await rival.query("begin");
+        const inserted = await rival.query<{ id: string }>(
+          `insert into "user" ("id", "name", "email", "emailVerified", "role", "createdAt", "updatedAt")
+           values (gen_random_uuid()::text, 'Hermana', $1, false, 'student', now(), now()) returning "id"`,
+          [student!.email],
+        );
+        rivalUserId = inserted.rows[0]!.id;
+
+        const repository = new DrizzlePaymentSettlementRepository(tx as unknown as Db);
+        const settling = repository.settle({
+          paymentId,
+          enrollmentId,
+          classGroupId: GROUP,
+          to: "approved",
+          notifications: [],
+          audit: audit(paymentId, "payment.approved"),
+          portalAccess: {
+            studentId,
+            actorId: "usr_billing",
+            activation: newPortalToken("activation"),
+            at: new Date(),
+            notify: (account, tokenId) => [portalCredentialsEmail(account, "https://student.test/access/x", tokenId, "es-PE")],
+          },
+        });
+
+        await waitUntilBlockedOnLock(settlementPid);
+        await rival.query("commit");
+
+        expect(await settling).toEqual({ seatStatus: "confirmed", portalAccess: "email_conflict" });
+
+        // The outer transaction survived the rolled-back savepoint: the
+        // settlement's own writes are there, and nothing of the account is.
+        const [payment] = await tx.select({ status: payments.status }).from(payments).where(eq(payments.id, paymentId));
+        expect(payment!.status).toBe("approved");
+        const [enrollment] = await tx
+          .select({ seatStatus: enrollments.seatStatus })
+          .from(enrollments)
+          .where(eq(enrollments.id, enrollmentId));
+        expect(enrollment!.seatStatus).toBe("confirmed");
+        const [linked] = await tx.select({ userId: students.userId }).from(students).where(eq(students.id, studentId));
+        expect(linked!.userId).toBeNull();
+        const approvals = await tx.select().from(auditLog).where(eq(auditLog.targetId, paymentId));
+        expect(approvals.map((a) => a.action)).toEqual(["payment.approved"]);
+        const studentAudits = await tx.select().from(auditLog).where(eq(auditLog.targetId, studentId));
+        expect(studentAudits.map((a) => a.action)).toEqual(["portal_access.email_conflict"]);
+        const mails = await tx.select().from(outbox).where(eq(outbox.templateKey, "portal_credentials"));
+        expect(mails.filter((m) => m.recipient === student!.email)).toHaveLength(0);
+      });
+    } finally {
+      await rival.query("rollback").catch(() => undefined);
+      if (rivalUserId) await rival.query(`delete from "user" where "id" = $1`, [rivalUserId]);
+      await rival.end();
+    }
+  });
 });
+
+/** Polls until the backend `pid` is waiting on a lock (here: the unique index). */
+async function waitUntilBlockedOnLock(pid: number): Promise<void> {
+  for (let attempt = 0; attempt < 200; attempt += 1) {
+    const { rows } = await pool.query<{ wait: string | null }>(
+      "select wait_event_type as wait from pg_stat_activity where pid = $1",
+      [pid],
+    );
+    if (rows[0]?.wait === "Lock") return;
+    await new Promise((resolve) => setTimeout(resolve, 25));
+  }
+  throw new Error(`backend ${pid} never blocked on a lock`);
+}

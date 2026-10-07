@@ -212,6 +212,13 @@ export {
   NewPasswordRejectedError,
 } from "./identity/errors.js";
 export { STAFF_PASSWORD_MIN_LENGTH, meetsStaffPasswordPolicy } from "./identity/StaffPasswordPolicy.js";
+export {
+  STUDENT_PASSWORD_MAX_LENGTH,
+  STUDENT_PASSWORD_MIN_LENGTH,
+  meetsStudentPasswordPolicy,
+  studentPasswordIssues,
+} from "./identity/StudentPasswordPolicy.js";
+export type { StudentPasswordIssue } from "./identity/StudentPasswordPolicy.js";
 export type { ICurrentSessionPort } from "./identity/ports/ICurrentSessionPort.js";
 export type { IUserRoleRepository } from "./identity/ports/IUserRoleRepository.js";
 export type { IAuditLogRepository, AuditLogEntry } from "./identity/ports/IAuditLogRepository.js";
@@ -448,3 +455,36 @@ export {
   type IPaymentSettlementRepository,
 } from "./enrollment/PaymentSettlement.js";
 export { SettlePaymentUseCase, type SettlePaymentInput, type SettlePaymentOutput } from "./enrollment/SettlePaymentUseCase.js";
+
+export {
+  PORTAL_ACTIVATION_TTL_DAYS,
+  PORTAL_RESET_TTL_MINUTES,
+  PORTAL_SIGN_IN_SENTINEL_EMAIL,
+  PORTAL_TOKEN_COOLDOWN_SECONDS,
+  hashPortalToken,
+  newPortalToken,
+  parsePortalIdentifier,
+} from "./identity/portal/PortalAccess.js";
+export type {
+  NewPortalToken,
+  PortalAccessOutcome,
+  PortalAccessState,
+  PortalAccessToken,
+  PortalAccessTokenPurpose,
+  PortalAccount,
+  PortalIdentifier,
+  PortalIdentity,
+} from "./identity/portal/PortalAccess.js";
+export type {
+  IPortalAccessRepository,
+  IPortalLinkBuilder,
+  IPortalPasswordSetter,
+  IssuePortalTokenRequest,
+  PortalAccountProvisioning,
+} from "./identity/portal/ports.js";
+export { portalCredentialsEmail, portalPasswordResetEmail } from "./identity/portal/portalEmails.js";
+export { ResolvePortalSignInEmailUseCase } from "./identity/portal/ResolvePortalSignInEmailUseCase.js";
+export { RequestPortalPasswordResetUseCase } from "./identity/portal/RequestPortalPasswordResetUseCase.js";
+export { CompletePortalAccessUseCase } from "./identity/portal/CompletePortalAccessUseCase.js";
+export { IssuePortalAccessUseCase } from "./identity/portal/IssuePortalAccessUseCase.js";
+export type { IssuePortalAccessOutcome } from "./identity/portal/IssuePortalAccessUseCase.js";

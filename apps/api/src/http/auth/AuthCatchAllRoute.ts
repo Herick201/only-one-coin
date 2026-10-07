@@ -1,7 +1,7 @@
 import { fromNodeHeaders } from "better-auth/node";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import type { Auth } from "@/infra/auth/betterAuth.js";
-import { RATE_LIMITS } from "@/shared/http/rateLimit.js";
+import { AUTH_SIGN_IN_BY_EMAIL, RATE_LIMITS } from "@/shared/http/rateLimit.js";
 
 export function registerAuthRoutes(app: FastifyInstance, auth: Auth) {
   app.route({
@@ -12,8 +12,9 @@ export function registerAuthRoutes(app: FastifyInstance, auth: Auth) {
     // already established. Still subject to the deny-by-default onRoute
     // check (CLAUDE.md §6), so it must declare itself explicitly public.
     // Same for the rate limit (CLAUDE.md §6): per IP, since there is no
-    // account to count against before sign-in.
-    config: { auth: { public: true }, rateLimit: [RATE_LIMITS.auth] },
+    // account to count against before sign-in, plus a per-e-mail ceiling on
+    // sign-in: for the account under attack rather than the address attacking it.
+    config: { auth: { public: true }, rateLimit: [RATE_LIMITS.auth, AUTH_SIGN_IN_BY_EMAIL] },
     handler: async (request, reply) => {
       const url = new URL(request.url, `http://${request.headers.host}`);
       const headers = fromNodeHeaders(request.headers);

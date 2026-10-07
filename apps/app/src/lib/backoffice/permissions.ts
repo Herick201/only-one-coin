@@ -179,6 +179,16 @@ export function canEditStudent(role: StaffRole): boolean {
 }
 
 /**
+ * Who sends a student their portal access from the file — the same audience
+ * as the file itself (`GetStudentRoute`) and the API route behind the button
+ * (`IssuePortalAccessRoute`). Billing settles money; it does not hand out
+ * accounts.
+ */
+export function canIssuePortalAccess(role: StaffRole): boolean {
+  return isManagement(role) || role === 'enrollment_supervisor'
+}
+
+/**
  * Who records a final grade — the teacher of that class group, nobody else.
  * The grade is what the docente signs, and everything downstream reads it: the
  * certificate (grade ≥ 14, `docs/REGRAS-NEGOCIO.md` §3) and the module

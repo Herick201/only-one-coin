@@ -31,6 +31,10 @@ const SAMPLE_VARS: EmailTemplateVars = {
     loginEmail: "rosa.quispe@gmail.com",
     accessUrl: "https://aula.onlyonecoin.edu.pe/portal",
   },
+  portal_password_reset: {
+    recipientName: "Ana Quispe",
+    resetUrl: "https://student.onlyonecoin.edu.pe/access/abc123",
+  },
   staff_password_reset: {
     recipientName: "Rosa Quispe",
     resetUrl: "https://backoffice.onlyonecoin.edu.pe/backoffice/reset-password/abc123",

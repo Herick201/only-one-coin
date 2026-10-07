@@ -2268,11 +2268,11 @@ const mandarinChinesePT: CourseContent = {
 
 const germanES: CourseContent = {
   description: [
-    "El Curso de Alemán Básico (16 horas) es una introducción intensiva al idioma alemán, dirigido a estudiantes sin conocimientos previos que desean un primer acercamiento estructurado: pronunciación correcta, vocabulario esencial, construcción de oraciones simples y comunicación básica en situaciones cotidianas.",
+    "El Curso de Alemán Básico (20 horas) es una introducción intensiva al idioma alemán, dirigido a estudiantes sin conocimientos previos que desean un primer acercamiento estructurado: pronunciación correcta, vocabulario esencial, construcción de oraciones simples y comunicación básica en situaciones cotidianas.",
     "Por su duración corta, el curso tiene un enfoque práctico y funcional: al terminar podrás presentarte, comprender expresiones frecuentes y formar frases básicas en alemán.",
   ],
-  sessions: "16 sesiones",
-  duration: "16 horas académicas",
+  sessions: "20 sesiones",
+  duration: "20 horas académicas",
   level: "Introductorio (A1 inicial)",
   modality: "Virtual",
   curriculum: [
@@ -2348,16 +2348,16 @@ const germanES: CourseContent = {
     "Preparación para continuar a un nivel A1 completo",
   ],
   outcomeNote:
-    "Este curso funciona como puerta de entrada al idioma alemán, ideal para quienes desean explorar el idioma antes de continuar con un programa más extenso: en 16 horas te prepara para un nivel A1 completo, no lo reemplaza.",
+    "Este curso funciona como puerta de entrada al idioma alemán, ideal para quienes desean explorar el idioma antes de continuar con un programa más extenso: en 20 horas te prepara para un nivel A1 completo, no lo reemplaza.",
 };
 
 const germanEN: CourseContent = {
   description: [
-    "The Basic German Course (16 hours) is an intensive introduction to German for students with no previous knowledge who want a first structured approach to the language: correct pronunciation, essential vocabulary, building simple sentences and basic communication in everyday situations.",
+    "The Basic German Course (20 hours) is an intensive introduction to German for students with no previous knowledge who want a first structured approach to the language: correct pronunciation, essential vocabulary, building simple sentences and basic communication in everyday situations.",
     "Because of its short length, the course takes a practical, functional approach: by the end you will be able to introduce yourself, understand frequent expressions and form basic sentences in German.",
   ],
-  sessions: "16 sessions",
-  duration: "16 academic hours",
+  sessions: "20 sessions",
+  duration: "20 academic hours",
   level: "Introductory (early A1)",
   modality: "Online",
   curriculum: [
@@ -2433,16 +2433,16 @@ const germanEN: CourseContent = {
     "Preparation to continue towards a full A1 level",
   ],
   outcomeNote:
-    "This course works as a gateway into German, ideal for those who want to explore the language before moving on to a longer program: in 16 hours it prepares you for a full A1 level — it does not replace one.",
+    "This course works as a gateway into German, ideal for those who want to explore the language before moving on to a longer program: in 20 hours it prepares you for a full A1 level — it does not replace one.",
 };
 
 const germanPT: CourseContent = {
   description: [
-    "O Curso de Alemão Básico (16 horas) é uma introdução intensiva ao idioma alemão, voltado a estudantes sem conhecimentos prévios que desejam um primeiro contato estruturado com o idioma: pronúncia correta, vocabulário essencial, construção de frases simples e comunicação básica em situações cotidianas.",
+    "O Curso de Alemão Básico (20 horas) é uma introdução intensiva ao idioma alemão, voltado a estudantes sem conhecimentos prévios que desejam um primeiro contato estruturado com o idioma: pronúncia correta, vocabulário essencial, construção de frases simples e comunicação básica em situações cotidianas.",
     "Pela duração curta, o curso tem um enfoque prático e funcional: ao terminar você conseguirá se apresentar, compreender expressões frequentes e formar frases básicas em alemão.",
   ],
-  sessions: "16 sessões",
-  duration: "16 horas acadêmicas",
+  sessions: "20 sessões",
+  duration: "20 horas acadêmicas",
   level: "Introdutório (A1 inicial)",
   modality: "Virtual",
   curriculum: [
@@ -2518,7 +2518,7 @@ const germanPT: CourseContent = {
     "Preparação para continuar rumo a um nível A1 completo",
   ],
   outcomeNote:
-    "Este curso funciona como porta de entrada ao idioma alemão, ideal para quem deseja explorar o idioma antes de continuar com um programa mais extenso: em 16 horas ele prepara você para um nível A1 completo, não o substitui.",
+    "Este curso funciona como porta de entrada ao idioma alemão, ideal para quem deseja explorar o idioma antes de continuar com um programa mais extenso: em 20 horas ele prepara você para um nível A1 completo, não o substitui.",
 };
 
 const koreanES: CourseContent = {

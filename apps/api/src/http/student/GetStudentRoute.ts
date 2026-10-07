@@ -61,6 +61,7 @@ const GetStudentResponseSchema = z.object({
   totalEnrollments: z.number().int(),
   lastActivityAt: z.string(),
   guardian: GuardianResponseSchema.nullable(),
+  portalAccess: z.enum(["none", "pending_activation", "active"]),
   // Every enrollment the person ever opened, newest first — including seats
   // still waiting on money and ones handed back (OOC-73). The ledger lists
   // confirmed seats only; this is the person's history.
@@ -103,8 +104,11 @@ export const getStudentRoute = RouteBuilder.get("/students/:studentId")
       });
     }
 
+    const portalAccess = await container.repositories.portalAccess.accessState(student.id);
+
     reply.status(200).send({
       ...student,
+      portalAccess,
       birthDate: student.birthDate.toISOString(),
       createdAt: student.createdAt.toISOString(),
       lastActivityAt: student.lastActivityAt.toISOString(),

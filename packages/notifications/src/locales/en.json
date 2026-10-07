@@ -39,13 +39,24 @@
       ]
     },
     "portal_credentials": {
-      "subject": "Your Only One Coin student portal access",
-      "preheader": "Your account is ready.",
+      "subject": "Activate your Only One Coin student portal access",
+      "preheader": "Create your password to sign in.",
       "paragraphs": [
-        "Your student portal account is ready.",
-        "Sign in with your e-mail {loginEmail} using the button below."
+        "Your enrollment was approved and your student portal account is ready.",
+        "Your username is {loginEmail}. You can also sign in with the document you enrolled with.",
+        "Use the button below to create your password. The link is valid for seven days and works only once."
       ],
-      "action": "Go to the portal"
+      "action": "Create my password"
+    },
+    "portal_password_reset": {
+      "subject": "Reset your student portal password",
+      "preheader": "The link is valid for one hour.",
+      "paragraphs": [
+        "We received a request to reset the password of your Only One Coin student portal account.",
+        "Use the button below to create a new password. The link is valid for one hour and works only once.",
+        "If you didn't ask for this, ignore this e-mail: your password stays the same."
+      ],
+      "action": "Create a new password"
     },
     "staff_password_reset": {
       "subject": "Reset your Only One Coin panel password",

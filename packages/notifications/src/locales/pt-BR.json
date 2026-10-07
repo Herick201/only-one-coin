@@ -39,13 +39,24 @@
       ]
     },
     "portal_credentials": {
-      "subject": "Seu acesso ao portal do aluno da Only One Coin",
-      "preheader": "Sua conta já está pronta.",
+      "subject": "Ative seu acesso ao portal do aluno da Only One Coin",
+      "preheader": "Crie sua senha para entrar.",
       "paragraphs": [
-        "Sua conta no portal do aluno já está pronta.",
-        "Entre com o seu e-mail {loginEmail} pelo botão abaixo."
+        "Sua matrícula foi aprovada e sua conta no portal do aluno já está criada.",
+        "Seu usuário é {loginEmail}. Você também pode entrar com o documento usado na matrícula.",
+        "Use o botão abaixo para criar sua senha. O link vale por sete dias e só pode ser usado uma vez."
       ],
-      "action": "Entrar no portal"
+      "action": "Criar minha senha"
+    },
+    "portal_password_reset": {
+      "subject": "Redefina sua senha do portal do aluno",
+      "preheader": "O link vale por uma hora.",
+      "paragraphs": [
+        "Recebemos um pedido para redefinir a senha da sua conta no portal do aluno da Only One Coin.",
+        "Use o botão abaixo para criar uma senha nova. O link vale por uma hora e só pode ser usado uma vez.",
+        "Se você não pediu, ignore este e-mail: sua senha continua a mesma."
+      ],
+      "action": "Criar senha nova"
     },
     "staff_password_reset": {
       "subject": "Redefina sua senha do painel da Only One Coin",

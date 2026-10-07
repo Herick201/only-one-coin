@@ -3,12 +3,18 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
 import { getStudent, getStudentActivity } from '@/lib/backoffice/students'
 import { getStaffSession } from '@/lib/backoffice/session'
-import { canBrowseStudents, canEditStudent, canViewPayments } from '@/lib/backoffice/permissions'
+import {
+  canBrowseStudents,
+  canEditStudent,
+  canIssuePortalAccess,
+  canViewPayments,
+} from '@/lib/backoffice/permissions'
 import { initials } from '@/lib/format'
 import { Card, StatusBadge } from '@/components/backoffice/ui'
 import { studentTone } from '@/components/backoffice/status-tone'
 import { BoIcon } from '@/components/backoffice/icons'
 import { StudentFile } from './student-file'
+import { PortalAccessControl } from './portal-access-control'
 
 /**
  * One student's file. The status shown here is derived from the enrollments
@@ -70,13 +76,11 @@ export default async function StudentDetailPage({
               tone={studentTone[student.status]}
               label={t(`student_status.${student.status}`)}
             />
-            <span className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg border border-dashed border-line px-3 py-1.5 text-xs font-semibold text-slate-400">
-              <BoIcon name="email" size={14} />
-              {t('student_file.resend_credentials')}
-              <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] uppercase tracking-wide">
-                {t('nav.soon')}
-              </span>
-            </span>
+            <PortalAccessControl
+              studentId={student.id}
+              state={student.portalAccess}
+              canIssue={canIssuePortalAccess(staff.role)}
+            />
           </div>
         </div>
       </Card>

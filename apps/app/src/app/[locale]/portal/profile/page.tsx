@@ -1,5 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { getPortalSession } from '@/lib/portal/mock-data'
+import { getPortalView } from '@/lib/portal/session'
 import { PageHeader } from '@/components/portal/ui'
 import { ProfileView } from './profile-view'
 
@@ -12,7 +12,7 @@ export default async function ProfilePage({
   setRequestLocale(locale)
   const t = await getTranslations('portal')
 
-  const { student } = getPortalSession()
+  const { student } = await getPortalView()
 
   return (
     <div>

@@ -43,6 +43,7 @@ export interface EmailTemplateVars {
     studentName: string;
     courseName: string;
   };
+  /** The portal account was created: the link sets the first password (never the password itself — outbox.vars is plain text). */
   portal_credentials: {
     recipientName: string;
     loginEmail: string;
@@ -50,6 +51,11 @@ export interface EmailTemplateVars {
   };
   /** A staff member asked for a new password from the panel's login (OOC-30). */
   staff_password_reset: {
+    recipientName: string;
+    resetUrl: string;
+  };
+  /** A student asked for a new portal password (05/10/2026). */
+  portal_password_reset: {
     recipientName: string;
     resetUrl: string;
   };
@@ -64,6 +70,7 @@ export const EMAIL_TEMPLATE_KEYS = [
   "payment_rejected",
   "portal_credentials",
   "staff_password_reset",
+  "portal_password_reset",
 ] as const satisfies readonly EmailTemplateKey[];
 
 /** One message to one recipient — the shape of one `outbox` row. A union over

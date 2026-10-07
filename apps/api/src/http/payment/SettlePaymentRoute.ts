@@ -10,6 +10,7 @@ const ResultSchema = z.object({
   id: z.string().uuid(),
   status: z.enum(["approved", "rejected"]),
   seatStatus: z.enum(["reserved", "confirmed", "released"]),
+  portalAccess: z.enum(["created", "linked_existing", "already_linked", "email_conflict"]).nullable(),
 });
 
 /** Approving finishes the enrollment: the seat is confirmed (OOC-55). */
@@ -27,7 +28,7 @@ export const approvePaymentRoute = RouteBuilder.post("/payments/:id/approve")
       paymentId: request.params.id,
       decision: { kind: "approve" },
     });
-    reply.status(200).send({ id: result.paymentId, status: result.status, seatStatus: result.seatStatus });
+    reply.status(200).send({ id: result.paymentId, status: result.status, seatStatus: result.seatStatus, portalAccess: result.portalAccess });
   });
 
 /** Rejecting hands the seat back to the class group. */
@@ -46,5 +47,5 @@ export const rejectPaymentRoute = RouteBuilder.post("/payments/:id/reject")
       paymentId: request.params.id,
       decision: { kind: "reject", reason: request.body.reason, note: request.body.note },
     });
-    reply.status(200).send({ id: result.paymentId, status: result.status, seatStatus: result.seatStatus });
+    reply.status(200).send({ id: result.paymentId, status: result.status, seatStatus: result.seatStatus, portalAccess: result.portalAccess });
   });

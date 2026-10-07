@@ -90,25 +90,26 @@ export function hasKidsProgram(slug: CourseSlug): boolean {
 // charged amounts. A course whose price is `null` simply loses that modality
 // card instead of showing an invented number.
 export const coursePrices: Record<CourseSlug, number | null> = {
-  "english": 69.9,
-  // "79.90 paquete completo" no documento do programa de inglês (INGLES.docx):
-  // nível Intermedio = livros 5 e 6.
-  "english-intermediate": 79.9,
-  // Cambridge: dois cursos diferentes (B1 e B2), mesmo preço — palavra do
-  // dono, 02/09/2026.
-  "cambridge-b1": 120,
-  "cambridge-b2": 120,
-  "french": 80,
+  // Tabela de preços da coordenação, 29/09/2026 (Actualizacion_de_Precios.docx).
+  "english": 79.9,
+  // Nível Intermedio/Avanzado = livros 5 e 6, 80 sessões.
+  "english-intermediate": 94.9,
+  // Cambridge: dois cursos diferentes (B1 e B2), mesmo preço, 80 horas cada.
+  "cambridge-b1": 140,
+  "cambridge-b2": 140,
+  "french": 95,
   // `null` = preço ainda não definido pela coordenação. A página omite o valor
   // em vez de inventar um: preço é dado de negócio, nunca chute (CLAUDE.md §9).
-  "french-advanced": 120,
-  "italian": 80,
-  "german": 30,
-  "portuguese": 80,
-  "mandarin-chinese": 95,
-  "korean": 60,
-  "japanese": 40,
-  "russian": 40,
+  "french-advanced": 140,
+  "italian": 89.9,
+  // "Alemán Regular (1 mes – 20 horas)". O Intensivo é outro card, em
+  // `extraPlans`.
+  "german": 40,
+  "portuguese": 89.9,
+  "mandarin-chinese": 109.9,
+  "korean": 70,
+  "japanese": 50,
+  "russian": 50,
 };
 
 /**
@@ -116,32 +117,31 @@ export const coursePrices: Record<CourseSlug, number | null> = {
  * a landing mostra maior que qualquer outro.
  *
  * Não é o total dividido pelas sessões: é o valor que a coordenação anuncia
- * (tabela do dono, 04/09/2026), e as duas contas nem sempre fecham — inglés
- * básico são 80 sessões a S/0.60 num paquete de S/69.90. Quem manda é a
- * tabela, nunca a divisão.
+ * (planilha de 07/10/2026), e as duas contas nem sempre fecham. Quem manda é
+ * a tabela, nunca a divisão.
  *
  * `null` = sem valor anunciado; o card então mostra só o total, sem a
  * equivalência por sessão.
  */
 export const sessionPrices: Record<CourseSlug, number | null> = {
-  "english": 0.6,
-  "english-intermediate": 1,
-  // Cambridge não veio na tabela de 04/09/2026 — nem B1 nem B2.
-  "cambridge-b1": null,
-  "cambridge-b2": null,
-  "french": 2,
-  "french-advanced": 2,
-  "italian": 2,
-  // "1 sol por clase (1 hora), 20 sesiones".
-  "german": 1,
-  "portuguese": 2,
-  // A tabela trazia dois valores para a mesma condição ("S/2.50 si es 2 meses
-  // – S/1.60 si es dos meses"); o dono confirmou S/2.50 (04/09/2026).
-  "mandarin-chinese": 2.5,
-  "korean": 2,
-  // "8 sesiones, 5 soles" — e 8 × 5 fecha os S/40 do paquete.
-  "japanese": 5,
-  "russian": 5,
+  // Coluna "Precio por sesión" da planilha da coordenação (Hoja OOC,
+  // 07/10/2026). O S/0.60 é só do Inglés Total, em `bundles`.
+  "english": 1,
+  "english-intermediate": 1.2,
+  "cambridge-b1": 1.8,
+  "cambridge-b2": 1.8,
+  "french": 1.2,
+  "french-advanced": 1.8,
+  "italian": 1.5,
+  // Alemán 1 mes: S/40, 20 horas.
+  "german": 2,
+  "portuguese": 1.1,
+  "mandarin-chinese": 1.8,
+  "korean": 1.8,
+  // 8 horas a S/50.
+  "japanese": 6.3,
+  // 12 horas a S/50.
+  "russian": 4.2,
 };
 
 // Monthly ("mensual") modality — price per module, in PEN. Only English
@@ -151,8 +151,30 @@ export const sessionPrices: Record<CourseSlug, number | null> = {
 // `coursePrices`: display copy only, the payment system is the source of
 // truth for charged amounts.
 export const monthlyPrices: Partial<Record<CourseSlug, number>> = {
-  "english": 20,
+  "english": 25,
 };
+
+/**
+ * Formas de pagar um nível que não são nem o mensual, nem o paquete, nem um
+ * pacote de vários níveis (tabela de 29/09/2026): dois ou três módulos do
+ * inglês básico de uma vez, e o alemão intensivo ao lado do regular.
+ *
+ * Cada uma vira um card no bloco de modalidades do próprio curso. Nome e
+ * linha de benefícios saem do locale (`paymentExtraNames` /
+ * `paymentExtraPerks`) — nada de texto aqui. Mesma ressalva do resto do
+ * arquivo: é copy de vitrine, quem manda no valor cobrado é o sistema de
+ * pagamento.
+ */
+export const extraPlans = {
+  "english-2-modules": { course: "english" as CourseSlug, price: 35.9, perSession: null as number | null },
+  "english-3-modules": { course: "english" as CourseSlug, price: 58.9, perSession: null as number | null },
+  // "2 horas diarias – 40 horas en total", S/80: S/2 a hora, como o regular.
+  "german-intensive": { course: "german" as CourseSlug, price: 80, perSession: 2 as number | null },
+  // "Ruso dos módulos": 24 horas, S/4.2 a hora (planilha de 07/10/2026).
+  "russian-2-modules": { course: "russian" as CourseSlug, price: 99.9, perSession: 4.2 as number | null },
+};
+
+export type ExtraPlanId = keyof typeof extraPlans;
 
 /**
  * Pacotes que cobrem MAIS DE UM nível de um idioma, pagos de uma vez.
@@ -166,22 +188,44 @@ export const monthlyPrices: Partial<Record<CourseSlug, number>> = {
  * de cada nível — nada de escrever a combinação à mão em três idiomas.
  */
 export const bundles = {
-  // 69.90 (básico) + 79.90 (intermedio) = 149.80, exato. Sem valor por sessão
-  // na tabela do dono.
-  "english-intensive": {
-    price: 149.8,
-    perSession: null as number | null,
+  // INGLÉS TOTAL: Básico + Intermedio + Avanzado, 160 sessões + reforzamiento
+  // + talleres. É o ÚNICO programa a S/0.60 a hora (tabela de 29/09/2026) —
+  // o "desde S/0.60" do site inteiro mora aqui.
+  "english-total": {
+    price: 149.9,
+    perSession: 0.6 as number | null,
     covers: ["english", "english-intermediate"] as CourseSlug[],
   },
-  // 80 (básico) + 120 (intermedio) = 200, cobrado 180.
+  // "Francés Completo": 200 horas, S/1.0 a hora (planilha de 07/10/2026).
   "french-full": {
-    price: 180,
-    perSession: 1.2 as number | null,
+    price: 199.9,
+    perSession: 1 as number | null,
     covers: ["french", "french-advanced"] as CourseSlug[],
   },
 };
 
 export type BundleId = keyof typeof bundles;
+
+/**
+ * O "desde" de um curso: o menor preço por sessão entre TODAS as formas de
+ * pagar que a página dele oferece — o paquete do nível, os pacotes que o
+ * cobrem e os planos extras. No inglés é o Inglés Total (S/0.60) que dá o
+ * número, não o básico (tabela de 29/09/2026: "el precio desde S/0.60 la hora
+ * corresponde únicamente al programa INGLÉS TOTAL"). `null` quando nenhuma
+ * delas tem valor por sessão anunciado.
+ */
+export function lowestSessionPrice(slug: CourseSlug): number | null {
+  const candidates = [
+    sessionPrices[slug],
+    ...Object.values(bundles)
+      .filter((bundle) => bundle.covers.includes(slug))
+      .map((bundle) => bundle.perSession),
+    ...Object.values(extraPlans)
+      .filter((plan) => plan.course === slug)
+      .map((plan) => plan.perSession),
+  ].filter((value): value is number => value !== null);
+  return candidates.length === 0 ? null : Math.min(...candidates);
+}
 
 /**
  * Preço por sessão DENTRO da modalidade mensual — o contraste que faz o
@@ -190,7 +234,8 @@ export type BundleId = keyof typeof bundles;
  * valor anunciado, não conta derivada.
  */
 export const monthlySessionPrices: Partial<Record<CourseSlug, number>> = {
-  "english": 1,
+  // S/25 por módulo de 20 horas (planilha de 07/10/2026).
+  "english": 1.3,
 };
 
 // Legal identity and contact channels of the operating company.
@@ -625,12 +670,24 @@ export const content = {
       titlePre: "Aprende ",
       titlePost: "",
       paymentBundleNames: {
-        "english-intensive": "Intensivo completo",
+        "english-total": "Inglés Total",
         "french-full": "Completo",
       },
       paymentSessionsWith: "{sessions} + reforzamientos",
       paymentWorkshops: "Este paquete incluye {count} talleres gratuitos",
       paymentMonthlyName: "Mensual",
+      paymentExtraNames: {
+        "english-2-modules": "2 módulos",
+        "english-3-modules": "3 módulos",
+        "russian-2-modules": "2 módulos",
+        "german-intensive": "Intensivo",
+      },
+      paymentExtraPerks: {
+        "english-2-modules": [],
+        "english-3-modules": [],
+        "german-intensive": ["2 horas diarias · 40 horas en total"],
+        "russian-2-modules": ["24 horas"],
+      },
       paymentFullName: "Paquete completo",
       paymentRecommended: "Recomendado",
       leadPre: "Un programa completo de ",
@@ -1172,12 +1229,24 @@ export const content = {
       titlePre: "Learn ",
       titlePost: "",
       paymentBundleNames: {
-        "english-intensive": "Full intensive",
+        "english-total": "Total English",
         "french-full": "Full course",
       },
       paymentSessionsWith: "{sessions} + reinforcement classes",
       paymentWorkshops: "This package includes {count} free workshops",
       paymentMonthlyName: "Monthly",
+      paymentExtraNames: {
+        "english-2-modules": "2 modules",
+        "english-3-modules": "3 modules",
+        "russian-2-modules": "2 modules",
+        "german-intensive": "Intensive",
+      },
+      paymentExtraPerks: {
+        "english-2-modules": [],
+        "english-3-modules": [],
+        "german-intensive": ["2 hours a day · 40 hours in total"],
+        "russian-2-modules": ["24 hours"],
+      },
       paymentFullName: "Full package",
       paymentRecommended: "Recommended",
       leadPre: "A complete ",
@@ -1718,12 +1787,24 @@ export const content = {
       titlePre: "Aprenda ",
       titlePost: "",
       paymentBundleNames: {
-        "english-intensive": "Intensivo completo",
+        "english-total": "Inglês Total",
         "french-full": "Completo",
       },
       paymentSessionsWith: "{sessions} + reforços",
       paymentWorkshops: "Este pacote inclui {count} oficinas gratuitas",
       paymentMonthlyName: "Mensal",
+      paymentExtraNames: {
+        "english-2-modules": "2 módulos",
+        "english-3-modules": "3 módulos",
+        "russian-2-modules": "2 módulos",
+        "german-intensive": "Intensivo",
+      },
+      paymentExtraPerks: {
+        "english-2-modules": [],
+        "english-3-modules": [],
+        "german-intensive": ["2 horas por dia · 40 horas no total"],
+        "russian-2-modules": ["24 horas"],
+      },
       paymentFullName: "Pacote completo",
       paymentRecommended: "Recomendado",
       leadPre: "Um programa completo de ",
