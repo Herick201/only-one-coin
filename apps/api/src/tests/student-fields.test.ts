@@ -212,7 +212,7 @@ describe("suggestEmailDomain", () => {
     expect(suggestEmailDomain(typed)).toBe(expected);
   });
 
-  it.each(["rosa@gmail.com", "rosa@colegio.edu.pe", "rosa", "", "@gmial.com"])("has nothing for %s", (typed) => {
+  it.each(["rosa@gmail.com", "rosa@colegio.edu.pe", "rosa", "", "@gmial.com", "rosagmailxcom"])("has nothing for %s", (typed) => {
     expect(suggestEmailDomain(typed)).toBeNull();
   });
 });

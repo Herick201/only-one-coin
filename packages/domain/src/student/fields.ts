@@ -110,9 +110,9 @@ export function isGmail(email: string): boolean {
 }
 
 /**
- * Gmail's own username rules (6-30 characters; letters, digits and dots; no
+ * Gmail's own username rules (6–30 characters; letters, digits and dots; no
  * dot at either end or two in a row). An address that breaks them cannot
- * exist, so it is refused wherever an e-mail is written - student or guardian,
+ * exist, so it is refused wherever an e-mail is written — student or guardian,
  * checkout or backoffice. Only `@gmail.com` is judged: other providers have
  * their own rules and the Gmail requirement itself is the checkout's
  * (`refineGmail`). `+` aliases are refused on purpose: they deliver to the same
@@ -156,11 +156,11 @@ const DOMAIN_TYPOS: Record<string, string> = {
   "yahoo.con": "yahoo.com",
 };
 
-/** `name123gmail.com` - the "@" that never got typed (legacy import, parse-row.ts). */
-const MISSING_AT = /^(.+?)(gmail|hotmail|outlook|yahoo).com$/;
+/** `name123gmail.com` — the "@" that never got typed (legacy import, parse-row.ts). */
+const MISSING_AT = /^(.+?)(gmail|hotmail|outlook|yahoo)\.com$/;
 
 /**
- * "Did you mean ...?" - the corrected address, or null when there is nothing to
+ * "Did you mean ...?" — the corrected address, or null when there is nothing to
  * suggest. A suggestion, never a refusal: the list can never be complete, so
  * nothing is rejected for missing from it.
  */
