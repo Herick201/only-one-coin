@@ -109,6 +109,7 @@ import { TigrisReceiptStorage } from "./infra/storage/TigrisReceiptStorage.js";
 import { ReceiptObjectStore } from "./infra/storage/ReceiptObjectStore.js";
 import { ListStudentsQuery } from "./infra/persistence/student/ListStudentsQuery.js";
 import { GetStudentQuery } from "./infra/persistence/student/GetStudentQuery.js";
+import { StudentEnrollmentHistoryQuery } from "./infra/persistence/student/StudentEnrollmentHistoryQuery.js";
 import { DrizzlePaymentSettlementRepository } from "./infra/persistence/payment/DrizzlePaymentSettlementRepository.js";
 import { ListPaymentsQuery } from "./infra/persistence/payment/ListPaymentsQuery.js";
 import { ListPaymentReviewQueueQuery } from "./infra/persistence/payment/ListPaymentReviewQueueQuery.js";
@@ -234,6 +235,7 @@ export interface AppQueries {
   listPaymentReviewQueue: ListPaymentReviewQueueQuery;
   paymentReceiptImage: PaymentReceiptImageQuery;
   getStudent: GetStudentQuery;
+  studentEnrollmentHistory: StudentEnrollmentHistoryQuery;
   listOpenClassGroups: ListOpenClassGroupsQuery;
   getPublicCatalog: GetPublicCatalogQuery;
   listCourses: ListCoursesQuery;
@@ -444,6 +446,7 @@ function buildContainer(): AppContainer {
   // Queries (read-only, no domain invariant to protect — see class docs)
   const listStudents = new ListStudentsQuery(db);
   const getStudent = new GetStudentQuery(db);
+  const studentEnrollmentHistory = new StudentEnrollmentHistoryQuery(db);
   const listEnrollments = new ListEnrollmentsQuery(db);
   const listPayments = new ListPaymentsQuery(db);
   const listPaymentReviewQueue = new ListPaymentReviewQueueQuery(db);
@@ -563,6 +566,7 @@ function buildContainer(): AppContainer {
     queries: {
       listStudents,
       getStudent,
+      studentEnrollmentHistory,
       listEnrollments,
       listPayments,
       listPaymentReviewQueue,

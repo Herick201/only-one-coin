@@ -200,22 +200,30 @@ export interface StudentRow {
   lastActivityAt: string
 }
 
-/** An enrollment as the backoffice sees it — course + money + seat, in one row. */
+/**
+ * One enrollment in the student file — course + money + seat, in one row.
+ * Every seat the person ever opened, including one still waiting on money and
+ * one handed back after a refused payment (OOC-73): the file is the person's
+ * history, unlike the ledger, which lists confirmed seats only.
+ */
 export interface EnrollmentHistoryItem {
   id: string
+  /** Tracking code the student quotes on the phone. */
+  code: string
   status: EnrollmentStatus
   seatStatus: SeatStatus
   createdAt: string
   courseName: string
   classGroupName: string
   teacherName: string
-  modality: ClassModality
   academicPeriodName: string
   planName: string
   /** Frozen price version at enrollment time (CLAUDE.md §5). */
   planPriceId: string
   amountCents: number
   currency: 'PEN'
+  /** The payment that speaks for the seat now; null when none was written. */
+  paymentId: string | null
   paymentStatus: PaymentStatus
   paymentMethod: PaymentMethod
   /**
@@ -226,7 +234,6 @@ export interface EnrollmentHistoryItem {
   operationNumber: string | null
   /** When the payment was credited — null until it is approved. */
   paidAt: string | null
-  progressPct: number | null
 }
 
 /** Where the e-mail carrying a document currently is (outbox, CLAUDE.md §5). */

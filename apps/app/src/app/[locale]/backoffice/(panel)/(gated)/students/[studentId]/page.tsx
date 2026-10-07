@@ -3,7 +3,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
 import { getStudent } from '@/lib/backoffice/students'
 import { getStaffSession } from '@/lib/backoffice/session'
-import { canBrowseStudents } from '@/lib/backoffice/permissions'
+import { canBrowseStudents, canViewPayments } from '@/lib/backoffice/permissions'
 import { initials } from '@/lib/format'
 import { Card, StatusBadge } from '@/components/backoffice/ui'
 import { studentTone } from '@/components/backoffice/status-tone'
@@ -24,7 +24,8 @@ export default async function StudentDetailPage({
   setRequestLocale(locale)
   const t = await getTranslations('bo')
 
-  if (!canBrowseStudents((await getStaffSession()).role)) notFound()
+  const staff = await getStaffSession()
+  if (!canBrowseStudents(staff.role)) notFound()
 
   const student = await getStudent(studentId)
   if (!student) notFound()
@@ -77,7 +78,7 @@ export default async function StudentDetailPage({
         </div>
       </Card>
 
-      <StudentFile student={student} />
+      <StudentFile student={student} canViewPayments={canViewPayments(staff.role)} />
     </div>
   )
 }

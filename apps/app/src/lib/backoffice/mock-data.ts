@@ -525,7 +525,7 @@ export function listEnrollments(): EnrollmentRow[] {
         classGroupName: item.classGroupName,
         teacherName: item.teacherName,
         language: group?.language ?? languageOf(item.courseName),
-        modality: item.modality,
+        modality: 'online',
         academicPeriodName: item.academicPeriodName,
         status: item.status,
         seatStatus: item.seatStatus,
@@ -539,7 +539,7 @@ export function listEnrollments(): EnrollmentRow[] {
         operationNumber: item.operationNumber,
         createdAt: item.createdAt,
         paidAt: item.paidAt,
-        progressPct: item.progressPct,
+        progressPct: null,
       })
     }
   }

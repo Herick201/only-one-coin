@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
-import type { AuditReference, StudentDetail } from '@/lib/backoffice/types'
+import type { AuditReference, EnrollmentHistoryItem, StudentDetail } from '@/lib/backoffice/types'
+import { paymentLedgerSearchParams } from '@/lib/backoffice/payment-ledger-query'
+import { Link } from '@/i18n/navigation'
 import { countryName } from '@/lib/geo'
 import { ageFrom, formatDate, formatDateTime, formatMoney, type Locale } from '@/lib/format'
 import {
@@ -49,7 +51,14 @@ const TABS: Tab[] = ['data', 'enrollments', 'documents', 'activity']
  * there is no backend yet, and the real write goes through `apps/api`, never
  * from the browser (CLAUDE.md §8).
  */
-export function StudentFile({ student }: { student: StudentDetail }) {
+export function StudentFile({
+  student,
+  canViewPayments,
+}: {
+  student: StudentDetail
+  /** Whether the reader's cargo opens Pagos — decides whether the file links there. */
+  canViewPayments: boolean
+}) {
   const t = useTranslations('bo')
   const locale = useLocale() as Locale
   const [tab, setTab] = useState<Tab>('data')
@@ -86,6 +95,26 @@ export function StudentFile({ student }: { student: StudentDetail }) {
   const consent = student.guardian?.consent ?? null
   /** Enrollment whose detail panel is open — the table shows status only. */
   const [openEnrollmentId, setOpenEnrollmentId] = useState<string | null>(null)
+
+  /**
+   * Pagos filtered down to this enrollment's payment. The ledger has no
+   * by-id deep link, so it is searched by what identifies the payment best:
+   * the operation number, or the student's name when none was ever written.
+   */
+  function paymentsHref(item: EnrollmentHistoryItem): string | null {
+    if (!canViewPayments || item.paymentId === null) return null
+    const search = paymentLedgerSearchParams({
+      page: 1,
+      status: null,
+      method: null,
+      q: item.operationNumber ?? `${student.firstName} ${student.lastName}`,
+      sort: 'newest',
+    })
+    return `/backoffice/payments?${search.toString()}`
+  }
+
+  const openEnrollment =
+    student.enrollments.find((item) => item.id === openEnrollmentId) ?? null
 
   /** Audit references carry domain data or a domain code — the screen only ever
    *  shows text (CLAUDE.md §4: zero UI string outside the locale files). */
@@ -370,10 +399,22 @@ export function StudentFile({ student }: { student: StudentDetail }) {
                       />
                     </td>
                     <td className={tdClass}>
-                      <StatusBadge
-                        tone={paymentTone[item.paymentStatus]}
-                        label={t(`payment_status.${item.paymentStatus}`)}
-                      />
+                      <span className="flex flex-col items-start gap-1">
+                        <StatusBadge
+                          tone={paymentTone[item.paymentStatus]}
+                          label={t(`payment_status.${item.paymentStatus}`)}
+                        />
+                        {/* Money still open or refused is settled in Pagos,
+                            never from the file — the row points the way. */}
+                        {item.paymentStatus !== 'approved' && paymentsHref(item) && (
+                          <Link
+                            href={paymentsHref(item)!}
+                            className="text-xs font-semibold text-brand-blue transition hover:text-brand-blue-deep"
+                          >
+                            {t('student_file.open_in_payments')}
+                          </Link>
+                        )}
+                      </span>
                     </td>
                     <td className={`${tdClass} whitespace-nowrap font-semibold tabular-nums`}>
                       {formatMoney(item.amountCents, item.currency, locale)}
@@ -387,9 +428,8 @@ export function StudentFile({ student }: { student: StudentDetail }) {
             </TableShell>
           )}
           <EnrollmentDetailSheet
-            enrollment={
-              student.enrollments.find((item) => item.id === openEnrollmentId) ?? null
-            }
+            enrollment={openEnrollment}
+            paymentsHref={openEnrollment ? paymentsHref(openEnrollment) : null}
             onClose={() => setOpenEnrollmentId(null)}
           />
         </Card>
