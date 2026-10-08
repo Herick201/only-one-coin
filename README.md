@@ -20,6 +20,8 @@ backoffice administrativo e módulo de e-mail.
 - [`docs/superpowers/plans/2026-10-01-catalog-crud.md`](docs/superpowers/plans/2026-10-01-catalog-crud.md) — plano de implementação desse desenho, em dois PRs (OOC-36 primeiro, depois OOC-35).
 - [`docs/superpowers/specs/2026-10-05-student-auth-design.md`](docs/superpowers/specs/2026-10-05-student-auth-design.md) — desenho da autenticação real do aluno: conta criada na aprovação do pagamento, login por e-mail ou documento, recuperação de senha, anti-enumeração.
 - [`docs/superpowers/plans/2026-10-05-student-auth.md`](docs/superpowers/plans/2026-10-05-student-auth.md) — plano de implementação desse desenho, em 15 tarefas (domínio e API primeiro, depois as telas e a documentação).
+- [`docs/superpowers/specs/2026-10-07-checkout-email-verification-design.md`](docs/superpowers/specs/2026-10-07-checkout-email-verification-design.md) — verificação do Gmail do aluno no checkout: código de 6 dígitos preso à reserva, regra de nome de usuário do Gmail e sugestão de domínio.
+- [`docs/superpowers/plans/2026-10-07-checkout-email-verification.md`](docs/superpowers/plans/2026-10-07-checkout-email-verification.md) — plano de implementação desse desenho.
 - [`docs/DNS-MIGRATION-CLOUDFLARE.md`](docs/DNS-MIGRATION-CLOUDFLARE.md) — plano (em andamento): corte de nameservers para o Cloudflare sem downtime, preservando o e-mail no Google Workspace.
 
 ## Stack
@@ -423,6 +425,7 @@ o que é real:
   backoffice. **Só valida, nunca aprova:** verde deixa o pagamento pendente
   com a marca de que tudo bate, amarelo e vermelho vão pra revisão — vermelho
   como rejeição sugerida. Quem aprova é sempre uma pessoa em Pagos.
+- Checkout prova o Gmail do aluno com código de 6 dígitos (tabela `email_verifications`, rotas `/enrollments/email-verifications`), recusa nome de usuário do Gmail impossível e sugere correção de domínio.
 
 **Autorização e domínio de negócio já não dependem de Neon de staging/produção
 provisionado** — rodam sobre o Postgres local. **A reconstruir** quando
