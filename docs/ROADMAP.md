@@ -46,7 +46,7 @@ entra aqui ou vira sessão nova.
 | 1 — Site público | 0 | 6 | 0 | Páginas e SEO no ar; faltam píxeis/PostHog, blog, redirects do WordPress e o cutover de DNS |
 | 2 — Matrícula + IA | 8 | 4 | 3 | Núcleo construído de ponta a ponta; falta medir a OCR, o nível 2 e a espera no checkout |
 | 3 — Backoffice | 1 | 4 | 5 | Alunos, turmas, Pagos e equipe reais; docentes, notas, conciliação e relatórios ainda mock |
-| 4 — Portal do aluno | 1 | 0 | 4 | Login real; o resto do portal ainda é dado mock |
+| 4 — Portal do aluno | 1 | 2 | 2 | Login e telas reais (OOC-32); faltam enlace da aula, módulos/mensalidade, trâmites pagos e documentos |
 | 5 — E-mail | 0 | 1 | 3 | Envio real via Brevo pela outbox; telas de e-mail ainda mock |
 | 6 — Instalável | 0 | 0 | 4 | — |
 | 7 — Lançamento | 0 | 2 | 4 | Backup a cada deploy já roda; restauração nunca testada; Sentry/PostHog não instalados |
@@ -140,9 +140,9 @@ Sem isso, tudo depois fica mais caro. Não pule nem comprima.
 | # | Sessão | Entregável | Pronto quando | Estado |
 | --- | --- | --- | --- | --- |
 | 41 | **Acesso do aluno** | Login com credencial recebida por e-mail, recuperação de senha, política de senha, rate limit, anti-enumeração | Aluno só vê os próprios dados, comprovado por teste de autorização | ✅ OOC-28: conta criada na aprovação, login por e-mail ou documento, link de 1 h |
-| 42 | **Painel do aluno** | Cursos, horário, data de início, enlace à aula, estado de matrícula e pagamento | Constancia visível na tela, sem depender do e-mail | ⬜ Telas prontas sobre mock (OOC-32) |
-| 43 | **Materiais e reenvio** | Materiais e links de gravação, carga de novo comprovante pelo portal | Nenhum vídeo no Storage — só link externo | ⬜ OOC-32, OOC-62 |
-| 44 | **Notas, frequência e perfil** | Visualização de notas e avanço, perfil editável, dados do apoderado | — | ⬜ Depende da 37 |
+| 42 | **Painel do aluno** | Cursos, horário, data de início, enlace à aula, estado de matrícula e pagamento | Constancia visível na tela, sem depender do e-mail | 🟡 OOC-32: cursos, horário, data de início, próxima aula, estado de matrícula e pagamento leem `GET /portal/overview`. Faltam o enlace da aula (OOC-98), módulos/cadeado (OOC-94/OOC-85), mensalidade (OOC-86) e a constancia (OOC-33/OOC-83) |
+| 43 | **Materiais e reenvio** | Materiais e links de gravação, carga de novo comprovante pelo portal | Nenhum vídeo no Storage — só link externo | ⬜ O aluno já reabre o comprovante enviado (URL de 5 min, OOC-32); materiais e reenvio pelo portal ainda não — OOC-100, OOC-62 |
+| 44 | **Notas, frequência e perfil** | Visualização de notas e avanço, perfil editável, dados do apoderado | — | 🟡 Perfil e apoderado reais, só leitura (OOC-32); o aluno editar o próprio contato é ticket à parte; notas e avanço dependem da 37 |
 | 45 | **Certificados** | Constancia e certificado em PDF, código de verificação, página pública de validação | Página pública valida sem expor dado pessoal além do nome e curso | ⬜ OOC-33, OOC-59 |
 
 > **Marco:** aprovação das Fases 3 e 4. Libera 25% do pagamento.
