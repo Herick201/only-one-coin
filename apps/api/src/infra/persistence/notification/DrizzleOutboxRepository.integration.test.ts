@@ -310,6 +310,22 @@ describe("a one-time link never outlives its row's delivery", () => {
     });
   });
 
+  it("strips a verification code when the row is sent", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const notification: EmailNotification = {
+        templateKey: "email_verification_code",
+        to: "code.outbox.integration@gmail.com",
+        locale: "es-PE",
+        vars: { recipientName: "Lucía", code: "042137" },
+        dedupeKey: "email_verification_code:018f2b5c-4000-7000-8000-0000000000cc:student",
+      };
+      await insertOutboxEmails(tx, [notification]);
+      const [row] = await tx.select({ id: outbox.id }).from(outbox).where(eq(outbox.dedupeKey, notification.dedupeKey));
+      await new DrizzleOutboxRepository(tx).markSent(row!.id, "<msg@brevo>");
+      expect(await varsOf(tx, row!.id)).toEqual({ recipientName: "Lucía" });
+    });
+  });
+
   it("leaves vars without a link untouched", async () => {
     await inRolledBackTransaction(async (tx) => {
       const id = await insertOne(tx);

@@ -39,6 +39,7 @@ const SAMPLE_VARS: EmailTemplateVars = {
     recipientName: "Rosa Quispe",
     resetUrl: "https://backoffice.onlyonecoin.edu.pe/backoffice/reset-password/abc123",
   },
+  email_verification_code: { recipientName: "Rosa", code: "042137" },
 };
 
 const LOCALES = LocaleSchema.options;
@@ -85,6 +86,15 @@ describe("renderEmail", () => {
       });
     }
   }
+
+  it("puts the verification code in the subject and body, in every locale", () => {
+    for (const locale of LOCALES) {
+      const rendered = renderEmail(sample("email_verification_code", locale));
+      expect(rendered.subject).toContain("042137");
+      expect(rendered.text).toContain("042137");
+      expect(rendered.html).toContain("042137");
+    }
+  });
 
   it("formats money as PEN and the start date in America/Lima, in the reader's locale", () => {
     const es = renderEmail(sample("enrollment_received", "es-PE"));

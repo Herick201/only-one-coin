@@ -55,4 +55,4 @@ Idempotentes. Build de produção recusa rodar.
 - [`docs/INFRAESTRUTURA.md`](docs/INFRAESTRUTURA.md) — pesquisa de mercado que baseou a hospedagem.
 - [`docs/FRONTEND-CONSOLIDACAO.md`](docs/FRONTEND-CONSOLIDACAO.md) — avaliação em aberto: unificar `landing` + `app`.
 - [`docs/OPEN-FINANCE-PERU.md`](docs/OPEN-FINANCE-PERU.md) — pesquisa: Open Finance no Peru.
-- [`docs/superpowers/specs/`](docs/superpowers/specs/) — desenhos das features grandes (catálogo, Pagos, semáforo, auth do aluno).
+- [`docs/superpowers/specs/`](docs/superpowers/specs/) — desenhos das features grandes (catálogo, Pagos, semáforo, auth do aluno, verificação do e-mail no checkout).

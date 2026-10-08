@@ -2,6 +2,7 @@ import {
   CreateGuardianSchema,
   CreateStudentSchema,
   EmailField,
+  gmailUsernameIssue,
   InvalidFieldsError,
   issueOf,
   nationalIdIssue,
@@ -9,6 +10,7 @@ import {
   OperationNumberField,
   PersonNameField,
   PhoneField,
+  suggestEmailDomain,
   Student,
   type NationalIdType,
 } from "@ooc/domain";
@@ -160,5 +162,57 @@ describe("guardian", () => {
     const result = CreateGuardianSchema.safeParse({ ...A_GUARDIAN, nationalId: "4012" });
     expect(result.success).toBe(false);
     expect(result.error?.issues.map((issue) => issue.message)).toEqual(["national_id_format"]);
+  });
+});
+
+describe("Gmail username rules", () => {
+  it.each([
+    "rosa.quispe@gmail.com",
+    "ROSA.Quispe@Gmail.com",
+    "abcdef@gmail.com",
+    "a23456789012345678901234567890@gmail.com",
+  ])("accepts %s", (email) => {
+    expect(gmailUsernameIssue(email)).toBeNull();
+    expect(issueOf(EmailField, email)).toBeNull();
+  });
+
+  it.each([
+    ["too short", "abcde@gmail.com"],
+    ["too long", "a234567890123456789012345678901@gmail.com"],
+    ["a plus alias", "rosa+curso@gmail.com"],
+    ["an underscore", "rosa_quispe@gmail.com"],
+    ["a leading dot", ".rosaquispe@gmail.com"],
+    ["a trailing dot", "rosaquispe.@gmail.com"],
+    ["two dots in a row", "rosa..quispe@gmail.com"],
+  ])("refuses %s", (_label, email) => {
+    expect(gmailUsernameIssue(email)).toBe("email_gmail_username_invalid");
+    expect(issueOf(EmailField, email)).not.toBeNull();
+  });
+
+  it("leaves other providers alone", () => {
+    expect(gmailUsernameIssue("rosa_q@hotmail.com")).toBeNull();
+    expect(issueOf(EmailField, "rosa_q@hotmail.com")).toBeNull();
+  });
+});
+
+describe("suggestEmailDomain", () => {
+  it.each([
+    ["rosa@gmial.com", "rosa@gmail.com"],
+    ["rosa@gmail.co", "rosa@gmail.com"],
+    ["rosa@gmai.com", "rosa@gmail.com"],
+    ["rosa@gmal.com", "rosa@gmail.com"],
+    ["rosa@gmail.con", "rosa@gmail.com"],
+    ["rosa@gnail.com", "rosa@gmail.com"],
+    ["rosa@gmail.cm", "rosa@gmail.com"],
+    ["Rosa@Hotmial.com", "rosa@hotmail.com"],
+    ["rosa@outlok.com", "rosa@outlook.com"],
+    ["rosa@yaho.com", "rosa@yahoo.com"],
+    ["rosa123gmail.com", "rosa123@gmail.com"],
+  ])("suggests %s → %s", (typed, expected) => {
+    expect(suggestEmailDomain(typed)).toBe(expected);
+  });
+
+  it.each(["rosa@gmail.com", "rosa@colegio.edu.pe", "rosa", "", "@gmial.com", "rosagmailxcom"])("has nothing for %s", (typed) => {
+    expect(suggestEmailDomain(typed)).toBeNull();
   });
 });

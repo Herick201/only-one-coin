@@ -103,7 +103,7 @@ describe("UpdateStudentUseCase", () => {
   });
 
   it("refuses a document already on another person's file", async () => {
-    const other = Student.create({ ...ADULT, nationalId: "70999999", email: "otro@gmail.com" });
+    const other = Student.create({ ...ADULT, nationalId: "70999999", email: "otra.persona@gmail.com" });
     const { student, students, update } = setup({ others: [other] });
 
     await expect(

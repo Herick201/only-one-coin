@@ -59,14 +59,14 @@ export async function insertOutboxEmails(tx: OutboxWriter, notifications: EmailN
 }
 
 /**
- * The vars that carry a one-time link (activation, password reset). The link
- * embeds the raw token, which `portal_access_tokens` and the staff reset
- * table only keep hashed — so once a row reaches an end state nobody needs
- * the link any more, and leaving it in `vars` would undo that hashing. Every
- * final transition strips them in the same UPDATE; a non-final failed
- * attempt keeps them, because the retry still has to send the link.
+ * The vars that carry a one-time secret: a link with a raw token (activation,
+ * password reset) or the checkout's verification code. The tables behind them
+ * keep only hashes, so once a row reaches an end state nobody needs the secret
+ * any more, and leaving it in `vars` would undo that hashing. Every final
+ * transition strips them in the same UPDATE; a non-final failed attempt keeps
+ * them, because the retry still has to send them.
  */
-const stripOneTimeLinks = sql`${outbox.vars} - 'accessUrl' - 'resetUrl'`;
+const stripOneTimeSecrets = sql`${outbox.vars} - 'accessUrl' - 'resetUrl' - 'code'`;
 
 export class DrizzleOutboxRepository implements IOutboxStore {
   constructor(private readonly db: Db) {}
@@ -112,7 +112,7 @@ export class DrizzleOutboxRepository implements IOutboxStore {
       .update(outbox)
       .set({
         status: "sent",
-        vars: stripOneTimeLinks,
+        vars: stripOneTimeSecrets,
         providerMessageId,
         attempts: sql`${outbox.attempts} + 1`,
         lastError: null,
@@ -125,7 +125,7 @@ export class DrizzleOutboxRepository implements IOutboxStore {
   async markBlocked(id: string): Promise<void> {
     await this.db
       .update(outbox)
-      .set({ status: "blocked", vars: stripOneTimeLinks, updatedAt: new Date() })
+      .set({ status: "blocked", vars: stripOneTimeSecrets, updatedAt: new Date() })
       .where(and(eq(outbox.id, id), eq(outbox.status, "pending")));
   }
 
@@ -133,7 +133,7 @@ export class DrizzleOutboxRepository implements IOutboxStore {
     await this.db
       .update(outbox)
       .set({
-        ...(final ? { status: "failed", vars: stripOneTimeLinks } : {}),
+        ...(final ? { status: "failed", vars: stripOneTimeSecrets } : {}),
         attempts: sql`${outbox.attempts} + 1`,
         lastError: errorCode,
         updatedAt: new Date(),

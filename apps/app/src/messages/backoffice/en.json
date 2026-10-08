@@ -202,6 +202,7 @@
         "phone_format": "Invalid mobile: too few digits.",
         "email_format": "Invalid e-mail.",
         "email_must_be_gmail": "Must be a Gmail account.",
+        "email_gmail_username_invalid": "That Gmail address cannot exist: the username must be 6–30 characters, only letters, numbers and dots (no “+”, no dot at the start or end, no two dots in a row).",
         "birth_date_range": "Check the birth date.",
         "operation_format": "Invalid operation number.",
         "invalid": "Check this."

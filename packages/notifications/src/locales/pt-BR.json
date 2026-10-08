@@ -67,6 +67,15 @@
         "Se não foi você, ignore este e-mail: sua senha continua a mesma."
       ],
       "action": "Criar senha nova"
+    },
+    "email_verification_code": {
+      "subject": "Seu código de verificação: {code}",
+      "preheader": "Digite-o no formulário de matrícula. Ele vence em 10 minutos.",
+      "paragraphs": [
+        "Você está concluindo uma matrícula na Only One Coin. Para confirmar que este e-mail é seu, digite este código no formulário:",
+        "{code}",
+        "O código vence em 10 minutos. Se você não está fazendo uma matrícula, ignore este e-mail."
+      ]
     }
   }
 }

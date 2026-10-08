@@ -48,7 +48,40 @@
         "guardian_subtitle": "O aluno é menor de idade, então precisamos dos dados e do consentimento do responsável.",
         "guardian_email_hint": "Pode ser de qualquer provedor.",
         "consent_label": "Autorizo a matrícula do menor e o tratamento dos seus dados pessoais para fins acadêmicos.",
-        "consent_version": "Texto de consentimento versão {version}. Guardamos a data e a hora do seu aceite."
+        "consent_version": "Texto de consentimento versão {version}. Guardamos a data e a hora do seu aceite.",
+        "verify": {
+          "title": "Verifique seu e-mail",
+          "intro": "Vamos enviar um código de 6 dígitos para {email}. Assim confirmamos que o e-mail existe e é seu: é nele que chegam o acesso à aula e os avisos da sua matrícula.",
+          "send": "Enviar código",
+          "sending": "Enviando…",
+          "sent": "Enviamos um código para {email}. Pode levar até um minuto; confira também a pasta de spam.",
+          "code_label": "Código de 6 dígitos",
+          "confirm": "Verificar",
+          "confirming": "Verificando…",
+          "resend": "Reenviar código",
+          "resend_in": "Você pode pedir outro código em {seconds} s",
+          "change_email": "Trocar e-mail",
+          "verified": "E-mail verificado",
+          "required": "Verifique seu e-mail com o código para continuar.",
+          "fill_email_first": "Digite um e-mail do Gmail válido para receber o código.",
+          "captcha_hint": "Conclua a verificação de segurança para enviar o código.",
+          "error": {
+            "code_invalid": "O código não está correto. Confira e tente de novo.",
+            "code_expired": "Esse código venceu ou foi substituído por um novo. Peça outro código.",
+            "attempts_exhausted": "Tentativas demais com este código. Peça outro código.",
+            "not_found": "Ainda não enviamos um código para este e-mail. Peça um.",
+            "cooldown": "Acabamos de enviar um código. Espere um momento antes de pedir outro.",
+            "too_many_sends": "Já enviamos vários códigos nesta matrícula. Confira se o e-mail está certo ou fale conosco pelo WhatsApp.",
+            "captcha_failed": "A verificação de segurança venceu ou não foi aceita. Conclua de novo.",
+            "captcha_unavailable": "Não conseguimos carregar a verificação de segurança. Recarregue a página; se continuar, desative o bloqueador de anúncios.",
+            "rate_limited": "Recebemos tentativas demais da sua conexão. Espere alguns minutos.",
+            "invalid_email": "Confira o e-mail: precisa ser uma conta do Gmail válida.",
+            "failed": "Não conseguimos concluir a operação. Tente de novo."
+          }
+        },
+        "email_suggestion": "Você quis dizer {email}?",
+        "email_suggestion_apply": "Usar este",
+        "guardian_email_confirm": "Confirme o e-mail do responsável"
       },
       "payment": {
         "short": "Pagamento",
@@ -99,7 +132,8 @@
         "captcha_hint": "Complete a verificação de segurança para enviar sua matrícula.",
         "captcha_failed": "A verificação de segurança expirou ou não foi aceita. Complete de novo e envie outra vez.",
         "captcha_unavailable": "Não conseguimos carregar a verificação de segurança. Recarregue a página; se continuar, desative o bloqueador de anúncios ou fale com a gente pelo WhatsApp.",
-        "rate_limited": "Recebemos tentativas demais da sua conexão. Espere alguns minutos e envie de novo — seus dados e sua vaga continuam aqui."
+        "rate_limited": "Recebemos tentativas demais da sua conexão. Espere alguns minutos e envie de novo — seus dados e sua vaga continuam aqui.",
+        "email_unverified": "Precisamos verificar o e-mail do aluno antes de enviar. Volte ao passo de dados do aluno e digite o código."
       }
     },
     "time_range": "{start} às {end}",
@@ -186,7 +220,9 @@
       "national_id_format": "Confira o número: o DNI tem 8 dígitos; o carnê de estrangeiro, de 9 a 12 letras ou números; o passaporte, de 6 a 12.",
       "phone_format": "Escreva um número de celular válido.",
       "email_format": "Escreva um e-mail válido.",
+      "email_mismatch": "Os dois e-mails não coincidem.",
       "email_must_be_gmail": "Precisa ser uma conta do Gmail. Não aceitamos e-mails institucionais nem corporativos.",
+      "email_gmail_username_invalid": "Esse e-mail do Gmail não existe: o nome de usuário precisa ter de 6 a 30 caracteres, só letras, números e pontos (sem «+», sem ponto no início ou no fim, sem dois pontos seguidos).",
       "birth_date_range": "Confira a data de nascimento.",
       "min_age": "A idade mínima deste curso é maior. Escolha outro curso ou fale com a gente.",
       "consent_required": "Precisamos da autorização do responsável para continuar.",

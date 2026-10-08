@@ -1,3 +1,4 @@
+import { HttpError } from "../shared/base/errors/HttpError.js";
 import { ConflictError } from "../shared/base/errors/ConflictError.js";
 import { NotFoundError } from "../shared/base/errors/NotFoundError.js";
 import { UnableToProcessEntryError } from "../shared/base/errors/UnableToProcessEntryError.js";
@@ -131,5 +132,65 @@ export class PaymentAlreadySettledError extends ConflictError {
 export class PaymentSeatReleasedError extends ConflictError {
   constructor(params?: { path?: string; cause?: unknown }) {
     super({ reason: "payment.seat_released", message: "The enrollment's seat was already released.", ...params });
+  }
+}
+
+/** A code went out for this checkout less than a minute ago. */
+export class EmailVerificationCooldownError extends HttpError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ status: 429, reason: "email_verification.cooldown", message: "A code was sent moments ago.", ...params });
+  }
+}
+
+/** This checkout already spent every code it gets. */
+export class EmailVerificationTooManySendsError extends HttpError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({
+      status: 429,
+      reason: "email_verification.too_many_sends",
+      message: "This checkout already received the maximum number of codes.",
+      ...params,
+    });
+  }
+}
+
+/** No code went to this address on this checkout — or the address changed. */
+export class EmailVerificationNotFoundError extends UnableToProcessEntryError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "email_verification.not_found", message: "No code was sent to this address.", ...params });
+  }
+}
+
+export class EmailVerificationCodeInvalidError extends UnableToProcessEntryError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "email_verification.code_invalid", message: "The code does not match.", ...params });
+  }
+}
+
+export class EmailVerificationCodeExpiredError extends UnableToProcessEntryError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({ reason: "email_verification.code_expired", message: "The code expired or was replaced.", ...params });
+  }
+}
+
+export class EmailVerificationAttemptsExhaustedError extends UnableToProcessEntryError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({
+      reason: "email_verification.attempts_exhausted",
+      message: "Too many wrong codes; a new one is needed.",
+      ...params,
+    });
+  }
+}
+
+/** The submit found no verified, unconsumed proof for its seat hold and the
+ * student's e-mail (spec 2026-10-07). Nothing was written. */
+export class EmailVerificationRequiredError extends UnableToProcessEntryError {
+  constructor(params?: { path?: string; cause?: unknown }) {
+    super({
+      reason: "email_verification.required",
+      message: "The student's e-mail was not verified on this checkout.",
+      ...params,
+    });
   }
 }

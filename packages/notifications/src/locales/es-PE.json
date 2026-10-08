@@ -67,6 +67,15 @@
         "Si no lo pediste, ignora este correo: tu contraseña sigue siendo la misma."
       ],
       "action": "Crear contraseña nueva"
+    },
+    "email_verification_code": {
+      "subject": "Tu código de verificación: {code}",
+      "preheader": "Escríbelo en el formulario de matrícula. Vence en 10 minutos.",
+      "paragraphs": [
+        "Estás completando una matrícula en Only One Coin. Para confirmar que este correo es tuyo, escribe este código en el formulario:",
+        "{code}",
+        "El código vence en 10 minutos. Si no estás haciendo una matrícula, ignora este correo."
+      ]
     }
   }
 }

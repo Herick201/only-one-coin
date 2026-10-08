@@ -315,19 +315,24 @@ export function PrimaryButton({
 export function GhostButton({
   children,
   onClick,
+  disabled = false,
 }: {
   children: ReactNode
   onClick: () => void
+  disabled?: boolean
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       /* Yellow on hover, like the primary — the pair reads as one family. It
          stays outlined rather than filling, so "back" never competes with
          "continue" for the eye. `-deep` for the text because the flat yellow
-         is too light to read on white. */
-      className="inline-flex w-full items-center justify-center gap-2 rounded-full border-2 border-transparent px-6 py-3.5 text-[15px] font-bold text-muted-foreground transition hover:border-brand-yellow hover:bg-brand-yellow/10 hover:text-brand-yellow-deep sm:w-auto"
+         is too light to read on white. Disabled drops the hover entirely: a
+         control that lights up under the finger and then does nothing reads
+         as broken. */
+      className="inline-flex w-full items-center justify-center gap-2 rounded-full border-2 border-transparent px-6 py-3.5 text-[15px] font-bold text-muted-foreground transition hover:border-brand-yellow hover:bg-brand-yellow/10 hover:text-brand-yellow-deep disabled:cursor-not-allowed disabled:border-transparent disabled:bg-transparent disabled:text-muted-foreground disabled:opacity-60 sm:w-auto"
     >
       {children}
     </button>

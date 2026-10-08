@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { normalizeEmail } from '@ooc/domain/fields'
 import type {
   CheckoutDraft,
   GuardianRelationship,
@@ -31,6 +32,9 @@ import { citiesOf, PERU_REGIONS } from '@/lib/geo'
 import { PhoneField } from '@/components/enrollment/phone-field'
 import { BirthDateField } from '@/components/enrollment/birth-date-field'
 import { AutoGrid, fullRowClass } from '@/components/layout/auto-grid'
+import { isEmailVerified } from '@/lib/enrollment/email-verification'
+import { EmailVerification } from './email-verification'
+import { EmailSuggestion } from './email-suggestion'
 
 const ID_TYPES: NationalIdType[] = ['DNI', 'CE', 'passport']
 const RELATIONSHIPS: GuardianRelationship[] = ['mother', 'father', 'legal_guardian']
@@ -65,12 +69,17 @@ export function StepStudent({
   catalog,
   draft,
   setDraft,
+  holdId,
+  onHoldExpired,
   onBack,
   onContinue,
 }: {
   catalog: PublicCatalog
   draft: CheckoutDraft
   setDraft: (next: (prev: CheckoutDraft) => CheckoutDraft) => void
+  /** The seat hold the e-mail proof is bound to. */
+  holdId: string | null
+  onHoldExpired: () => void
   onBack: () => void
   onContinue: () => void
 }) {
@@ -92,7 +101,15 @@ export function StepStudent({
     [minor, draft.guardian],
   )
 
-  const ready = !hasErrors(studentErrors) && !hasErrors(guardianErrors)
+  // The proof counts for this hold and this exact address — edit the e-mail
+  // after verifying and the step asks for a code again.
+  const emailVerified = isEmailVerified(draft, holdId)
+  const ready = !hasErrors(studentErrors) && !hasErrors(guardianErrors) && emailVerified
+  // Who the code e-mail greets. The API takes a person's name (1–80 chars);
+  // until the first name is valid, the Gmail username stands in for it.
+  const recipientName = studentErrors.firstName
+    ? (normalizeEmail(draft.student.email).split('@')[0] ?? '')
+    : draft.student.firstName.trim()
   /** A field's error shows once the reader leaves it, or once they try to
       move on — never while they are still typing the first letter of it. */
   const leave = (key: string) => () =>
@@ -238,7 +255,22 @@ export function StepStudent({
               invalid={Boolean(sErr('email', studentErrors.email))}
               onChange={(e) => patchStudent({ email: e.target.value })}
             />
+            <EmailSuggestion email={draft.student.email} onApply={(email) => patchStudent({ email })} />
           </FieldGroup>
+
+          <div className={fullRowClass}>
+            <EmailVerification
+              holdId={holdId}
+              email={draft.student.email}
+              recipientName={recipientName}
+              ready={!studentErrors.email}
+              verified={emailVerified}
+              onVerified={(email) =>
+                setDraft((prev) => ({ ...prev, emailVerification: holdId ? { holdId, email } : null }))
+              }
+              onHoldExpired={onHoldExpired}
+            />
+          </div>
 
           {/* One pair, always in its own row: region decides what city offers,
               and the two read as one address line — an outer auto-fit column
@@ -419,6 +451,26 @@ export function StepStudent({
                 invalid={Boolean(gErr('email', guardianErrors.email))}
                 onChange={(e) => patchGuardian({ email: e.target.value })}
               />
+              <EmailSuggestion email={draft.guardian.email} onApply={(email) => patchGuardian({ email })} />
+            </FieldGroup>
+
+            {/* Typed twice, never pasted: nobody proves this address with a
+                code, so a typo here is a guardian the Asociación cannot reach. */}
+            <FieldGroup
+              label={t('step.student.guardian_email_confirm')}
+              htmlFor="guardian-email-confirm"
+              onLeave={leave('guardian.emailConfirmation')}
+              error={gErr('emailConfirmation', guardianErrors.emailConfirmation)}
+            >
+              <TextInput
+                id="guardian-email-confirm"
+                type="email"
+                autoComplete="off"
+                onPaste={(e) => e.preventDefault()}
+                value={draft.guardian.emailConfirmation}
+                invalid={Boolean(gErr('emailConfirmation', guardianErrors.emailConfirmation))}
+                onChange={(e) => patchGuardian({ emailConfirmation: e.target.value })}
+              />
             </FieldGroup>
 
             <div className={fullRowClass}>
@@ -451,7 +503,8 @@ export function StepStudent({
         </Card>
       )}
 
-      {show && !ready && <Note tone="danger">{t('error.fix_fields')}</Note>}
+      {show && !emailVerified && <Note tone="danger">{t('step.student.verify.required')}</Note>}
+      {show && !ready && emailVerified && <Note tone="danger">{t('error.fix_fields')}</Note>}
 
       <StepNav
         back={
