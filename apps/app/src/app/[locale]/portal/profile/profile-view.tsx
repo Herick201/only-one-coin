@@ -13,7 +13,7 @@ import { ProfilePreferences } from './profile-preferences'
  * the class-access Gmail (CLAUDE.md §1), the phone, and everything about the
  * guardian. Every field carries a padlock — correcting the file is the
  * coordination's, with an audit trail (OOC-74), never self-service. The
- * student editing their own phone is its own ticket; the mock's extra e-mail
+ * student editing their own phone is OOC-110; the mock's extra e-mail
  * and phone never had a column to land in, so they left with the mock.
  *
  * Plus what the student chooses about the portal itself (`ProfilePreferences`):
