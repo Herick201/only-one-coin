@@ -38,9 +38,13 @@ export interface IEmailVerificationRepository {
    */
   issue(request: IssueEmailVerificationRequest): Promise<IssueEmailVerificationOutcome>;
   findLatest(params: { seatHoldId: string; email: string }): Promise<LatestEmailVerification | null>;
-  /** +1 attempt, capped at the maximum; returns the count after it. */
-  recordFailedAttempt(id: string): Promise<number>;
-  /** Sets `verified_at` only if still unverified, unexpired and under the
-   * attempt limit; `false` when it was not (a race with expiry or a burn). */
+  /** Counts one attempt before the code is compared: +1 only while the row is
+   * unverified, unexpired and under the limit; returns the count after it, or
+   * null when the row could not take another attempt (burned, expired or
+   * already verified — a race). */
+  claimAttempt(id: string): Promise<number | null>;
+  /** Sets `verified_at` only if still unverified and unexpired (no attempts
+   * condition — the attempt was already counted, and the 5th attempt may
+   * succeed); `false` when it was not (a race with expiry). */
   markVerified(id: string): Promise<boolean>;
 }

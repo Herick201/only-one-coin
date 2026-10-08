@@ -86,13 +86,20 @@ export class DrizzleEmailVerificationRepository implements IEmailVerificationRep
     return row ?? null;
   }
 
-  async recordFailedAttempt(id: string): Promise<number> {
+  async claimAttempt(id: string): Promise<number | null> {
     const [row] = await this.db
       .update(emailVerifications)
       .set({ attempts: sql`${emailVerifications.attempts} + 1`, updatedAt: sql`now()` })
-      .where(and(eq(emailVerifications.id, id), lt(emailVerifications.attempts, EMAIL_VERIFICATION_MAX_ATTEMPTS)))
+      .where(
+        and(
+          eq(emailVerifications.id, id),
+          lt(emailVerifications.attempts, EMAIL_VERIFICATION_MAX_ATTEMPTS),
+          isNull(emailVerifications.verifiedAt),
+          gt(emailVerifications.expiresAt, sql`now()`),
+        ),
+      )
       .returning({ attempts: emailVerifications.attempts });
-    return row?.attempts ?? EMAIL_VERIFICATION_MAX_ATTEMPTS;
+    return row?.attempts ?? null;
   }
 
   async markVerified(id: string): Promise<boolean> {
@@ -104,7 +111,6 @@ export class DrizzleEmailVerificationRepository implements IEmailVerificationRep
           eq(emailVerifications.id, id),
           isNull(emailVerifications.verifiedAt),
           gt(emailVerifications.expiresAt, sql`now()`),
-          lt(emailVerifications.attempts, EMAIL_VERIFICATION_MAX_ATTEMPTS),
         ),
       )
       .returning({ id: emailVerifications.id });

@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import * as schema from "@ooc/db";
 import { academicPeriods, classGroups, courses, emailVerifications, outbox, seatHolds } from "@ooc/db";
 import { emailVerificationCodeEmail, hashVerificationCode } from "@ooc/domain";
-import { eq, inArray, like, sql } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -24,9 +24,9 @@ if (!DATABASE_URL) {
   throw new Error("DATABASE_URL is required: this suite exercises DrizzleEmailVerificationRepository against a real, migrated Postgres.");
 }
 
-const PERIOD = "018f2b5c-7000-7000-8000-000000000001";
-const COURSE = "018f2b5c-7000-7000-8000-000000000002";
-const GROUP = "018f2b5c-7000-7000-8000-000000000003";
+const PERIOD = "018f2b5c-7100-7000-8000-000000000001";
+const COURSE = "018f2b5c-7100-7000-8000-000000000002";
+const GROUP = "018f2b5c-7100-7000-8000-000000000003";
 const EMAIL = "verify.integration@gmail.com";
 
 let pool: pg.Pool;
@@ -75,7 +75,10 @@ afterEach(async () => {
 async function cleanUp(): Promise<void> {
   const holds = db.select({ id: seatHolds.id }).from(seatHolds).where(eq(seatHolds.classGroupId, GROUP));
   await db.delete(emailVerifications).where(inArray(emailVerifications.seatHoldId, holds));
-  await db.delete(outbox).where(like(outbox.dedupeKey, "email_verification_code:%"));
+  const ids = await db.select({ id: emailVerifications.id }).from(emailVerifications).where(inArray(emailVerifications.seatHoldId, holds));
+  if (ids.length > 0) {
+    await db.delete(outbox).where(inArray(outbox.dedupeKey, ids.map(({ id }) => `email_verification_code:${id}:student`)));
+  }
   await db.delete(seatHolds).where(eq(seatHolds.classGroupId, GROUP));
   await db.delete(classGroups).where(eq(classGroups.id, GROUP));
   await db.delete(courses).where(eq(courses.id, COURSE));
@@ -154,12 +157,31 @@ describe("DrizzleEmailVerificationRepository.issue", () => {
 });
 
 describe("attempts, verification and consumption", () => {
-  it("counts attempts up to the cap and stops verifying past it", async () => {
+  it("claims attempts up to the cap, then refuses", async () => {
     const issued = request();
     await repository.issue(issued);
-    for (let i = 1; i <= 5; i++) expect(await repository.recordFailedAttempt(issued.id)).toBe(i);
-    expect(await repository.recordFailedAttempt(issued.id)).toBe(5);
-    expect(await repository.markVerified(issued.id)).toBe(false);
+    for (let i = 1; i <= 5; i++) expect(await repository.claimAttempt(issued.id)).toBe(i);
+    expect(await repository.claimAttempt(issued.id)).toBeNull();
+  });
+
+  it("does not claim an attempt on an expired or a verified row", async () => {
+    const expired = request();
+    await repository.issue(expired);
+    await db.update(emailVerifications).set({ expiresAt: sql`now() - interval '1 second'` }).where(eq(emailVerifications.id, expired.id));
+    expect(await repository.claimAttempt(expired.id)).toBeNull();
+
+    await ageSends();
+    const verified = request();
+    await repository.issue(verified);
+    expect(await repository.markVerified(verified.id)).toBe(true);
+    expect(await repository.claimAttempt(verified.id)).toBeNull();
+  });
+
+  it("verifies on the fifth attempt, since the attempt was already counted", async () => {
+    const issued = request();
+    await repository.issue(issued);
+    for (let i = 1; i <= 5; i++) await repository.claimAttempt(issued.id);
+    expect(await repository.markVerified(issued.id)).toBe(true);
   });
 
   it("does not verify an expired code", async () => {

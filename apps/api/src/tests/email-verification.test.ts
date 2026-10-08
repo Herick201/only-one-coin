@@ -59,15 +59,16 @@ class FakeEmailVerifications implements IEmailVerificationRepository {
     return matching.at(-1) ?? null;
   }
 
-  async recordFailedAttempt(id: string): Promise<number> {
+  async claimAttempt(id: string): Promise<number | null> {
     const row = this.rows.find((r) => r.id === id)!;
-    row.attempts = Math.min(row.attempts + 1, EMAIL_VERIFICATION_MAX_ATTEMPTS);
+    if (row.verified || row.expired || row.attempts >= EMAIL_VERIFICATION_MAX_ATTEMPTS) return null;
+    row.attempts += 1;
     return row.attempts;
   }
 
   async markVerified(id: string): Promise<boolean> {
     const row = this.rows.find((r) => r.id === id)!;
-    if (row.verified || row.expired || row.attempts >= EMAIL_VERIFICATION_MAX_ATTEMPTS) return false;
+    if (row.verified || row.expired) return false;
     row.verified = true;
     return true;
   }
@@ -182,6 +183,34 @@ describe("ConfirmEmailVerificationUseCase", () => {
     }
     await expect(useCase.run({ ...input, code: wrong })).rejects.toBeInstanceOf(EmailVerificationAttemptsExhaustedError);
     await expect(useCase.run({ ...input, code })).rejects.toBeInstanceOf(EmailVerificationAttemptsExhaustedError);
+  });
+
+  it("a correct code on the fifth attempt still verifies", async () => {
+    const repository = new FakeEmailVerifications();
+    const code = await sendOne(repository);
+    const wrong = code === "000000" ? "000001" : "000000";
+    const useCase = new ConfirmEmailVerificationUseCase(repository);
+    const input = { seatHoldId: HOLD, email: "rosa.quispe@gmail.com" };
+
+    for (let i = 1; i < EMAIL_VERIFICATION_MAX_ATTEMPTS; i++) {
+      await expect(useCase.run({ ...input, code: wrong })).rejects.toBeInstanceOf(EmailVerificationCodeInvalidError);
+    }
+    await expect(useCase.run({ ...input, code })).resolves.toBeUndefined();
+    expect(repository.rows[0]!.verified).toBe(true);
+  });
+
+  it("refuses when the row stops taking attempts between the read and the claim", async () => {
+    class RacingFake extends FakeEmailVerifications {
+      override async claimAttempt(): Promise<number | null> {
+        return null;
+      }
+    }
+    const repository = new RacingFake();
+    const code = await sendOne(repository);
+
+    await expect(
+      new ConfirmEmailVerificationUseCase(repository).run({ seatHoldId: HOLD, email: "rosa.quispe@gmail.com", code }),
+    ).rejects.toBeInstanceOf(EmailVerificationCodeExpiredError);
   });
 
   it("refuses an expired code", async () => {

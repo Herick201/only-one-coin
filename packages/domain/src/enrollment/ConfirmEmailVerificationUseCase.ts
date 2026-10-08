@@ -29,8 +29,12 @@ export class ConfirmEmailVerificationUseCase extends BaseUseCase<ConfirmEmailVer
     if (row.attempts >= EMAIL_VERIFICATION_MAX_ATTEMPTS) throw new EmailVerificationAttemptsExhaustedError();
     if (row.expired) throw new EmailVerificationCodeExpiredError();
 
+    // Count the attempt before comparing, atomically, so concurrent confirms
+    // cannot all test a code against an attempts count read earlier.
+    const attempts = await this.repository.claimAttempt(row.id);
+    if (attempts === null) throw new EmailVerificationCodeExpiredError();
+
     if (!verificationCodeMatches(row.id, input.code, row.codeHash)) {
-      const attempts = await this.repository.recordFailedAttempt(row.id);
       if (attempts >= EMAIL_VERIFICATION_MAX_ATTEMPTS) throw new EmailVerificationAttemptsExhaustedError();
       throw new EmailVerificationCodeInvalidError();
     }
