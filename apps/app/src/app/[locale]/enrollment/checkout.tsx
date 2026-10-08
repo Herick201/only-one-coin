@@ -192,6 +192,13 @@ export function Checkout({
         if (body?.reason === 'enrollment.operation_number_already_used') {
           return 'operation_number_used'
         }
+        // The submit found no proof of the student's e-mail for this hold —
+        // the address was edited after verifying, or a stale draft. Nothing
+        // was written; the proof is dropped so the student step asks again.
+        if (body?.reason === 'email_verification.required') {
+          setDraft((prev) => ({ ...prev, emailVerification: null }))
+          return 'email_unverified'
+        }
         // The captcha token was refused (expired, already used). Nothing was
         // written; the widget hands out a new one.
         if (body?.reason === 'captcha.failed') {
@@ -277,6 +284,8 @@ export function Checkout({
           catalog={catalog}
           draft={draft}
           setDraft={setDraft}
+          holdId={holdId}
+          onHoldExpired={expireHold}
           onBack={() => goTo('course')}
           onContinue={() => goTo('payment')}
         />
