@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import type { Student } from '@/lib/portal/types'
 import { formatDate, type Locale } from '@/lib/format'
@@ -10,17 +9,15 @@ import { AutoGrid } from '@/components/layout/auto-grid'
 import { ProfilePreferences } from './profile-preferences'
 
 /**
- * Profile with two kinds of data on one screen, told apart visually:
- *
- * — self-service: the student's phone, plus optional extra contacts (another
- *   e-mail, another phone). Editable inputs, mock save.
- * — record: name, document, birth date, the class-access Gmail (CLAUDE.md §1)
- *   and everything about the guardian. Shown, but locked — a padlock marks
- *   each one, and correcting them is a coordination flow, never self-service.
+ * Profile, read from the student's file (OOC-32): name, document, birth date,
+ * the class-access Gmail (CLAUDE.md §1), the phone, and everything about the
+ * guardian. Every field carries a padlock — correcting the file is the
+ * coordination's, with an audit trail (OOC-74), never self-service. The
+ * student editing their own phone is OOC-110; the mock's extra e-mail
+ * and phone never had a column to land in, so they left with the mock.
  *
  * Plus what the student chooses about the portal itself (`ProfilePreferences`):
- * the language, which used to sit in the avatar menu and in the tab bar's
- * sheet. Neither is the record nor a contact — it is a preference, and it lives
+ * the language. Neither the record nor a contact — a preference, and it lives
  * with the rest of what a person sets about themselves.
  */
 
@@ -46,151 +43,10 @@ function LockedField({
   )
 }
 
-function EditableField({
-  id,
-  label,
-  value,
-  placeholder,
-  error,
-  inputMode,
-  onChange,
-}: {
-  id: string
-  label: string
-  value: string
-  placeholder?: string
-  error?: string | null
-  inputMode?: 'tel' | 'email'
-  onChange: (next: string) => void
-}) {
-  return (
-    <div>
-      <label
-        htmlFor={id}
-        className="text-xs font-medium uppercase tracking-wide text-muted-foreground"
-      >
-        {label}
-      </label>
-      <input
-        id={id}
-        value={value}
-        placeholder={placeholder}
-        inputMode={inputMode}
-        onChange={(e) => onChange(e.target.value)}
-        className={`mt-1 w-full rounded-lg border bg-white px-3 py-2 text-sm font-medium text-ink outline-none transition focus:border-brand-blue ${
-          error ? 'border-red-400' : 'border-line'
-        }`}
-      />
-      {error && (
-        <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-red-600">
-          <Icon name="alert" size={13} />
-          {error}
-        </p>
-      )}
-    </div>
-  )
-}
-
-function AddButton({ label, onClick }: { label: string; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-blue transition hover:text-brand-blue-deep"
-    >
-      <Icon name="plus" size={15} />
-      {label}
-    </button>
-  )
-}
-
-/** A revealed optional input with its own way back out. */
-function RemovableField({
-  removeLabel,
-  onRemove,
-  children,
-}: {
-  removeLabel: string
-  onRemove: () => void
-  children: React.ReactNode
-}) {
-  return (
-    <div className="flex items-end gap-2">
-      <div className="flex-1">{children}</div>
-      <button
-        type="button"
-        onClick={onRemove}
-        aria-label={removeLabel}
-        title={removeLabel}
-        className="mb-1 shrink-0 rounded-lg p-2 text-muted-foreground transition hover:bg-red-50 hover:text-red-600"
-      >
-        <Icon name="trash" size={16} />
-      </button>
-    </div>
-  )
-}
-
-const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
 export function ProfileView({ student }: { student: Student }) {
   const t = useTranslations('portal')
   const locale = useLocale() as Locale
   const { guardian } = student
-
-  // What the record currently holds — the baseline "dirty" is measured
-  // against. Mock: saving just moves the baseline.
-  const [baseline, setBaseline] = useState({
-    phone: student.phone,
-    secondaryEmail: student.secondaryEmail ?? '',
-    secondaryPhone: student.secondaryPhone ?? '',
-  })
-  const [phone, setPhone] = useState(baseline.phone)
-  const [secondaryEmail, setSecondaryEmail] = useState(baseline.secondaryEmail)
-  const [secondaryPhone, setSecondaryPhone] = useState(baseline.secondaryPhone)
-  const [showSecondaryEmail, setShowSecondaryEmail] = useState(
-    baseline.secondaryEmail !== '',
-  )
-  const [showSecondaryPhone, setShowSecondaryPhone] = useState(
-    baseline.secondaryPhone !== '',
-  )
-  const [touched, setTouched] = useState(false)
-  const [saved, setSaved] = useState(false)
-
-  const phoneError = phone.trim() === '' ? t('profile.error_phone') : null
-  const emailError =
-    secondaryEmail.trim() !== '' && !EMAIL_SHAPE.test(secondaryEmail.trim())
-      ? t('profile.error_email')
-      : null
-
-  // Nothing changed → nothing to save; the record stays as it is.
-  const dirty =
-    phone !== baseline.phone ||
-    secondaryEmail !== baseline.secondaryEmail ||
-    secondaryPhone !== baseline.secondaryPhone
-
-  function save() {
-    if (!dirty) return
-    setTouched(true)
-    if (phoneError || emailError) {
-      setSaved(false)
-      return
-    }
-    // Mock save — in production this hits the profile usecase in apps/api.
-    setBaseline({ phone, secondaryEmail, secondaryPhone })
-    setTouched(false)
-    setSaved(true)
-  }
-
-  function hideSecondary(kind: 'email' | 'phone') {
-    if (kind === 'email') {
-      setSecondaryEmail('')
-      setShowSecondaryEmail(false)
-    } else {
-      setSecondaryPhone('')
-      setShowSecondaryPhone(false)
-    }
-    setSaved(false)
-  }
 
   const lockedHint = t('profile.locked_hint')
 
@@ -225,95 +81,11 @@ export function ProfileView({ student }: { student: Student }) {
             >
               {formatDate(student.birthDate, locale)}
             </LockedField>
+            <LockedField label={t('profile.phone_label')} lockedHint={lockedHint}>
+              {student.phone}
+            </LockedField>
           </AutoGrid>
 
-          {/* Self-service contacts: the extras stay behind a "+ add" until
-              they are wanted — an empty optional input is just noise. */}
-          <div className="mt-5 flex flex-col gap-4 border-t border-line pt-4">
-            <div>
-              <EditableField
-                id="profile-phone"
-                label={t('profile.phone_label')}
-                value={phone}
-                inputMode="tel"
-                error={touched ? phoneError : null}
-                onChange={(next) => {
-                  setPhone(next)
-                  setSaved(false)
-                }}
-              />
-              {!showSecondaryPhone && (
-                <AddButton
-                  label={t('profile.add_secondary_phone')}
-                  onClick={() => setShowSecondaryPhone(true)}
-                />
-              )}
-            </div>
-
-            {showSecondaryPhone && (
-              <RemovableField
-                removeLabel={t('profile.remove_secondary')}
-                onRemove={() => hideSecondary('phone')}
-              >
-                <EditableField
-                  id="profile-secondary-phone"
-                  label={t('profile.secondary_phone_label')}
-                  value={secondaryPhone}
-                  inputMode="tel"
-                  onChange={(next) => {
-                    setSecondaryPhone(next)
-                    setSaved(false)
-                  }}
-                />
-              </RemovableField>
-            )}
-
-            {showSecondaryEmail ? (
-              <RemovableField
-                removeLabel={t('profile.remove_secondary')}
-                onRemove={() => hideSecondary('email')}
-              >
-                <EditableField
-                  id="profile-secondary-email"
-                  label={t('profile.secondary_email_label')}
-                  value={secondaryEmail}
-                  inputMode="email"
-                  error={touched ? emailError : null}
-                  onChange={(next) => {
-                    setSecondaryEmail(next)
-                    setSaved(false)
-                  }}
-                />
-              </RemovableField>
-            ) : (
-              <AddButton
-                label={t('profile.add_secondary_email')}
-                onClick={() => setShowSecondaryEmail(true)}
-              />
-            )}
-
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                onClick={save}
-                disabled={!dirty}
-                className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold shadow-card transition ${
-                  dirty
-                    ? 'bg-brand-blue text-white hover:bg-brand-yellow hover:text-ink'
-                    : 'cursor-not-allowed bg-sky text-muted-foreground shadow-none'
-                }`}
-              >
-                <Icon name="check" size={16} />
-                {t('profile.save')}
-              </button>
-              {saved && !dirty && (
-                <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700">
-                  <Icon name="check" size={15} />
-                  {t('profile.saved_note')}
-                </span>
-              )}
-            </div>
-          </div>
         </Card>
 
         {/* Guardian — record only */}

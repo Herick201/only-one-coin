@@ -184,7 +184,8 @@
       "view_receipt": "View receipt",
       "month_pay_cta": "Pay",
       "review_note": "We're verifying your receipt. This step can take a few hours.",
-      "rejected_note": "We couldn't validate this payment. Message us on WhatsApp to sort it out."
+      "rejected_note": "We couldn't validate this payment. Message us on WhatsApp to sort it out.",
+      "receipt_error": "We couldn't open your receipt. Please try again in a moment."
     },
     "receipt_form": {
       "amount_label": "Amount to pay",
@@ -229,6 +230,7 @@
     "requests": {
       "title": "Requests",
       "catalog_title": "Available requests",
+      "catalog_empty": "Soon you'll be able to request your procedures here. For now, message us on WhatsApp to ask for your enrollment certificate, exam or freeze.",
       "request_cta": "Request",
       "not_eligible": "You have no eligible courses for this request.",
       "new_title": "Request: {procedure}",
@@ -295,15 +297,6 @@
       "consent_none": "Registration pending.",
       "edit_note": "Padlocked details are corrected by the coordination — message us on WhatsApp.",
       "locked_hint": "Only the coordination can correct this.",
-      "secondary_email_label": "Another email (optional)",
-      "secondary_phone_label": "Another phone (optional)",
-      "save": "Save changes",
-      "saved_note": "Details updated.",
-      "error_phone": "Enter your phone.",
-      "error_email": "That email doesn't look valid.",
-      "add_secondary_email": "Add another email (optional)",
-      "add_secondary_phone": "Add another phone (optional)",
-      "remove_secondary": "Remove",
       "preferences_title": "Preferences",
       "language_label": "Language"
     },

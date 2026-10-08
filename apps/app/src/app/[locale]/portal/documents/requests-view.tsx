@@ -17,7 +17,9 @@ import { ReceiptUploadForm } from '@/components/portal/receipt-upload'
  * human queue — that only becomes a document / takes effect once the payment
  * is approved.
  *
- * Mockup: submitting appends the request locally with `under_review`.
+ * Not wired yet: paid requests have no backend (OOC-83), so the page passes
+ * an empty catalog and this renders only the empty states. Submitting still
+ * appends locally — unreachable until the catalog is real.
  */
 
 export interface EligibleEnrollment {
@@ -103,111 +105,120 @@ export function RequestsView({
         <div className="mb-3">
           <SectionTitle>{t('requests.catalog_title')}</SectionTitle>
         </div>
-        <Card>
-          <ul className="divide-y divide-line">
-            {procedures.map((p) => {
-              const active = openType === p.type
-              const eligible = p.eligible.length > 0
-              return (
-                <li key={p.type}>
-                  {/* Quatro peças numa linha só cabem numa coluna larga. Num
-                      telefone o `flex-wrap` sozinho não salvava: com
-                      `min-w-0` o bloco de texto encolhia até uma palavra por
-                      linha em vez de empurrar preço e botão para baixo. Então
-                      o preço e o botão andam juntos num bloco que ocupa a
-                      linha inteira até a coluna dar 32rem. */}
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-3 px-4 py-4 sm:px-5">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-sky text-brand-blue">
-                      <Icon name={procedureIcon[p.type]} size={20} />
-                    </span>
-                    <div className="min-w-40 flex-1">
-                      <p className="text-sm font-semibold text-ink">
-                        {t(`request_type.${p.type}`)}
-                      </p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        {eligible
-                          ? t(`requests.desc.${p.type}`)
-                          : t('requests.not_eligible')}
-                      </p>
-                    </div>
-                    <div className="flex w-full items-center justify-between gap-3 @lg/page:w-auto">
-                      <span className="shrink-0 text-sm font-bold text-ink">
-                        {formatMoney(p.priceCents, p.currency, locale)}
+        {procedures.length === 0 ? (
+          /* No price table and no paid request has a backend yet (OOC-83):
+             the catalog says how to ask meanwhile instead of offering a form
+             that goes nowhere. */
+          <Card className="p-6">
+            <p className="text-sm text-muted-foreground">{t('requests.catalog_empty')}</p>
+          </Card>
+        ) : (
+          <Card>
+            <ul className="divide-y divide-line">
+              {procedures.map((p) => {
+                const active = openType === p.type
+                const eligible = p.eligible.length > 0
+                return (
+                  <li key={p.type}>
+                    {/* Quatro peças numa linha só cabem numa coluna larga. Num
+                        telefone o `flex-wrap` sozinho não salvava: com
+                        `min-w-0` o bloco de texto encolhia até uma palavra por
+                        linha em vez de empurrar preço e botão para baixo. Então
+                        o preço e o botão andam juntos num bloco que ocupa a
+                        linha inteira até a coluna dar 32rem. */}
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-3 px-4 py-4 sm:px-5">
+                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-sky text-brand-blue">
+                        <Icon name={procedureIcon[p.type]} size={20} />
                       </span>
-                      {eligible && (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            active ? setOpenType(null) : startProcedure(p.type)
-                          }
-                          aria-expanded={active}
-                          className={`inline-flex min-h-tap shrink-0 items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                            active
-                              ? 'border-line bg-white text-muted-foreground hover:text-ink'
-                              : 'border-brand-blue text-brand-blue hover:border-brand-yellow hover:bg-brand-yellow hover:text-ink'
-                          }`}
-                        >
-                          {active ? t('requests.cancel') : t('requests.request_cta')}
-                          <Icon
-                            name="chevron-right"
-                            size={15}
-                            className={`transition-transform ${active ? 'rotate-90' : ''}`}
-                          />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Inline flow, right where the click happened. */}
-                  {active && open && (
-                    <div className="border-t border-line bg-sky-soft px-5 py-4">
-                      {open.type === 'enrollment_freeze' && (
-                        <p className="mb-4 rounded-xl bg-white px-4 py-3 text-sm text-muted-foreground">
-                          {t('requests.freeze_note')}
+                      <div className="min-w-40 flex-1">
+                        <p className="text-sm font-semibold text-ink">
+                          {t(`request_type.${p.type}`)}
                         </p>
-                      )}
-
-                      <p className="mb-2 text-sm font-semibold text-ink">
-                        {t('requests.choose_enrollment')}
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {open.eligible.map((e) => {
-                          const selected = chosen?.enrollmentId === e.enrollmentId
-                          return (
-                            <button
-                              key={e.enrollmentId}
-                              type="button"
-                              onClick={() => setEnrollmentId(e.enrollmentId)}
-                              aria-pressed={selected}
-                              className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                                selected
-                                  ? 'border-brand-blue bg-brand-blue text-white'
-                                  : 'border-line bg-white text-muted-foreground hover:border-brand-blue hover:text-brand-blue'
-                              }`}
-                            >
-                              {e.courseName}
-                            </button>
-                          )
-                        })}
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {eligible
+                            ? t(`requests.desc.${p.type}`)
+                            : t('requests.not_eligible')}
+                        </p>
                       </div>
-
-                      {chosen && (
-                        <div className="mt-4 rounded-xl border border-line bg-white p-4">
-                          <ReceiptUploadForm
-                            amountCents={open.priceCents}
-                            currency={open.currency}
-                            submitLabel={t('requests.submit')}
-                            onSubmit={submit}
-                          />
-                        </div>
-                      )}
+                      <div className="flex w-full items-center justify-between gap-3 @lg/page:w-auto">
+                        <span className="shrink-0 text-sm font-bold text-ink">
+                          {formatMoney(p.priceCents, p.currency, locale)}
+                        </span>
+                        {eligible && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              active ? setOpenType(null) : startProcedure(p.type)
+                            }
+                            aria-expanded={active}
+                            className={`inline-flex min-h-tap shrink-0 items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                              active
+                                ? 'border-line bg-white text-muted-foreground hover:text-ink'
+                                : 'border-brand-blue text-brand-blue hover:border-brand-yellow hover:bg-brand-yellow hover:text-ink'
+                            }`}
+                          >
+                            {active ? t('requests.cancel') : t('requests.request_cta')}
+                            <Icon
+                              name="chevron-right"
+                              size={15}
+                              className={`transition-transform ${active ? 'rotate-90' : ''}`}
+                            />
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  )}
-                </li>
-              )
-            })}
-          </ul>
-        </Card>
+
+                    {/* Inline flow, right where the click happened. */}
+                    {active && open && (
+                      <div className="border-t border-line bg-sky-soft px-5 py-4">
+                        {open.type === 'enrollment_freeze' && (
+                          <p className="mb-4 rounded-xl bg-white px-4 py-3 text-sm text-muted-foreground">
+                            {t('requests.freeze_note')}
+                          </p>
+                        )}
+
+                        <p className="mb-2 text-sm font-semibold text-ink">
+                          {t('requests.choose_enrollment')}
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {open.eligible.map((e) => {
+                            const selected = chosen?.enrollmentId === e.enrollmentId
+                            return (
+                              <button
+                                key={e.enrollmentId}
+                                type="button"
+                                onClick={() => setEnrollmentId(e.enrollmentId)}
+                                aria-pressed={selected}
+                                className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                                  selected
+                                    ? 'border-brand-blue bg-brand-blue text-white'
+                                    : 'border-line bg-white text-muted-foreground hover:border-brand-blue hover:text-brand-blue'
+                                }`}
+                              >
+                                {e.courseName}
+                              </button>
+                            )
+                          })}
+                        </div>
+
+                        {chosen && (
+                          <div className="mt-4 rounded-xl border border-line bg-white p-4">
+                            <ReceiptUploadForm
+                              amountCents={open.priceCents}
+                              currency={open.currency}
+                              submitLabel={t('requests.submit')}
+                              onSubmit={submit}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+          </Card>
+        )}
       </section>
 
       {justSubmitted && (

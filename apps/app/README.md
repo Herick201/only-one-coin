@@ -35,7 +35,7 @@ que muda a tela.
 | --- | --- |
 | Checkout público (`/enrollment`) | **Real**: hold de vaga, upload por URL assinada, Turnstile, submit |
 | Login do aluno (`/login`, `/forgot-password`, `/access/[token]`) | **Real**: e-mail ou documento, definir/recuperar senha por link |
-| Portal do aluno (`/portal/*`) | Sessão real; dados mock, exceto nome e e-mail (`GET /portal/me`) — OOC-32 |
+| Portal do aluno (`/portal/*`) | **Real** (OOC-32): sessão (`GET /portal/me`) e dados (`GET /portal/overview`) — ficha, apoderado, matrículas, pagamentos, próxima aula, comprovante por URL assinada. Sem backend ainda, chegam vazios: módulos/mensalidade/cadeado, documentos, trâmites pagos, avisos, ofertas de continuação. Perfil só leitura |
 | Login, convite e senha do staff | **Real** (Better Auth). Falta MFA — OOC-29 |
 | Alunos (`/backoffice/students`) | **Real**: diretório com busca/filtros no servidor, cadastro, ficha com matrículas, edição de aluno e apoderado, aba Atividade. Faltam documentos emitidos e trâmites (OOC-33), suspensão e exportação |
 | Matrículas (`/backoffice/enrollments`) | **Real**: só vaga confirmada; abertura manual manda pra Pagos |

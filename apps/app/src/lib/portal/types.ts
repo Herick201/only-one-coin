@@ -1,9 +1,9 @@
 /**
- * Domain shapes for the student portal UI (mockup phase).
- *
- * These mirror the future database rows described in CLAUDE.md §4 glossary and
- * §5 architecture — same names, same enums — so the UI can later swap the mock
- * source for real queries without touching a single component.
+ * Domain shapes for the student portal UI, filled from `GET /portal/overview`
+ * by `lib/portal/session.ts` (OOC-32). Same names and enums as the database
+ * rows (CLAUDE.md §4 glossary). Parts with no backend yet — modules, monthly
+ * billing, documents, requests, notices, offers — keep their shape here and
+ * arrive empty until the ticket that builds them.
  *
  * Money is always integer cents (CLAUDE.md §5: `amount_cents INTEGER`, never
  * float). Timestamps are ISO 8601 UTC strings; the UI renders them in
@@ -109,7 +109,6 @@ export type NotificationKind =
   | 'next_level_invite'
 
 export interface Guardian {
-  id: string
   firstName: string
   lastName: string
   nationalIdType: NationalIdType
@@ -117,16 +116,17 @@ export interface Guardian {
   relationship: 'mother' | 'father' | 'legal_guardian'
   email: string
   phone: string
-  /** Ley 29733 consent record — CLAUDE.md §8. */
+  /**
+   * Ley 29733 consent — CLAUDE.md §8. The IP stays on the guardian's record;
+   * the student's screen has no use for it.
+   */
   consent: {
     version: string
     acceptedAt: string
-    ip: string
   } | null
 }
 
 export interface Student {
-  id: string
   firstName: string
   lastName: string
   nationalIdType: NationalIdType
@@ -136,11 +136,7 @@ export interface Student {
    * profile screen; changing it is a coordination flow, never self-service.
    */
   email: string
-  /** Self-service on the profile screen. */
   phone: string
-  /** Optional extra contacts the student adds themself. */
-  secondaryEmail: string | null
-  secondaryPhone: string | null
   birthDate: string
   /** Derived from birthDate; drives the guardian-consent flow (CLAUDE.md §1). */
   isMinor: boolean
@@ -149,7 +145,6 @@ export interface Student {
 
 /** A sellable package / plan. Price is versioned and frozen at enrollment. */
 export interface Plan {
-  id: string
   /** Data, not UI copy — this is a catalog row, like a DB value. */
   name: string
   priceCents: number
@@ -157,10 +152,7 @@ export interface Plan {
 }
 
 export interface AcademicPeriod {
-  id: string
   name: string
-  startDate: string
-  endDate: string
 }
 
 export interface WeeklySlot {
@@ -173,16 +165,16 @@ export interface WeeklySlot {
 
 /** A turma. Never `class` — reserved word (CLAUDE.md §4 glossary). */
 export interface ClassGroup {
-  id: string
-  courseId: string
   name: string
   teacherName: string
   schedule: WeeklySlot[]
-  startDate: string
-  endDate: string
-  capacity: number
-  seatsTaken: number
-  /** External Google Meet link only — no video hosting in-platform (CLAUDE.md §2). */
+  /** Null only for a class group still without dates. */
+  startDate: string | null
+  endDate: string | null
+  /**
+   * External Google Meet link only — no video hosting in-platform (CLAUDE.md
+   * §2). Always null until the class group carries one (OOC-98).
+   */
   meetingUrl: string | null
 }
 
@@ -206,7 +198,6 @@ export interface CourseModule {
 }
 
 export interface Course {
-  id: string
   name: string
   /** Short blurb — catalog data. */
   summary: string
@@ -217,6 +208,7 @@ export interface Course {
    * certification exam (CLAUDE.md §1). Documents copy reads this flag.
    */
   requiresCertificationExam: boolean
+  /** External links only. Empty until materials have a backend (OOC-100). */
   materials: CourseMaterial[]
 }
 
@@ -225,18 +217,22 @@ export interface Payment {
   amountCents: number
   currency: 'PEN'
   method: PaymentMethod
+  /** The free-text label when `method` is `other` (CLAUDE.md §4 glossary). */
+  methodDetail: string | null
   status: PaymentStatus
-  /** Provider operation number read from the receipt. */
+  /** Provider operation number the student typed. */
   operationNumber: string | null
-  /** Date on the receipt — when the student says they paid. */
-  paidAt: string | null
+  /** When the payment (and its receipt) went in. */
+  submittedAt: string
+  /** When a person approved or rejected it; null while it waits. */
+  settledAt: string | null
   /**
-   * The receipt the student sent, so they can open it again. Null while none
-   * was uploaded. In production this is never a public link: the bucket is
-   * private and the portal mints a signed URL of 5 minutes scoped to the
-   * student, and the access is logged (CLAUDE.md §8).
+   * A processed receipt exists, so the student can open it again. Never a
+   * link of its own: the bucket is private, and the portal asks the API for a
+   * 5-minute URL scoped to the student only when they click — every opening
+   * is logged (CLAUDE.md §8).
    */
-  receiptUrl: string | null
+  hasReceipt: boolean
 }
 
 /**
@@ -264,8 +260,8 @@ export interface MonthlyBilling {
 export interface Enrollment {
   id: string
   /**
-   * Human-readable enrollment code the student quotes for support — course
-   * short code + sequence (`IN-1122`). Generated server-side and immutable;
+   * Human-readable enrollment code the student quotes for support — the same
+   * tracking code the ledger shows (`OOC-2026-1188`), derived server-side;
    * the internal `id` never reaches the screen (CLAUDE.md §4).
    */
   code: string
@@ -275,20 +271,24 @@ export interface Enrollment {
   course: Course
   classGroup: ClassGroup
   plan: Plan
-  /** Price version frozen at enrollment time (CLAUDE.md §5). */
-  planPriceId: string
   academicPeriod: AcademicPeriod
   billingMode: BillingMode
   /** Present only when billingMode === 'monthly' (English, CLAUDE.md §1). */
   monthly: MonthlyBilling | null
+  /** Empty until course modules have a backend (OOC-94 / OOC-85). */
   modules: CourseModule[]
   /**
-   * The enrollment payment: the whole package, or — for monthly — the first
-   * module (the one that opened the enrollment). Later months live in
-   * `monthly.payments`.
+   * Every payment written for this enrollment, newest first — the package, or
+   * a replacement after a rejected receipt. The newest one speaks for the
+   * seat, as on the ledger. Months of a monthly enrollment will live in
+   * `monthly.payments` (OOC-86).
    */
-  payment: Payment
-  /** The portal cadeado on the "join class" option (CLAUDE.md §1). */
+  payments: Payment[]
+  /**
+   * The portal cadeado on the "join class" option (CLAUDE.md §1). Null until
+   * monthly billing and module progression exist (OOC-86 / OOC-85) — nothing
+   * stored today can lock a class.
+   */
   classAccessLock: ClassAccessLock
   /**
    * Final grade once the class group closes. ≥ 14 earns the free certificate;
@@ -296,7 +296,11 @@ export interface Enrollment {
    * (docs/DOCUMENTOS-E-CERTIFICADOS.md). Null while the course runs.
    */
   finalGrade: number | 'did_not_attempt' | null
-  /** Progress 0–100 for active/completed enrollments; null while under review. */
+  /**
+   * Progress 0–100 for active/completed enrollments; null while under review,
+   * and null for every enrollment until modules and grades are recorded —
+   * the calendar alone is not progress.
+   */
   progressPct: number | null
 }
 
