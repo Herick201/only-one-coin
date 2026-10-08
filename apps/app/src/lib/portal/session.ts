@@ -2,13 +2,19 @@ import { cache } from 'react'
 import { getLocale } from 'next-intl/server'
 import { redirect } from '@/i18n/navigation'
 import { apiFetch } from '@/lib/backoffice/api-client'
-import { getPortalSession } from './mock-data'
+import { nextClassOf, toEnrollment, type OverviewResponse } from './overview'
 import type { PortalSession } from './types'
 
 export interface StudentIdentity {
   firstName: string
   lastName: string
   email: string
+}
+
+async function backToLogin(): Promise<never> {
+  const locale = await getLocale()
+  redirect({ href: '/login', locale })
+  throw new Error('unreachable')
 }
 
 /**
@@ -20,24 +26,33 @@ export interface StudentIdentity {
  */
 export const getStudentSession = cache(async (): Promise<StudentIdentity> => {
   const response = await apiFetch('/api/v1/portal/me')
-  if (!response.ok) {
-    const locale = await getLocale()
-    redirect({ href: '/login', locale })
-    throw new Error('unreachable')
-  }
+  if (!response.ok) return backToLogin()
   return (await response.json()) as StudentIdentity
 })
 
 /**
- * The portal's data until it is wired to the API (spec 2026-10-05, decision
- * 2): the mock persona's courses, payments and documents, under the real
- * student's name and e-mail.
+ * Everything the portal shows, from `GET /portal/overview` (OOC-32) —
+ * memoized per request, so the layout and the page share one call. Same
+ * guard as `getStudentSession`: any non-OK answer is back to the login.
+ *
+ * What has no backend yet arrives empty, never as sample data: documents
+ * (OOC-33), paid requests and their price table (OOC-83), notices and
+ * continuation offers. The screens already have an empty state for each.
  */
-export async function getPortalView(): Promise<PortalSession> {
-  const identity = await getStudentSession()
-  const mock = getPortalSession()
+export const getPortalView = cache(async (): Promise<PortalSession> => {
+  const response = await apiFetch('/api/v1/portal/overview')
+  if (!response.ok) return backToLogin()
+  const overview = (await response.json()) as OverviewResponse
+
+  const enrollments = overview.enrollments.map(toEnrollment)
   return {
-    ...mock,
-    student: { ...mock.student, firstName: identity.firstName, lastName: identity.lastName, email: identity.email },
+    student: overview.student,
+    enrollments,
+    documents: [],
+    requests: [],
+    procedures: [],
+    offers: [],
+    notifications: [],
+    nextClass: nextClassOf(enrollments, new Date()),
   }
-}
+})

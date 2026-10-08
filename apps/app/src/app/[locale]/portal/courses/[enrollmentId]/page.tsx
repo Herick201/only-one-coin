@@ -1,8 +1,7 @@
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
-import { getEnrollment } from '@/lib/portal/mock-data'
-import { getStudentSession } from '@/lib/portal/session'
+import { getPortalView } from '@/lib/portal/session'
 import { getFeatureFlags } from '@/lib/feature-flags/server'
 import { formatDate, formatMoney } from '@/lib/portal/format'
 import type { CourseMaterial, Locale } from '@/lib/portal/types'
@@ -25,11 +24,13 @@ export default async function CourseDetailPage({
   const { locale: raw, enrollmentId } = await params
   const locale = raw as Locale
   setRequestLocale(raw)
-  await getStudentSession()
   const t = await getTranslations('portal')
 
   const flags = await getFeatureFlags()
-  const enrollment = getEnrollment(enrollmentId)
+  // Looked up among the student's own enrollments only — an id from the URL
+  // that is not theirs is a 404, never someone else's course (CLAUDE.md §8).
+  const { enrollments } = await getPortalView()
+  const enrollment = enrollments.find((e) => e.id === enrollmentId)
   if (!enrollment) notFound()
 
   const { course, classGroup, plan, academicPeriod, monthly } = enrollment
@@ -88,12 +89,14 @@ export default async function CourseDetailPage({
                 </li>
               ))}
             </ul>
-            <p className="mt-3 text-xs text-muted-foreground">
-              {t('course_detail.period_dates', {
-                start: formatDate(classGroup.startDate, locale),
-                end: formatDate(classGroup.endDate, locale),
-              })}
-            </p>
+            {classGroup.startDate && classGroup.endDate && (
+              <p className="mt-3 text-xs text-muted-foreground">
+                {t('course_detail.period_dates', {
+                  start: formatDate(classGroup.startDate, locale),
+                  end: formatDate(classGroup.endDate, locale),
+                })}
+              </p>
+            )}
             <div className="mt-4">
               {/* The cadeado (CLAUDE.md §1): the lock is this portal option,
                   never a Classroom integration. */}

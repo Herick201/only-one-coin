@@ -1,6 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { getPortalSession } from '@/lib/portal/mock-data'
-import { getStudentSession } from '@/lib/portal/session'
+import { getPortalView } from '@/lib/portal/session'
 import { PageHeader } from '@/components/portal/ui'
 import { ContinueView } from './continue-view'
 
@@ -11,10 +10,9 @@ export default async function ContinuePage({
 }) {
   const { locale } = await params
   setRequestLocale(locale)
-  await getStudentSession()
   const t = await getTranslations('portal')
 
-  const { offers } = getPortalSession()
+  const { offers } = await getPortalView()
 
   return (
     <div>

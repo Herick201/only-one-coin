@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
-import { getPortalSession } from '@/lib/portal/mock-data'
-import { getStudentSession } from '@/lib/portal/session'
+import { getPortalView } from '@/lib/portal/session'
+import { currentPayment } from '@/lib/portal/overview'
 import { getFeatureFlags } from '@/lib/feature-flags/server'
 import type {
   Enrollment,
@@ -12,6 +12,7 @@ import type {
 import { Card, EmptyState, PageHeader } from '@/components/portal/ui'
 import { StatusTabs, type StatusTab } from '@/components/portal/status-tabs'
 import { Icon } from '@/components/portal/icons'
+import { ReceiptLink } from '@/components/portal/receipt-link'
 import { AutoGrid } from '@/components/layout/auto-grid'
 
 /**
@@ -73,14 +74,14 @@ export default async function EnrollmentPage({
 }) {
   const { locale: raw } = await params
   setRequestLocale(raw)
-  await getStudentSession()
   const t = await getTranslations('portal')
 
   const flags = await getFeatureFlags()
-  const { enrollments } = getPortalSession()
+  const { enrollments } = await getPortalView()
 
   function card(e: Enrollment) {
-    const note = noteFor[e.payment.status]
+    const latest = currentPayment(e)
+    const note = latest ? noteFor[latest.status] : undefined
 
     // Days that share a time are one entry: "Seg · Qua 18:00–19:30".
     const slots: { time: string; days: string[] }[] = []
@@ -113,9 +114,9 @@ export default async function EnrollmentPage({
           }))
         : [
             {
-              key: e.payment.id,
+              key: latest?.id ?? e.id,
               label: t(`billing_mode.${e.billingMode}`),
-              payment: e.payment,
+              payment: latest,
             },
           ]
 
@@ -154,12 +155,15 @@ export default async function EnrollmentPage({
           </p>
           <ul className="mt-1 divide-y divide-line border-t border-line">
             {payments.map((row) => {
-              // Two states, not four: paid, or waiting for the student. The
-              // one in between — receipt sent, OCR still deciding — keeps its
-              // own word, because telling that student to pay would have them
-              // pay twice.
+              // Paid, or waiting for the student. The one in between —
+              // receipt sent, a person still deciding — keeps its own word,
+              // because telling that student to pay would have them pay
+              // twice. A refused receipt says so in red and leaves the why to
+              // the note under the list; the shortcut to Pagos is only for a
+              // month with no payment at all.
               const settled = row.payment?.status === 'approved'
               const reviewing = row.payment?.status === 'under_review'
+              const refused = row.payment?.status === 'rejected'
               return (
                 <li
                   key={row.key}
@@ -184,20 +188,16 @@ export default async function EnrollmentPage({
                           ? t('enrollments.state_paid')
                           : t('payment_status.under_review')}
                       </span>
-                      {/* The receipt the student sent, theirs to open again. In
-                          production the href is a signed URL of 5 min scoped to
-                          the student, minted on click (CLAUDE.md §8). */}
-                      {row.payment?.receiptUrl && (
-                        <a
-                          href={row.payment.receiptUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-blue transition hover:text-brand-blue-deep"
-                        >
-                          <Icon name="doc" size={14} />
-                          {t('enrollments.view_receipt')}
-                        </a>
+                      {/* The receipt the student sent, theirs to open again —
+                          a 5-minute URL minted on click (CLAUDE.md §8). */}
+                      {row.payment?.hasReceipt && (
+                        <ReceiptLink paymentId={row.payment.id} />
                       )}
+                    </span>
+                  ) : refused ? (
+                    <span className="flex items-center gap-2 font-medium text-red-700">
+                      <span className="h-2 w-2 rounded-full bg-red-500" />
+                      {t('payment_status.rejected')}
                     </span>
                   ) : (
                     <span className="flex items-center gap-3">
