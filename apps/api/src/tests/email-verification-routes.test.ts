@@ -4,6 +4,7 @@ import {
   EmailVerificationCodeInvalidError,
   EmailVerificationCooldownError,
   EmailVerificationRequiredError,
+  SeatHoldExpiredError,
 } from "@ooc/domain";
 import { buildApp } from "@/app.js";
 import { container } from "@/container.js";
@@ -79,6 +80,16 @@ describe("POST /enrollments/email-verifications", () => {
 
     expect(response.statusCode).toBe(429);
     expect(response.json()).toMatchObject({ reason: "email_verification.cooldown" });
+  });
+
+  it("answers an expired seat hold as 422 with its own reason", async () => {
+    vi.spyOn(container.edge.captcha, "verify").mockResolvedValue("passed");
+    vi.spyOn(container.useCases.enrollment.sendEmailVerification, "run").mockRejectedValue(new SeatHoldExpiredError());
+
+    const response = await send(SEND);
+
+    expect(response.statusCode).toBe(422);
+    expect(response.json()).toMatchObject({ reason: "enrollment.seat_hold_expired" });
   });
 });
 
