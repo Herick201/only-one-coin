@@ -67,6 +67,15 @@
         "If you did not ask for this, ignore this e-mail: your password stays the same."
       ],
       "action": "Set a new password"
+    },
+    "email_verification_code": {
+      "subject": "Your verification code: {code}",
+      "preheader": "Type it into the enrollment form. It expires in 10 minutes.",
+      "paragraphs": [
+        "You are completing an enrollment at Only One Coin. To confirm this address is yours, type this code into the form:",
+        "{code}",
+        "The code expires in 10 minutes. If you are not enrolling, ignore this e-mail."
+      ]
     }
   }
 }
