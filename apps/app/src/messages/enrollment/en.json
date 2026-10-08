@@ -186,6 +186,7 @@
       "national_id_format": "Check the number: a DNI has 8 digits; a foreigner's card, 9 to 12 letters or digits; a passport, 6 to 12.",
       "phone_format": "Enter a valid mobile number.",
       "email_format": "Enter a valid email address.",
+      "email_mismatch": "The two addresses do not match.",
       "email_must_be_gmail": "It must be a Gmail account. Institutional and corporate addresses are not accepted.",
       "email_gmail_username_invalid": "That Gmail address cannot exist: the username must be 6–30 characters, only letters, numbers and dots (no “+”, no dot at the start or end, no two dots in a row).",
       "birth_date_range": "Check the date of birth.",

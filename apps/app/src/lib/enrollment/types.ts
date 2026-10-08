@@ -236,6 +236,9 @@ export interface GuardianDraft {
   phone: string
   /** No Gmail constraint here: Classroom access belongs to the student. */
   email: string
+  /** Typed twice: no code proves this address (spec 2026-10-07), so a typo
+   * here is caught only by the reader agreeing with themselves. */
+  emailConfirmation: string
   consentAccepted: boolean
 }
 
@@ -266,11 +269,22 @@ export interface PaymentDraft {
   receipt: ReceiptDraft | null
 }
 
+/**
+ * The student's e-mail, proven with the 6-digit code on this checkout's seat
+ * hold (spec 2026-10-07). Kept so a reload does not ask for the code again;
+ * it only counts while both the hold and the address still match.
+ */
+export interface EmailVerificationProof {
+  holdId: string
+  email: string
+}
+
 export interface CheckoutDraft {
   course: CourseDraft
   student: StudentDraft
   guardian: GuardianDraft
   payment: PaymentDraft
+  emailVerification: EmailVerificationProof | null
   /** Resolved once, on first arrival, and carried to submit. */
   source: EnrollmentSource
   /** Campaign parameters, kept apart from the business field, for reporting. */

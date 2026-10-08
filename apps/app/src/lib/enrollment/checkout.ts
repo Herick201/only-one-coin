@@ -8,6 +8,7 @@ import {
   NationalIdField,
   nationalIdIssue,
   type NationalIdType,
+  normalizeEmail,
   normalizeNationalId,
   OperationNumberField,
   PersonNameField,
@@ -300,7 +301,12 @@ export function validateGuardian(draft: GuardianDraft): FieldErrors<GuardianFiel
   setIf(errors, 'nationalId', nationalIdError(draft.nationalIdType, draft.nationalId))
   setIf(errors, 'phone', issueOf(PhoneField, phoneNumberOf(draft.phone)))
   // Any provider: Classroom belongs to the student.
-  setIf(errors, 'email', issueOf(EmailField, draft.email))
+  const emailError = issueOf(EmailField, draft.email)
+  if (emailError) errors.email = emailError
+  // Typed twice, compared as the server will store it.
+  else if (normalizeEmail(draft.emailConfirmation) !== normalizeEmail(draft.email)) {
+    errors.emailConfirmation = 'email_mismatch'
+  }
 
   if (!draft.consentAccepted) errors.consentAccepted = 'consent_required'
 
@@ -362,9 +368,11 @@ export function emptyDraft(source: EnrollmentSource = 'web'): CheckoutDraft {
       relationship: 'mother',
       phone: '',
       email: '',
+      emailConfirmation: '',
       consentAccepted: false,
     },
     payment: { method: null, operationNumber: '', receipt: null },
+    emailVerification: null,
     source,
     campaign: {},
   }

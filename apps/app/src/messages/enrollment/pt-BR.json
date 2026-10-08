@@ -186,6 +186,7 @@
       "national_id_format": "Confira o número: o DNI tem 8 dígitos; o carnê de estrangeiro, de 9 a 12 letras ou números; o passaporte, de 6 a 12.",
       "phone_format": "Escreva um número de celular válido.",
       "email_format": "Escreva um e-mail válido.",
+      "email_mismatch": "Os dois e-mails não coincidem.",
       "email_must_be_gmail": "Precisa ser uma conta do Gmail. Não aceitamos e-mails institucionais nem corporativos.",
       "email_gmail_username_invalid": "Esse e-mail do Gmail não existe: o nome de usuário precisa ter de 6 a 30 caracteres, só letras, números e pontos (sem «+», sem ponto no início ou no fim, sem dois pontos seguidos).",
       "birth_date_range": "Confira a data de nascimento.",
