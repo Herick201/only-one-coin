@@ -74,11 +74,11 @@ afterEach(async () => {
 
 async function cleanUp(): Promise<void> {
   const holds = db.select({ id: seatHolds.id }).from(seatHolds).where(eq(seatHolds.classGroupId, GROUP));
-  await db.delete(emailVerifications).where(inArray(emailVerifications.seatHoldId, holds));
   const ids = await db.select({ id: emailVerifications.id }).from(emailVerifications).where(inArray(emailVerifications.seatHoldId, holds));
   if (ids.length > 0) {
     await db.delete(outbox).where(inArray(outbox.dedupeKey, ids.map(({ id }) => `email_verification_code:${id}:student`)));
   }
+  await db.delete(emailVerifications).where(inArray(emailVerifications.seatHoldId, holds));
   await db.delete(seatHolds).where(eq(seatHolds.classGroupId, GROUP));
   await db.delete(classGroups).where(eq(classGroups.id, GROUP));
   await db.delete(courses).where(eq(courses.id, COURSE));
@@ -153,6 +153,19 @@ describe("DrizzleEmailVerificationRepository.issue", () => {
 
     const latest = await repository.findLatest({ seatHoldId: holdId, email: EMAIL });
     expect(latest!.codeHash).toBe(hashVerificationCode(latest!.id, "222222"));
+  });
+});
+
+describe("cleanUp", () => {
+  it("removes the outbox rows of this suite's verifications", async () => {
+    const issued = request();
+    await repository.issue(issued);
+    const key = `email_verification_code:${issued.id}:student`;
+    expect(await db.select().from(outbox).where(eq(outbox.dedupeKey, key))).toHaveLength(1);
+
+    await cleanUp();
+
+    expect(await db.select().from(outbox).where(eq(outbox.dedupeKey, key))).toHaveLength(0);
   });
 });
 
