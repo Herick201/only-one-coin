@@ -185,8 +185,9 @@ export function getSeatWatch(): SeatWatchItem[] {
 type ClassGroupStudentSeed = Omit<ClassGroupStudent, 'examGrade' | 'notes'> &
   Partial<Pick<ClassGroupStudent, 'examGrade' | 'notes'>>
 
-type ClassGroupSeed = Omit<ClassGroupDetail, 'pendingGrades' | 'students'> & {
+type ClassGroupSeed = Omit<ClassGroupDetail, 'pendingGrades' | 'students' | 'notices'> & {
   students: ClassGroupStudentSeed[]
+  notices?: ClassGroupDetail['notices']
 }
 
 function serveStudents(students: ClassGroupStudentSeed[]): ClassGroupStudent[] {
@@ -240,8 +241,9 @@ function pendingGradesOf(group: ClassGroupSeed): number {
 
 export function listClassGroups(): ClassGroupRow[] {
   return classGroups.map((group) => {
-    const { students, ...row } = group
+    const { students, notices, ...row } = group
     void students
+    void notices
     return { ...row, pendingGrades: pendingGradesOf(group) }
   })
 }
@@ -252,6 +254,7 @@ export function getClassGroup(id: string): ClassGroupDetail | undefined {
   return {
     ...group,
     students: serveStudents(group.students),
+    notices: group.notices ?? [],
     pendingGrades: pendingGradesOf(group),
   }
 }
@@ -266,6 +269,7 @@ export function listClassGroupRosters(): ClassGroupDetail[] {
   return classGroups.map((group) => ({
     ...group,
     students: serveStudents(group.students),
+    notices: group.notices ?? [],
     pendingGrades: pendingGradesOf(group),
   }))
 }

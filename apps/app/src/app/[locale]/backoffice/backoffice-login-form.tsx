@@ -54,7 +54,19 @@ function Heading({ title, subtitle }: { title: string; subtitle: string }) {
  * language. Only a request that never got that answer — network, 5xx — shows
  * an error.
  */
-export function BackofficeLoginForm() {
+export function BackofficeLoginForm({
+  homeHref = '/backoffice/home',
+  heading,
+}: {
+  /**
+   * Where a correct password lands. The docente portal passes its own home;
+   * the role read server-side there sends anybody else back here
+   * (CLAUDE.md §8) — the form never decides who is who.
+   */
+  homeHref?: '/backoffice/home' | '/docente/home'
+  /** Already translated by the page; the backoffice copy when absent. */
+  heading?: { title: string; subtitle: string }
+} = {}) {
   const t = useTranslations('backoffice')
   const locale = useLocale()
   const router = useRouter()
@@ -101,14 +113,14 @@ export function BackofficeLoginForm() {
       return
     }
 
-    router.push('/backoffice/home')
+    router.push(homeHref)
   }
 
   function onMfa(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (pending) return
     // Mocked panel — the real session (and MFA check) comes with the backend.
-    mockRoundTrip(() => router.push('/backoffice/home'))
+    mockRoundTrip(() => router.push(homeHref))
   }
 
   async function onRecover(event: React.FormEvent<HTMLFormElement>) {
@@ -267,7 +279,10 @@ export function BackofficeLoginForm() {
 
   return (
     <form onSubmit={(event) => void onCredentials(event)} className={cardClass} noValidate>
-      <Heading title={t('title')} subtitle={t('subtitle')} />
+      <Heading
+        title={heading?.title ?? t('title')}
+        subtitle={heading?.subtitle ?? t('subtitle')}
+      />
 
       {error && (
         <div

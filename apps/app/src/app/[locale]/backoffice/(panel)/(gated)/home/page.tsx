@@ -16,7 +16,6 @@ import {
 } from '@/lib/backoffice/mock-data'
 import { getStaffSession } from '@/lib/backoffice/session'
 import { getFeatureFlags } from '@/lib/feature-flags/server'
-import { isRestrictedToOwnClassGroups } from '@/lib/backoffice/permissions'
 import { formatDate, formatDateTime, formatMoney, type Locale } from '@/lib/format'
 import { reviewFlagTone, seatPressureTone } from '@/components/backoffice/status-tone'
 import { StatusPill, toneBar } from '@/components/backoffice/status-pill'
@@ -31,7 +30,6 @@ import {
 } from '@/components/ui/table'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
-import { TeacherHome } from './teacher-home'
 import { AutoGrid } from '@/components/layout/auto-grid'
 
 /**
@@ -50,12 +48,6 @@ export default async function BackofficeHomePage({
   const t = await getTranslations('bo')
 
   const staff = await getStaffSession()
-
-  /* A teacher gets their own home, not this one with the money removed — see
-     `TeacherHome` for why it is a separate screen. */
-  if (isRestrictedToOwnClassGroups(staff.role)) {
-    return <TeacherHome staff={staff} locale={locale} />
-  }
 
   const flags = await getFeatureFlags()
   const metrics = getDashboardMetrics()
