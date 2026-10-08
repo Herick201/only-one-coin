@@ -53,7 +53,7 @@ const PortalOverviewSchema = z.object({
     nationalId: z.string(),
     email: z.string(),
     phone: z.string(),
-    birthDate: z.string(),
+    birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     isMinor: z.boolean(),
     guardian: z
       .object({
@@ -105,7 +105,10 @@ export const getPortalOverviewRoute = RouteBuilder.get("/portal/overview")
         nationalId: student.nationalId,
         email: student.email,
         phone: student.phone,
-        birthDate: student.birthDate.toISOString(),
+        // A calendar date, stored as UTC midnight (BirthDateField): sent as
+        // `YYYY-MM-DD` so the screen prints it as written — read as an
+        // instant in America/Lima it lands on the day before.
+        birthDate: student.birthDate.toISOString().slice(0, 10),
         isMinor: student.isMinor,
         guardian: student.guardian
           ? {
