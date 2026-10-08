@@ -1,6 +1,4 @@
 import type { ReactNode } from 'react'
-import { getStaffSession } from '@/lib/backoffice/session'
-import { isRestrictedToOwnClassGroups } from '@/lib/backoffice/permissions'
 import { requireFeature } from '@/lib/feature-flags/server'
 
 /**
@@ -22,14 +20,6 @@ export default async function BackofficeGatedLayout({
   children: ReactNode
 }) {
   await requireFeature('backoffice')
-
-  const staff = await getStaffSession()
-
-  /* The docente panel is a surface of its own — the same app with the rail
-     narrowed — and it can be off while the rest of the backoffice is on. A
-     teacher then meets a 404 like anyone reaching a section that does not
-     exist yet; every other cargo is untouched. */
-  if (isRestrictedToOwnClassGroups(staff.role)) await requireFeature('teacher')
 
   return <>{children}</>
 }

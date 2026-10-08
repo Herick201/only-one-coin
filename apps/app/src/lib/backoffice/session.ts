@@ -29,12 +29,13 @@ const DEMO_TEACHER_ID = 'tea_01'
  * `lib/feature-flags/server.ts`): the panel's shell and its gate both need
  * it, on every screen, and that is one call to `/me` either way.
  */
-export const getStaffSession = cache(async (): Promise<StaffUser> => {
+export const getStaffSession = cache(
+  async (loginHref: '/backoffice' | '/docente' = '/backoffice'): Promise<StaffUser> => {
   const response = await apiFetch('/api/v1/me')
 
   if (!response.ok) {
     const locale = await getLocale()
-    redirect({ href: '/backoffice', locale })
+    redirect({ href: loginHref, locale })
     // redirect() throws NEXT_REDIRECT — unreachable, closes TS control flow.
     throw new Error('unreachable')
   }
@@ -44,4 +45,25 @@ export const getStaffSession = cache(async (): Promise<StaffUser> => {
     return { ...staff, teacherId: DEMO_TEACHER_ID }
   }
   return staff
-})
+  },
+)
+
+/**
+ * The signed-in teacher, for the docente portal (`/docente`). The portal is
+ * its own door — own login, own shell — but the same auth and the same
+ * `/me`: what makes it the teacher's is the role read from the session,
+ * server-side, never a choice on the screen (CLAUDE.md §8). Anybody else who
+ * lands here is sent to the backoffice, the way a teacher who lands on the
+ * backoffice is sent here.
+ */
+export const getTeacherSession = cache(
+  async (): Promise<StaffUser & { teacherId: string }> => {
+    const staff = await getStaffSession('/docente')
+    if (staff.role !== 'teacher' || staff.teacherId === null) {
+      const locale = await getLocale()
+      redirect({ href: '/backoffice/home', locale })
+      throw new Error('unreachable')
+    }
+    return { ...staff, teacherId: staff.teacherId }
+  },
+)
