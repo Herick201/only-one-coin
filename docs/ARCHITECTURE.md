@@ -125,15 +125,9 @@ Requisito não-negociável (`CLAUDE.md` §3): processo **always-on**, porque rod
 
 Descartados: AWS App Runner (descontinuado pra novo cliente a partir de abr/2026); Heroku, Railway, Render, DigitalOcean App Platform (nenhum tem região LatAm — ~110-140ms de Lima/SP em vez de ~1-5ms); Google Cloud Run (serverless — viola o requisito de always-on, mesmo tendo região `southamerica-east1` e sendo o mais barato do levantamento).
 
-### 5.3 Caixa de e-mail (staff) — Zoho Mail Lite
+### 5.3 Caixa de e-mail (staff) — Google Workspace
 
-Distinto do Brevo (`CLAUDE.md` §3, envio transacional/campanhas): **Brevo não hospeda caixa de e-mail** — sem servidor IMAP próprio, não dá pra alguém **receber e ler** e-mail nele. Se `contato@` ou `matricula@onlyonecoin.edu.pe` precisar de alguém respondendo manualmente, é infra separada.
-
-| Critério | **Zoho Mail Lite (escolhido)** | Alternativa mais robusta — Google Workspace |
-| --- | --- | --- |
-| Preço | US$1/usuário/mês | US$8,40/usuário/mês (Business Starter) |
-| Armazenamento | 5-10 GB | 30 GB pooled |
-| Por que não a alternativa agora | — | Custo ~8x maior se justifica pelo admin console/MFA/DLP mais maduro do Google — não é a prioridade agora pro volume de staff do projeto |
+Distinto do Brevo (`CLAUDE.md` §3, envio transacional/campanhas): **Brevo não hospeda caixa de e-mail** — sem IMAP próprio, ninguém **recebe e lê** e-mail nele. A caixa do domínio (`contato@`, `matricula@`) fica no **Google Workspace**, que já rodava no `onlyonecoin.edu.pe` antes da plataforma. O Zoho Mail Lite chegou a ser escolhido em 17/08/2026 pelo preço (US$1 × US$8,40/usuário/mês), nunca foi implementado e saiu em 07/10/2026: migrar caixas que já funcionam não compensava a diferença.
 
 ### 5.4 Storage (comprovante de pagamento + backup) — Tigris (Fly.io)
 
@@ -230,7 +224,7 @@ Envelope de resposta pública (`apps/api/src/shared/http/ErrorResponseSchema.ts`
 
 Migration "vazia inicial" (Sessão 3) gerada com `drizzle-kit generate --custom` — o modo padrão (`generate`, diff de schema) não produz arquivo quando não há tabela nenhuma ainda; `--custom` existe justamente pra SQL que não vem de diff de schema (baseline vazia, extensão, seed pontual). `Drizzle ORM` como client de query em `apps/api` (substituindo `pg` cru nos repositórios) é decisão separada, ainda em aberto — este fechamento cobre só schema/migration em `packages/db`.
 
-**Migration de produção é automática no deploy, sempre atrás de backup (sessão 31/08/2026).** `.github/workflows/deploy-api.yml` roda um job `backup-and-migrate` entre o CI e o `flyctl deploy`: `pg_dump` do Neon de produção → `gzip` → upload pro bucket Tigris `only-one-coin-backups` (S3-compatible, `https://t3.storage.dev`) e só then a migration (`pnpm --filter @ooc/db db:migrate`). Se o backup falhar, a migration não roda; se a migration falhar, o deploy não roda — mecaniza o `CLAUDE.md` §7 ("migration em produção sempre depois de backup") sem depender de alguém lembrar de rodar o comando manualmente. Não substitui o backup periódico do `CLAUDE.md` §3 ("pg_dump → Tigris via Scheduled Function") — aquele ainda não existe e cobre a janela entre deploys; este é só o snapshot imediatamente antes de qualquer mudança de schema chegar em produção.
+**Migration de produção é automática no deploy, sempre atrás de backup (sessão 31/08/2026).** `.github/workflows/deploy-api.yml` roda um job `backup-and-migrate` entre o CI e o `flyctl deploy`: `pg_dump` do Neon de produção → `gzip` → upload pro bucket Tigris `only-one-coin-backups` (S3-compatible, `https://t3.storage.dev`) e só then a migration (`pnpm --filter @ooc/db db:migrate`). Se o backup falhar, a migration não roda; se a migration falhar, o deploy não roda — mecaniza o `CLAUDE.md` §7 ("migration em produção sempre depois de backup") sem depender de alguém lembrar de rodar o comando manualmente. **É o único backup (decisão de 07/10/2026):** o backup agendado ("pg_dump → Tigris via Scheduled Function") foi arquivado. A janela entre um deploy e o seguinte não tem cópia no Tigris — fica coberta só pela retenção de histórico do próprio Neon.
 
 Precisa de três GitHub secrets além do `FLY_API_TOKEN` já existente: `DATABASE_URL` (a mesma URL do Neon de produção, também setada como secret do Fly), `TIGRIS_ACCESS_KEY_ID` e `TIGRIS_SECRET_ACCESS_KEY` (saem de `fly storage create -a only-one-coin-api -n only-one-coin-backups`, impressas uma vez só — nunca recuperáveis depois). O nome do bucket está fixo no workflow (`only-one-coin-backups`) porque não é segredo.
 
@@ -279,7 +273,7 @@ Preços detalhados e fontes: `docs/INFRAESTRUTURA.md`. Três colunas — **free 
 | **Brevo** (transacional) | US$0 — até 9.000 e-mails/mês | **US$0** — ~6.000 e-mails/mês (5.000 × ~1,2/matrícula), dentro do free | **~US$29/mês** — ~24.000 e-mails/mês (20.000 × ~1,2) **estoura o free (9k) e o tier de 20k (US$18)**, precisa do tier de 40k | Só transacional por enquanto, sem campanha (confirmado) — ~1,2 e-mail/matrícula (credencial + boas-vindas) é estimativa, ajustar quando o fluxo real de notificação for desenhado |
 | **Redis da fila** (self-hospedado no Fly.io) | **US$2,34/mês** — máquina `shared-cpu-1x`/256MB em `iad` (US$2,19) + volume de 1GB (US$0,15) | igual | igual | Preço é por tempo ligado, **não por comando** — foi o motivo de sair do Upstash, cujo pay-as-you-go é US$0,20/100k comandos e o BullMQ é conversador. Instância compartilhada com os outros serviços da NR Labs, isolada por user de ACL (`~ooc:*`). Fica em `iad` e a API em `gru`: ~138ms de RTT por comando, trade-off aceito e documentado no repo NR-Labs/services |
 | **Redis de rate limit** | US$0 — é o mesmo Redis da fila | igual | igual | Upstash saiu da stack (03/10/2026): o rate limit roda dentro de `apps/api` sobre o `redis-nrlabs`, então não há instância nem fatura à parte. Não fica na borda da Vercel, que não alcança a rede privada do Fly (`CLAUDE.md` §3) |
-| **Zoho Mail** (mailbox) | US$0 — até 5 caixas | US$0-3/mês | igual | Não depende do volume de aluno. Quantidade de caixas não confirmada (usei 3 de exemplo) |
+| **Google Workspace** (mailbox) | já pago pelo cliente, fora desta conta | igual | igual | Não depende do volume de aluno |
 | **Sentry / PostHog / Vercel / Turnstile** | US$0 | **US$0 (provável)** | **US$0 (provável)** | Não escalam linearmente com matrícula nesse volume — free tier de cada um (5k erros, 1M eventos, 100GB banda) tem folga |
 | **Total produção** | — | **~US$86-88/mês** | **~US$120-125/mês** | Neon domina os dois cenários (~65-90% do total); Brevo é o item que mais varia entre normal e pico |
 

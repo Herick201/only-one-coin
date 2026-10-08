@@ -54,7 +54,7 @@ src/
     enrollment/                           # ClaimSeatHoldRoute, ReleaseSeatHoldRoute e SubmitPublicEnrollmentRoute (checkout público), CreateManualEnrollmentRoute e ListEnrollmentsRoute (backoffice)
     identity/                             # staff: convite, promoção de cargo, acesso, redefinição de senha, bitácora
     platform/                             # feature flags: Get/List/Set; settings: GetPlatformSettings, UpdateCheckoutHoldMinutes
-    student/                              # GetStudentRoute, ListStudentsRoute, RegisterStudentRoute
+    student/                              # diretório e seletor (ListStudents, SearchStudents), ficha (GetStudent, ListStudentActivity), cadastro e edição (RegisterStudent, UpdateStudent, SaveGuardian) — cargos em studentRoles.ts
   workers/
     outbox-relay.worker.ts     # a cada 5 s oferece as linhas pending da outbox à fila send-email
     send-email.worker.ts       # entrega pelo NotificationProvider (Brevo, atrás da allowlist)

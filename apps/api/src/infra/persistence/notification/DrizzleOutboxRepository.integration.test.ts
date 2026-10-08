@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Db } from "@/infra/db/client.js";
+import { DrizzleAuditLogRepository } from "@/infra/identity/DrizzleAuditLogRepository.js";
 import { DrizzleEnrollmentEmailContextLookup } from "@/infra/persistence/enrollment/DrizzleEnrollmentEmailContextLookup.js";
 import { DrizzleEnrollmentRepository } from "@/infra/persistence/enrollment/DrizzleEnrollmentRepository.js";
 import { DrizzlePlanPriceLookup } from "@/infra/persistence/enrollment/DrizzlePlanPriceLookup.js";
@@ -117,10 +118,12 @@ function manualEnrollment(tx: Db): CreateManualEnrollmentUseCase {
     new DrizzleEnrollmentRepository(tx),
     new DrizzlePlanPriceLookup(tx),
     new DrizzleEnrollmentEmailContextLookup(tx),
+    new DrizzleAuditLogRepository(tx),
   );
 }
 
 const MANUAL_INPUT = {
+  actorId: "staff-integration",
   studentId: STUDENT,
   planId: PLAN,
   method: "yape" as const,

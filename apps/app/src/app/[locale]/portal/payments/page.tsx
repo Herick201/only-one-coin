@@ -1,6 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { getPortalSession } from '@/lib/portal/mock-data'
-import { getStudentSession } from '@/lib/portal/session'
+import { getPortalView } from '@/lib/portal/session'
 import { formatDateNumeric, formatMoney } from '@/lib/portal/format'
 import type { Locale, Payment } from '@/lib/portal/types'
 import { Card, PageHeader, SectionTitle, StatusBadge } from '@/components/portal/ui'
@@ -21,10 +20,9 @@ export default async function PaymentsPage({
   const { locale: raw } = await params
   const locale = raw as Locale
   setRequestLocale(raw)
-  await getStudentSession()
   const t = await getTranslations('portal')
 
-  const { enrollments, requests } = getPortalSession()
+  const { enrollments, requests } = await getPortalView()
 
   /**
    * Monthly enrollments with something still to pay, one card each. The card
@@ -58,7 +56,9 @@ export default async function PaymentsPage({
   })
 
   /**
-   * Everything already paid (or being validated), newest first. The row keeps
+   * Every payment ever sent, newest first — dated by when the receipt went
+   * in, the one date every row has (a payment still waiting on a person has
+   * no settlement date yet). The row keeps
    * the course and what was bought apart — one column each — instead of gluing
    * them into a sentence: a column of names is what the eye scans down.
    */
@@ -84,14 +84,12 @@ export default async function PaymentsPage({
           ]
         })
       }
-      return [
-        {
-          id: e.payment.id,
-          name: e.course.name,
-          type: 'package',
-          payment: e.payment,
-        },
-      ]
+      return e.payments.map<HistoryRow>((payment) => ({
+        id: payment.id,
+        name: e.course.name,
+        type: 'package',
+        payment,
+      }))
     }),
     ...requests.map<HistoryRow>((r) => ({
       id: r.payment.id,
@@ -99,7 +97,7 @@ export default async function PaymentsPage({
       type: 'procedure',
       payment: r.payment,
     })),
-  ].sort((a, b) => (b.payment.paidAt ?? '').localeCompare(a.payment.paidAt ?? ''))
+  ].sort((a, b) => b.payment.submittedAt.localeCompare(a.payment.submittedAt))
 
   return (
     <div className="flex flex-col gap-8">
@@ -174,8 +172,7 @@ export default async function PaymentsPage({
                         {t(`payments.type_${row.type}`)}
                       </td>
                       <td className="whitespace-nowrap px-5 py-3.5 text-center tabular-nums text-muted-foreground">
-                        {row.payment.paidAt &&
-                          formatDateNumeric(row.payment.paidAt, locale)}
+                        {formatDateNumeric(row.payment.submittedAt, locale)}
                       </td>
                       <td className="whitespace-nowrap px-5 py-3.5 text-right tabular-nums font-semibold text-ink">
                         {formatMoney(

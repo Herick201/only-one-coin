@@ -1,7 +1,7 @@
 # Regras de Negócio — Only One Coin
 
-> **Fonte:** `docs/base-conhecimentos.json` — export da configuração do bot de vendas
-> (Yavendio) que hoje atende pelo WhatsApp. Não é uma especificação de sistema:
+> **Fonte:** export da configuração do bot de vendas (Yavendio, 15/08/2026 — o
+> arquivo saiu do repo em 07/10/2026; está no histórico do Git) que hoje atende pelo WhatsApp. Não é uma especificação de sistema:
 > é o retrato do **processo comercial atual**, capturado para servir de base ao
 > desenho do catálogo, preços e políticas da nova plataforma (ver `REQUISITOS.md`).
 >
@@ -231,7 +231,7 @@ Não são regras de sistema, mas documentam como a marca se comunica hoje — ú
 
 ## 11. Inconsistências identificadas na fonte (confirmar com o cliente, não escolher um lado sozinho)
 
-O `base-conhecimentos.json` é um acúmulo de instruções escritas em momentos diferentes por quem opera o bot — várias FAQs se contradizem entre si. Listado aqui para não "resolver" nada por conta própria:
+O export do bot era um acúmulo de instruções escritas em momentos diferentes por quem opera o bot — várias FAQs se contradizem entre si. Listado aqui para não "resolver" nada por conta própria:
 
 | Tema | Versão A | Versão B |
 |---|---|---|

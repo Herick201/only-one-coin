@@ -1,9 +1,14 @@
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
-import { getStudent } from '@/lib/backoffice/students'
+import { getStudent, getStudentActivity } from '@/lib/backoffice/students'
 import { getStaffSession } from '@/lib/backoffice/session'
-import { canBrowseStudents, canIssuePortalAccess } from '@/lib/backoffice/permissions'
+import {
+  canBrowseStudents,
+  canEditStudent,
+  canIssuePortalAccess,
+  canViewPayments,
+} from '@/lib/backoffice/permissions'
 import { initials } from '@/lib/format'
 import { Card, StatusBadge } from '@/components/backoffice/ui'
 import { studentTone } from '@/components/backoffice/status-tone'
@@ -28,7 +33,10 @@ export default async function StudentDetailPage({
   const staff = await getStaffSession()
   if (!canBrowseStudents(staff.role)) notFound()
 
-  const student = await getStudent(studentId)
+  const [student, activity] = await Promise.all([
+    getStudent(studentId),
+    getStudentActivity(studentId),
+  ])
   if (!student) notFound()
 
   const fullName = `${student.firstName} ${student.lastName}`
@@ -77,7 +85,12 @@ export default async function StudentDetailPage({
         </div>
       </Card>
 
-      <StudentFile student={student} />
+      <StudentFile
+        student={student}
+        canViewPayments={canViewPayments(staff.role)}
+        canEdit={canEditStudent(staff.role)}
+        activity={activity}
+      />
     </div>
   )
 }

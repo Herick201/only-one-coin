@@ -1,5 +1,5 @@
 ---
-import { languageSlugs, sessionPrices } from "../i18n/ui";
+import { languageSlugs, lowestSessionPrice } from "../i18n/ui";
 import { getLangFromUrl, useTranslations, withLang, formatPEN } from "../i18n/utils";
 import LanguageFlag from "./LanguageFlag.astro";
 
@@ -7,11 +7,12 @@ const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const c = t.courses;
 
-// O card anuncia o preço da SESSÃO — que é de cada curso, não um valor único
-// do site (tabela do dono, 04/09/2026): vai de S/0.60 no inglés a S/5 no
-// japonês. O total do paquete saiu da lista e mora só na página do curso.
+// O card anuncia o "desde" da SESSÃO — que é de cada curso, não um valor
+// único do site: o menor por sessão entre as formas de pagar da página dele
+// (`lowestSessionPrice`). O total do paquete saiu da lista e mora só na
+// página do curso.
 const courses = languageSlugs.map((slug) => {
-  const perSession = sessionPrices[slug];
+  const perSession = lowestSessionPrice(slug);
   return {
     slug,
     name: t.courses.list[slug],

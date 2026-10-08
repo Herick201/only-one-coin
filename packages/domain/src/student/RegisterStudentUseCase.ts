@@ -1,3 +1,4 @@
+import type { IAuditLogRepository } from "../identity/ports/IAuditLogRepository.js";
 import { BaseUseCase } from "../shared/base/BaseUseCase.js";
 import { GuardianRequiredForMinorError, StudentAlreadyRegisteredError } from "./errors.js";
 import { Guardian, type CreateGuardianDTO } from "./Guardian.js";
@@ -6,6 +7,8 @@ import { Student, type CreateStudentDTO } from "./Student.js";
 import type { IStudentRepository } from "./StudentRepository.js";
 
 export interface RegisterStudentInput {
+  /** Who registered the person — the student file's activity names them (OOC-75). */
+  actorId: string;
   student: CreateStudentDTO;
   /** Optional in general; required when the computed age is under
    * Student.MAJORITY_AGE (CLAUDE.md §1). Never carries consent — the
@@ -27,6 +30,7 @@ export class RegisterStudentUseCase extends BaseUseCase<RegisterStudentInput, Re
   constructor(
     private readonly studentRepository: IStudentRepository,
     private readonly guardianRepository: IGuardianRepository,
+    private readonly auditLog: IAuditLogRepository,
   ) {
     super();
   }
@@ -53,12 +57,17 @@ export class RegisterStudentUseCase extends BaseUseCase<RegisterStudentInput, Re
 
     const createdStudent = await this.studentRepository.create(student);
 
-    if (!input.guardian) {
-      return { student: createdStudent, guardian: null };
-    }
+    const createdGuardian = input.guardian
+      ? await this.guardianRepository.create(Guardian.create({ ...input.guardian, studentId: createdStudent.id }))
+      : null;
 
-    const guardian = Guardian.create({ ...input.guardian, studentId: createdStudent.id });
-    const createdGuardian = await this.guardianRepository.create(guardian);
+    await this.auditLog.append({
+      actorId: input.actorId,
+      action: "student.registered",
+      targetId: createdStudent.id,
+      metadata: { withGuardian: createdGuardian !== null },
+      at: createdStudent.createdAt,
+    });
 
     return { student: createdStudent, guardian: createdGuardian };
   }

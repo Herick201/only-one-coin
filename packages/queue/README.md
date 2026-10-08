@@ -19,8 +19,8 @@ O user de ACL precisa de `+info` além do `+@all -@dangerous`: o BullMQ roda
 `@dangerous`. Sem ele a API cai no boot com `NOPERM ... 'info' command` — foi o
 incidente de 03/10/2026, corrigido no `redis-entrypoint.sh` do repo services.
 
-O rate limit/idempotência (Sessão 25) vai usar este mesmo Redis, dentro de
-`apps/api` — o Upstash saiu da stack (ver `CLAUDE.md`, seção 3).
+O rate limit/idempotência (OOC-24) usa este mesmo Redis, dentro de
+`apps/api` (ver `CLAUDE.md`, seção 3).
 
 ## Estrutura
 

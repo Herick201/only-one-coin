@@ -1,10 +1,40 @@
 import { Student, type IStudentRepository, type NationalIdType } from "@ooc/domain";
 import { students } from "@ooc/db";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import type { Db } from "@/infra/db/client.js";
+
+type StudentRow = typeof students.$inferSelect;
+
+function toStudent(row: StudentRow): Student {
+  return new Student({
+    id: row.id,
+    firstName: row.firstName,
+    lastName: row.lastName,
+    nationalIdType: row.nationalIdType as NationalIdType,
+    nationalId: row.nationalId,
+    email: row.email,
+    phone: row.phone,
+    birthDate: row.birthDate,
+    country: row.country,
+    region: row.region,
+    city: row.city,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  });
+}
 
 export class DrizzleStudentRepository implements IStudentRepository {
   constructor(private readonly db: Db) {}
+
+  async findById(id: string): Promise<Student | null> {
+    const [row] = await this.db
+      .select()
+      .from(students)
+      .where(and(eq(students.id, id), isNull(students.deletedAt)))
+      .limit(1);
+
+    return row ? toStudent(row) : null;
+  }
 
   async findByNationalId(params: {
     nationalIdType: NationalIdType;
@@ -26,23 +56,7 @@ export class DrizzleStudentRepository implements IStudentRepository {
       )
       .limit(1);
 
-    if (!row) {
-      return null;
-    }
-
-    return new Student({
-      id: row.id,
-      firstName: row.firstName,
-      lastName: row.lastName,
-      nationalIdType: row.nationalIdType as NationalIdType,
-      nationalId: row.nationalId,
-      email: row.email,
-      phone: row.phone,
-      birthDate: row.birthDate,
-      country: row.country,
-      region: row.region,
-      city: row.city,
-    });
+    return row ? toStudent(row) : null;
   }
 
   async create(student: Student): Promise<Student> {
@@ -67,18 +81,32 @@ export class DrizzleStudentRepository implements IStudentRepository {
       throw new Error("Insert into students returned no row");
     }
 
-    return new Student({
-      id: row.id,
-      firstName: row.firstName,
-      lastName: row.lastName,
-      nationalIdType: row.nationalIdType as NationalIdType,
-      nationalId: row.nationalId,
-      email: row.email,
-      phone: row.phone,
-      birthDate: row.birthDate,
-      country: row.country,
-      region: row.region,
-      city: row.city,
-    });
+    return toStudent(row);
+  }
+
+  async update(student: Student): Promise<Student> {
+    const [row] = await this.db
+      .update(students)
+      .set({
+        firstName: student.firstName,
+        lastName: student.lastName,
+        nationalIdType: student.nationalIdType,
+        nationalId: student.nationalId,
+        email: student.email,
+        phone: student.phone,
+        birthDate: student.birthDate,
+        country: student.country,
+        region: student.region,
+        city: student.city,
+        updatedAt: sql`now()`,
+      })
+      .where(and(eq(students.id, student.id), isNull(students.deletedAt)))
+      .returning();
+
+    if (!row) {
+      throw new Error("Update of students matched no live row");
+    }
+
+    return toStudent(row);
   }
 }

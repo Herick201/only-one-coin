@@ -30,7 +30,7 @@ const labelClass =
 const METHODS: PaymentMethod[] = ['yape', 'plin', 'bcp', 'interbank', 'other']
 
 /** Minimum characters before searching — matches the API's own floor
- * (GET /api/v1/students), which refuses to turn a search box into a
+ * (GET /api/v1/students/search), which refuses to turn a search box into a
  * directory-enumeration primitive. */
 const MIN_QUERY_LENGTH = 2
 
@@ -46,17 +46,15 @@ export interface StudentSearchResult {
 }
 
 /**
- * `GET /api/v1/students` answers a page, not a bare array: it is the same route
- * the student directory browses, cursor-paginated since #86. A `q` search is
- * never paginated — the API returns the whole (short) match list with
- * `nextCursor` null — so the picker reads `items` and ignores the cursor.
+ * `GET /api/v1/students/search` answers a short, capped match list — the
+ * picker's own route since the directory moved to server-side paging
+ * (OOC-76). It still finds a student whose seat is under review.
  */
 interface StudentSearchPage {
   items: StudentSearchResult[]
-  nextCursor: string | null
 }
 
-const EMPTY_PAGE: StudentSearchPage = { items: [], nextCursor: null }
+const EMPTY_PAGE: StudentSearchPage = { items: [] }
 
 interface OpenClassGroup {
   id: string
@@ -96,7 +94,7 @@ interface OpenClassGroup {
  *   the one who settles it.
  *
  * Student search and the open class group list are both real reads against
- * `apps/api` (GET /api/v1/students, GET /api/v1/class-groups) — teacher and
+ * `apps/api` (GET /api/v1/students/search, GET /api/v1/class-groups) — teacher and
  * language aren't modeled on a class group yet (no teachers bounded context
  * built), so this form doesn't show or send them.
  */
@@ -172,7 +170,7 @@ export function NewEnrollmentForm({
 
     let cancelled = false
     const timeout = window.setTimeout(() => {
-      fetch(`/api/v1/students?q=${encodeURIComponent(query)}`)
+      fetch(`/api/v1/students/search?q=${encodeURIComponent(query)}`)
         .then((response) =>
           response.ok ? (response.json() as Promise<StudentSearchPage>) : EMPTY_PAGE,
         )

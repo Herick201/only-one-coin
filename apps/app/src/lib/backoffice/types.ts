@@ -200,22 +200,30 @@ export interface StudentRow {
   lastActivityAt: string
 }
 
-/** An enrollment as the backoffice sees it — course + money + seat, in one row. */
+/**
+ * One enrollment in the student file — course + money + seat, in one row.
+ * Every seat the person ever opened, including one still waiting on money and
+ * one handed back after a refused payment (OOC-73): the file is the person's
+ * history, unlike the ledger, which lists confirmed seats only.
+ */
 export interface EnrollmentHistoryItem {
   id: string
+  /** Tracking code the student quotes on the phone. */
+  code: string
   status: EnrollmentStatus
   seatStatus: SeatStatus
   createdAt: string
   courseName: string
   classGroupName: string
   teacherName: string
-  modality: ClassModality
   academicPeriodName: string
   planName: string
   /** Frozen price version at enrollment time (CLAUDE.md §5). */
   planPriceId: string
   amountCents: number
   currency: 'PEN'
+  /** The payment that speaks for the seat now; null when none was written. */
+  paymentId: string | null
   paymentStatus: PaymentStatus
   paymentMethod: PaymentMethod
   /**
@@ -226,7 +234,6 @@ export interface EnrollmentHistoryItem {
   operationNumber: string | null
   /** When the payment was credited — null until it is approved. */
   paidAt: string | null
-  progressPct: number | null
 }
 
 /** Where the e-mail carrying a document currently is (outbox, CLAUDE.md §5). */
@@ -300,22 +307,23 @@ export interface StudentAttachment {
   uploadedByName: string
 }
 
-/** Append-only audit trail (CLAUDE.md §8) — one entry per staff action. */
+/**
+ * Append-only audit trail (CLAUDE.md §8), as the student file reads it
+ * (OOC-75). The union is what `GET /students/:id/activity` can answer — one
+ * per `audit_log` action the tab shows (`student.registered`,
+ * `payment.approved`…), never the stored name itself.
+ */
 export type AuditAction =
-  | 'student_created'
+  | 'student_registered'
   | 'student_updated'
+  | 'guardian_added'
+  | 'guardian_updated'
   | 'enrollment_created'
   | 'payment_approved'
   | 'payment_rejected'
-  | 'payment_flagged'
-  | 'document_issued'
-  | 'document_requested'
-  | 'certificates_batch_issued'
-  | 'attachment_uploaded'
-  | 'email_sent'
-  | 'credentials_sent'
+  | 'receipt_viewed'
 
-/** Student data fields, as shown in the file — used by the audit trail. */
+/** Student and guardian data fields, as shown in the file — used by the audit trail. */
 export type StudentField =
   | 'first_name'
   | 'last_name'
@@ -327,6 +335,7 @@ export type StudentField =
   | 'region'
   | 'city'
   | 'birth_date'
+  | 'relationship'
 
 /**
  * Versioned e-mail templates (CLAUDE.md §5, outbox). The union *is* the
@@ -354,22 +363,29 @@ export type EmailTemplate =
 
 /**
  * What an audit entry points at. Either real data (a course name, an operation
- * number) or a domain code the UI translates — a code never reaches the screen.
+ * number) or field codes the UI translates — never a value from the log: the
+ * log names which fields changed, not what they held (Ley 29733).
  */
 export type AuditReference =
   | { kind: 'course'; name: string }
   | { kind: 'operation'; number: string }
-  | { kind: 'review_flag'; flag: ReviewFlag }
-  | { kind: 'student_field'; field: StudentField }
-  | { kind: 'email_template'; template: EmailTemplate }
+  | { kind: 'fields'; fields: StudentField[] }
 
 export interface AuditEntry {
   id: string
   at: string
   action: AuditAction
-  actorName: string
-  actorRole: StaffRole
+  /** Null when the account behind the entry no longer exists. */
+  actorName: string | null
+  actorRole: StaffRole | null
   reference: AuditReference | null
+}
+
+/** One page of a student's activity, newest first. */
+export interface StudentActivityPage {
+  items: AuditEntry[]
+  /** Pass back as `?cursor=` for the next page; null on the last one. */
+  nextCursor: string | null
 }
 
 /** Where a student's portal account stands, as the API derives it. */
@@ -384,7 +400,6 @@ export interface StudentDetail extends StudentRow {
   /** Paid procedures still on their way to becoming a document. */
   documentRequests: DocumentRequest[]
   attachments: StudentAttachment[]
-  activity: AuditEntry[]
 }
 
 /** Why a receipt landed in the human queue (CLAUDE.md §5 tier ladder). */

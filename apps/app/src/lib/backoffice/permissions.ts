@@ -169,6 +169,16 @@ export function canCreateStudent(role: StaffRole): boolean {
 }
 
 /**
+ * Who corrects a student file — the student's data and the guardian's. The
+ * same three as registration (decision of 07/10/2026, OOC-74): `support` does
+ * not correct contact either. The enforcing check is `STUDENT_FILE_ROLES` on
+ * the routes in `apps/api`.
+ */
+export function canEditStudent(role: StaffRole): boolean {
+  return canCreateStudent(role)
+}
+
+/**
  * Who sends a student their portal access from the file — the same audience
  * as the file itself (`GetStudentRoute`) and the API route behind the button
  * (`IssuePortalAccessRoute`). Billing settles money; it does not hand out

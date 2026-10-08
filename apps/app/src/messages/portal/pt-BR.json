@@ -184,7 +184,8 @@
       "view_receipt": "Ver comprovante",
       "month_pay_cta": "Pagar",
       "review_note": "Estamos verificando seu comprovante. Esta etapa pode levar algumas horas.",
-      "rejected_note": "Não conseguimos validar este pagamento. Fale conosco pelo WhatsApp para resolver."
+      "rejected_note": "Não conseguimos validar este pagamento. Fale conosco pelo WhatsApp para resolver.",
+      "receipt_error": "Não conseguimos abrir seu comprovante. Tente de novo em instantes."
     },
     "receipt_form": {
       "amount_label": "Valor a pagar",
@@ -229,6 +230,7 @@
     "requests": {
       "title": "Solicitações",
       "catalog_title": "Solicitações disponíveis",
+      "catalog_empty": "Em breve você poderá pedir seus trâmites por aqui. Por enquanto, fale conosco pelo WhatsApp para solicitar sua constancia, exame ou congelamento.",
       "request_cta": "Solicitar",
       "not_eligible": "Você não tem cursos elegíveis para esta solicitação.",
       "new_title": "Solicitar: {procedure}",
@@ -295,15 +297,6 @@
       "consent_none": "Registro pendente.",
       "edit_note": "Os dados com cadeado só são corrigidos pela coordenação — fale conosco pelo WhatsApp.",
       "locked_hint": "Este dado só é corrigido pela coordenação.",
-      "secondary_email_label": "Outro e-mail (opcional)",
-      "secondary_phone_label": "Outro telefone (opcional)",
-      "save": "Salvar alterações",
-      "saved_note": "Dados atualizados.",
-      "error_phone": "Informe seu telefone.",
-      "error_email": "Esse e-mail não parece válido.",
-      "add_secondary_email": "Adicionar outro e-mail (opcional)",
-      "add_secondary_phone": "Adicionar outro telefone (opcional)",
-      "remove_secondary": "Remover",
       "preferences_title": "Preferências",
       "language_label": "Idioma"
     },

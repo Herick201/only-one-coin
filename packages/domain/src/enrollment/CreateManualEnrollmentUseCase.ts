@@ -1,5 +1,6 @@
 import { DEFAULT_LOCALE } from "../notification/EmailNotification.js";
 import { enrollmentReceivedEmails } from "../notification/enrollmentEmails.js";
+import type { IAuditLogRepository } from "../identity/ports/IAuditLogRepository.js";
 import { BaseUseCase } from "../shared/base/BaseUseCase.js";
 import { Enrollment } from "./Enrollment.js";
 import type { IEnrollmentEmailContextLookup } from "./EnrollmentEmailContextLookup.js";
@@ -9,6 +10,8 @@ import { PlanPriceNotFoundError } from "./errors.js";
 import type { IPlanPriceLookup } from "./PlanPriceLookup.js";
 
 export interface CreateManualEnrollmentInput {
+  /** Who opened the enrollment — the student file's activity names them (OOC-75). */
+  actorId: string;
   studentId: string;
   classGroupId: string;
   planId: string;
@@ -45,6 +48,7 @@ export class CreateManualEnrollmentUseCase extends BaseUseCase<
     private readonly enrollmentRepository: IEnrollmentRepository,
     private readonly planPriceLookup: IPlanPriceLookup,
     private readonly emailContextLookup: IEnrollmentEmailContextLookup,
+    private readonly auditLog: IAuditLogRepository,
   ) {
     super();
   }
@@ -85,6 +89,18 @@ export class CreateManualEnrollmentUseCase extends BaseUseCase<
         )
       : [];
 
-    return this.enrollmentRepository.createWithPayment({ enrollment, payment, notifications });
+    const created = await this.enrollmentRepository.createWithPayment({ enrollment, payment, notifications });
+
+    // The exception path is the one that most needs a name on it: the
+    // checkout is the student acting, this is staff acting for them.
+    await this.auditLog.append({
+      actorId: input.actorId,
+      action: "enrollment.created",
+      targetId: created.enrollment.id,
+      metadata: { studentId: input.studentId, paymentId: created.payment.id },
+      at: created.enrollment.createdAt,
+    });
+
+    return created;
   }
 }

@@ -1,7 +1,7 @@
 ---
 import type { CourseSlug } from "../i18n/ui";
-import { audienceAnchors, bundles, courseParent, coursePrices, hasKidsProgram, htmlLang, levelsOf, monthlyPrices, monthlySessionPrices, org, sessionPrices, whatsappUrl } from "../i18n/ui";
-import type { BundleId } from "../i18n/ui";
+import { audienceAnchors, bundles, courseParent, coursePrices, extraPlans, hasKidsProgram, htmlLang, levelsOf, lowestSessionPrice, monthlyPrices, monthlySessionPrices, org, sessionPrices, whatsappUrl } from "../i18n/ui";
+import type { BundleId, ExtraPlanId } from "../i18n/ui";
 import { getLangFromUrl, useTranslations, withLang, formatPEN } from "../i18n/utils";
 import { courseIdBySlug, englishKidsCourseId, enrollmentHref } from "../data/checkout";
 import { courseContent } from "../i18n/courses-content";
@@ -54,9 +54,23 @@ const paymentOptions = (levelSlug: CourseSlug) => {
     .map(([id, bundle]) => ({
       key: id,
       name: d.paymentBundleNames[id],
+      amount: bundle.price,
       price: formatPEN(bundle.price, lang),
       note: noteOf(bundle.perSession),
       perks: [bundle.covers.map(shortName).join(" + "), workshops],
+      recommended: false,
+    }));
+  // Os planos extras deste nível (2 ou 3 módulos do inglês, alemão
+  // intensivo): nome e benefícios vêm do locale.
+  const levelExtras = (Object.entries(extraPlans) as [ExtraPlanId, (typeof extraPlans)[ExtraPlanId]][])
+    .filter(([, plan]) => plan.course === levelSlug)
+    .map(([id, plan]) => ({
+      key: id,
+      name: d.paymentExtraNames[id],
+      amount: plan.price,
+      price: formatPEN(plan.price, lang),
+      note: noteOf(plan.perSession),
+      perks: [...d.paymentExtraPerks[id]] as string[],
       recommended: false,
     }));
   const options = [
@@ -66,6 +80,7 @@ const paymentOptions = (levelSlug: CourseSlug) => {
           {
             key: "monthly",
             name: d.paymentMonthlyName,
+            amount: monthly,
             price: formatPEN(monthly, lang),
             note: noteOf(monthlyPerSession),
             perks: [] as string[],
@@ -78,6 +93,7 @@ const paymentOptions = (levelSlug: CourseSlug) => {
           {
             key: "full",
             name: d.paymentFullName,
+            amount: full,
             price: formatPEN(full, lang),
             // Só a pílula e a unidade: "equivale a" era preâmbulo, e o que
             // importa é o número.
@@ -86,11 +102,13 @@ const paymentOptions = (levelSlug: CourseSlug) => {
             recommended: false,
           },
         ]),
+    ...levelExtras,
     ...levelBundles,
-  ];
-  // Em ordem do mais curto ao mais completo, e o ÚLTIMO é o recomendado — que
-  // é o mais completo disponível ali, seja o paquete do nível ou o pacote que
-  // cobre dois. Um card sozinho não é o recomendado de nada, é o preço.
+  ].sort((a, b) => a.amount - b.amount);
+  // Em ordem do mais curto ao mais completo — que é a ordem de preço: mensual,
+  // 2 e 3 módulos, paquete, pacote de vários níveis — e o ÚLTIMO é o
+  // recomendado, o mais completo disponível ali. Um card sozinho não é o
+  // recomendado de nada, é o preço.
   if (options.length > 1) options[options.length - 1].recommended = true;
   return options;
 };
@@ -98,9 +116,10 @@ const paymentOptions = (levelSlug: CourseSlug) => {
 // Programa real deste curso, quando a coordenação já entregou o documento.
 // Sem ele a página segue no texto genérico, com o aviso de exemplo.
 const program = courseContent[lang][slug] ?? null;
-// O gancho do topo é o preço por sessão DESTE curso. Antes vinha do herói,
-// que carrega o mínimo do site (S/0.60): japonês, a S/5, anunciava 0.60.
-const hookPrice = sessionPrices[slug];
+// O gancho do topo é o "desde" DESTE curso: o menor por sessão entre as
+// formas de pagar que esta página oferece. Antes vinha do herói, que carrega
+// o mínimo do site (S/0.60): japonês, a S/5, anunciava 0.60.
+const hookPrice = lowestSessionPrice(slug);
 
 // Idioma e seus níveis. A página de um idioma vira o hub da família: um
 // seletor de níveis em quadradinhos, e UM painel de detalhe que troca com a

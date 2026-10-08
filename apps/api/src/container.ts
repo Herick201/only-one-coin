@@ -27,6 +27,8 @@ import {
   ExpireSeatHoldsUseCase,
   PromoteUserRoleUseCase,
   RegisterStudentUseCase,
+  UpdateStudentUseCase,
+  SaveGuardianUseCase,
   RenamePlanUseCase,
   ReleaseSeatHoldUseCase,
   RequestPortalPasswordResetUseCase,
@@ -121,10 +123,13 @@ import { TigrisReceiptStorage } from "./infra/storage/TigrisReceiptStorage.js";
 import { ReceiptObjectStore } from "./infra/storage/ReceiptObjectStore.js";
 import { ListStudentsQuery } from "./infra/persistence/student/ListStudentsQuery.js";
 import { GetStudentQuery } from "./infra/persistence/student/GetStudentQuery.js";
+import { StudentEnrollmentHistoryQuery } from "./infra/persistence/student/StudentEnrollmentHistoryQuery.js";
+import { StudentActivityQuery } from "./infra/persistence/student/StudentActivityQuery.js";
 import { DrizzlePaymentSettlementRepository } from "./infra/persistence/payment/DrizzlePaymentSettlementRepository.js";
 import { ListPaymentsQuery } from "./infra/persistence/payment/ListPaymentsQuery.js";
 import { ListPaymentReviewQueueQuery } from "./infra/persistence/payment/ListPaymentReviewQueueQuery.js";
 import { PaymentReceiptImageQuery } from "./infra/persistence/payment/PaymentReceiptImageQuery.js";
+import { StudentPortalQuery } from "./infra/persistence/portal/StudentPortalQuery.js";
 import { ListEnrollmentsQuery } from "./infra/persistence/enrollment/ListEnrollmentsQuery.js";
 import { ListOpenClassGroupsQuery } from "./infra/persistence/catalog/ListOpenClassGroupsQuery.js";
 import { GetPublicCatalogQuery } from "./infra/persistence/catalog/GetPublicCatalogQuery.js";
@@ -183,6 +188,8 @@ export interface AppRepositories {
 export interface AppUseCases {
   student: {
     register: RegisterStudentUseCase;
+    update: UpdateStudentUseCase;
+    saveGuardian: SaveGuardianUseCase;
   };
   enrollment: {
     createManual: CreateManualEnrollmentUseCase;
@@ -256,6 +263,9 @@ export interface AppQueries {
   listPaymentReviewQueue: ListPaymentReviewQueueQuery;
   paymentReceiptImage: PaymentReceiptImageQuery;
   getStudent: GetStudentQuery;
+  studentPortal: StudentPortalQuery;
+  studentEnrollmentHistory: StudentEnrollmentHistoryQuery;
+  studentActivity: StudentActivityQuery;
   listOpenClassGroups: ListOpenClassGroupsQuery;
   getPublicCatalog: GetPublicCatalogQuery;
   listCourses: ListCoursesQuery;
@@ -379,11 +389,14 @@ function buildContainer(): AppContainer {
   const receiptObjectStore = new ReceiptObjectStore(s3Client, config.BUCKET_NAME);
 
   // Use cases
-  const registerStudent = new RegisterStudentUseCase(studentRepository, guardianRepository);
+  const registerStudent = new RegisterStudentUseCase(studentRepository, guardianRepository, auditLogRepository);
+  const updateStudent = new UpdateStudentUseCase(studentRepository, guardianRepository, auditLogRepository);
+  const saveGuardian = new SaveGuardianUseCase(studentRepository, guardianRepository, auditLogRepository);
   const createManualEnrollment = new CreateManualEnrollmentUseCase(
     enrollmentRepository,
     planPriceLookup,
     enrollmentEmailContextLookup,
+    auditLogRepository,
   );
   const submitPublicEnrollment = new SubmitPublicEnrollmentUseCase(
     publicEnrollmentRepository,
@@ -483,6 +496,9 @@ function buildContainer(): AppContainer {
   // Queries (read-only, no domain invariant to protect — see class docs)
   const listStudents = new ListStudentsQuery(db);
   const getStudent = new GetStudentQuery(db);
+  const studentPortal = new StudentPortalQuery(db, getStudent);
+  const studentEnrollmentHistory = new StudentEnrollmentHistoryQuery(db);
+  const studentActivity = new StudentActivityQuery(db);
   const listEnrollments = new ListEnrollmentsQuery(db);
   const listPayments = new ListPaymentsQuery(db);
   const listPaymentReviewQueue = new ListPaymentReviewQueueQuery(db);
@@ -547,6 +563,8 @@ function buildContainer(): AppContainer {
     useCases: {
       student: {
         register: registerStudent,
+        update: updateStudent,
+        saveGuardian,
       },
       enrollment: {
         createManual: createManualEnrollment,
@@ -607,6 +625,9 @@ function buildContainer(): AppContainer {
     queries: {
       listStudents,
       getStudent,
+      studentPortal,
+      studentEnrollmentHistory,
+      studentActivity,
       listEnrollments,
       listPayments,
       listPaymentReviewQueue,

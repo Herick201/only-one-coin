@@ -67,11 +67,10 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
-  # CLAUDE.md §7: "Migration em produção sempre depois de backup." Este job
-  # mecaniza a regra — backup sempre roda, e só se ele terminar OK a
-  # migration roda em seguida. Não substitui o backup periódico do §3
-  # ("pg_dump → Tigris via Scheduled Function", ainda não construído) — é
-  # só o snapshot imediatamente antes de qualquer deploy que mude schema.
+  # CLAUDE.md §7: migrations in production always run after a backup. This
+  # job enforces it — the backup always runs, and the migration only runs
+  # if it succeeds. It is the project's only backup: the scheduled one was
+  # dropped on 2026-10-07 (CLAUDE.md §3).
   backup-and-migrate:
     needs: [wait-for-ci, check-secrets]
     runs-on: ubuntu-latest

@@ -1,7 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
-import { getPortalSession } from '@/lib/portal/mock-data'
-import { getStudentSession } from '@/lib/portal/session'
+import { getPortalView } from '@/lib/portal/session'
 import { formatDateNumeric } from '@/lib/portal/format'
 import type { Locale } from '@/lib/portal/types'
 import {
@@ -37,10 +36,9 @@ export default async function CoursesPage({
   const { locale: raw } = await params
   const locale = raw as Locale
   setRequestLocale(raw)
-  await getStudentSession()
   const t = await getTranslations('portal')
 
-  const { enrollments } = getPortalSession()
+  const { enrollments } = await getPortalView()
 
   return (
     <div>
@@ -89,11 +87,15 @@ export default async function CoursesPage({
                       </div>
 
                       <p className="mt-1 text-sm text-muted-foreground">
-                        {schedule}
-                        {' · '}
-                        {t('courses.starts_on', {
-                          date: formatDateNumeric(e.classGroup.startDate, locale),
-                        })}
+                        {[
+                          schedule,
+                          e.classGroup.startDate &&
+                            t('courses.starts_on', {
+                              date: formatDateNumeric(e.classGroup.startDate, locale),
+                            }),
+                        ]
+                          .filter(Boolean)
+                          .join(' · ')}
                       </p>
 
                     </div>
