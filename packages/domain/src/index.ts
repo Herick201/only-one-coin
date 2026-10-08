@@ -92,6 +92,13 @@ export {
   ReceiptUploadNotFoundError,
   SeatHoldExpiredError,
   StudentBelowMinimumAgeError,
+  EmailVerificationAttemptsExhaustedError,
+  EmailVerificationCodeExpiredError,
+  EmailVerificationCodeInvalidError,
+  EmailVerificationCooldownError,
+  EmailVerificationNotFoundError,
+  EmailVerificationRequiredError,
+  EmailVerificationTooManySendsError,
 } from "./enrollment/errors.js";
 export {
   EnrollmentOriginSchema,
@@ -486,3 +493,27 @@ export { RequestPortalPasswordResetUseCase } from "./identity/portal/RequestPort
 export { CompletePortalAccessUseCase } from "./identity/portal/CompletePortalAccessUseCase.js";
 export { IssuePortalAccessUseCase } from "./identity/portal/IssuePortalAccessUseCase.js";
 export type { IssuePortalAccessOutcome } from "./identity/portal/IssuePortalAccessUseCase.js";
+export {
+  EMAIL_VERIFICATION_CODE_TTL_MINUTES,
+  EMAIL_VERIFICATION_MAX_ATTEMPTS,
+  EMAIL_VERIFICATION_MAX_SENDS_PER_HOLD,
+  EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS,
+  emailVerificationCodeEmail,
+  hashVerificationCode,
+  newVerificationCode,
+  verificationCodeMatches,
+} from "./enrollment/EmailVerification.js";
+export type {
+  IEmailVerificationRepository,
+  IssueEmailVerificationOutcome,
+  IssueEmailVerificationRequest,
+  LatestEmailVerification,
+} from "./enrollment/EmailVerificationRepository.js";
+export {
+  SendEmailVerificationCodeUseCase,
+  type SendEmailVerificationCodeInput,
+} from "./enrollment/SendEmailVerificationCodeUseCase.js";
+export {
+  ConfirmEmailVerificationUseCase,
+  type ConfirmEmailVerificationInput,
+} from "./enrollment/ConfirmEmailVerificationUseCase.js";
