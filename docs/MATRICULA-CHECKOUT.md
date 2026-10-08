@@ -96,7 +96,7 @@ lacuna que a plataforma fecha.
   timestamp e IP** (Ley 29733, `CLAUDE.md` §8). Boa parte do público é menor;
   este é o caminho normal, não a exceção.
 
-**Verificação do Gmail (07/10/2026).** Com o e-mail do aluno válido, o passo mostra o bloco "Verifica tu correo": Turnstile, "Enviar código", campo de 6 dígitos com `autocomplete="one-time-code"`, reenviar depois de 60 s (contagem por reserva de vaga — trocar o e-mail não zera) e "Cambiar correo". Continuar exige o selo de verificado. A prova fica no rascunho (`sessionStorage`) presa à reserva e ao endereço — editar o e-mail tira a prova. Domínio digitado errado (`gmial.com`, `gmail.co`, …) ganha "¿Quisiste decir…?" com correção de um clique, para aluno e apoderado; o apoderado digita o e-mail duas vezes (sem colar). Spec: `docs/superpowers/specs/2026-10-07-checkout-email-verification-design.md`.
+**Verificação do Gmail (07/10/2026).** Com o e-mail do aluno válido, o passo mostra o bloco "Verifica tu correo": Turnstile, "Enviar código", campo de 6 dígitos com `autocomplete="one-time-code"`, reenviar depois de 60 s (contagem por reserva de vaga — trocar o e-mail não zera) e "Cambiar correo". Continuar exige o selo de verificado. A prova fica no rascunho (`sessionStorage`) presa à reserva e ao endereço — a prova fica no rascunho mas só vale para a mesma reserva e o mesmo endereço — editar o e-mail faz ela deixar de valer, e voltar ao endereço verificado a faz valer de novo. Domínio digitado errado (`gmial.com`, `gmail.co`, …) ganha "¿Quisiste decir…?" com correção de um clique, para aluno e apoderado; o apoderado digita o e-mail duas vezes (sem colar). Spec: `docs/superpowers/specs/2026-10-07-checkout-email-verification-design.md`.
 
 ### 2.1 De onde vieram os campos
 
