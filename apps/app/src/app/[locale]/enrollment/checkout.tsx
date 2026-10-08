@@ -194,9 +194,15 @@ export function Checkout({
         }
         // The submit found no proof of the student's e-mail for this hold —
         // the address was edited after verifying, or a stale draft. Nothing
-        // was written; the proof is dropped so the student step asks again.
+        // was written; the proof is dropped and the reader is taken back to
+        // the student step, where the verify block asks again (spec §5).
         if (body?.reason === 'email_verification.required') {
           setDraft((prev) => ({ ...prev, emailVerification: null }))
+          goTo('student')
+          // The review step unmounts on the next render, so the outcome it
+          // gets back only touches state that is about to be discarded — and
+          // it comes back fresh, not stuck on "sending", when the reader
+          // returns. It stays as the fallback note for a review that remains.
           return 'email_unverified'
         }
         // The captcha token was refused (expired, already used). Nothing was
