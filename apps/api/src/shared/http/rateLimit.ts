@@ -60,6 +60,10 @@ export const RATE_LIMITS = {
   seatHold: { name: "seat-hold:ip", by: "ip", limit: 60, windowSeconds: 10 * MINUTE },
   /** Checkout: minting and confirming the receipt upload. */
   receiptUpload: { name: "receipt-upload:ip", by: "ip", limit: 60, windowSeconds: 10 * MINUTE },
+  /** Checkout: mailing the e-mail verification code. */
+  emailVerificationSend: { name: "email-verification-send:ip", by: "ip", limit: 20, windowSeconds: 10 * MINUTE },
+  /** Checkout: typing the code. */
+  emailVerificationConfirm: { name: "email-verification-confirm:ip", by: "ip", limit: 60, windowSeconds: 10 * MINUTE },
   /** Checkout: the submit. */
   enrollmentSubmit: { name: "enrollment-submit:ip", by: "ip", limit: 60, windowSeconds: 10 * MINUTE },
 } as const satisfies Record<string, RateLimitRule>;

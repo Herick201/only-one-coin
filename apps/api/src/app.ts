@@ -29,6 +29,8 @@ import { claimSeatHoldRoute } from "@/http/enrollment/ClaimSeatHoldRoute.js";
 import { releaseSeatHoldRoute } from "@/http/enrollment/ReleaseSeatHoldRoute.js";
 import { requestReceiptUploadRoute } from "@/http/enrollment/RequestReceiptUploadRoute.js";
 import { confirmReceiptUploadRoute } from "@/http/enrollment/ConfirmReceiptUploadRoute.js";
+import { sendEmailVerificationRoute } from "@/http/enrollment/SendEmailVerificationRoute.js";
+import { confirmEmailVerificationRoute } from "@/http/enrollment/ConfirmEmailVerificationRoute.js";
 import { listOpenClassGroupsRoute } from "@/http/catalog/ListOpenClassGroupsRoute.js";
 import { getPublicCatalogRoute } from "@/http/catalog/GetPublicCatalogRoute.js";
 import { retireCatalogEntryRoute } from "@/http/catalog/RetireCatalogEntryRoute.js";
@@ -140,6 +142,8 @@ export async function buildApp(): Promise<FastifyInstance> {
         instance.withTypeProvider<ZodTypeProvider>().route(releaseSeatHoldRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(requestReceiptUploadRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(confirmReceiptUploadRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(sendEmailVerificationRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(confirmEmailVerificationRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(listOpenClassGroupsRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(getPublicCatalogRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(retireCatalogEntryRoute);

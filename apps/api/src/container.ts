@@ -2,11 +2,13 @@ import type { FastifyBaseLogger } from "fastify";
 import {
   CancelStaffInviteUseCase,
   ClaimSeatHoldUseCase,
+  SendEmailVerificationCodeUseCase,
   CancelStaffPasswordResetUseCase,
   ChangeOwnPasswordUseCase,
   CompletePortalAccessUseCase,
   CompleteStaffInviteUseCase,
   CompleteStaffPasswordResetUseCase,
+  ConfirmEmailVerificationUseCase,
   ConfirmReceiptUploadUseCase,
   CreateCourseUseCase,
   CreateAcademicPeriodUseCase,
@@ -65,6 +67,7 @@ import {
   type IPublicEnrollmentRepository,
   type IReceiptExtractionRepository,
   type IReceiptUploadRepository,
+  type IEmailVerificationRepository,
   type ISeatHoldRepository,
   type IStaffAccessRepository,
   type IStaffAccountProvisioner,
@@ -104,6 +107,7 @@ import { DrizzleGuardianRepository } from "./infra/persistence/student/DrizzleGu
 import { DrizzleEnrollmentRepository } from "./infra/persistence/enrollment/DrizzleEnrollmentRepository.js";
 import { DrizzlePublicEnrollmentRepository } from "./infra/persistence/enrollment/DrizzlePublicEnrollmentRepository.js";
 import { DrizzlePlanPriceLookup } from "./infra/persistence/enrollment/DrizzlePlanPriceLookup.js";
+import { DrizzleEmailVerificationRepository } from "./infra/persistence/enrollment/DrizzleEmailVerificationRepository.js";
 import { DrizzleSeatHoldRepository } from "./infra/persistence/enrollment/DrizzleSeatHoldRepository.js";
 import {
   DrizzleReceiptUploadRepository,
@@ -157,6 +161,7 @@ export interface AppRepositories {
   enrollment: IEnrollmentRepository;
   publicEnrollment: IPublicEnrollmentRepository;
   seatHold: ISeatHoldRepository;
+  emailVerification: IEmailVerificationRepository;
   /** Widened past the domain port: the normalize worker's own read/write
    * shape (`IReceiptNormalizationStore`) lives here too, the same way
    * `AppNotifications.outbox` is `IOutboxStore` rather than a domain port —
@@ -187,6 +192,8 @@ export interface AppUseCases {
     expireSeatHolds: ExpireSeatHoldsUseCase;
     requestReceiptUpload: RequestReceiptUploadUseCase;
     confirmReceiptUpload: ConfirmReceiptUploadUseCase;
+    sendEmailVerification: SendEmailVerificationCodeUseCase;
+    confirmEmailVerification: ConfirmEmailVerificationUseCase;
     /** Run by the `receipt-screen` worker, never a route (OOC-22). */
     screenReceiptUpload: ScreenReceiptUploadUseCase;
     /** Run by the `receipt-validate` worker, never a route (OOC-21). Pure
@@ -338,6 +345,7 @@ function buildContainer(): AppContainer {
   const publicEnrollmentRepository = new DrizzlePublicEnrollmentRepository(db);
   const planPriceLookup = new DrizzlePlanPriceLookup(db);
   const seatHoldRepository = new DrizzleSeatHoldRepository(db);
+  const emailVerificationRepository = new DrizzleEmailVerificationRepository(db);
   const receiptUploadRepository = new DrizzleReceiptUploadRepository(db);
   const receiptScreeningRepository = new DrizzleReceiptScreeningRepository(db);
   const receiptExtractionRepository = new DrizzleReceiptExtractionRepository(db);
@@ -392,6 +400,8 @@ function buildContainer(): AppContainer {
     config.RECEIPT_MAX_UPLOAD_BYTES,
   );
   const confirmReceiptUpload = new ConfirmReceiptUploadUseCase(receiptUploadRepository, receiptStorage);
+  const sendEmailVerification = new SendEmailVerificationCodeUseCase(emailVerificationRepository);
+  const confirmEmailVerification = new ConfirmEmailVerificationUseCase(emailVerificationRepository);
   const screenReceiptUpload = new ScreenReceiptUploadUseCase(receiptScreeningRepository);
   const promoteRole = new PromoteUserRoleUseCase(freshAuthVerifier, userRoleRepository, auditLogRepository);
   const createInvite = new CreateStaffInviteUseCase(staffUserLookup, staffInviteRepository, auditLogRepository);
@@ -524,6 +534,7 @@ function buildContainer(): AppContainer {
       enrollment: enrollmentRepository,
       publicEnrollment: publicEnrollmentRepository,
       seatHold: seatHoldRepository,
+      emailVerification: emailVerificationRepository,
       receiptUpload: receiptUploadRepository,
       receiptExtraction: receiptExtractionRepository,
       planPriceLookup,
@@ -545,6 +556,8 @@ function buildContainer(): AppContainer {
         expireSeatHolds,
         requestReceiptUpload,
         confirmReceiptUpload,
+        sendEmailVerification,
+        confirmEmailVerification,
         screenReceiptUpload,
         validateReceipt,
       },
