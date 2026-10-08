@@ -14,6 +14,8 @@ import { portalSignInRoute } from "@/http/portal/PortalSignInRoute.js";
 import { requestPortalPasswordResetRoute } from "@/http/portal/RequestPortalPasswordResetRoute.js";
 import { getPortalAccessTokenRoute, completePortalAccessTokenRoute } from "@/http/portal/PortalAccessTokenRoutes.js";
 import { getPortalMeRoute } from "@/http/portal/GetPortalMeRoute.js";
+import { getPortalOverviewRoute } from "@/http/portal/GetPortalOverviewRoute.js";
+import { getPortalPaymentReceiptRoute } from "@/http/portal/GetPortalPaymentReceiptRoute.js";
 import { registerStudentRoute } from "@/http/student/RegisterStudentRoute.js";
 import { listStudentsRoute } from "@/http/student/ListStudentsRoute.js";
 import { searchStudentsRoute } from "@/http/student/SearchStudentsRoute.js";
@@ -128,6 +130,8 @@ export async function buildApp(): Promise<FastifyInstance> {
         instance.withTypeProvider<ZodTypeProvider>().route(getPortalAccessTokenRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(completePortalAccessTokenRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(getPortalMeRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(getPortalOverviewRoute);
+        instance.withTypeProvider<ZodTypeProvider>().route(getPortalPaymentReceiptRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(registerStudentRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(listStudentsRoute);
         instance.withTypeProvider<ZodTypeProvider>().route(searchStudentsRoute);
